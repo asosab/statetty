@@ -1,0 +1,61 @@
+# setup
+title:        "El código nuestro de cada día"
+description:  "Pedazos de código de uso cotidiano, apuntes sobre lenguajes de programación, bases de datos y tecnologías de la información"
+tagline:      ""
+baseurl:      ""
+url:          https://asosab.github.io
+keywords:     "PHP, webscraping, postgresql, bases de datos, node.js, datos abiertos, estadística, big data, robot, whatsapp, asistente"
+shortlink:    "http://j.mp/dia-cod"
+theme-color:  "#ffffff"
+desarrollo:   false
+# About/contact
+author:
+  name:             Alejandro Sosa Briceño
+  url:              asosab.github.io
+  github:           asosab
+  google_analytics: UA-84695-6
+  disqus:           codigo-nuestro
+  linkedin:         alejandrososa
+  twitter:          asosab
+  facebook:         asosab
+  email:            asosab@gmail.com
+  region:           BO-S
+  placename:        Santa Cruz de la Sierra
+  ICBM:             "-17.7833152;-63.1821236"
+  flickr:           alejandrososa
+  instagram:        alejandrososab
+  youtube:          asosab
+  googleplus:       AlejandroSosaBriceño
+  pinterest:        asosab
+
+timezone:       America/La_Paz
+locale:         es_ES
+encoding:       utf-8
+email:          asosab@gmail.com
+imageFolder:    "/imagen/"
+
+
+# Build settings
+markdown: kramdown
+highlighter: rouge
+kramdown:
+  input: GFM
+  hard_wrap: false
+  syntax_highlighter_opts:
+    format_style: 'div'
+    css_class: 'highlight'
+    span:
+      line_numbers: false
+    block:
+      line_numbers: true
+
+permalink: /:title/
+
+webrick:
+  headers:
+    Strict-Transport-Security: max-age=2592000
+
+# gems
+plugins:
+  - jekyll-gist
+  - rouge

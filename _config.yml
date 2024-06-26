@@ -1,41 +1,70 @@
 
 title: Statetty
 email: info@Statetty.com
+short: "Tu Asistente Integral para el Mercado Inmobiliario"
 description: "Statetty ofrece una plataforma tecnológica que centraliza datos de inmuebles y proporciona alertas personalizadas en tiempo real. Además, brinda talleres prácticos para automatizar respuestas, gestionar prospectos y usar inteligencia artificial, mejorando la eficiencia y efectividad de los agentes inmobiliarios."
 keywords: "inmobiliarias, agentes inmobiliarios, búsqueda de inmuebles, tecnología inmobiliaria, Telegram, Statetty, Santa Cruz, Bolivia, educación inmobiliaria, talleres inmobiliarios, inteligencia artificial inmobiliaria, alertas inmobiliarias, mercado inmobiliario, propiedades en venta, propiedades en alquiler, redes sociales inmobiliarias, automatización inmobiliaria, gestión de prospectos, API inmobiliaria, chatbot inmobiliario"
 
-social:
-  twitter_username: statetty
-  facebook_username: statetty
-  instagram_username: statetty
-  tiktok_username: statetty
-  whatsapp: "https://wa.me/59178447518"
-  telegram: "https://t.me/statettybot"
+siteImage: "statetty.png"
 
-baseurl: "" 
-url: "https://statetty.com" 
-timezone:       America/La_Paz
-locale:         es_ES
-encoding:       utf-8
-imageFolder:    "/imagen/"
+social:
+  twitter:    "statetty"
+  facebook:   "statetty"
+  instagram:  "statetty"
+  tiktok:     "statetty"
+  whatsapp:   "https://wa.me/59178447518"
+  telegram:   "https://t.me/statettybot"
+  github:     false
+  linkedin:   false
+  flickr:     false
+  youtube:    statetty
+  googleplus: false
+  pinterest:  false
+
+baseurl:      "" 
+url:          "https://statetty.com" 
+timezone:     "America/La_Paz"
+locale:       "es_ES"
+encoding:     "utf-8"
+imageFolder:  "/assets/images/"
+ICBM:         "-17.7833152;-63.1821236"
+region:       "BO-S"
+placename:    "Santa Cruz de la Sierra"
 
 # About/contact
-author: Alejandro Sosa Briceño         
+author:
+  name:             Alejandro Sosa Briceño
+  url:              asosab.github.io
+  github:           asosab
+  google_analytics: UA-84695-6
+  disqus:           codigo-nuestro
+  linkedin:         alejandrososa
+  twitter:          asosab
+  facebook:         asosab
+  email:            alejandro.sosa@statetty.com
+  region:           BO-S
+  placename:        Santa Cruz de la Sierra
+  ICBM:             "-17.7833152;-63.1821236"
+  flickr:           alejandrososa
+  instagram:        alejandrososab
+  youtube:          asosab
+  googleplus:       AlejandroSosaBriceño
+  pinterest:        asosab    
 
 
 # Build settings
-markdown: kramdown
-highlighter: rouge
+markdown:     "kramdown"
+highlighter:  "rouge"
 kramdown:
-  input: GFM
-  hard_wrap: false
+  input:                  "GFM"
+  hard_wrap:              false
   syntax_highlighter_opts:
-    format_style: 'div'
-    css_class: 'highlight'
+    format_style:         'div'
+    css_class:            'highlight'
     span:
-      line_numbers: false
+      line_numbers:       false
     block:
-      line_numbers: true
+      line_numbers:       true
 
 permalink: /:title/
 
@@ -43,12 +72,6 @@ webrick:
   headers:
     Strict-Transport-Security: max-age=2592000
 
-
-
-remote_theme: pages-themes/architect@v0.2.0
-
 # gems
 plugins:
-  - jekyll-feed
   - rouge
-  - jekyll-remote-theme

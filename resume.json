@@ -1,0 +1,90 @@
+{
+  "basics": {
+    "name": "Alejandro Sosa Briceño",
+    "label": "",
+    "picture": "asosab.github.io/imagen/asosab.jpg",
+    "email": "asosab@gmail.com",
+    "phone": "+59174189700",
+    "website": "http://asosab.github.io",
+    "summary": "Panadero, Jardinero y fermentista, casado con Siria y padre de Julieta y Maximiliano. Desarrollo microservicios y veo estructuras de datos en todos lados",
+    "location": {
+      "address": "",
+      "postalCode": "10260",
+      "city": "Santa Cruz de laSierra",
+      "countryCode": "BO",
+      "region": ""
+    },
+    "profiles": [
+      {
+        "network": "Twitter",
+        "username": "asosab",
+        "url": "https://twitter.com/asosab"
+      },
+      {
+        "network": "LinkedIn",
+        "username": "alejandrososa",
+        "url": "https://linkedin.com/in/alejandrososa"
+      },
+      {
+        "network": "YouTube",
+        "username": "asosab",
+        "url": "http://www.youtube.com/asosab"
+      },
+      {
+        "network": "Pinterest",
+        "username": "asosab",
+        "url": "https://www.pinterest.com/asosab/"
+      }
+    ]
+  },
+  "work": [
+    {
+      "company": "Alejandro Sosa",
+      "position": "",
+      "website": "https://asosab.github.io",
+      "startDate": "",
+      "endDate": "",
+      "summary": "",
+      "highlights": [
+        "",
+        "",
+        ""
+      ]
+    },
+  
+  ],
+  "volunteer": [
+  ],
+  "education": [
+  ],
+  "awards": [
+  ],
+  "publications": [
+  ],
+  "skills": [
+    {
+      "name": "Web Development",
+      "level": "Advanced",
+      "keywords": [
+        "Jekyll",
+        "Javascript",
+        "Google Analytics",
+        "PHP"
+      ]
+    },
+  ],
+  "languages": [
+    {
+      "language": "Español",
+      "fluency": "Nativo"
+    }
+  ],
+  "interests": [
+    {
+      "name": "",
+      "keywords": [ "" ]
+    }
+  ],
+  "references": [
+  ]
+}

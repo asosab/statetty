@@ -1,0 +1,25 @@
+  <script>
+  $(document).ready(function() {
+    $("#form-submit").click(function(e) {
+      e.preventDefault();
+
+      // Obtener los valores de los campos del formulario
+      var name = $("#name").val();
+      var pais = $("#pais").val();
+      var email = $("#email").val();
+      var message = $("#message").val();
+
+      // Construir el mensajeStr
+      var mensajeStr = "¡Hola Christty! me llamo " + name + ", vivo en " + pais + ", mi celular es " + cel + " y estoy interesado en Statetty. " + message;
+
+      // Codificar el mensaje para agregarlo al final del enlace de WhatsApp
+      var encodedMessage = encodeURI(mensajeStr);
+
+      // Crear el enlace de WhatsApp con los datos codificados
+      var whatsappLink = "https://api.whatsapp.com/send?phone=%2B59178447518&text=" + encodedMessage;
+
+      // Redireccionar a WhatsApp con los datos del formulario
+      window.location.href = whatsappLink;
+    });
+  });
+  </script>

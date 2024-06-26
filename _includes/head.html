@@ -1,0 +1,23 @@
+<head itemscope itemtype="http://schema.org/WebSite">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title itemprop='name'>{% if page.title %}{{ page.title }}{% else %}{{ site.title }}{% endif %}</title>
+  <meta http-equiv="X-Clacks-Overhead" content="GNU Terry Pratchett" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  {% include favicon.html %}
+  {% include seo.html %}
+
+  <link href='https://fonts.googleapis.com/css?family=Lato:300,400,300italic,400italic' rel='stylesheet' type='text/css'>
+  <link href='https://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'> 
+  <!-- FontAwesome JS-->  
+  <script defer src="{{'/assets/fontawesome/js/all.min.js' | prepend: site.url}}"></script>
+  <!-- Global CSS -->     
+  <link rel="stylesheet" href="{{'/assets/plugins/bootstrap/css/bootstrap.min.css' | prepend: site.url}}">
+  <!-- Plugins CSS -->    
+  <link rel="stylesheet" href="{{'/assets/plugins/prism/prism.css' | prepend: site.url}}">
+  <!-- Theme CSS -->      
+  <link id="theme-style" rel="stylesheet" href="{{'/assets/css/theme-1.css' | prepend: site.url}}">
+
+  <!-- GitHub Button -->  <!--script async defer src="https://buttons.github.io/buttons.js"></script--> 
+</head>
