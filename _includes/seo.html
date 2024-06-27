@@ -24,12 +24,12 @@
   <meta property="og:image:type" content="image/png" />
   <meta property="og:image:alt" content="{% if page.title %}{{ page.title }}{% else %}{{ site.title }}{% endif %}" />
   <meta property="og:site_name" content="{{ site.title }}" />
-  {% if site.social.facebook_username %}<meta property="article:author" content="https://www.facebook.com/{{site.social.facebook_username}}"/>{% endif %}
+  {% if site.social.facebook %}<meta property="article:author" content="https://www.facebook.com/{{site.social.facebook}}"/>{% endif %}
   <meta content="{{site.author.name}}" name="author">
   {% if site.author.googleplus %}<link href="https://plus.google.com/+{{site.author.googleplus}}" rel="author">{% endif %}
 
   <meta name="twitter:card" content="summary" />
-  <meta name="twitter:site" content="@{{ site.social.twitter_username }}" />
+  <meta name="twitter:site" content="@{{ site.social.twitter }}" />
   <meta name="twitter:title" content="{% if page.title %}{{ page.title }}{% else %}{{ site.title }}{% endif %}" />
   <meta name="twitter:description" content="{% if page.description %}{{ page.description }}{% else %}{{ site.description }}{% endif %}" />
   <meta name="twitter:image:src" content="{% if page.image %}{{ page.image | prepend: site.imageFolder | prepend: site.url }}{% else %}{{site.siteImage | prepend: site.imageFolder | prepend: site.url}}{% endif %}" />
