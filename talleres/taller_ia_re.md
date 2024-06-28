@@ -7,7 +7,7 @@ comments:           true
 description:        "Capacitar a los agentes inmobiliarios en el uso de IA para optimizar respuestas, interacción con prospectos y aumentar la tasa de conversión."
 tags:               [inteligencia artificial, AI, machine learning, inmobiliaria, broker, real estate, taller]
 published:          true
-image:              ia.jpg
+image:              ia.png
 ---
 
 ## Taller de Inteligencia Artificial & Real Estate
