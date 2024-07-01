@@ -58,17 +58,17 @@ Nuestro taller está diseñado específicamente para agentes inmobiliarios como 
 
 ### Agenda del Taller
 
-1. **Introducción y Bienvenida** (10 minutos)
-2. **Identificación de Necesidades y Problemas Actuales** (15 minutos)
-3. **Introducción a la Herramienta de Automatización** (20 minutos)
-4. **Automatización de Mensajes** (35 minutos)
-5. **Registro de Prospectos y Gestión de Contactos** (20 minutos)
-6. **Pausa** (15 minutos)
-7. **Uso de Inteligencia Artificial** (20 minutos)
-8. **Incluir Captaciones en las Respuestas** (20 minutos)
-9. **Sesión Práctica: Configuración Personalizada** (30 minutos)
-10. **Buenas Prácticas y Estrategias Avanzadas** (20 minutos)
-11. **Conclusión y Cierre** (15 minutos)
+1. **Introducción y Bienvenida** 
+2. **Identificación de Necesidades y Problemas Actuales** 
+3. **Introducción a la Herramienta de Automatización**
+4. **Automatización de Mensajes** 
+5. **Registro de Prospectos y Gestión de Contactos** 
+6. **Pausa** 
+7. **Uso de Inteligencia Artificial** 
+8. **Incluir Captaciones en las Respuestas** 
+9. **Sesión Práctica: Configuración Personalizada** 
+10. **Buenas Prácticas y Estrategias Avanzadas**
+11. **Conclusión y Cierre** 
 
 ### Beneficios del Taller
 

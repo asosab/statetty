@@ -48,15 +48,15 @@ En el mundo digital actual, tener una presencia online fuerte es crucial para el
 
 ### Agenda del Taller
 
-1. **Introducción y Bienvenida** (10 minutos)
-2. **Introducción al Marketing Digital** (20 minutos)
-3. **Estrategias de SEO** (30 minutos)
-4. **Marketing en Redes Sociales** (30 minutos)
+1. **Introducción y Bienvenida** 
+2. **Introducción al Marketing Digital** 
+3. **Estrategias de SEO** 
+4. **Marketing en Redes Sociales**
 5. **Pausa** (15 minutos)
-6. **Publicidad Online** (30 minutos)
-7. **Email Marketing** (20 minutos)
-8. **Análisis y Medición** (30 minutos)
-9. **Conclusión y Cierre** (15 minutos)
+6. **Publicidad Online**
+7. **Email Marketing** 
+8. **Análisis y Medición**
+9. **Conclusión y Cierre**
 
 ### Beneficios del Taller
 

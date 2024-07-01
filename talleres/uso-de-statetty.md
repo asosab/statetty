@@ -48,15 +48,15 @@ El uso eficaz de herramientas tecnológicas es crucial en el mercado inmobiliari
 
 ### Agenda del Taller
 
-1. **Introducción y Bienvenida** (10 minutos)
-2. **Configuración Inicial de Statetty** (20 minutos)
-3. **Personalización de Funcionalidades** (30 minutos)
-4. **Integración con Herramientas Externas** (20 minutos)
-5. **Pausa** (15 minutos)
-6. **Automatización de Procesos** (30 minutos)
-7. **Uso Avanzado de Estadísticas y Reportes** (20 minutos)
-8. **Prácticas Personalizadas** (45 minutos)
-9. **Conclusión y Cierre** (10 minutos)
+1. **Introducción y Bienvenida** 
+2. **Configuración Inicial de Statetty** 
+3. **Personalización de Funcionalidades** 
+4. **Integración con Herramientas Externas** 
+5. **Pausa** 
+6. **Automatización de Procesos** 
+7. **Uso Avanzado de Estadísticas y Reportes**
+8. **Prácticas Personalizadas** 
+9. **Conclusión y Cierre** 
 
 ### Beneficios del Taller
 
