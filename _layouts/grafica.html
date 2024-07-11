@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+  {% include head.html %}
+  {% include analytics.html %}
+    <body>
+    {% include headert.html %}
+    <div class="page-content">
+      <div class="wrap">
+
+        <section id="grafica" class="about section active">
+          <div class="container">
+            <div class="about-inner"><br/><br/><br/>
+
+            {{ content | external_link_filter }}
+
+            </div><!--//grafica-inner-->     
+          </div><!--//container-->
+        </section>
+
+      </div>
+    </div>
+    {% include disqus.html %}
+    {% include footer.html %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> 
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-wordcloud"></script> 
+    </body>
+</html>
