@@ -4,7 +4,7 @@ title:  			"Uso de palabras en mensajes de Requerimientos en WhatsApp"
 date:   			2024-07-11
 categories: 	graficas,datos
 comments: 		true
-description: 	"Estas son las palabras (a más grandes, más usadas) que representan los mensajes de requerimiento en más de 0 grupos de WhatsApp"
+description: 	"Estas son las palabras (a más grandes, más usadas) que representan los mensajes de requerimiento en más de 30 grupos de WhatsApp"
 tags: 				[Whatsapp, estadística, chart, conteo, palabras, WordCloud, Requerimieno, casa, norte, alquiler, anillo]
 published: 		true
 image: 				wordCloud.png
@@ -914,4 +914,3 @@ image: 				wordCloud.png
     new Chart(ctx, config);
   </script>
 
-  
