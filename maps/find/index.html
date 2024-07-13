@@ -87,17 +87,18 @@ image:              mapa.png
 
         //var marker = L.marker([dato.lat, dato.lng]).addTo(mymap);
         var nombre = dato?.agente? dato.agente.split(" ")[0]:'';
-        var cel = dato.numero.replace(/[^0-9]/g, "");
+        var cel = dato?.numero? dato.numero.replace(/[^0-9]/g, ""):'';
         var msj = `Buenas tardes ${nombre}, un gusto saludarle. Quisiera saber si tiene disponible este inmueble` +
                   ` (${dato.nombre}) \nlink: ${params.URL}`;
         var msjWhatsapp = `https://wa.me/${cel}?text=${encodeURIComponent(msj)}`;
+        var linkWA = cel? '<a href="' + msjWhatsapp + '">Contacta al captador</a>':'';
 
 
         var popupContent = "<b>" + dato.nombre + "</b><br>" +
                            "<b>Dirección:</b> " + dato.dir + "<br>" +
                            "<b>Descripción:</b> " + dato.des + "<br>" +
                            '<a href="' + dato.URL + '">Ver más detalles</a>' +
-                           '<a href="' + msjWhatsapp + '">Contacta al captador</a>';
+                           linkWA;
         
         marker.bindPopup(popupContent);
       });
