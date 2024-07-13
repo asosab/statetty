@@ -88,8 +88,8 @@ image:              mapa.png
         //var marker = L.marker([dato.lat, dato.lng]).addTo(mymap);
         var nombre = dato?.agente? dato.agente.split(" ")[0]:'';
         var cel = dato?.numero? dato.numero.replace(/[^0-9]/g, ""):'';
-        var msj = `Buenas tardes ${nombre}, un gusto saludarle. Quisiera saber si tiene disponible este inmueble` +
-                  ` (${dato.nombre}) \nlink: ${params.URL}`;
+        var msj = `Buenas tardes ${nombre}, un gusto saludarle. Quisiera saber si sigue disponible este inmueble` +
+                  ` (${dato.nombre}) \nlink: ${dato.URL}\nGracias de antemano`;
         var msjWhatsapp = `https://wa.me/${cel}?text=${encodeURIComponent(msj)}`;
         var linkWA = cel? '<a href="' + msjWhatsapp + '">Contacta al captador</a>':'';
 
