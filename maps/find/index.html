@@ -91,13 +91,13 @@ image:              mapa.png
         var msj = `Buenas tardes ${nombre}, un gusto saludarle. Quisiera saber si sigue disponible este inmueble` +
                   ` (${dato.nombre}) \nlink: ${dato.URL}\nGracias de antemano`;
         var msjWhatsapp = `https://wa.me/${cel}?text=${encodeURIComponent(msj)}`;
-        var linkWA = cel? '<br/><a href="' + msjWhatsapp + '">Contacta al captador</a>':'';
+        var linkWA = cel? '<br/><a href="' + msjWhatsapp + '" target="_blank">Contacta al captador</a>':'';
 
 
         var popupContent = "<b>" + dato.nombre + "</b><br>" +
                            "<b>Dirección:</b> " + dato.dir + "<br>" +
                            "<b>Descripción:</b> " + dato.des + "<br>" +
-                           '<a href="' + dato.URL + '">Ver más detalles</a>' +
+                           '<a href="' + dato.URL + '" target="_blank">Ver más detalles</a>' +
                            linkWA;
         
         marker.bindPopup(popupContent);
