@@ -40,8 +40,8 @@ image:              mapa.png
         location.lng = parseFloat(this[2]);
         location.dir = this[3];
         location.URL = this[4];
-        location.agentName = this[16];
-        location.agentPhon = this[17];
+        location.agente = this[16];
+        location.numero = this[17];
 
         var stringOriginal = this[5]?this[5]:'';
         let totalChr;
@@ -86,9 +86,9 @@ image:              mapa.png
         var marker = L.marker([dato.lat, dato.lng], {icon}).addTo(mymap);
 
         //var marker = L.marker([dato.lat, dato.lng]).addTo(mymap);
-        var nombre = dato.agentName.split(" ");
-        var cel = dato.agentPhon.replace(/[^0-9]/g, "");
-        var msj = `Buenas tardes ${nombre[0]}, un gusto saludarle. Quisiera saber si tiene disponible este inmueble` +
+        var nombre = dato?.agente? dato.agente.split(" ")[0]:'';
+        var cel = dato.numero.replace(/[^0-9]/g, "");
+        var msj = `Buenas tardes ${nombre}, un gusto saludarle. Quisiera saber si tiene disponible este inmueble` +
                   ` (${dato.nombre}) \nlink: ${params.URL}`;
         var msjWhatsapp = `https://wa.me/${cel}?text=${encodeURIComponent(msj)}`;
 
