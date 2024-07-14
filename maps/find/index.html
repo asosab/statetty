@@ -70,8 +70,9 @@ image:              mapa.png
       locations.forEach(function(dato) {
         // Crear marcador y vincular un pop-up con los datos adicionales
         var markerColor;
-             if (dato.URL.includes("c21.com"))  { markerColor = 'black';} 
-        else if (dato.URL.includes("remax"))    { markerColor = 'blue';} 
+             if (dato.URL.includes("c21.com"))      { markerColor = 'black';} 
+        else if (dato.URL.includes("remax"))        { markerColor = 'blue';} 
+        else if (dato.URL.includes("bieninmuebles")){ markerColor = 'green';} 
         else {markerColor = 'red'; }
 
         var icon = new L.Icon({
