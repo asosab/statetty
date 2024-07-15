@@ -434,8 +434,8 @@ image: 				wordCloud.png
     }
 
     // Escalar los valores para que estén entre 9 y 90
-    //var sizes = normalize(values, 10, 150);
-    var sizes = values;
+    var sizes = normalize(values, 10, 150);
+    //var sizes = values;
 
     // Configuración del gráfico
     const config = {
