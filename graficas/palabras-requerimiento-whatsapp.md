@@ -701,7 +701,7 @@ image: 				wordCloud.png
           {
             label: 'Importancia',
             data: sizes,
-            backgroundColor: '#007bff' // Color de las palabras
+            backgroundColor: '#17BAEF' // Color de las palabras
           },
         ],
       },
