@@ -4,7 +4,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title itemprop='name'>
     {% if page.short %}{{ page.short }}
-    {% if page.title %}{{ site.title }} | {{ page.title }}
+    {% else if page.title %}{{ site.title }} | {{ page.title }}
     {% else %}{{ site.title }}
     {% endif %}</title>
   <meta http-equiv="X-Clacks-Overhead" content="GNU Terry Pratchett" />
