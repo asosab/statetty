@@ -155,6 +155,7 @@ image:              mapa.png
       } else {
         priceComparison = `<span style="color: green;">↓ ${Math.abs(priceDiffPercent).toFixed(2)}%</span>`;
       }
+      priceComparison = "";
 
       var popupContent = "<b>" + dato.nombre + " (" + distance.toFixed(2) + " m)</b> " + priceComparison + "<br>" +
         "<b>Dirección:</b> " + dato.dir + "<br>" +
