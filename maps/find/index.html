@@ -121,6 +121,18 @@ image:              mapa.png
         radius: radius
       }).addTo(mymap);
 
+      // Dibujar una cruz en el centro del círculo
+      var crossSize = 20; // Tamaño de la cruz en píxeles
+      var cross = L.polyline([
+        [circleCenter.lat - crossSize / 111000, circleCenter.lng],
+        [circleCenter.lat + crossSize / 111000, circleCenter.lng],
+        [circleCenter.lat, circleCenter.lng - crossSize / (111000 * Math.cos(circleCenter.lat * Math.PI / 180))],
+        [circleCenter.lat, circleCenter.lng + crossSize / (111000 * Math.cos(circleCenter.lat * Math.PI / 180))]
+      ], {
+        color: 'red',
+        weight: 2
+      }).addTo(mymap);
+
 
 
     });
