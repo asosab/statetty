@@ -40,7 +40,8 @@ image:              mapa.png
       location.lng = parseFloat(this[2]);
       location.dir = this[3];
       location.URL = this[4];
-      location.precio = parseInt(this[15]);
+      location.precio = parseInt(this[15]) || 0;
+      //console.log('Valor de this[15]:', this[15]);
       location.agente = this[16];
       location.numero = this[17];
 
@@ -155,7 +156,7 @@ image:              mapa.png
       } else {
         priceComparison = `<span style="color: green;">↓ ${Math.abs(priceDiffPercent).toFixed(2)}%</span>`;
       }
-      priceComparison = "";
+      //priceComparison = "";
 
       var popupContent = "<b>" + dato.nombre + " (" + distance.toFixed(2) + " m)</b> " + priceComparison + "<br>" +
         "<b>Dirección:</b> " + dato.dir + "<br>" +
