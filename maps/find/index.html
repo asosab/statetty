@@ -146,7 +146,8 @@ image:              mapa.png
       var linkWA = cel ? '<br/><a href="' + msjWhatsapp + '" target="_blank">Contacta al captador</a>' : '';
 
       // Calcular la distancia al centro de la circunferencia en metros
-      var distance = calculateDistanceHaversine(circleCenter.lat, circleCenter.lng, dato.lat, dato.lng) * 1000;
+      var distance = parseInt(calculateDistanceHaversine(circleCenter.lat, circleCenter.lng, dato.lat, dato.lng) * 1000);
+
 
       // Calcular la diferencia porcentual del precio
       var priceDiffPercent = ((dato.precio - pProm) / pProm) * 100;
@@ -158,7 +159,7 @@ image:              mapa.png
       }
       //priceComparison = "";
 
-      var popupContent = "<b>" + dato.nombre + " (" + distance.toFixed(2) + " m)</b> " + priceComparison + "<br>" +
+      var popupContent = "<b>" + dato.nombre + " (" + distance + " m)</b> " + priceComparison + "<br>" +
         "<b>Dirección:</b> " + dato.dir + "<br>" +
         "<b>Descripción:</b> " + dato.des + "<br>" +
         '<a href="' + dato.URL + '" target="_blank">Ver página de la captación</a>' +
