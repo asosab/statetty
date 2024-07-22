@@ -17,7 +17,7 @@ image:              mapa.png
   var urlParams = new URLSearchParams(window.location.search);
   let id = urlParams.get('id');
   let key = urlParams.get('key');
-  let pProm = parseInt(urlParams.get('p'));
+  let pProm = Math.round(urlParams.get('p'));
 
   if (!id || !key) {
     throw new Error("ID o clave no proporcionados en la URL");
@@ -146,16 +146,16 @@ image:              mapa.png
       var linkWA = cel ? '<br/><a href="' + msjWhatsapp + '" target="_blank">Contacta al captador</a>' : '';
 
       // Calcular la distancia al centro de la circunferencia en metros
-      var distance = parseInt(calculateDH(circleCenter.lat, circleCenter.lng, dato.lat, dato.lng) * 1000);
+      var distance = Math.round(calculateDH(circleCenter.lat, circleCenter.lng, dato.lat, dato.lng) * 1000);
 
 
       // Calcular la diferencia porcentual del precio
       var priceDiffPercent = ((dato.precio - pProm) / pProm) * 100;
       var priceComparison;
       if (priceDiffPercent > 0) {
-        priceComparison = `<span style="color: red;">↑${parseInt(priceDiffPercent)}%</span>`;
+        priceComparison = `<span style="color: red;">↑${Math.round(priceDiffPercent)}%</span>`;
       } else {
-        priceComparison = `<span style="color: green;">↓${parseInt(Math.abs(priceDiffPercent))}%</span>`;
+        priceComparison = `<span style="color: green;">↓${Math.round(Math.abs(priceDiffPercent))}%</span>`;
       }
       //priceComparison = "";
 
