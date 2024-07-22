@@ -153,9 +153,9 @@ image:              mapa.png
       var priceDiffPercent = ((dato.precio - pProm) / pProm) * 100;
       var priceComparison;
       if (priceDiffPercent > 0) {
-        priceComparison = `<span style="color: red;">↑${Math.round(priceDiffPercent)}%</span>`;
+        priceComparison = `<span style="color: red;">↑${Math.ceil(priceDiffPercent)}%</span>`;
       } else {
-        priceComparison = `<span style="color: green;">↓${Math.round(Math.abs(priceDiffPercent))}%</span>`;
+        priceComparison = `<span style="color: green;">↓${Math.ceil(Math.abs(priceDiffPercent))}%</span>`;
       }
       //priceComparison = "";
 
