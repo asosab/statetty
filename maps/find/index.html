@@ -9,152 +9,156 @@ published:          true
 image:              mapa.png
 ---
 
+<div id="mapid"></div> <!-- Div donde se mostrará el mapa -->
+<div id="loading-indicator">Cargando...</div>
+<script>
+  var map;
+  var locations = [];
+  var urlParams = new URLSearchParams(window.location.search);
+  let id = urlParams.get('id');
+  let key = urlParams.get('key');
 
-  <div id="mapid"></div> <!-- Div donde se mostrará el mapa style="height:600px;width:800px; -->
-  <div id="loading-indicator">Cargando...</div>
-  <script>
-    var map;
-    var locations = [];
-    var urlParams = new URLSearchParams(window.location.search);
-    let id = urlParams.get('id');
-    let key = urlParams.get('key');
+  if (!id || !key) {
+    throw new Error("ID o clave no proporcionados en la URL");
+  }
 
-    if (!id || !key) {
-      throw new Error("ID o clave no proporcionados en la URL");
-    }
+  var valores = 'Sheet1!A2:R';
+  var url = 'https://sheets.googleapis.com/v4/spreadsheets/' + id + '/values/' + valores + '?key=' + key;
 
-    var valores = 'Sheet1!A2:R';
-    var url = 'https://sheets.googleapis.com/v4/spreadsheets/' + id + '/values/' + valores + '?key=' + key;
+  // Mostrar indicador de carga
+  $('#loading-indicator').show();
 
-    // Mostrar indicador de carga
-    $('#loading-indicator').show();
+  $.getJSON(url, function (data) {
+    // Ocultar indicador de carga una vez que se hayan cargado los datos
+    $('#loading-indicator').hide();
 
-    $.getJSON(url, function (data) {
-      // Ocultar indicador de carga una vez que se hayan cargado los datos
-      $('#loading-indicator').hide();
+    $(data.values).each(function () {
+      var location = {};
+      location.nombre = this[0];
+      location.lat = parseFloat(this[1]);
+      location.lng = parseFloat(this[2]);
+      location.dir = this[3];
+      location.URL = this[4];
+      location.agente = this[16];
+      location.numero = this[17];
 
-      $(data.values).each(function () {
-        var location = {};
-        location.nombre = this[0];
-        location.lat = parseFloat(this[1]);
-        location.lng = parseFloat(this[2]);
-        location.dir = this[3];
-        location.URL = this[4];
-        location.agente = this[16];
-        location.numero = this[17];
+      var stringOriginal = this[5] ? this[5] : '';
+      let totalChr;
+      if (stringOriginal && stringOriginal.length > 0) { totalChr = stringOriginal.length; }
+      else { totalChr = 0; }
+      var chrMax = 500;
+      var faltan = 0;
+      if (totalChr > chrMax) { faltan = totalChr - chrMax; }
+      var frase = '... (y ' + faltan + ' caracteres más)';
+      var stringTruncado = totalChr > chrMax ? stringOriginal.substring(0, chrMax) + frase : stringOriginal;
+      location.des = stringTruncado;
 
-        var stringOriginal = this[5]?this[5]:'';
-        let totalChr;
-        if (stringOriginal && stringOriginal.length > 0 ) { totalChr = stringOriginal.length;}
-        else{totalChr = 0;}
-        var chrMax = 500;
-        var faltan = 0; 
-        if (totalChr>chrMax) {faltan = totalChr - chrMax};
-        var frase = '... (y '+faltan+' caracteres más)';
-        var stringTruncado = totalChr > chrMax ? stringOriginal.substring(0, chrMax)+frase : stringOriginal;
-        location.des = stringTruncado;
-
-        //location.des = this[5];
-        locations.push(location);
-      });
-
-      // Crear el mapa
-      var mymap = L.map('mapid'); // No establezcas una vista inicial aquí
-
-      // Añadir capa de OpenStreetMap al mapa
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-      }).addTo(mymap);
-
-      function calculateDistanceHaversine(lat1, lng1, lat2, lng2) {
-        // Convertir las coordenadas a radianes
-        const lat1Rad = lat1 * Math.PI / 180;
-        const lng1Rad = lng1 * Math.PI / 180;
-        const lat2Rad = lat2 * Math.PI / 180;
-        const lng2Rad = lng2 * Math.PI / 180;
-        // Calcular la diferencia de latitudes y longitudes
-        const dLat = lat2Rad - lat1Rad;
-        const dLng = lng2Rad - lng1Rad;
-        // Calcular la distancia en un plano considerando la esfericidad de la Tierra
-        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-            Math.cos(lat1Rad) * Math.cos(lat2Rad) *
-            Math.sin(dLng / 2) * Math.sin(dLng / 2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        // Calcular la distancia en kilómetros usando el radio de la Tierra (6371 km)
-        const distance = 6371 * c;
-        return distance;
-      }
-
-
-      // Iterar sobre los datos y añadir marcadores al mapa
-      locations.forEach(function(dato) {
-        // Crear marcador y vincular un pop-up con los datos adicionales
-        var markerColor;
-             if (dato.URL.includes("c21.com"))      { markerColor = 'black';} 
-        else if (dato.URL.includes("remax"))        { markerColor = 'blue';} 
-        else if (dato.URL.includes("bieninmuebles")){ markerColor = 'green';} 
-        else {markerColor = 'red'; }
-
-        var icon = new L.Icon({
-          iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-'+markerColor+'.png',
-          shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-          iconSize: [25, 41],
-          iconAnchor: [12, 41],
-          popupAnchor: [1, -34],
-          shadowSize: [41, 41]
-        });        
-
-        var marker = L.marker([dato.lat, dato.lng], {icon}).addTo(mymap);
-
-        //var marker = L.marker([dato.lat, dato.lng]).addTo(mymap);
-        var nombre = dato?.agente? dato.agente.split(" ")[0]:'';
-        var cel = dato?.numero? dato.numero.replace(/[^0-9]/g, ""):'';
-        var msj = `Buenas tardes ${nombre}, un gusto saludarle. Quisiera saber si sigue disponible este inmueble` +
-                  ` (${dato.nombre}) \nlink: ${dato.URL}\nGracias de antemano`;
-        var msjWhatsapp = `https://wa.me/${cel}?text=${encodeURIComponent(msj)}`;
-        var linkWA = cel? '<br/><a href="' + msjWhatsapp + '" target="_blank">Contacta al captador</a>':'';
-
-        var distance = calculateDistanceHaversine(circleCenter.lat, circleCenter.lng, dato.lat, dato.lng) * 1000;
-
-
-        var popupContent = "<b>" + dato.nombre + " (" + distance.toFixed(2) + " m)</b><br>" +
-                           "<b>Dirección:</b> " + dato.dir + "<br>" +
-                           "<b>Descripción:</b> " + dato.des + "<br>" +
-                           '<a href="' + dato.URL + '" target="_blank">Ver página de la captación</a>' +
-                           linkWA;
-        
-        marker.bindPopup(popupContent);
-      });
-
-      // Ajustar el mapa para que todos los marcadores sean visibles
-      var group = new L.featureGroup(locations.map(function(location) {
-        return L.marker([location.lat, location.lng]);
-      }));
-      mymap.fitBounds(group.getBounds());
-
-      var lat = urlParams.get('lat');
-      var lng = urlParams.get('lng');
-      var circleCenter = L.latLng(lat, lng);
-      var radius = urlParams.get('r');
-      var circle = L.circle(circleCenter, {
-        color: 'green',
-        weight: 1, // Grosor del borde
-        fillOpacity: 0, // Sin relleno
-        radius: radius
-      }).addTo(mymap);
-
-      var crossIcon = L.icon({
-        iconUrl: '../../assets/images/cross_green.png', // Ruta al archivo PNG
-        iconSize: [20, 20], // Tamaño del icono
-        iconAnchor: [10, 10], // Punto del icono que se ubicará en la coordenada especificada
-        popupAnchor: [0, -10] // Punto donde se abrirá el popup (opcional)
-      });
-
-      var crossMarker = L.marker(circleCenter, { icon: crossIcon }).addTo(mymap);
-
-
-
+      locations.push(location);
     });
 
-  </script>
+    // Crear el mapa
+    var mymap = L.map('mapid'); // No establezcas una vista inicial aquí
+
+    // Añadir capa de OpenStreetMap al mapa
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(mymap);
+
+    // Obtener los parámetros de la URL para el centro y radio del círculo
+    var lat = urlParams.get('lat');
+    var lng = urlParams.get('lng');
+    var radius = urlParams.get('r');
+
+    // Convertir las coordenadas en un objeto L.latLng
+    var circleCenter = L.latLng(lat, lng);
+
+    // Añadir el círculo al mapa
+    var circle = L.circle(circleCenter, {
+      color: 'green',
+      weight: 1, // Grosor del borde
+      fillOpacity: 0, // Sin relleno
+      radius: radius
+    }).addTo(mymap);
+
+    // Crear un icono personalizado para la cruz
+    var crossIcon = L.icon({
+      iconUrl: 'ruta/a/tu/archivo/cruz.png', // Ruta al archivo PNG
+      iconSize: [20, 20], // Tamaño del icono
+      iconAnchor: [10, 10], // Punto del icono que se ubicará en la coordenada especificada
+      popupAnchor: [0, -10] // Punto donde se abrirá el popup (opcional)
+    });
+
+    // Añadir un marcador con el icono personalizado al centro del círculo
+    var crossMarker = L.marker(circleCenter, { icon: crossIcon }).addTo(mymap);
+
+    // Función para calcular la distancia usando la fórmula de Haversine
+    function calculateDistanceHaversine(lat1, lng1, lat2, lng2) {
+      // Convertir las coordenadas a radianes
+      const lat1Rad = lat1 * Math.PI / 180;
+      const lng1Rad = lng1 * Math.PI / 180;
+      const lat2Rad = lat2 * Math.PI / 180;
+      const lng2Rad = lng2 * Math.PI / 180;
+
+      // Calcular la diferencia de latitudes y longitudes
+      const dLat = lat2Rad - lat1Rad;
+      const dLng = lng2Rad - lng1Rad;
+
+      // Calcular la distancia en un plano considerando la esfericidad de la Tierra
+      const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1Rad) * Math.cos(lat2Rad) *
+        Math.sin(dLng / 2) * Math.sin(dLng / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+      // Calcular la distancia en kilómetros usando el radio de la Tierra (6371 km)
+      const distance = 6371 * c;
+
+      return distance;
+    }
+
+    // Iterar sobre los datos y añadir marcadores al mapa
+    locations.forEach(function (dato) {
+      // Crear marcador y vincular un pop-up con los datos adicionales
+      var markerColor;
+      if (dato.URL.includes("c21.com")) { markerColor = 'black'; }
+      else if (dato.URL.includes("remax")) { markerColor = 'blue'; }
+      else if (dato.URL.includes("bieninmuebles")) { markerColor = 'green'; }
+      else { markerColor = 'red'; }
+
+      var icon = new L.Icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-' + markerColor + '.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41]
+      });
+
+      var marker = L.marker([dato.lat, dato.lng], { icon }).addTo(mymap);
+
+      var nombre = dato?.agente ? dato.agente.split(" ")[0] : '';
+      var cel = dato?.numero ? dato.numero.replace(/[^0-9]/g, "") : '';
+      var msj = `Buenas tardes ${nombre}, un gusto saludarle. Quisiera saber si sigue disponible este inmueble` +
+        ` (${dato.nombre}) \nlink: ${dato.URL}\nGracias de antemano`;
+      var msjWhatsapp = `https://wa.me/${cel}?text=${encodeURIComponent(msj)}`;
+      var linkWA = cel ? '<br/><a href="' + msjWhatsapp + '" target="_blank">Contacta al captador</a>' : '';
+
+      // Calcular la distancia al centro de la circunferencia en metros
+      var distance = calculateDistanceHaversine(circleCenter.lat, circleCenter.lng, dato.lat, dato.lng) * 1000;
+
+      var popupContent = "<b>" + dato.nombre + " (" + distance.toFixed(2) + " m)</b><br>" +
+        "<b>Dirección:</b> " + dato.dir + "<br>" +
+        "<b>Descripción:</b> " + dato.des + "<br>" +
+        '<a href="' + dato.URL + '" target="_blank">Ver página de la captación</a>' +
+        linkWA;
+
+      marker.bindPopup(popupContent);
+    });
+
+    // Ajustar el mapa para que todos los marcadores sean visibles
+    var group = new L.featureGroup(locations.map(function (location) {
+      return L.marker([location.lat, location.lng]);
+    }));
+    mymap.fitBounds(group.getBounds());
+  });
+</script>
 
