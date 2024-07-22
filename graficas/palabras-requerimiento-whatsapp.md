@@ -16,411 +16,458 @@ image: 				wordCloud.png
 
   <script>
     // Datos JSON
-    var data = [
-    		{
-				  "count": 181,
-				  "word": "casa"
-				},
-				{
-				  "count": 175,
-				  "word": "norte"
-				},
-				{
-				  "count": 174,
-				  "word": "alquiler"
-				},
-				{
-				  "count": 168,
-				  "word": "anillo"
-				},
-				{
-				  "count": 163,
-				  "word": "dormitorios"
-				},
-				{
-				  "count": 131,
-				  "word": "departamento"
-				},
-				{
-				  "count": 121,
-				  "word": "equipetrol"
-				},
-				{
-				  "count": 118,
-				  "word": "venta"
-				},
-				{
-				  "count": 109,
-				  "word": "compra"
-				},
-				{
-				  "count": 90,
-				  "word": "condominio"
-				},
-				{
-				  "count": 88,
-				  "word": "ppto"
-				},
-				{
-				  "count": 63,
-				  "word": "dormitorio"
-				},
-				{
-				  "count": 60,
-				  "word": "monoambiente"
-				},
-				{
-				  "count": 54,
-				  "word": "terreno"
-				},
-				{
-				  "count": 53,
-				  "word": "amoblado"
-				},
-				{
-				  "count": 42,
-				  "word": "fuera"
-				},
-				{
-				  "count": 42,
-				  "word": "contado"
-				},
-				{
-				  "count": 41,
-				  "word": "4to"
-				},
-				{
-				  "count": 40,
-				  "word": "pago"
-				},
-				{
-				  "count": 40,
-				  "word": "parqueo"
-				},
-				{
-				  "count": 38,
-				  "word": "dpto"
-				},
-				{
-				  "count": 35,
-				  "word": "garaje"
-				},
-				{
-				  "count": 35,
-				  "word": "anticretico"
-				},
-				{
-				  "count": 32,
-				  "word": "alemana"
-				},
-				{
-				  "count": 32,
-				  "word": "beni"
-				},
-				{
-				  "count": 31,
-				  "word": "7mo"
-				},
-				{
-				  "count": 31,
-				  "word": "dentro"
-				},
-				{
-				  "count": 31,
-				  "word": "inmediata"
-				},
-				{
-				  "count": 30,
-				  "word": "preferencia"
-				},
-				{
-				  "count": 28,
-				  "word": "urubo"
-				},
-				{
-				  "count": 28,
-				  "word": "solo"
-				},
-				{
-				  "count": 28,
-				  "word": "acorde"
-				},
-				{
-				  "count": 27,
-				  "word": "5to"
-				},
-				{
-				  "count": 26,
-				  "word": "banzer"
-				},
-				{
-				  "count": 26,
-				  "word": "máximo"
-				},
-				{
-				  "count": 25,
-				  "word": "tenga"
-				},
-				{
-				  "count": 25,
-				  "word": "habitaciones"
-				},
-				{
-				  "count": 24,
-				  "word": "depto"
-				},
-				{
-				  "count": 24,
-				  "word": "urgente"
-				},
-				{
-				  "count": 23,
-				  "word": "cerca"
-				},
-				{
-				  "count": 23,
-				  "word": "sur"
-				},
-				{
-				  "count": 23,
-				  "word": "avenida"
-				},
-				{
-				  "count": 23,
-				  "word": "tipo"
-				},
-				{
-				  "count": 22,
-				  "word": "estrenar"
-				},
-				{
-				  "count": 22,
-				  "word": "este"
-				},
-				{
-				  "count": 20,
-				  "word": "superficie"
-				},
-				{
-				  "count": 19,
-				  "word": "oeste"
-				},
-				{
-				  "count": 19,
-				  "word": "6to"
-				},
-				{
-				  "count": 18,
-				  "word": "cocina"
-				},
-				{
-				  "count": 18,
-				  "word": "8vo"
-				},
-				{
-				  "count": 17,
-				  "word": "dorm"
-				},
-				{
-				  "count": 17,
-				  "word": "cualquier"
-				},
-				{
-				  "count": 17,
-				  "word": "entrega"
-				},
-				{
-				  "count": 16,
-				  "word": "usd"
-				},
-				{
-				  "count": 16,
-				  "word": "dos"
-				},
-				{
-				  "count": 16,
-				  "word": "local"
-				},
-				{
-				  "count": 16,
-				  "word": "oficial"
-				},
-				{
-				  "count": 15,
-				  "word": "abierto"
-				},
-				{
-				  "count": 15,
-				  "word": "canal"
-				},
-				{
-				  "count": 15,
-				  "word": "sky"
-				},
-				{
-				  "count": 15,
-				  "word": "nuevo"
-				},
-				{
-				  "count": 15,
-				  "word": "mejor"
-				},
-				{
-				  "count": 15,
-				  "word": "requiero"
-				},
-				{
-				  "count": 14,
-				  "word": "independiente"
-				},
-				{
-				  "count": 14,
-				  "word": "cambio"
-				},
-				{
-				  "count": 14,
-				  "word": "minimo"
-				},
-				{
-				  "count": 14,
-				  "word": "mínimo"
-				},
-				{
-				  "count": 14,
-				  "word": "suite"
-				},
-				{
-				  "count": 13,
-				  "word": "piscina"
-				},
-				{
-				  "count": 13,
-				  "word": "max"
-				},
-				{
-				  "count": 13,
-				  "word": "toma"
-				},
-				{
-				  "count": 13,
-				  "word": "radial"
-				},
-				{
-				  "count": 13,
-				  "word": "sirari"
-				},
-				{
-				  "count": 13,
-				  "word": "dólares"
-				},
-				{
-				  "count": 13,
-				  "word": "info"
-				},
-				{
-				  "count": 12,
-				  "word": "palmas"
-				},
-				{
-				  "count": 12,
-				  "word": "financiamiento"
-				},
-				{
-				  "count": 12,
-				  "word": "sociales"
-				},
-				{
-				  "count": 12,
-				  "word": "maximo"
-				},
-				{
-				  "count": 12,
-				  "word": "3er"
-				},
-				{
-				  "count": 12,
-				  "word": "preventa"
-				},
-				{
-				  "count": 12,
-				  "word": "urbari"
-				},
-				{
-				  "count": 12,
-				  "word": "adelante"
-				},
-				{
-				  "count": 12,
-				  "word": "sólo"
-				},
-				{
-				  "count": 12,
-				  "word": "oficina"
-				},
-				{
-				  "count": 12,
-				  "word": "mil"
-				},
-				{
-				  "count": 12,
-				  "word": "muebles"
-				},
-				{
-				  "count": 11,
-				  "word": "doble"
-				},
-				{
-				  "count": 11,
-				  "word": "zonas"
-				},
-				{
-				  "count": 11,
-				  "word": "negocio"
-				},
-				{
-				  "count": 11,
-				  "word": "ideal"
-				},
-				{
-				  "count": 11,
-				  "word": "sirve"
-				},
-				{
-				  "count": 11,
-				  "word": "presup"
-				},
-				{
-				  "count": 11,
-				  "word": "nueva"
-				},
-				{
-				  "count": 11,
-				  "word": "comercial"
-				},
-				{
-				  "count": 11,
-				  "word": "patio"
-				},
-				{
-				  "count": 10,
-				  "word": "amoblada"
-				},
-				{
-				  "count": 10,
-				  "word": "puede"
-				},
-				{
-				  "count": 10,
-				  "word": "dumont"
-				},
-				{
-				  "count": 10,
-				  "word": "baño"
-				},
-				{
-				  "count": 10,
-				  "word": "isuto"
-				}];
+    var data = [{
+  "count": 222,
+  "word": "casa"
+},
+{
+  "count": 205,
+  "word": "norte"
+},
+{
+  "count": 201,
+  "word": "anillo"
+},
+{
+  "count": 183,
+  "word": "dormitorios"
+},
+{
+  "count": 162,
+  "word": "alquiler"
+},
+{
+  "count": 153,
+  "word": "venta"
+},
+{
+  "count": 122,
+  "word": "departamento"
+},
+{
+  "count": 115,
+  "word": "equipetrol"
+},
+{
+  "count": 112,
+  "word": "ppto"
+},
+{
+  "count": 98,
+  "word": "condominio"
+},
+{
+  "count": 97,
+  "word": "compra"
+},
+{
+  "count": 80,
+  "word": "terreno"
+},
+{
+  "count": 69,
+  "word": "dentro"
+},
+{
+  "count": 65,
+  "word": "monoambiente"
+},
+{
+  "count": 64,
+  "word": "dormitorio"
+},
+{
+  "count": 61,
+  "word": "anticretico"
+},
+{
+  "count": 60,
+  "word": "amoblado"
+},
+{
+  "count": 53,
+  "word": "4to"
+},
+{
+  "count": 53,
+  "word": "acorde"
+},
+{
+  "count": 51,
+  "word": "5to"
+},
+{
+  "count": 45,
+  "word": "dpto"
+},
+{
+  "count": 44,
+  "word": "parqueo"
+},
+{
+  "count": 43,
+  "word": "contado"
+},
+{
+  "count": 42,
+  "word": "beni"
+},
+{
+  "count": 41,
+  "word": "alemana"
+},
+{
+  "count": 39,
+  "word": "pago"
+},
+{
+  "count": 39,
+  "word": "solo"
+},
+{
+  "count": 38,
+  "word": "oeste"
+},
+{
+  "count": 38,
+  "word": "habitaciones"
+},
+{
+  "count": 38,
+  "word": "urubo"
+},
+{
+  "count": 38,
+  "word": "urgente"
+},
+{
+  "count": 36,
+  "word": "garaje"
+},
+{
+  "count": 35,
+  "word": "tipo"
+},
+{
+  "count": 33,
+  "word": "depto"
+},
+{
+  "count": 33,
+  "word": "oficial"
+},
+{
+  "count": 30,
+  "word": "8vo"
+},
+{
+  "count": 30,
+  "word": "requiero"
+},
+{
+  "count": 29,
+  "word": "máximo"
+},
+{
+  "count": 28,
+  "word": "preferencia"
+},
+{
+  "count": 28,
+  "word": "banzer"
+},
+{
+  "count": 28,
+  "word": "inmediata"
+},
+{
+  "count": 25,
+  "word": "usd"
+},
+{
+  "count": 25,
+  "word": "fuera"
+},
+{
+  "count": 24,
+  "word": "7mo"
+},
+{
+  "count": 24,
+  "word": "max"
+},
+{
+  "count": 24,
+  "word": "dorm"
+},
+{
+  "count": 24,
+  "word": "cualquier"
+},
+{
+  "count": 24,
+  "word": "avenida"
+},
+{
+  "count": 23,
+  "word": "maximo"
+},
+{
+  "count": 23,
+  "word": "radial"
+},
+{
+  "count": 22,
+  "word": "este"
+},
+{
+  "count": 21,
+  "word": "tenga"
+},
+{
+  "count": 21,
+  "word": "cerca"
+},
+{
+  "count": 20,
+  "word": "cambio"
+},
+{
+  "count": 19,
+  "word": "dependencias"
+},
+{
+  "count": 19,
+  "word": "piscina"
+},
+{
+  "count": 18,
+  "word": "nueva"
+},
+{
+  "count": 18,
+  "word": "mil"
+},
+{
+  "count": 18,
+  "word": "centro"
+},
+{
+  "count": 18,
+  "word": "busch"
+},
+{
+  "count": 17,
+  "word": "demás"
+},
+{
+  "count": 17,
+  "word": "superficie"
+},
+{
+  "count": 17,
+  "word": "comercial"
+},
+{
+  "count": 17,
+  "word": "amplio"
+},
+{
+  "count": 16,
+  "word": "sky"
+},
+{
+  "count": 16,
+  "word": "toma"
+},
+{
+  "count": 16,
+  "word": "zonas"
+},
+{
+  "count": 16,
+  "word": "patio"
+},
+{
+  "count": 16,
+  "word": "dólares"
+},
+{
+  "count": 15,
+  "word": "roca"
+},
+{
+  "count": 15,
+  "word": "coronado"
+},
+{
+  "count": 15,
+  "word": "sociales"
+},
+{
+  "count": 15,
+  "word": "edificio"
+},
+{
+  "count": 15,
+  "word": "palmas"
+},
+{
+  "count": 15,
+  "word": "vehículos"
+},
+{
+  "count": 15,
+  "word": "ser"
+},
+{
+  "count": 15,
+  "word": "mínimo"
+},
+{
+  "count": 15,
+  "word": "sur"
+},
+{
+  "count": 15,
+  "word": "nuevo"
+},
+{
+  "count": 14,
+  "word": "características"
+},
+{
+  "count": 14,
+  "word": "áreas"
+},
+{
+  "count": 14,
+  "word": "estado"
+},
+{
+  "count": 14,
+  "word": "contacto"
+},
+{
+  "count": 13,
+  "word": "independiente"
+},
+{
+  "count": 13,
+  "word": "mariana"
+},
+{
+  "count": 13,
+  "word": "6to"
+},
+{
+  "count": 13,
+  "word": "muebles"
+},
+{
+  "count": 13,
+  "word": "ideal"
+},
+{
+  "count": 12,
+  "word": "urubó"
+},
+{
+  "count": 12,
+  "word": "libre"
+},
+{
+  "count": 11,
+  "word": "cusis"
+},
+{
+  "count": 11,
+  "word": "puede"
+},
+{
+  "count": 11,
+  "word": "abierto"
+},
+{
+  "count": 11,
+  "word": "estrenar"
+},
+{
+  "count": 11,
+  "word": "doble"
+},
+{
+  "count": 11,
+  "word": "lujo"
+},
+{
+  "count": 11,
+  "word": "gravamen"
+},
+{
+  "count": 11,
+  "word": "efectivo"
+},
+{
+  "count": 11,
+  "word": "perrotta"
+},
+{
+  "count": 11,
+  "word": "buen"
+},
+{
+  "count": 11,
+  "word": "suite"
+},
+{
+  "count": 11,
+  "word": "local"
+},
+{
+  "count": 10,
+  "word": "pirai"
+},
+{
+  "count": 10,
+  "word": "anticrético"
+},
+{
+  "count": 10,
+  "word": "bancario"
+},
+{
+  "count": 10,
+  "word": "9no"
+},
+{
+  "count": 10,
+  "word": "años"
+},
+{
+  "count": 10,
+  "word": "expensas"
+},
+{
+  "count": 10,
+  "word": "2do"
+},
+{
+  "count": 10,
+  "word": "info"
+},
+{
+  "count": 10,
+  "word": "guardia"
+},
+{
+  "count": 10,
+  "word": "cocina"
+},
+{
+  "count": 10,
+  "word": "mejor"
+}];
 
     // Convertir los datos JSON a la estructura requerida
     var labels = data.map(item => item.word);
