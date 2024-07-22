@@ -94,7 +94,7 @@ image:              mapa.png
     // Añadir un marcador con el icono personalizado al centro del círculo
     var crossMarker = L.marker(circleCenter, { icon: crossIcon }).addTo(mymap);
 
-    crossMarker.bindPopup(`Coordenadas: ${lat},${lng}<br>Valor promedio: USD${pProm}`).openPopup();
+    crossMarker.bindPopup(`Coordenadas: ${lat},${lng}<br>Valor promedio: USD${pProm}`);  // .openPopup();  //
 
     // Función para calcular la distancia usando la fórmula de Haversine
     function calculateDH(lat1, lng1, lat2, lng2) {
