@@ -95,7 +95,7 @@ image:              mapa.png
     var crossMarker = L.marker(circleCenter, { icon: crossIcon }).addTo(mymap);
 
     // Función para calcular la distancia usando la fórmula de Haversine
-    function calculateDistanceHaversine(lat1, lng1, lat2, lng2) {
+    function calculateDH(lat1, lng1, lat2, lng2) {
       // Convertir las coordenadas a radianes
       const lat1Rad = lat1 * Math.PI / 180;
       const lng1Rad = lng1 * Math.PI / 180;
@@ -146,16 +146,16 @@ image:              mapa.png
       var linkWA = cel ? '<br/><a href="' + msjWhatsapp + '" target="_blank">Contacta al captador</a>' : '';
 
       // Calcular la distancia al centro de la circunferencia en metros
-      var distance = parseInt(calculateDistanceHaversine(circleCenter.lat, circleCenter.lng, dato.lat, dato.lng) * 1000);
+      var distance = parseInt(calculateDH(circleCenter.lat, circleCenter.lng, dato.lat, dato.lng) * 1000);
 
 
       // Calcular la diferencia porcentual del precio
       var priceDiffPercent = ((dato.precio - pProm) / pProm) * 100;
       var priceComparison;
       if (priceDiffPercent > 0) {
-        priceComparison = `<span style="color: red;">↑ ${priceDiffPercent.toFixed(2)}%</span>`;
+        priceComparison = `<span style="color: red;">↑${parseInt(priceDiffPercent)}%</span>`;
       } else {
-        priceComparison = `<span style="color: green;">↓ ${Math.abs(priceDiffPercent).toFixed(2)}%</span>`;
+        priceComparison = `<span style="color: green;">↓${parseInt(Math.abs(priceDiffPercent))}%</span>`;
       }
       //priceComparison = "";
 
