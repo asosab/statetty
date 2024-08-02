@@ -41,7 +41,6 @@ image:              mapa.png
       location.dir = this[3];
       location.URL = this[4];
       location.precio = parseInt(this[15]) || 0;
-      //console.log('Valor de this[15]:', this[15]);
       location.agente = this[16];
       location.numero = this[17];
 
@@ -59,18 +58,40 @@ image:              mapa.png
       locations.push(location);
     });
 
+    // Calcular centroide y radio si no están en la URL
+    var lat = urlParams.get('lat');
+    var lng = urlParams.get('lng');
+    var radius = urlParams.get('r');
+
+    if (!lat || !lng || !radius) {
+      let latSum = 0, lngSum = 0;
+      locations.forEach(loc => {
+        latSum += loc.lat;
+        lngSum += loc.lng;
+      });
+
+      lat = latSum / locations.length;
+      lng = lngSum / locations.length;
+
+      // Calcular la distancia máxima desde el centroide
+      let maxDistance = 0;
+      locations.forEach(loc => {
+        const distance = calculateDH(lat, lng, loc.lat, loc.lng);
+        if (distance > maxDistance) {
+          maxDistance = distance;
+        }
+      });
+
+      radius = maxDistance * 1000; // Convertir a metros
+    }
+
     // Crear el mapa
-    var mymap = L.map('mapid'); // No establezcas una vista inicial aquí
+    var mymap = L.map('mapid');
 
     // Añadir capa de OpenStreetMap al mapa
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
     }).addTo(mymap);
-
-    // Obtener los parámetros de la URL para el centro y radio del círculo
-    var lat = urlParams.get('lat');
-    var lng = urlParams.get('lng');
-    var radius = urlParams.get('r');
 
     // Convertir las coordenadas en un objeto L.latLng
     var circleCenter = L.latLng(lat, lng);
@@ -94,11 +115,10 @@ image:              mapa.png
     // Añadir un marcador con el icono personalizado al centro del círculo
     var crossMarker = L.marker(circleCenter, { icon: crossIcon }).addTo(mymap);
 
-    function formatNumber(num) {return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") + ",00";}
+    function formatNumber(num) { return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") + ",00"; }
     var pPromFormatted = formatNumber(pProm);
 
-    crossMarker.bindPopup(`Coordenadas: ${lat},${lng}<br>Valor promedio: USD${pPromFormatted}`);  // .openPopup();  //
-
+    crossMarker.bindPopup(`Coordenadas: ${lat},${lng}<br>Valor promedio: USD${pPromFormatted}`);
 
     // Función para calcular la distancia usando la fórmula de Haversine
     function calculateDH(lat1, lng1, lat2, lng2) {
@@ -154,7 +174,6 @@ image:              mapa.png
       // Calcular la distancia al centro de la circunferencia en metros
       var distance = Math.round(calculateDH(circleCenter.lat, circleCenter.lng, dato.lat, dato.lng) * 1000);
 
-
       // Calcular la diferencia porcentual del precio
       var priceDiffPercent = ((dato.precio - pProm) / pProm) * 100;
       var priceComparison;
@@ -163,7 +182,6 @@ image:              mapa.png
       } else {
         priceComparison = `<span style="color: green;">↓${Math.ceil(Math.abs(priceDiffPercent))}%</span>`;
       }
-      //priceComparison = "";
 
       var popupContent = "<b>" + dato.nombre + " (" + distance + "m)</b> " + priceComparison + "<br>" +
         "<b>Dirección:</b> " + dato.dir + "<br>" +
@@ -181,4 +199,5 @@ image:              mapa.png
     mymap.fitBounds(group.getBounds());
   });
 </script>
+
 
