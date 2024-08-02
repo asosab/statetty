@@ -162,10 +162,10 @@ image:              mapa.png
       var icon = new L.Icon({
         iconUrl: '../../assets/images/pointers/pointer_' + brand + '.png',
         shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-        iconSize: [25, 41],
-        iconAnchor: [12, 41],
-        popupAnchor: [1, -34],
-        shadowSize: [41, 41]
+        iconSize: [40, 60], // [25, 41],
+        iconAnchor: [20, 60], // [12, 41],
+        popupAnchor: [1, -54], // [1, -34], 
+        shadowSize: [60, 60] // [41, 41] 
       });
 
       var marker = L.marker([dato.lat, dato.lng], { icon }).addTo(mymap);
