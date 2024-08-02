@@ -40,9 +40,9 @@ image:              mapa.png
       location.lng = parseFloat(this[2]);
       location.dir = this[3];
       location.URL = this[4];
-      location.precio = parseInt(this[15]) || 0;
-      location.agente = this[16];
-      location.numero = this[17];
+      location.precio = parseInt(this[12]) || 0;
+      location.agente = this[13];
+      location.numero = this[14];
 
       var stringOriginal = this[5] ? this[5] : '';
       let totalChr;
@@ -86,6 +86,7 @@ image:              mapa.png
     }
 
     // Calcular promedio del precio si no está en la URL
+    console.log({pProm});
     if (isNaN(pProm)) {
       pProm = calcularPromedio(locations, 'precio');
     }
