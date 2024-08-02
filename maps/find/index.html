@@ -150,15 +150,6 @@ image:              mapa.png
       return distance;
     }
 
-    // Función para calcular el promedio de una propiedad de un array de objetos
-    function calcularPromedio(datos, prop) {
-      if (!Array.isArray(datos) || datos.length === 0) { return 0; }
-      const datosFiltrados = datos.filter(item => item && typeof item[prop] === 'number' && item[prop] >= 0);
-      if (datosFiltrados.length === 0) { return 0; }
-      const suma = datosFiltrados.reduce((acc, item) => acc + item[prop], 0);
-      return Math.round(suma / datosFiltrados.length);
-    }
-
     // Iterar sobre los datos y añadir marcadores al mapa
     locations.forEach(function (dato) {
       // Crear marcador y vincular un pop-up con los datos adicionales
@@ -213,6 +204,17 @@ image:              mapa.png
     }));
     mymap.fitBounds(group.getBounds());
   });
+
+
+  // Función para calcular el promedio de una propiedad de un array de objetos
+  function calcularPromedio(datos, prop) {
+    if (!Array.isArray(datos) || datos.length === 0) { return 0; }
+    const datosFiltrados = datos.filter(item => item && typeof item[prop] === 'number' && item[prop] >= 0);
+    if (datosFiltrados.length === 0) { return 0; }
+    const suma = datosFiltrados.reduce((acc, item) => acc + item[prop], 0);
+    return Math.round(suma / datosFiltrados.length);
+  }
+
 </script>
 
 
