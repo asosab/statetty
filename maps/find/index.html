@@ -152,14 +152,15 @@ image:              mapa.png
     // Iterar sobre los datos y añadir marcadores al mapa
     locations.forEach(function (dato) {
       // Crear marcador y vincular un pop-up con los datos adicionales
-      var markerColor;
-      if (dato.URL.includes("c21.com")) { markerColor = 'black'; }
-      else if (dato.URL.includes("remax")) { markerColor = 'blue'; }
-      else if (dato.URL.includes("bieninmuebles")) { markerColor = 'green'; }
-      else { markerColor = 'red'; }
+      var brand;
+      if (dato.URL.includes("c21.com")) { brand = 'c21'; }
+      else if (dato.URL.includes("remax")) { brand = 'remax'; }
+      else if (dato.URL.includes("bieninmuebles")) { brand = 'bieni'; }
+      else if (dato.URL.includes("ultracasas")) { brand = 'UC'; }
+      else { brand = 'black'; }
 
       var icon = new L.Icon({
-        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-' + markerColor + '.png',
+        iconUrl: '../../assets/images/pointers/pointer_' + brand + '.png',
         shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
         iconSize: [25, 41],
         iconAnchor: [12, 41],
