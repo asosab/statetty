@@ -86,8 +86,7 @@ image:              mapa.png
     }
 
     // Calcular promedio del precio si no está en la URL
-    console.log({pProm});
-    if (isNaN(pProm)) {
+    if (isNaN(pProm)||pProm==0) {
       pProm = calcularPromedio(locations, 'precio');
     }
 
