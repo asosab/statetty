@@ -17,892 +17,1100 @@ image: 				wordCloud.png
   <script>
     // Datos JSON
     var data = [{
-  "count": 884,
+  "count": 1219,
   "word": "casa"
 },
 {
-  "count": 820,
+  "count": 1111,
   "word": "anillo"
 },
 {
-  "count": 754,
+  "count": 1084,
   "word": "norte"
 },
 {
-  "count": 671,
-  "word": "dormitorios"
-},
-{
-  "count": 656,
+  "count": 932,
   "word": "alquiler"
 },
 {
-  "count": 561,
+  "count": 930,
+  "word": "dormitorios"
+},
+{
+  "count": 806,
   "word": "venta"
 },
 {
-  "count": 424,
-  "word": "departamento"
-},
-{
-  "count": 421,
+  "count": 662,
   "word": "compra"
 },
 {
-  "count": 420,
+  "count": 659,
   "word": "equipetrol"
 },
 {
-  "count": 386,
+  "count": 624,
+  "word": "departamento"
+},
+{
+  "count": 530,
   "word": "condominio"
 },
 {
-  "count": 371,
-  "word": "ppto"
-},
-{
-  "count": 365,
+  "count": 517,
   "word": "terreno"
 },
 {
-  "count": 239,
-  "word": "dentro"
+  "count": 507,
+  "word": "ppto"
 },
 {
-  "count": 225,
-  "word": "4to"
-},
-{
-  "count": 208,
-  "word": "acorde"
-},
-{
-  "count": 204,
-  "word": "5to"
-},
-{
-  "count": 202,
+  "count": 316,
   "word": "monoambiente"
 },
 {
-  "count": 191,
-  "word": "alemana"
+  "count": 310,
+  "word": "dentro"
 },
 {
-  "count": 190,
+  "count": 295,
   "word": "pago"
 },
 {
-  "count": 174,
+  "count": 290,
   "word": "dormitorio"
 },
 {
-  "count": 168,
-  "word": "anticretico"
+  "count": 282,
+  "word": "acorde"
 },
 {
-  "count": 167,
-  "word": "amoblado"
+  "count": 280,
+  "word": "4to"
 },
 {
-  "count": 161,
+  "count": 276,
+  "word": "5to"
+},
+{
+  "count": 271,
   "word": "contado"
 },
 {
-  "count": 159,
+  "count": 261,
   "word": "oficial"
 },
 {
-  "count": 159,
+  "count": 257,
+  "word": "alemana"
+},
+{
+  "count": 239,
+  "word": "amoblado"
+},
+{
+  "count": 234,
   "word": "urubo"
 },
 {
-  "count": 153,
-  "word": "beni"
-},
-{
-  "count": 147,
-  "word": "avenida"
-},
-{
-  "count": 142,
-  "word": "fuera"
-},
-{
-  "count": 140,
-  "word": "parqueo"
-},
-{
-  "count": 139,
-  "word": "solo"
-},
-{
-  "count": 139,
+  "count": 216,
   "word": "urgente"
 },
 {
-  "count": 138,
+  "count": 213,
   "word": "dpto"
 },
 {
-  "count": 137,
-  "word": "máximo"
+  "count": 209,
+  "word": "beni"
 },
 {
-  "count": 131,
+  "count": 206,
+  "word": "anticretico"
+},
+{
+  "count": 202,
+  "word": "parqueo"
+},
+{
+  "count": 196,
   "word": "tipo"
 },
 {
-  "count": 128,
-  "word": "requiero"
+  "count": 194,
+  "word": "solo"
 },
 {
-  "count": 124,
-  "word": "habitaciones"
+  "count": 192,
+  "word": "avenida"
 },
 {
-  "count": 119,
-  "word": "garaje"
-},
-{
-  "count": 118,
-  "word": "oeste"
-},
-{
-  "count": 118,
-  "word": "sur"
-},
-{
-  "count": 118,
-  "word": "banzer"
-},
-{
-  "count": 117,
-  "word": "cerca"
-},
-{
-  "count": 109,
+  "count": 190,
   "word": "preferencia"
 },
 {
-  "count": 107,
-  "word": "comercial"
+  "count": 188,
+  "word": "máximo"
 },
 {
-  "count": 106,
+  "count": 188,
+  "word": "requiero"
+},
+{
+  "count": 184,
+  "word": "fuera"
+},
+{
+  "count": 173,
   "word": "inmediata"
 },
 {
-  "count": 102,
-  "word": "8vo"
+  "count": 167,
+  "word": "banzer"
 },
 {
-  "count": 102,
+  "count": 166,
+  "word": "habitaciones"
+},
+{
+  "count": 161,
+  "word": "garaje"
+},
+{
+  "count": 157,
+  "word": "oeste"
+},
+{
+  "count": 155,
+  "word": "cerca"
+},
+{
+  "count": 151,
+  "word": "sur"
+},
+{
+  "count": 149,
   "word": "6to"
 },
 {
-  "count": 100,
-  "word": "superficie"
+  "count": 146,
+  "word": "comercial"
 },
 {
-  "count": 98,
-  "word": "puede"
+  "count": 144,
+  "word": "8vo"
 },
 {
-  "count": 95,
-  "word": "radial"
-},
-{
-  "count": 93,
-  "word": "usd"
-},
-{
-  "count": 93,
+  "count": 135,
   "word": "depto"
 },
 {
-  "count": 88,
-  "word": "ser"
+  "count": 134,
+  "word": "superficie"
 },
 {
-  "count": 84,
+  "count": 123,
+  "word": "usd"
+},
+{
+  "count": 122,
+  "word": "radial"
+},
+{
+  "count": 121,
   "word": "zonas"
 },
 {
-  "count": 82,
-  "word": "maximo"
+  "count": 120,
+  "word": "puede"
 },
 {
-  "count": 80,
-  "word": "max"
-},
-{
-  "count": 74,
+  "count": 111,
   "word": "cambio"
 },
 {
-  "count": 69,
-  "word": "7mo"
+  "count": 109,
+  "word": "ser"
 },
 {
-  "count": 67,
-  "word": "cualquier"
+  "count": 107,
+  "word": "maximo"
 },
 {
-  "count": 67,
-  "word": "local"
-},
-{
-  "count": 66,
-  "word": "tenga"
-},
-{
-  "count": 66,
-  "word": "toma"
-},
-{
-  "count": 66,
-  "word": "doble"
-},
-{
-  "count": 63,
-  "word": "dorm"
-},
-{
-  "count": 63,
-  "word": "isuto"
-},
-{
-  "count": 60,
-  "word": "contacto"
-},
-{
-  "count": 59,
-  "word": "amplio"
-},
-{
-  "count": 59,
-  "word": "piscina"
-},
-{
-  "count": 58,
-  "word": "efectivo"
-},
-{
-  "count": 56,
-  "word": "2do"
-},
-{
-  "count": 55,
-  "word": "canal"
-},
-{
-  "count": 55,
-  "word": "dependencias"
-},
-{
-  "count": 54,
+  "count": 103,
   "word": "este"
 },
 {
-  "count": 54,
-  "word": "guardia"
+  "count": 100,
+  "word": "max"
 },
 {
-  "count": 54,
-  "word": "ideal"
+  "count": 100,
+  "word": "dorm"
 },
 {
-  "count": 54,
-  "word": "busch"
+  "count": 97,
+  "word": "7mo"
 },
 {
-  "count": 51,
-  "word": "san"
+  "count": 94,
+  "word": "toma"
 },
 {
-  "count": 51,
-  "word": "edificio"
+  "count": 94,
+  "word": "isuto"
 },
 {
-  "count": 49,
-  "word": "mínimo"
+  "count": 94,
+  "word": "tenga"
 },
 {
-  "count": 48,
+  "count": 92,
+  "word": "cualquier"
+},
+{
+  "count": 88,
+  "word": "local"
+},
+{
+  "count": 86,
+  "word": "piscina"
+},
+{
+  "count": 84,
+  "word": "canal"
+},
+{
+  "count": 82,
+  "word": "doble"
+},
+{
+  "count": 81,
+  "word": "amplio"
+},
+{
+  "count": 78,
   "word": "oficina"
 },
 {
-  "count": 48,
-  "word": "dumont"
-},
-{
-  "count": 48,
-  "word": "frente"
-},
-{
-  "count": 47,
+  "count": 78,
   "word": "abierto"
 },
 {
-  "count": 46,
-  "word": "sirari"
+  "count": 74,
+  "word": "ideal"
 },
 {
-  "count": 46,
-  "word": "amoblar"
+  "count": 72,
+  "word": "efectivo"
 },
 {
-  "count": 46,
-  "word": "características"
+  "count": 72,
+  "word": "mínimo"
 },
 {
-  "count": 45,
-  "word": "santos"
+  "count": 72,
+  "word": "busch"
 },
 {
-  "count": 43,
-  "word": "centro"
-},
-{
-  "count": 43,
-  "word": "vivienda"
-},
-{
-  "count": 42,
-  "word": "nueva"
-},
-{
-  "count": 42,
+  "count": 71,
   "word": "entrega"
 },
 {
-  "count": 42,
-  "word": "remax"
+  "count": 70,
+  "word": "amoblar"
 },
 {
-  "count": 41,
-  "word": "coronado"
+  "count": 70,
+  "word": "guardia"
 },
 {
-  "count": 41,
-  "word": "sirve"
+  "count": 67,
+  "word": "edificio"
 },
 {
-  "count": 41,
-  "word": "roca"
+  "count": 66,
+  "word": "sirari"
 },
 {
-  "count": 40,
-  "word": "suite"
+  "count": 66,
+  "word": "2do"
 },
 {
-  "count": 40,
-  "word": "dos"
+  "count": 65,
+  "word": "contacto"
 },
 {
-  "count": 40,
-  "word": "demás"
-},
-{
-  "count": 40,
-  "word": "palmas"
-},
-{
-  "count": 40,
-  "word": "mil"
-},
-{
-  "count": 40,
-  "word": "hoy"
-},
-{
-  "count": 40,
-  "word": "independiente"
-},
-{
-  "count": 39,
-  "word": "agente"
-},
-{
-  "count": 39,
-  "word": "sociales"
-},
-{
-  "count": 38,
-  "word": "expensas"
-},
-{
-  "count": 37,
-  "word": "dólares"
-},
-{
-  "count": 36,
-  "word": "sky"
-},
-{
-  "count": 36,
+  "count": 65,
   "word": "bolivianos"
 },
 {
-  "count": 36,
-  "word": "alrededores"
+  "count": 64,
+  "word": "dependencias"
 },
 {
-  "count": 35,
-  "word": "vehículos"
+  "count": 64,
+  "word": "san"
 },
 {
-  "count": 35,
-  "word": "urubó"
+  "count": 63,
+  "word": "expensas"
 },
 {
-  "count": 35,
-  "word": "inmueble"
+  "count": 62,
+  "word": "sociales"
 },
 {
-  "count": 35,
-  "word": "3er"
-},
-{
-  "count": 35,
-  "word": "paragua"
-},
-{
-  "count": 35,
-  "word": "mariana"
-},
-{
-  "count": 35,
-  "word": "vía"
-},
-{
-  "count": 34,
-  "word": "dependencia"
-},
-{
-  "count": 34,
-  "word": "muebles"
-},
-{
-  "count": 34,
-  "word": "ver"
-},
-{
-  "count": 34,
-  "word": "estrenar"
-},
-{
-  "count": 34,
-  "word": "patio"
-},
-{
-  "count": 33,
-  "word": "perrotta"
-},
-{
-  "count": 33,
-  "word": "negocio"
-},
-{
-  "count": 33,
-  "word": "cocina"
-},
-{
-  "count": 33,
-  "word": "sólo"
-},
-{
-  "count": 33,
-  "word": "nuevo"
-},
-{
-  "count": 33,
+  "count": 62,
   "word": "amoblada"
 },
 {
-  "count": 32,
-  "word": "buen"
+  "count": 61,
+  "word": "palmas"
 },
 {
-  "count": 32,
-  "word": "bancario"
+  "count": 61,
+  "word": "agente"
 },
 {
-  "count": 32,
-  "word": "financiamiento"
+  "count": 61,
+  "word": "coronado"
 },
 {
-  "count": 32,
-  "word": "ubicación"
+  "count": 60,
+  "word": "sky"
 },
 {
-  "count": 31,
-  "word": "infinity"
+  "count": 60,
+  "word": "roca"
 },
 {
-  "count": 31,
-  "word": "universidad"
+  "count": 60,
+  "word": "frente"
 },
 {
-  "count": 31,
-  "word": "calle"
+  "count": 59,
+  "word": "inmueble"
 },
 {
-  "count": 31,
-  "word": "áreas"
+  "count": 59,
+  "word": "nueva"
 },
 {
-  "count": 31,
-  "word": "detalle"
+  "count": 58,
+  "word": "sirve"
 },
 {
-  "count": 30,
-  "word": "pirai"
+  "count": 58,
+  "word": "dumont"
 },
 {
-  "count": 29,
-  "word": "oficinas"
+  "count": 56,
+  "word": "mil"
 },
 {
-  "count": 29,
-  "word": "balcón"
+  "count": 56,
+  "word": "suite"
 },
 {
-  "count": 29,
-  "word": "antigua"
+  "count": 56,
+  "word": "ver"
 },
 {
-  "count": 29,
-  "word": "moderna"
+  "count": 55,
+  "word": "santos"
 },
 {
-  "count": 29,
-  "word": "empresa"
+  "count": 54,
+  "word": "vivienda"
 },
 {
-  "count": 29,
-  "word": "pre"
+  "count": 54,
+  "word": "dos"
 },
 {
-  "count": 29,
-  "word": "info"
+  "count": 54,
+  "word": "hoy"
 },
 {
-  "count": 29,
-  "word": "mejor"
+  "count": 53,
+  "word": "independiente"
 },
 {
-  "count": 29,
-  "word": "cusis"
-},
-{
-  "count": 29,
-  "word": "udabol"
-},
-{
-  "count": 29,
-  "word": "estado"
-},
-{
-  "count": 28,
-  "word": "precio"
-},
-{
-  "count": 28,
-  "word": "mutualista"
-},
-{
-  "count": 28,
-  "word": "pto"
-},
-{
-  "count": 28,
-  "word": "preventa"
-},
-{
-  "count": 27,
-  "word": "amplia"
-},
-{
-  "count": 27,
-  "word": "parque"
-},
-{
-  "count": 27,
-  "word": "quiñones"
-},
-{
-  "count": 27,
-  "word": "fabiana"
-},
-{
-  "count": 27,
+  "count": 52,
   "word": "información"
 },
 {
-  "count": 27,
+  "count": 52,
+  "word": "características"
+},
+{
+  "count": 52,
+  "word": "centro"
+},
+{
+  "count": 51,
+  "word": "3er"
+},
+{
+  "count": 49,
+  "word": "mutualista"
+},
+{
+  "count": 48,
+  "word": "demás"
+},
+{
+  "count": 48,
+  "word": "vía"
+},
+{
+  "count": 48,
+  "word": "estrenar"
+},
+{
+  "count": 47,
+  "word": "dólares"
+},
+{
+  "count": 47,
+  "word": "áreas"
+},
+{
+  "count": 46,
   "word": "cotoca"
 },
 {
-  "count": 26,
-  "word": "operacion"
+  "count": 46,
+  "word": "remax"
 },
 {
-  "count": 26,
-  "word": "aprox"
+  "count": 46,
+  "word": "alrededores"
 },
 {
-  "count": 26,
-  "word": "planta"
+  "count": 46,
+  "word": "precio"
 },
 {
-  "count": 25,
-  "word": "anticrÉtico"
+  "count": 45,
+  "word": "nuevo"
 },
 {
-  "count": 25,
-  "word": "principal"
+  "count": 45,
+  "word": "info"
 },
 {
-  "count": 25,
-  "word": "tiene"
+  "count": 45,
+  "word": "patio"
 },
 {
-  "count": 25,
-  "word": "servicio"
+  "count": 45,
+  "word": "bancario"
 },
 {
-  "count": 25,
-  "word": "lujo"
+  "count": 45,
+  "word": "ubicación"
 },
 {
-  "count": 24,
-  "word": "colegas"
+  "count": 44,
+  "word": "dependencia"
 },
 {
-  "count": 24,
-  "word": "galpon"
-},
-{
-  "count": 24,
-  "word": "baño"
-},
-{
-  "count": 24,
-  "word": "barrio"
-},
-{
-  "count": 23,
+  "count": 44,
   "word": "baños"
 },
 {
-  "count": 23,
-  "word": "anticrético"
+  "count": 44,
+  "word": "financiamiento"
 },
 {
-  "count": 23,
-  "word": "9no"
+  "count": 44,
+  "word": "muebles"
 },
 {
-  "count": 23,
-  "word": "directo"
+  "count": 43,
+  "word": "cocina"
 },
 {
-  "count": 23,
-  "word": "similar"
+  "count": 43,
+  "word": "urubó"
 },
 {
-  "count": 23,
+  "count": 42,
+  "word": "estado"
+},
+{
+  "count": 42,
+  "word": "vehículos"
+},
+{
+  "count": 42,
+  "word": "calle"
+},
+{
+  "count": 42,
+  "word": "aprox"
+},
+{
+  "count": 41,
+  "word": "lujo"
+},
+{
+  "count": 41,
+  "word": "paragua"
+},
+{
+  "count": 41,
+  "word": "cusis"
+},
+{
+  "count": 41,
+  "word": "preventa"
+},
+{
+  "count": 40,
+  "word": "pto"
+},
+{
+  "count": 40,
+  "word": "sólo"
+},
+{
+  "count": 40,
+  "word": "mariana"
+},
+{
+  "count": 40,
+  "word": "balcón"
+},
+{
+  "count": 39,
+  "word": "negocio"
+},
+{
+  "count": 38,
+  "word": "tiene"
+},
+{
+  "count": 38,
+  "word": "udabol"
+},
+{
+  "count": 38,
+  "word": "cliente"
+},
+{
+  "count": 38,
   "word": "enviar"
 },
 {
-  "count": 22,
-  "word": "restaurante"
+  "count": 38,
+  "word": "perrotta"
 },
 {
-  "count": 22,
-  "word": "inmobiliaria"
+  "count": 37,
+  "word": "detalle"
 },
 {
-  "count": 22,
-  "word": "condominios"
+  "count": 37,
+  "word": "buen"
 },
 {
-  "count": 22,
-  "word": "hacienda"
+  "count": 37,
+  "word": "universidad"
 },
 {
-  "count": 22,
-  "word": "escritorio"
+  "count": 37,
+  "word": "empresa"
 },
 {
-  "count": 22,
-  "word": "ambientes"
+  "count": 37,
+  "word": "pre"
 },
 {
-  "count": 22,
-  "word": "propietario"
+  "count": 37,
+  "word": "parque"
 },
 {
-  "count": 21,
-  "word": "trato"
+  "count": 36,
+  "word": "arriba"
 },
 {
-  "count": 21,
-  "word": "ref"
+  "count": 36,
+  "word": "moderna"
 },
 {
-  "count": 21,
-  "word": "churrasquera"
+  "count": 36,
+  "word": "mejor"
 },
 {
-  "count": 21,
-  "word": "remanso"
+  "count": 35,
+  "word": "planta"
 },
 {
-  "count": 21,
-  "word": "mayor"
-},
-{
-  "count": 21,
-  "word": "carretera"
-},
-{
-  "count": 21,
-  "word": "santa"
-},
-{
-  "count": 21,
-  "word": "minimo"
-},
-{
-  "count": 21,
-  "word": "cerrado"
-},
-{
-  "count": 20,
-  "word": "century"
-},
-{
-  "count": 20,
-  "word": "crédito"
-},
-{
-  "count": 20,
-  "word": "construcción"
-},
-{
-  "count": 20,
-  "word": "c21"
-},
-{
-  "count": 20,
-  "word": "colinas"
-},
-{
-  "count": 20,
-  "word": "virgen"
-},
-{
-  "count": 20,
-  "word": "presup"
-},
-{
-  "count": 20,
-  "word": "mts2"
-},
-{
-  "count": 20,
-  "word": "comisión"
-},
-{
-  "count": 20,
+  "count": 34,
   "word": "sup"
 },
 {
-  "count": 20,
-  "word": "galpón"
+  "count": 34,
+  "word": "infinity"
 },
 {
-  "count": 20,
-  "word": "500"
-},
-{
-  "count": 20,
-  "word": "propiedad"
-},
-{
-  "count": 19,
-  "word": "paga"
-},
-{
-  "count": 19,
-  "word": "meses"
-},
-{
-  "count": 19,
-  "word": "cruz"
-},
-{
-  "count": 19,
-  "word": "años"
-},
-{
-  "count": 19,
-  "word": "operaciÓn"
-},
-{
-  "count": 19,
-  "word": "preferentemente"
-},
-{
-  "count": 18,
-  "word": "mañana"
-},
-{
-  "count": 18,
-  "word": "pasos"
-},
-{
-  "count": 18,
-  "word": "urbari"
-},
-{
-  "count": 18,
+  "count": 34,
   "word": "inversión"
 },
 {
-  "count": 18,
-  "word": "sevillas"
+  "count": 34,
+  "word": "escritorio"
 },
 {
-  "count": 18,
+  "count": 34,
+  "word": "remanso"
+},
+{
+  "count": 34,
+  "word": "oficinas"
+},
+{
+  "count": 33,
+  "word": "presup"
+},
+{
+  "count": 33,
+  "word": "galpon"
+},
+{
+  "count": 33,
+  "word": "colinas"
+},
+{
+  "count": 33,
+  "word": "antigua"
+},
+{
+  "count": 33,
+  "word": "servicio"
+},
+{
+  "count": 32,
+  "word": "pirai"
+},
+{
+  "count": 32,
+  "word": "directo"
+},
+{
+  "count": 32,
+  "word": "macororo"
+},
+{
+  "count": 32,
+  "word": "amplia"
+},
+{
+  "count": 32,
+  "word": "fabiana"
+},
+{
+  "count": 31,
+  "word": "virgen"
+},
+{
+  "count": 31,
+  "word": "barrio"
+},
+{
+  "count": 31,
+  "word": "century"
+},
+{
+  "count": 31,
+  "word": "baño"
+},
+{
+  "count": 31,
+  "word": "mayor"
+},
+{
+  "count": 31,
+  "word": "operaciÓn"
+},
+{
+  "count": 31,
+  "word": "colegas"
+},
+{
+  "count": 31,
+  "word": "operacion"
+},
+{
+  "count": 31,
+  "word": "inmobiliaria"
+},
+{
+  "count": 30,
+  "word": "ambientes"
+},
+{
+  "count": 30,
+  "word": "principal"
+},
+{
+  "count": 30,
+  "word": "santa"
+},
+{
+  "count": 30,
+  "word": "ref"
+},
+{
+  "count": 30,
+  "word": "minimo"
+},
+{
+  "count": 30,
+  "word": "mts2"
+},
+{
+  "count": 30,
+  "word": "piso"
+},
+{
+  "count": 30,
+  "word": "cerrado"
+},
+{
+  "count": 30,
+  "word": "quiñones"
+},
+{
+  "count": 30,
+  "word": "carretera"
+},
+{
+  "count": 29,
+  "word": "anticrÉtico"
+},
+{
+  "count": 29,
+  "word": "años"
+},
+{
+  "count": 29,
+  "word": "crédito"
+},
+{
+  "count": 28,
+  "word": "comisión"
+},
+{
+  "count": 28,
+  "word": "indistinta"
+},
+{
+  "count": 28,
+  "word": "hacienda"
+},
+{
+  "count": 27,
+  "word": "similar"
+},
+{
+  "count": 27,
+  "word": "9no"
+},
+{
+  "count": 27,
+  "word": "adelante"
+},
+{
+  "count": 27,
+  "word": "anticrético"
+},
+{
+  "count": 27,
+  "word": "cruz"
+},
+{
+  "count": 27,
+  "word": "construcción"
+},
+{
+  "count": 27,
+  "word": "c21"
+},
+{
+  "count": 27,
+  "word": "acepten"
+},
+{
+  "count": 26,
+  "word": "condominios"
+},
+{
+  "count": 26,
+  "word": "galpón"
+},
+{
+  "count": 26,
+  "word": "dolares"
+},
+{
+  "count": 26,
+  "word": "incluidas"
+},
+{
+  "count": 26,
+  "word": "mañana"
+},
+{
+  "count": 26,
+  "word": "presupuestous"
+},
+{
+  "count": 25,
+  "word": "caracteristicas"
+},
+{
+  "count": 25,
+  "word": "trato"
+},
+{
+  "count": 25,
+  "word": "mas"
+},
+{
+  "count": 25,
+  "word": "500"
+},
+{
+  "count": 24,
+  "word": "bush"
+},
+{
+  "count": 24,
+  "word": "busco"
+},
+{
+  "count": 24,
+  "word": "restaurante"
+},
+{
+  "count": 24,
+  "word": "pisos"
+},
+{
+  "count": 24,
+  "word": "villa"
+},
+{
+  "count": 24,
+  "word": "industrial"
+},
+{
+  "count": 24,
+  "word": "meses"
+},
+{
+  "count": 24,
+  "word": "urbari"
+},
+{
+  "count": 23,
+  "word": "propietario"
+},
+{
+  "count": 23,
+  "word": "preferentemente"
+},
+{
+  "count": 23,
+  "word": "pasos"
+},
+{
+  "count": 23,
   "word": "garage"
 },
 {
-  "count": 17,
-  "word": "aprobado"
+  "count": 23,
+  "word": "cond"
 },
 {
-  "count": 17,
-  "word": "colina"
-},
-{
-  "count": 17,
-  "word": "hectáreas"
-},
-{
-  "count": 17,
+  "count": 23,
   "word": "facturado"
 },
 {
-  "count": 17,
+  "count": 22,
+  "word": "churrasquera"
+},
+{
+  "count": 22,
+  "word": "año"
+},
+{
+  "count": 22,
+  "word": "excelente"
+},
+{
+  "count": 22,
+  "word": "propiedad"
+},
+{
+  "count": 22,
+  "word": "casas"
+},
+{
+  "count": 21,
+  "word": "personas"
+},
+{
+  "count": 21,
+  "word": "esté"
+},
+{
+  "count": 21,
+  "word": "aprobado"
+},
+{
+  "count": 21,
+  "word": "posible"
+},
+{
+  "count": 21,
+  "word": "moderno"
+},
+{
+  "count": 21,
+  "word": "colina"
+},
+{
+  "count": 21,
+  "word": "cen"
+},
+{
+  "count": 21,
+  "word": "paga"
+},
+{
+  "count": 20,
+  "word": "uso"
+},
+{
+  "count": 20,
+  "word": "sevillas"
+},
+{
+  "count": 20,
+  "word": "banco"
+},
+{
+  "count": 20,
+  "word": "excelsior"
+},
+{
+  "count": 20,
+  "word": "visitar"
+},
+{
+  "count": 20,
+  "word": "requerimientos"
+},
+{
+  "count": 20,
+  "word": "hacer"
+},
+{
+  "count": 20,
+  "word": "abdul"
+},
+{
+  "count": 20,
+  "word": "hectáreas"
+},
+{
+  "count": 20,
+  "word": "rashid"
+},
+{
+  "count": 19,
+  "word": "comedor"
+},
+{
+  "count": 19,
+  "word": "dirección"
+},
+{
+  "count": 19,
+  "word": "visita"
+},
+{
+  "count": 19,
+  "word": "living"
+},
+{
+  "count": 19,
+  "word": "libre"
+},
+{
+  "count": 19,
+  "word": "jardín"
+},
+{
+  "count": 18,
+  "word": "balcon"
+},
+{
+  "count": 18,
+  "word": "plaza"
+},
+{
+  "count": 18,
+  "word": "buenas"
+},
+{
+  "count": 18,
+  "word": "cuarto"
+},
+{
+  "count": 18,
+  "word": "real"
+},
+{
+  "count": 18,
+  "word": "buena"
+},
+{
+  "count": 18,
+  "word": "colegio"
+},
+{
+  "count": 18,
+  "word": "jardin"
+},
+{
+  "count": 18,
+  "word": "urbano"
+},
+{
+  "count": 18,
+  "word": "500bs"
+},
+{
+  "count": 18,
+  "word": "golf"
+},
+{
+  "count": 18,
   "word": "smart"
 },
 {
-  "count": 17,
-  "word": "plaza"
+  "count": 18,
+  "word": "menos"
+},
+{
+  "count": 18,
+  "word": "construir"
 },
 {
   "count": 17,
@@ -910,23 +1118,15 @@ image: 				wordCloud.png
 },
 {
   "count": 17,
-  "word": "cliente"
+  "word": "gravamen"
 },
 {
   "count": 17,
-  "word": "adelante"
+  "word": "lote"
 },
 {
   "count": 17,
-  "word": "busco"
-},
-{
-  "count": 17,
-  "word": "villa"
-},
-{
-  "count": 17,
-  "word": "personas"
+  "word": "mínima"
 },
 {
   "count": 17,
@@ -934,7 +1134,43 @@ image: 				wordCloud.png
 },
 {
   "count": 17,
-  "word": "bush"
+  "word": "comerciales"
+},
+{
+  "count": 17,
+  "word": "plan"
+},
+{
+  "count": 17,
+  "word": "tres"
+},
+{
+  "count": 17,
+  "word": "plantas"
+},
+{
+  "count": 17,
+  "word": "cerrar"
+},
+{
+  "count": 17,
+  "word": "piraí"
+},
+{
+  "count": 17,
+  "word": "maría"
+},
+{
+  "count": 17,
+  "word": "ofertas"
+},
+{
+  "count": 17,
+  "word": "mayo"
+},
+{
+  "count": 16,
+  "word": "cercano"
 },
 {
   "count": 16,
@@ -942,15 +1178,47 @@ image: 				wordCloud.png
 },
 {
   "count": 16,
-  "word": "esté"
+  "word": "telf"
 },
 {
   "count": 16,
-  "word": "mas"
+  "word": "cualquiera"
 },
 {
   "count": 16,
-  "word": "dolares"
+  "word": "gimac"
+},
+{
+  "count": 16,
+  "word": "opcion"
+},
+{
+  "count": 16,
+  "word": "mostrar"
+},
+{
+  "count": 16,
+  "word": "baja"
+},
+{
+  "count": 16,
+  "word": "indispensable"
+},
+{
+  "count": 16,
+  "word": "sala"
+},
+{
+  "count": 16,
+  "word": "esquina"
+},
+{
+  "count": 16,
+  "word": "lejos"
+},
+{
+  "count": 16,
+  "word": "centenario"
 },
 {
   "count": 16,
@@ -958,151 +1226,183 @@ image: 				wordCloud.png
 },
 {
   "count": 16,
-  "word": "incluidas"
-},
-{
-  "count": 16,
-  "word": "piso"
-},
-{
-  "count": 16,
-  "word": "cond"
-},
-{
-  "count": 16,
-  "word": "pisos"
-},
-{
-  "count": 16,
-  "word": "libre"
-},
-{
-  "count": 16,
-  "word": "urbano"
-},
-{
-  "count": 16,
-  "word": "tres"
+  "word": "alto"
 },
 {
   "count": 15,
-  "word": "gravamen"
+  "word": "tiendas"
 },
 {
   "count": 15,
-  "word": "macororo"
+  "word": "irala"
 },
 {
   "count": 15,
-  "word": "plan"
+  "word": "mantenido"
 },
 {
   "count": 15,
-  "word": "requerimientos"
+  "word": "agosto"
 },
 {
   "count": 15,
-  "word": "maría"
+  "word": "anillos"
 },
 {
   "count": 15,
-  "word": "real"
+  "word": "lugar"
 },
 {
   "count": 15,
-  "word": "arriba"
+  "word": "operación"
 },
 {
   "count": 15,
-  "word": "posible"
+  "word": "500m2"
 },
 {
   "count": 15,
-  "word": "visitar"
+  "word": "opciones"
 },
 {
   "count": 15,
-  "word": "visita"
-},
-{
-  "count": 15,
-  "word": "industrial"
-},
-{
-  "count": 15,
-  "word": "golf"
-},
-{
-  "count": 15,
-  "word": "moderno"
+  "word": "pequeña"
 },
 {
   "count": 15,
   "word": "asesora"
 },
 {
-  "count": 14,
-  "word": "cualquiera"
+  "count": 15,
+  "word": "tengan"
 },
 {
-  "count": 14,
-  "word": "menos"
+  "count": 15,
+  "word": "movilidades"
 },
 {
-  "count": 14,
-  "word": "pequeña"
+  "count": 15,
+  "word": "estate"
 },
 {
-  "count": 14,
-  "word": "living"
+  "count": 15,
+  "word": "sevilla"
 },
 {
-  "count": 14,
-  "word": "casas"
+  "count": 15,
+  "word": "puente"
 },
 {
-  "count": 14,
+  "count": 15,
+  "word": "inmobiliario"
+},
+{
+  "count": 15,
+  "word": "requerido"
+},
+{
+  "count": 15,
+  "word": "incluye"
+},
+{
+  "count": 15,
+  "word": "httpslinktreeblurealtybolivia"
+},
+{
+  "count": 15,
   "word": "suelo"
 },
 {
-  "count": 14,
-  "word": "acepten"
+  "count": 15,
+  "word": "requisitos"
 },
 {
   "count": 14,
-  "word": "plantas"
+  "word": "hab"
 },
 {
   "count": 14,
-  "word": "uso"
+  "word": "requiere"
 },
 {
   "count": 14,
-  "word": "ofertas"
+  "word": "adelantado"
 },
 {
   "count": 14,
-  "word": "piraí"
+  "word": "remanzo"
 },
 {
   "count": 14,
-  "word": "mínima"
+  "word": "porfavor"
 },
 {
-  "count": 13,
-  "word": "operación"
+  "count": 14,
+  "word": "metros"
 },
 {
-  "count": 13,
-  "word": "500bs"
+  "count": 14,
+  "word": "cumavi"
 },
 {
-  "count": 13,
+  "count": 14,
+  "word": "similares"
+},
+{
+  "count": 14,
   "word": "1er"
 },
 {
+  "count": 14,
+  "word": "vehículo"
+},
+{
+  "count": 14,
+  "word": "amplios"
+},
+{
+  "count": 14,
+  "word": "favor"
+},
+{
+  "count": 14,
+  "word": "urubÓ"
+},
+{
+  "count": 14,
+  "word": "mt2"
+},
+{
+  "count": 14,
+  "word": "aurelio"
+},
+{
+  "count": 14,
+  "word": "gas"
+},
+{
+  "count": 14,
+  "word": "mismo"
+},
+{
+  "count": 14,
+  "word": "máx"
+},
+{
   "count": 13,
-  "word": "indistinta"
+  "word": "nota"
+},
+{
+  "count": 13,
+  "word": "solamente"
+},
+{
+  "count": 13,
+  "word": "pase"
+},
+{
+  "count": 13,
+  "word": "inversiÓn"
 },
 {
   "count": 13,
@@ -1110,7 +1410,51 @@ image: 				wordCloud.png
 },
 {
   "count": 13,
-  "word": "mantenido"
+  "word": "visitas"
+},
+{
+  "count": 13,
+  "word": "ubicado"
+},
+{
+  "count": 13,
+  "word": "zonanorte"
+},
+{
+  "count": 13,
+  "word": "fontana"
+},
+{
+  "count": 13,
+  "word": "renee"
+},
+{
+  "count": 13,
+  "word": "studio"
+},
+{
+  "count": 13,
+  "word": "informacion"
+},
+{
+  "count": 13,
+  "word": "saldo"
+},
+{
+  "count": 13,
+  "word": "Áreas"
+},
+{
+  "count": 13,
+  "word": "curupau"
+},
+{
+  "count": 13,
+  "word": "utepsa"
+},
+{
+  "count": 13,
+  "word": "cel"
 },
 {
   "count": 13,
@@ -1118,95 +1462,31 @@ image: 				wordCloud.png
 },
 {
   "count": 13,
-  "word": "estate"
+  "word": "agua"
 },
 {
   "count": 13,
-  "word": "gimac"
+  "word": "pueda"
 },
 {
   "count": 13,
-  "word": "cerrar"
-},
-{
-  "count": 13,
-  "word": "sala"
-},
-{
-  "count": 13,
-  "word": "banco"
-},
-{
-  "count": 13,
-  "word": "irala"
-},
-{
-  "count": 13,
-  "word": "inmobiliario"
-},
-{
-  "count": 13,
-  "word": "mayo"
-},
-{
-  "count": 13,
-  "word": "mt2"
+  "word": "medidor"
 },
 {
   "count": 12,
-  "word": "studio"
+  "word": "gimnasio"
 },
 {
   "count": 12,
-  "word": "máx"
+  "word": "ingresos"
 },
 {
   "count": 12,
-  "word": "credito"
+  "word": "areas"
 },
 {
   "count": 12,
-  "word": "telf"
-},
-{
-  "count": 12,
-  "word": "porton"
-},
-{
-  "count": 12,
-  "word": "lote"
-},
-{
-  "count": 12,
-  "word": "centenario"
-},
-{
-  "count": 12,
-  "word": "tengan"
-},
-{
-  "count": 12,
-  "word": "colegio"
-},
-{
-  "count": 12,
-  "word": "httpslinktreeblurealtybolivia"
-},
-{
-  "count": 12,
-  "word": "puente"
-},
-{
-  "count": 12,
-  "word": "sevilla"
-},
-{
-  "count": 12,
-  "word": "jardín"
-},
-{
-  "count": 12,
-  "word": "requiere"
+  "word": "servicios"
 },
 {
   "count": 12,
@@ -1214,35 +1494,75 @@ image: 				wordCloud.png
 },
 {
   "count": 12,
-  "word": "aurelio"
+  "word": "semi"
 },
 {
   "count": 12,
-  "word": "indispensable"
+  "word": "vista"
 },
 {
   "count": 12,
-  "word": "cen"
+  "word": "ubicaciÓn"
 },
 {
   "count": 12,
-  "word": "esquina"
+  "word": "semana"
 },
 {
   "count": 12,
   "word": "condiciones"
 },
 {
-  "count": 11,
-  "word": "servicios"
+  "count": 12,
+  "word": "cerrada"
 },
 {
-  "count": 11,
-  "word": "hab"
+  "count": 12,
+  "word": "martin"
 },
 {
-  "count": 11,
-  "word": "nota"
+  "count": 12,
+  "word": "credito"
+},
+{
+  "count": 12,
+  "word": "prime"
+},
+{
+  "count": 12,
+  "word": "mercado"
+},
+{
+  "count": 12,
+  "word": "espacio"
+},
+{
+  "count": 12,
+  "word": "departamentos"
+},
+{
+  "count": 12,
+  "word": "habitable"
+},
+{
+  "count": 12,
+  "word": "parte"
+},
+{
+  "count": 12,
+  "word": "media"
+},
+{
+  "count": 12,
+  "word": "desarrollo"
+},
+{
+  "count": 12,
+  "word": "porton"
+},
+{
+  "count": 12,
+  "word": "ciudad"
 },
 {
   "count": 11,
@@ -1250,63 +1570,35 @@ image: 				wordCloud.png
 },
 {
   "count": 11,
-  "word": "media"
+  "word": "pequeño"
 },
 {
   "count": 11,
-  "word": "500m2"
+  "word": "molina"
 },
 {
   "count": 11,
-  "word": "jardin"
+  "word": "urbanización"
 },
 {
   "count": 11,
-  "word": "hacer"
+  "word": "galpÓn"
 },
 {
   "count": 11,
-  "word": "tarde"
+  "word": "renzo"
 },
 {
   "count": 11,
-  "word": "energia"
+  "word": "opción"
 },
 {
   "count": 11,
-  "word": "embardado"
+  "word": "grande"
 },
 {
   "count": 11,
-  "word": "village"
-},
-{
-  "count": 11,
-  "word": "cuarto"
-},
-{
-  "count": 11,
-  "word": "informacion"
-},
-{
-  "count": 11,
-  "word": "cumavi"
-},
-{
-  "count": 11,
-  "word": "gas"
-},
-{
-  "count": 11,
-  "word": "cercano"
-},
-{
-  "count": 11,
-  "word": "mostrar"
-},
-{
-  "count": 11,
-  "word": "agua"
+  "word": "envia"
 },
 {
   "count": 11,
@@ -1314,27 +1606,19 @@ image: 				wordCloud.png
 },
 {
   "count": 11,
-  "word": "medidor"
-},
-{
-  "count": 11,
   "word": "trifasica"
 },
 {
   "count": 11,
-  "word": "agosto"
+  "word": "garantía"
 },
 {
   "count": 11,
-  "word": "habitable"
+  "word": "village"
 },
 {
   "count": 11,
-  "word": "departamentos"
-},
-{
-  "count": 11,
-  "word": "año"
+  "word": "tarde"
 },
 {
   "count": 11,
@@ -1342,39 +1626,39 @@ image: 				wordCloud.png
 },
 {
   "count": 11,
-  "word": "lejos"
+  "word": "embardado"
 },
 {
   "count": 11,
-  "word": "lugar"
+  "word": "energia"
 },
 {
   "count": 11,
-  "word": "comedor"
+  "word": "brígida"
 },
 {
-  "count": 10,
-  "word": "velarde"
+  "count": 11,
+  "word": "mascota"
 },
 {
-  "count": 10,
-  "word": "alto"
+  "count": 11,
+  "word": "Área"
 },
 {
-  "count": 10,
-  "word": "saldo"
+  "count": 11,
+  "word": "mes"
 },
 {
-  "count": 10,
-  "word": "fontana"
+  "count": 11,
+  "word": "alta"
 },
 {
-  "count": 10,
-  "word": "vehículo"
+  "count": 11,
+  "word": "importante"
 },
 {
-  "count": 10,
-  "word": "upsa"
+  "count": 11,
+  "word": "bonita"
 },
 {
   "count": 10,
@@ -1382,11 +1666,87 @@ image: 				wordCloud.png
 },
 {
   "count": 10,
-  "word": "prime"
+  "word": "salón"
 },
 {
   "count": 10,
-  "word": "cel"
+  "word": "noroeste"
+},
+{
+  "count": 10,
+  "word": "aire"
+},
+{
+  "count": 10,
+  "word": "rentabilidad"
+},
+{
+  "count": 10,
+  "word": "gracias"
+},
+{
+  "count": 10,
+  "word": "importa"
+},
+{
+  "count": 10,
+  "word": "vivian"
+},
+{
+  "count": 10,
+  "word": "mÁximo"
+},
+{
+  "count": 10,
+  "word": "domiciliario"
+},
+{
+  "count": 10,
+  "word": "clientes"
+},
+{
+  "count": 10,
+  "word": "equipado"
+},
+{
+  "count": 10,
+  "word": "cada"
+},
+{
+  "count": 10,
+  "word": "g77"
+},
+{
+  "count": 10,
+  "word": "luxia"
+},
+{
+  "count": 10,
+  "word": "maÑana"
+},
+{
+  "count": 10,
+  "word": "lavandería"
+},
+{
+  "count": 10,
+  "word": "500m"
+},
+{
+  "count": 10,
+  "word": "altura"
+},
+{
+  "count": 10,
+  "word": "upsa"
+},
+{
+  "count": 10,
+  "word": "200"
+},
+{
+  "count": 10,
+  "word": "avenidas"
 },
 {
   "count": 10,
@@ -1394,19 +1754,71 @@ image: 				wordCloud.png
 },
 {
   "count": 10,
-  "word": "vista"
+  "word": "carlos"
 },
 {
   "count": 10,
-  "word": "excelente"
+  "word": "velarde"
 },
 {
   "count": 10,
-  "word": "amplios"
+  "word": "barranca"
+},
+{
+  "count": 10,
+  "word": "home"
 },
 {
   "count": 10,
   "word": "negociable"
+},
+{
+  "count": 10,
+  "word": "select"
+},
+{
+  "count": 10,
+  "word": "amplias"
+},
+{
+  "count": 10,
+  "word": "próximo"
+},
+{
+  "count": 10,
+  "word": "brigida"
+},
+{
+  "count": 10,
+  "word": "rubro"
+},
+{
+  "count": 10,
+  "word": "arteaga"
+},
+{
+  "count": 10,
+  "word": "persona"
+},
+{
+  "count": 10,
+  "word": "busca"
+},
+{
+  "count": 10,
+  "word": "únicamente"
+},
+{
+  "count": 10,
+  "word": "juan"
+},
+{
+  "count": 10,
+  "word": "duplex"
+},
+{
+  "count": 10,
+  "word": "300m2"
 }];
 
     // Convertir los datos JSON a la estructura requerida
