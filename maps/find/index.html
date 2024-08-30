@@ -18,6 +18,8 @@ image:              mapa.png
   let id = urlParams.get('id');
   let key = urlParams.get('key');
   let pProm = Math.round(urlParams.get('p'));
+  let na = urlParams.get('na');
+  let ag = urlParams.get('ag');
 
   if (!id || !key) {
     throw new Error("ID o clave no proporcionados en la URL");
@@ -153,7 +155,7 @@ image:              mapa.png
     locations.forEach(function (dato) {
       // Crear marcador y vincular un pop-up con los datos adicionales
       var brand;
-      if (dato.URL.includes("c21.com")) { brand = 'C21'; }
+           if (dato.URL.includes("c21.com")) { brand = 'C21'; }
       else if (dato.URL.includes("remax")) { brand = 'remax'; }
       else if (dato.URL.includes("bieninmuebles")) { brand = 'bieni'; }
       else if (dato.URL.includes("elfaro")) { brand = 'elfaro'; }
@@ -173,8 +175,12 @@ image:              mapa.png
 
       var nombre = dato?.agente ? dato.agente.split(" ")[0] : '';
       var cel = dato?.numero ? dato.numero.replace(/[^0-9]/g, "") : '';
-      var msj = `Buenas tardes ${nombre}, un gusto saludarle. Quisiera saber si sigue disponible este inmueble` +
-        ` (${dato.nombre}) \nlink: ${dato.URL}\nGracias de antemano`;
+      let soyNa = na? ` ${na}`:'';
+      let deAg = ag? ` de ${ag}`:'';
+      let sc = ', '; if (na || ag) {sc = ' por acá, '}
+      var msj = `Hola ${nombre}, ${soyNa}${deAg}${sc}un gusto saludarle. Quisiera saber si sigue disponible este inmueble` +
+        ` (${dato.nombre}) \nlink: ${dato.URL}\nGracias de antemano `+
+        `\n\nMensaje creado con Statetty https://statetty.com`;
       var msjWhatsapp = `https://wa.me/${cel}?text=${encodeURIComponent(msj)}`;
       var linkWA = cel ? '<br/><a href="' + msjWhatsapp + '" target="_blank">Contacta al captador</a>' : '';
 
