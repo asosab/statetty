@@ -177,7 +177,7 @@ image:              mapa.png
       var cel = dato?.numero ? dato.numero.replace(/[^0-9]/g, "") : '';
       let soyNa = na? ` ${na}`:'';
       let deAg = ag? ` de ${ag}`:'';
-      let sc = ', '; if (na || ag) {sc = ' por acá, '}
+      let sc = ''; if (na || ag) {sc = ' por acá, '}
       var msj = `Hola${nombre}, ${soyNa}${deAg}${sc}un gusto saludarle. Quisiera saber si sigue disponible este inmueble` +
         ` (${dato.nombre}) \nlink: ${dato.URL}\nGracias de antemano `+
         `\n\n - Mensaje creado con Statetty https://statetty.com -`;
