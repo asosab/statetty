@@ -42,7 +42,7 @@ Capacitar a los agentes inmobiliarios en el uso de IA para optimizar respuestas,
 ### Detalles del Taller
 
 - **Duración:** 3 horas
-- **Valor:** 40 bolivianos por participante
+- **Valor:** 300 bolivianos por participante
 - **Aforo:**
   - **Mínimo:** 5 personas
   - **Máximo:** 12 personas

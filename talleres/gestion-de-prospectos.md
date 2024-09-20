@@ -43,7 +43,7 @@ Descubrir cómo mantener un registro organizado de prospectos y gestionar contac
 ### Detalles del Taller
 
 - **Duración:** 3 horas
-- **Valor:** 45 bolivianos por participante
+- **Valor:** 300 bolivianos por participante
 - **Aforo:**
   - **Mínimo:** 5 personas
   - **Máximo:** 15 personas

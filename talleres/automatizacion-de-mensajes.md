@@ -53,7 +53,7 @@ Nuestro taller está diseñado específicamente para agentes inmobiliarios como 
 ### Detalles del Taller
 
 - **Duración:** 3 horas (con una pausa de 15 minutos)
-- **Valor:** 50 bolivianos por persona, para grupos de 5 hasta 10 agentes
+- **Valor:** 300 bolivianos por persona, para grupos de 5 hasta 10 agentes
 - **Lugar:** En las oficinas de tu inmobiliaria (para grupos de hasta 10 agentes)
 
 ### Agenda del Taller
