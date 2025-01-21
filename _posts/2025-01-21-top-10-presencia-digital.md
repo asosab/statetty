@@ -1,7 +1,7 @@
 ---
 layout: page
-title: "Top 10 Acciones para Crear una Presencia Digital como Agente Inmobiliario"
-date: 2025-01-20
+title: "Top 10 Presencia Digital"
+date: 2025-01-21
 categories: agentes-inmobiliarios, marketing-digital
 comments: true
 description: "Guía práctica para construir una presencia digital profesional y efectiva como agente inmobiliario."
