@@ -1,24 +1,26 @@
----
-layout: default
-comments: true
----
-<div class="post">
+<!DOCTYPE html>
+<html>
+  {% include head.html %}
+  {% include analytics.html %}
+    <body>
+    {% include headert.html %}
+    <div class="page-content">
+      <div class="wrap">
 
-  <header class="post-header">
-    <h1>{{ page.title }}</h1>
-    <p class="meta">{{ page.date | date: "%b %-d, %Y" }}{% if page.author %} • {{ page.author }}{% endif %}{% if page.meta %} • {{ page.meta }}{% endif %}</p>
-  </header>
+        <section id="talleres" class="talleres section active">
+          <div class="container">
+            <div class="talleres-inner"><br/><br/><br/>
 
-  <article class="post-content">
-  {{ content | external_link_filter }}
-  </article>
+            {{ content | external_link_filter }}
 
-	{% include social-compartir.html %}
-{% if site.desarrollo %}
-{{'en desarrollo, sin disqus ni analytics'}}
-{% else %}
-	{% include disqus.html %}
-{% endif %}
-</div>
+            </div><!--//talleres-inner-->     
+          </div><!--//container-->
+        </section>
 
-
+      </div>
+    </div>
+    {% include disqus.html %}
+    {% include footer.html %}
+    {% include scriptSend.html %}
+    </body>
+</html>
