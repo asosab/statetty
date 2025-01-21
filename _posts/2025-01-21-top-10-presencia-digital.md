@@ -8,6 +8,7 @@ description: "Guía práctica para construir una presencia digital profesional y
 tags: [presencia digital, marketing, agentes inmobiliarios, redes sociales, automatización]
 published: false
 image: "Presencia-digital-de-una-empresa.jpg"
+permalink: /Top-10-Presencia-Digital.html
 ---
 
 ## Top 10 Acciones para Crear una Presencia Digital como Agente Inmobiliario
