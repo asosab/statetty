@@ -1,13 +1,13 @@
 ---
-layout: 			taller
-title:  			"Taller de Automatización de Mensajes para Agentes Inmobiliarios"
-date:   			2024-06-25
-categories: 	bots,talleres
-comments: 		true
-description: 	"Respuestas automatizadas en chats como Whatsapp, messenger o Instagram para una atención 24/7"
-tags: 				[Whatsapp, Messenger, Instagram, bot, robot, lenguaje natural, asistente, taller, automatización, inmobiliaria, broker, real state]
-published: 		true
-image: 				cellphone.png
+layout: 	   taller
+title:  	   "Taller de Automatización de Mensajes para Agentes Inmobiliarios"
+date:   	   2024-06-25
+categories:    bots,talleres
+comments: 	   true
+description:   "Respuestas automatizadas en chats como Whatsapp, messenger o Instagram para una atención 24/7"
+tags: 		   [Whatsapp, Messenger, Instagram, bot, robot, lenguaje natural, asistente, taller, automatización, inmobiliaria, broker, real state]
+published: 	   true
+image: 		   cellphone.png
 ---
 
 
