@@ -286,6 +286,12 @@ pre code {
 .tarifa .item .icon-holder .svg-inline--fa { font-size: 24px; color: #074f66;}
 .tarifa .item .content { padding-left: 60px;}
 .tarifa .item .content .sub-title { margin-top: 0; color: #074f66; font-size: 18px;}
+.table-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh; 
+}
 table {
     border-collapse: collapse;
     width: 80%;
@@ -294,7 +300,6 @@ table {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     border-radius: 10px;
     overflow: hidden;
-    margin: 0 auto;
 }
 th, td {
     padding: 15px;
