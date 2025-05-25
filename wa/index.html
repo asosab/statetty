@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Comunícate con Statetty</title>
+
+  <!-- Meta para SEO -->
+  <meta name="description" content="Conéctate con Statetty y descubre herramientas inmobiliarias de última generación.">
+  <meta name="keywords" content="Statetty, inmobiliaria, tecnología inmobiliaria, whatsapp, contacto, real state Bolivia, agentes inmobiliarios, expo Real State 2025">
+  <meta name="author" content="Statetty">
+
+  <!-- Open Graph para vista previa en apps como WhatsApp -->
+  <meta property="og:title" content="Comunícate con Statetty">
+  <meta property="og:description" content="¿Estuviste en la Expo Real State 2025? Escríbenos y conoce más sobre nuestra propuesta para agentes inmobiliarios.">
+  <meta property="og:image" content="https://statetty.com/assets/imagen/statetty_phone.png">
+  <meta property="og:url" content="https://statetty.com/wa">
+  <meta property="og:type" content="website">
+
+  <!-- Redirección automática a WhatsApp -->
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const p = urlParams.get('p') || "5";
+
+    const mensajes = {
+      "5": "Estuve en la expo Real State 2025 y lo único que me llevé fué esta foto de tu polera"
+    };
+
+    const mensaje = mensajes[p] || mensajes["5"];
+    const numero = "591789700"; // número con código de país
+    const whatsappURL = `https://wa.me/${numero}?text=${encodeURIComponent(mensaje)}`;
+
+    window.location.href = whatsappURL;
+  </script>
+</head>
+<body>
+  <p>Redireccionando a WhatsApp...</p>
+</body>
+</html>
