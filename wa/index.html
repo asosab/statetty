@@ -6,13 +6,13 @@
   <title>Comunícate con Statetty</title>
 
   <!-- Meta para SEO -->
-  <meta name="description" content="Conéctate con Statetty y descubre herramientas inmobiliarias de última generación.">
-  <meta name="keywords" content="Statetty, inmobiliaria, tecnología inmobiliaria, whatsapp, contacto, real state Bolivia, agentes inmobiliarios, expo Real State 2025">
+  <meta name="description" content="Llévate a Statetty en tu bolsillo, la navaja suiza del asesor inmobiliario.">
+  <meta name="keywords" content="Statetty, inmobiliaria, tecnología, whatsapp, contacto, real state, agentes inmobiliarios, expo Real State 2025, Bolivia, SCZ, Telegram">
   <meta name="author" content="Statetty">
 
   <!-- Open Graph para vista previa en apps como WhatsApp -->
   <meta property="og:title" content="Comunícate con Statetty">
-  <meta property="og:description" content="¿Estuviste en la Expo Real State 2025? Escríbenos y conoce más sobre nuestra propuesta para agentes inmobiliarios.">
+  <meta property="og:description" content="¿Eres asesor inmobiliario? Escríbenos y descubre cómo estamos ayudando a cientos de asesores en tu área.">
   <meta property="og:image" content="https://statetty.com/assets/images/statetty_phone.jpg">
   <meta property="og:url" content="https://statetty.com/wa">
   <meta property="og:type" content="website">
@@ -23,10 +23,12 @@
     const p = urlParams.get('p') || "5";
 
     const mensajes = {
-      "5": "Estuve en la Expo Real Estate 2025 y lo único que me llevé fué una foto de tu polera"
+      "3": "Estuve en tu taller de Statetty y lo único que se me grabó fue una foto de tu polera",
+      "4": "Estuve en tu presentación de Statetty y lo único que se me grabó fue una foto de tu polera",
+      "5": "Estuve en la Expo Real Estate 2025 y lo único que me llevé fue una foto de tu polera"
     };
 
-    const mensaje = mensajes[p] || mensajes["5"];
+    const mensaje = mensajes[p] || mensajes["4"];
     const numero = "59178447518"; // número con código de país
     const whatsappURL = `https://wa.me/${numero}?text=${encodeURIComponent(mensaje)}`;
 
