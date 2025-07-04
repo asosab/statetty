@@ -187,9 +187,9 @@ image:              mapa.png
       let soyNa = na? ` ${na}`:'';
       let deAg = ag? ` de ${ag}`:'';
       let sc = ''; if (na || ag) {sc = ' te escribe, '}
-      var msj = `Hola${nombre}, ${soyNa}${deAg}${sc}un gusto saludarte. Por favor, podría enviarme información sobre este inmueble, en caso de que siga disponible` +
+      var msj = `Hola${nombre}, ${soyNa}${deAg}${sc}un gusto saludarte. \nPor favor, podría enviarme información sobre este inmueble, en caso de que siga disponible` +
         ` (${dato.nombre}) \nlink: ${url}\nGracias de antemano `+
-        `\n\n ( Mensaje creado con Statetty https://statetty.com )`;
+        `\n\n\n( Mensaje creado con Statetty https://statetty.com )`;
       var msjWhatsapp = `https://wa.me/${cel}?text=${encodeURIComponent(msj)}`;
       var linkWA = cel ? '<br/><a href="' + msjWhatsapp + '" target="_blank">Contacta al captador</a>' : '';
 
