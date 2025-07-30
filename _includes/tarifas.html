@@ -1,47 +1,62 @@
-  <!-- ******tarifas****** --> 
-  <section id="tarifas" class="tarifas section active">
-    <div class="container">
-      <div class="tarifas-inner">
+<!-- ******tarifas****** --> 
+<section id="tarifas" class="tarifas section active">
+  <style>
+    .grafica-costos { text-align: center; margin-top: 40px;}
+    .grafica-costos img { max-width: 100%; height: auto;}
+    .grafica-costos p { margin-top: 15px; line-height: 1.5;}
+  </style>
+  <div class="container">
+    <div class="tarifas-inner">
       <br/><br/><h2 class="title text-center"></h2>    
       <p></p>
       <div class="block"><br/>
         <h3 class="sub-title text-center">Planes de pago Statetty</h3><br/>
         <div class="table-container">
           <table>
-              <thead>
-                  <tr>
-                      <th>Duración</th>
-                      <th>1 Cuenta</th>
-                      <th>Paquete de 5 Cuentas</th>
-                      <th>Paquete de 10 Cuentas</th>
-                  </tr>
-              </thead>
-              <tbody>
-                  <tr>
-                      <td>30 días</td>
-                      <td>75 Bs.</td>
-                      <td>225 Bs.</td>
-                      <td>345 Bs.</td>
-                  </tr>
-                  <tr>
-                      <td>90 días</td>
-                      <td>191 Bs.</td>
-                      <td>619 Bs.</td>
-                      <td>900 Bs.</td>
-                  </tr>
-                  <tr>
-                      <td>180 días</td>
-                      <td>360 Bs.</td>
-                      <td>1125 Bs.</td>
-                      <td>1350 Bs.</td>
-                  </tr>
-              </tbody>
+            <thead>
+              <tr>
+                <th>Duración</th>
+                <th>1 Cuenta</th>
+                <th>Paquete de 5 Cuentas</th>
+                <th>Paquete de 10 Cuentas</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>30 días</td>
+                <td>75 Bs.</td>
+                <td>285 Bs.</td>
+                <td>380 Bs.</td>
+              </tr>
+              <tr>
+                <td>90 días</td>
+                <td>189 Bs.</td>
+                <td>720 Bs.</td>
+                <td>960 Bs.</td>
+              </tr>
+              <tr>
+                <td>180 días</td>
+                <td>300 Bs.</td>
+                <td>1140 Bs.</td>
+                <td>1560 Bs.</td>
+              </tr>
+            </tbody>
           </table>
         </div>
+
+        <!-- Imagen y descripción -->
+        <div class="grafica-costos">
+          <img src="{{ '/assets/images/Statetty_costos_mensuales_segun_paquete.jpg' |prepend: site.url}}" alt="Costos mensuales Statetty">
+          <p>
+            Esta gráfica muestra el costo mensual por persona para cada tipo de paquete, ya sea comprado en solitario o en grupo:<br><br>
+            <strong>Solo (línea amarilla):</strong> el pago mensual si contratas individualmente.<br>
+            <strong>Grupo de 5-9 (línea naranja):</strong> el ahorro mensual usando la fracción del paquete de 5 cuentas.<br>
+            <strong>Grupo de 10+ (línea roja):</strong> el ahorro máximo con la fracción del paquete de 10 cuentas.
+          </p>
+        </div>
+
         <br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
-
       </div><!--//block-->
-
-      </div><!--//talleres-inner-->     
-    </div><!--//container-->
-  </section>
+    </div><!--//tarifas-inner-->     
+  </div><!--//container-->
+</section>
