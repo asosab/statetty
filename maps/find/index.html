@@ -337,7 +337,7 @@ image:              mapa.png
     let filtrados = [];
 
     markers.forEach(obj => {
-      let texto = (obj.dato.des + ' ' + obj.dato.nombre + ' ' + obj.dato.dir).toLowerCase();
+      let texto = (obj.dato.des + ' ' + obj.dato.nombre + ' ' + obj.dato.dir + ' ' + obj.dato.agente + ' ' + obj.dato.numero).toLowerCase();
       if (query && texto.includes(query)) {
         obj.marker.setIcon(resultIcon);
         obj.marker.setZIndexOffset(1000);
