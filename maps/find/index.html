@@ -10,55 +10,47 @@ image:              mapa.png
 ---
 
 <style>
-  #toolbox-btn {
+  /* Caja de herramientas flotante visible por defecto */
+  #toolbox {
     position: absolute;
     top: 10px;
     right: 10px;
-    background: white;
-    border: 1px solid #ccc;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    text-align: center;
-    line-height: 38px;
-    cursor: pointer;
-    z-index: 1000;
-  }
-  #toolbox {
-    position: absolute;
-    top: 60px;
-    right: 10px;
-    background: white;
-    border: 1px solid #ccc;
+    width: 260px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 10px;
     padding: 10px;
-    display: none;
-    z-index: 1000;
+    z-index: 1100;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
   }
+  #toolbox h4 { margin: 0 0 8px 0; font-size: 14px; }
+  #search-input { width: 100%; box-sizing: border-box; padding: 6px 8px; border: 1px solid #ccc; border-radius: 6px; }
+  #toolbox-tools { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+  .tool-item { display: block; width: 100%; text-align: left; padding: 6px 8px; border-radius: 6px; border: 1px solid #f0f0f0; background: #fafafa; }
+  /* Tamaño del mapa */
+  #mapid { height: 80vh; }
+  #loading-indicator { position: absolute; left: 10px; top: 10px; z-index: 1200; background: rgba(255,255,255,0.9); padding: 6px 8px; border-radius: 6px; border: 1px solid #eee; display: none; }
 </style>
-<div id="toolbox-btn">🔍</div>
-<div id="toolbox">
-  <input type="text" id="search-input" placeholder="Buscar..." style="width: 200px;">
-</div>
-
 
 <div id="mapid"></div> <!-- Div donde se mostrará el mapa -->
-<div id="loading-indicator">Cargando....</div>
+<div id="loading-indicator">Cargando...</div>
+
+<!-- Caja de herramientas: buscador + contenedor para agregar más herramientas -->
+<div id="toolbox" role="region" aria-label="Caja de herramientas">
+  <h4>Caja de herramientas</h4>
+  <input type="text" id="search-input" placeholder="Buscar en nombre, dirección o descripción..." aria-label="Buscar" />
+  <!-- Aquí se agregarán herramientas adicionales -->
+  <div id="toolbox-tools" aria-live="polite">
+    <!-- Ejemplo de herramienta añadida por defecto (puedes quitarlo) -->
+    <button class="tool-item" id="clear-search">Limpiar búsqueda</button>
+  </div>
+</div>
+
 <script>
   var map;
   var locations = [];
-
-  var markers = []; // guardará { marker, iconOriginal, dato }
-  var resultIcon = new L.Icon({
-    iconUrl: '../../assets/images/pointers/pointer_statetty.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-    iconSize: [40, 60],
-    iconAnchor: [20, 60],
-    popupAnchor: [1, -54],
-    shadowSize: [60, 60]
-  });
-
-
-
+  var markers = []; // guardará { marker, iconOriginal, dato, zIndexOriginal }
   var urlParams = new URLSearchParams(window.location.search);
   let id = urlParams.get('id');
   let key = urlParams.get('key');
@@ -66,9 +58,7 @@ image:              mapa.png
   let na = urlParams.get('na');
   let ag = urlParams.get('ag');
 
-  if (!id || !key) {
-    throw new Error("ID o clave no proporcionados en la URL");
-  }
+  if (!id || !key) { throw new Error("ID o clave no proporcionados en la URL"); }
 
   var valores = 'Sheet1!A2:R';
   var url = 'https://sheets.googleapis.com/v4/spreadsheets/' + id + '/values/' + valores + '?key=' + key;
@@ -77,7 +67,6 @@ image:              mapa.png
   $('#loading-indicator').show();
 
   $.getJSON(url, function (data) {
-    // Ocultar indicador de carga una vez que se hayan cargado los datos
     $('#loading-indicator').hide();
 
     $(data.values).each(function () {
@@ -90,185 +79,116 @@ image:              mapa.png
       location.precio = parseInt(this[15]) || 0;
       location.agente = this[16];
       location.numero = this[17];
-
       var stringOriginal = this[5] ? this[5] : '';
-      let totalChr;
-      if (stringOriginal && stringOriginal.length > 0) { totalChr = stringOriginal.length; }
-      else { totalChr = 0; }
+      let totalChr = stringOriginal.length || 0;
       var chrMax = 500;
-      var faltan = 0;
-      if (totalChr > chrMax) { faltan = totalChr - chrMax; }
+      var faltan = totalChr > chrMax ? totalChr - chrMax : 0;
       var frase = '... (y ' + faltan + ' caracteres más)';
       var stringTruncado = totalChr > chrMax ? stringOriginal.substring(0, chrMax) + frase : stringOriginal;
       location.des = stringTruncado;
-
       locations.push(location);
     });
 
-    // Calcular centroide y radio si no están en la URL
     var lat = urlParams.get('lat');
     var lng = urlParams.get('lng');
     var radius = urlParams.get('r');
 
     if (!lat || !lng || !radius) {
       let latSum = 0, lngSum = 0;
-      locations.forEach(loc => {
-        latSum += loc.lat;
-        lngSum += loc.lng;
-      });
-
+      locations.forEach(loc => { latSum += loc.lat; lngSum += loc.lng; });
       lat = latSum / locations.length;
       lng = lngSum / locations.length;
-
-      // Calcular la distancia máxima desde el centroide
       let maxDistance = 0;
       locations.forEach(loc => {
         const distance = calculateDH(lat, lng, loc.lat, loc.lng);
-        if (distance > maxDistance) {
-          maxDistance = distance;
-        }
+        if (distance > maxDistance) { maxDistance = distance; }
       });
-
-      radius = maxDistance * 1000; // Convertir a metros
+      radius = maxDistance * 1000;
     }
 
-    // Calcular promedio del precio si no está en la URL
-    if (isNaN(pProm)||pProm==0) {
-      pProm = calcularPromedio(locations, 'precio');
-    }
+    if (isNaN(pProm) || pProm == 0) { pProm = calcularPromedio(locations, 'precio'); }
 
-    // Crear el mapa
     var mymap = L.map('mapid');
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' }).addTo(mymap);
 
-    // Añadir capa de OpenStreetMap al mapa
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-    }).addTo(mymap);
-
-    // Convertir las coordenadas en un objeto L.latLng
     var circleCenter = L.latLng(lat, lng);
+    var circle = L.circle(circleCenter, { color: 'green', weight: 1, fillOpacity: 0, radius: radius }).addTo(mymap);
 
-    // Añadir el círculo al mapa
-    var circle = L.circle(circleCenter, {
-      color: 'green',
-      weight: 1, // Grosor del borde
-      fillOpacity: 0, // Sin relleno
-      radius: radius
-    }).addTo(mymap);
-
-    // Crear un icono personalizado para la cruz
-    var crossIcon = L.icon({
-      iconUrl: '../../assets/images/cross_green.png', // Ruta al archivo PNG
-      iconSize: [20, 20], // Tamaño del icono
-      iconAnchor: [10, 10], // Punto del icono que se ubicará en la coordenada especificada
-      popupAnchor: [0, -10] // Punto donde se abrirá el popup (opcional)
-    });
-
-    // Añadir un marcador con el icono personalizado al centro del círculo
+    var crossIcon = L.icon({ iconUrl: '../../assets/images/cross_green.png', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] });
     var crossMarker = L.marker(circleCenter, { icon: crossIcon }).addTo(mymap);
 
+    /**
+     * Formatea número a estilo con puntos miles y ,00 final.
+     * @param {number} num
+     * @return {string}
+     */
     function formatNumber(num) { return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") + ",00"; }
     var pPromFormatted = formatNumber(pProm);
-
     crossMarker.bindPopup(`Coordenadas: ${lat},${lng}<br>Valor promedio: USD${pPromFormatted}`);
 
-    // Función para calcular la distancia usando la fórmula de Haversine
+    /**
+     * Calcula distancia en km entre dos coordenadas usando Haversine.
+     * @param {number} lat1
+     * @param {number} lng1
+     * @param {number} lat2
+     * @param {number} lng2
+     * @return {number} distancia en kilómetros
+     */
     function calculateDH(lat1, lng1, lat2, lng2) {
-      // Convertir las coordenadas a radianes
       const lat1Rad = lat1 * Math.PI / 180;
       const lng1Rad = lng1 * Math.PI / 180;
       const lat2Rad = lat2 * Math.PI / 180;
       const lng2Rad = lng2 * Math.PI / 180;
-
-      // Calcular la diferencia de latitudes y longitudes
       const dLat = lat2Rad - lat1Rad;
       const dLng = lng2Rad - lng1Rad;
-
-      // Calcular la distancia en un plano considerando la esfericidad de la Tierra
       const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
         Math.cos(lat1Rad) * Math.cos(lat2Rad) *
         Math.sin(dLng / 2) * Math.sin(dLng / 2);
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-      // Calcular la distancia en kilómetros usando el radio de la Tierra (6371 km)
-      const distance = 6371 * c;
-
-      return distance;
+      return 6371 * c;
     }
 
-    // Iterar sobre los datos y añadir marcadores al mapa
+    var resultIcon = new L.Icon({ iconUrl: '../../assets/images/pointers/pointer_found.png', shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png', iconSize: [40, 60], iconAnchor: [20, 60], popupAnchor: [1, -54], shadowSize: [60, 60] });
+    var resultIconLarge = new L.Icon({ iconUrl: '../../assets/images/pointers/pointer_found_large.png', shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png', iconSize: [48, 72], iconAnchor: [24, 72], popupAnchor: [1, -64], shadowSize: [72, 72] });
+
     locations.forEach(function (dato) {
-      // Crear marcador y vincular un pop-up con los datos adicionales
-      //TODO agregar url completo a c21
       let url = dato.URL;
-      if (!dato.URL.includes('http')) {url=`https://c21.com.bo${dato.URL}`}
+      if (!dato.URL.includes('http')) { url = `https://c21.com.bo${dato.URL}` }
 
       var brand;
-           if (url.includes("c21.com")) { brand = 'C21'; }
-      else if (url.includes("remax")) { brand = 'remax'; }
-      else if (url.includes("bieninmuebles")) { brand = 'bieni'; }
-      else if (url.includes("elfaro")) { brand = 'elfaro'; }
-      else if (url.includes("dueodeinmueble")) { brand = 'IDI'; }
-      else if (url.includes("ultracasas")) { brand = 'UC'; }
-      else if (url.includes("uno.com")) { brand = 'uno'; }
-      else if (url.includes("infocasas.com")) { brand = 'ic'; }
+      if (url.includes("c21.com")) { brand = 'C21'; } else if (url.includes("remax")) { brand = 'remax'; } else if (url.includes("bieninmuebles")) { brand = 'bieni'; } else if (url.includes("elfaro")) { brand = 'elfaro'; } else if (url.includes("dueodeinmueble")) { brand = 'IDI'; } else if (url.includes("ultracasas")) { brand = 'UC'; } else if (url.includes("uno.com")) { brand = 'uno'; } else if (url.includes("infocasas.com")) { brand = 'ic'; } else { brand = 'statetty'; }
 
-      
-      else { brand = 'statetty'; }
-
-      var icon = new L.Icon({
-        iconUrl: '../../assets/images/pointers/pointer_' + brand + '.png',
-        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-        iconSize: [40, 60], // [25, 41],
-        iconAnchor: [20, 60], // [12, 41],
-        popupAnchor: [1, -54], // [1, -34], 
-        shadowSize: [60, 60] // [41, 41] 
-      });
+      var icon = new L.Icon({ iconUrl: '../../assets/images/pointers/pointer_' + brand + '.png', shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png', iconSize: [40, 60], iconAnchor: [20, 60], popupAnchor: [1, -54], shadowSize: [60, 60] });
 
       var marker = L.marker([dato.lat, dato.lng], { icon }).addTo(mymap);
 
       var nombre = dato?.agente ? ' ' + dato.agente.split(" ")[0] : '';
       var cel = dato?.numero ? dato.numero.replace(/[^0-9]/g, "") : '';
-      let soyNa = na? ` ${na}`:'';
-      let deAg = ag? ` de ${ag}`:'';
-      let sc = ''; if (na || ag) {sc = ' te escribe, '}
-      var msj = `Hola${nombre}, ${soyNa}${deAg}${sc}un gusto saludarte. \nPor favor, podría enviarme información sobre este inmueble, en caso de que siga disponible` +
-        ` (${dato.nombre}) \n\nlink: ${url}\n\nGracias de antemano `+
-        `\n\n\n( Mensaje creado con Statetty https://statetty.com )`;
+      let soyNa = na ? ` ${na}` : ''; let deAg = ag ? ` de ${ag}` : ''; let sc = ''; if (na || ag) { sc = ' te escribe, ' }
+      var msj = `Hola${nombre}, ${soyNa}${deAg}${sc}un gusto saludarte. \nPor favor, podría enviarme información sobre este inmueble, en caso de que siga disponible (${dato.nombre}) \n\nlink: ${url}\n\nGracias de antemano \n\n\n( Mensaje creado con Statetty https://statetty.com )`;
       var msjWhatsapp = `https://wa.me/${cel}?text=${encodeURIComponent(msj)}`;
       var linkWA = cel ? '<br/><a href="' + msjWhatsapp + '" target="_blank">Contacta al captador</a>' : '';
 
-      // Calcular la distancia al centro de la circunferencia en metros
       var distance = Math.round(calculateDH(circleCenter.lat, circleCenter.lng, dato.lat, dato.lng) * 1000);
-
-      // Calcular la diferencia porcentual del precio
       var priceDiffPercent = ((dato.precio - pProm) / pProm) * 100;
-      var priceComparison;
-      if (priceDiffPercent > 0) {
-        priceComparison = `<span style="color: red;">↑${Math.ceil(priceDiffPercent)}%</span>`;
-      } else {
-        priceComparison = `<span style="color: green;">↓${Math.ceil(Math.abs(priceDiffPercent))}%</span>`;
-      }
+      var priceComparison = priceDiffPercent > 0 ? `<span style="color: red;">↑${Math.ceil(priceDiffPercent)}%</span>` : `<span style="color: green;">↓${Math.ceil(Math.abs(priceDiffPercent))}%</span>`;
 
-      var popupContent = "<b>" + dato.nombre + " (" + distance + "m)</b> " + priceComparison + "<br>" +
-        "<b>Dirección:</b> " + dato.dir + "<br>" +
-        "<b>Descripción:</b> " + dato.des + "<br>" +
-        '<a href="' + url + '" target="_blank">Ver página de la captación</a>' +
-        linkWA;
+      var popupContent = "<b>" + dato.nombre + " (" + distance + "m)</b> " + priceComparison + "<br>" + "<b>Dirección:</b> " + dato.dir + "<br>" + "<b>Descripción:</b> " + dato.des + "<br>" + '<a href="' + url + '" target="_blank">Ver página de la captación</a>' + linkWA;
 
       marker.bindPopup(popupContent);
-      markers.push({ marker, iconOriginal: icon, dato });
+      markers.push({ marker, iconOriginal: icon, dato, zIndexOriginal: marker.options && marker.options.zIndexOffset ? marker.options.zIndexOffset : 0 });
     });
 
-    // Ajustar el mapa para que todos los marcadores sean visibles
-    var group = new L.featureGroup(locations.map(function (location) {
-      return L.marker([location.lat, location.lng]);
-    }));
+    var group = new L.featureGroup(locations.map(function (location) { return L.marker([location.lat, location.lng]); }));
     mymap.fitBounds(group.getBounds());
   });
 
-
-  // Función para calcular el promedio de una propiedad de un array de objetos
+  /**
+   * Calcula el promedio de una propiedad numérica en un array de objetos.
+   * @param {Array} datos
+   * @param {string} prop
+   * @return {number}
+   */
   function calcularPromedio(datos, prop) {
     if (!Array.isArray(datos) || datos.length === 0) { return 0; }
     const datosFiltrados = datos.filter(item => item && typeof item[prop] === 'number' && item[prop] >= 0);
@@ -277,21 +197,48 @@ image:              mapa.png
     return Math.round(suma / datosFiltrados.length);
   }
 
+  /**
+   * Añade una herramienta visual dentro de la caja de herramientas.
+   * Devuelve el elemento creado (DOM) para que puedas añadir listeners u otras propiedades.
+   * @param {string} name - nombre/etiqueta de la herramienta
+   * @param {string} html - HTML string que representa la herramienta (por ejemplo: '<button>Mi acción</button>')
+   * @return {HTMLElement} elemento añadido
+   */
+  function addTool(name, html) {
+    var container = document.getElementById('toolbox-tools');
+    var wrapper = document.createElement('div');
+    wrapper.className = 'tool-item';
+    wrapper.setAttribute('data-tool-name', name);
+    wrapper.innerHTML = html;
+    container.appendChild(wrapper);
+    return wrapper;
+  }
 
-
-
-  $('#toolbox-btn').on('click', function() {$('#toolbox').toggle();});
-
+  // Evento de búsqueda: cambia iconos, agranda y trae al frente los punteros encontrados
   $('#search-input').on('input', function() {
     let query = $(this).val().toLowerCase();
     markers.forEach(obj => {
-      let texto = (obj.dato.des + ' ' + obj.dato.nombre + ' ' + obj.dato.dir).toLowerCase();
-      if (query && texto.includes(query)) { obj.marker.setIcon(resultIcon);} 
-      else { obj.marker.setIcon(obj.iconOriginal);}
+      let texto = ((obj.dato.des || '') + ' ' + (obj.dato.nombre || '') + ' ' + (obj.dato.dir || '')).toLowerCase();
+      if (query && texto.includes(query)) {
+        obj.marker.setIcon(resultIconLarge);
+        try { obj.marker.setZIndexOffset(1000); } catch (e) {}
+        try { if (obj.marker.bringToFront) obj.marker.bringToFront(); } catch (e) {}
+      } else {
+        obj.marker.setIcon(obj.iconOriginal);
+        try { obj.marker.setZIndexOffset(obj.zIndexOriginal || 0); } catch (e) {}
+        try { if (obj.marker.bringToBack) obj.marker.bringToBack(); } catch (e) {}
+      }
     });
   });
 
+  // Botón de ejemplo que limpia la búsqueda
+  document.getElementById('clear-search').addEventListener('click', function() {
+    document.getElementById('search-input').value = '';
+    $('#search-input').trigger('input');
+  });
+
+  // Ejemplo: cómo agregar otra herramienta desde código
+  // addTool('Export', '<button id="export-btn">Exportar resultados</button>');
+  // document.getElementById('export-btn')?.addEventListener('click', function(){ /* tu lógica */ });
+
 </script>
-
-
-
