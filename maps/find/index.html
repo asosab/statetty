@@ -80,12 +80,6 @@ image:              mapa.png
 </div>
 
 
-
-
-
-
-
-
 <div id="mapid"></div> <!-- Div donde se mostrará el mapa -->
 <div id="loading-indicator">Cargando...</div>
 <script>
@@ -176,7 +170,9 @@ image:              mapa.png
     // Calcular promedio del precio si no está en la URL
     if (isNaN(pProm)||pProm==0) {pProm = calcularPromedio(locations, 'precio');}
 
-    //actualizarEstadisticas(locations);
+
+    // actualizarEstadisticas(locations); daría error si lo descomento
+
 
     // Crear el mapa
     var mymap = L.map('mapid');
@@ -344,8 +340,6 @@ $('#search-input').on('input', function() {
     actualizarEstadisticas(locations); // 🔹 Restaurar stats originales
   }
 });
-
-
 
   function actualizarEstadisticas(lista) {
     if (!lista || lista.length === 0) {
