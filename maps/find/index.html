@@ -73,6 +73,8 @@ image:              mapa.png
   <div id="stats-container" style="font-size: 14px; line-height: 1.4;">
     🏙 Total inmuebles: <span id="total-inmuebles">0</span><br>
     💲 Precio promedio: USD<span id="precio-promedio">0</span>
+    🏷️ Más económico: <span id="mas-barato">-</span><br>
+    💎 Más costoso: <span id="mas-caro">-</span>
   </div>
 
 </div>
@@ -174,9 +176,15 @@ image:              mapa.png
     // Calcular promedio del precio si no está en la URL
     if (isNaN(pProm)||pProm==0) {pProm = calcularPromedio(locations, 'precio');}
 
+    // Encontrar el más barato y el más caro
+    let masBarato = locations.reduce((min, loc) => (loc.precio && loc.precio < min.precio ? loc : min), locations[0]);
+    let masCaro = locations.reduce((max, loc) => (loc.precio && loc.precio > max.precio ? loc : max), locations[0]);
+
     // 📊 Mostrar estadísticas en el panel
     $('#total-inmuebles').text(locations.length);
     $('#precio-promedio').text(formatNumber(pProm));
+    $('#mas-barato').text(`${masBarato.nombre} (USD${formatNumber(masBarato.precio)})`);
+    $('#mas-caro').text(`${masCaro.nombre} (USD${formatNumber(masCaro.precio)})`);
 
     // Crear el mapa
     var mymap = L.map('mapid');
