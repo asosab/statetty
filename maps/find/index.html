@@ -9,11 +9,56 @@ published:          true
 image:              mapa.png
 ---
 
+<style>
+  #toolbox-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    text-align: center;
+    line-height: 38px;
+    cursor: pointer;
+    z-index: 1000;
+  }
+  #toolbox {
+    position: absolute;
+    top: 60px;
+    right: 10px;
+    background: white;
+    border: 1px solid #ccc;
+    padding: 10px;
+    display: none;
+    z-index: 1000;
+  }
+</style>
+<div id="toolbox-btn">🔍</div>
+<div id="toolbox">
+  <input type="text" id="search-input" placeholder="Buscar..." style="width: 200px;">
+</div>
+
+
 <div id="mapid"></div> <!-- Div donde se mostrará el mapa -->
-<div id="loading-indicator">Cargando...</div>
+<div id="loading-indicator">Cargando....</div>
 <script>
   var map;
   var locations = [];
+
+  var markers = []; // guardará { marker, iconOriginal, dato }
+  var resultIcon = new L.Icon({
+    iconUrl: '../../assets/images/pointers/pointer_statetty.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+    iconSize: [40, 60],
+    iconAnchor: [20, 60],
+    popupAnchor: [1, -54],
+    shadowSize: [60, 60]
+  });
+
+
+
   var urlParams = new URLSearchParams(window.location.search);
   let id = urlParams.get('id');
   let key = urlParams.get('key');
@@ -212,6 +257,7 @@ image:              mapa.png
         linkWA;
 
       marker.bindPopup(popupContent);
+      markers.push({ marker, iconOriginal: icon, dato });
     });
 
     // Ajustar el mapa para que todos los marcadores sean visibles
@@ -230,6 +276,20 @@ image:              mapa.png
     const suma = datosFiltrados.reduce((acc, item) => acc + item[prop], 0);
     return Math.round(suma / datosFiltrados.length);
   }
+
+
+
+
+  $('#toolbox-btn').on('click', function() {$('#toolbox').toggle();});
+
+  $('#search-input').on('input', function() {
+    let query = $(this).val().toLowerCase();
+    markers.forEach(obj => {
+      let texto = (obj.dato.des + ' ' + obj.dato.nombre + ' ' + obj.dato.dir).toLowerCase();
+      if (query && texto.includes(query)) { obj.marker.setIcon(resultIcon);} 
+      else { obj.marker.setIcon(obj.iconOriginal);}
+    });
+  });
 
 </script>
 
