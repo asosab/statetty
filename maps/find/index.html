@@ -53,26 +53,28 @@ image:              mapa.png
 <div id="toolbox-btn">⚙</div>
 <div id="toolbox">
 
-
-<div class="search-container">
-  <span>🔍</span>
-  <div style="position: relative; flex: 1;">
-    <input type="text" id="search-input" placeholder="Buscar..." style="width: 100%; padding-right: -5px;">
-    <span id="search-count" style="
-      position: absolute;
-      right: 0px;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 12px;
-      color: #555;
-      pointer-events: none;
-      display: none;
-    "></span>
+  <div class="search-container">
+    <span>🔍</span>
+    <div style="position: relative; flex: 1;">
+      <input type="text" id="search-input" placeholder="Buscar..." style="width: 100%; padding-right: -5px;">
+      <span id="search-count" style="
+        position: absolute;
+        right: 0px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 12px;
+        color: #555;
+        pointer-events: none;
+        display: none;
+      "></span>
+    </div>
   </div>
-</div>
 
+  <div id="stats-container" style="font-size: 14px; line-height: 1.4;">
+    📦 Total inmuebles: <span id="total-inmuebles">0</span><br>
+    💲 Precio promedio: USD<span id="precio-promedio">0</span>
+  </div>
 
-  <!-- Aquí podrás añadir más herramientas -->
 </div>
 
 
@@ -97,8 +99,6 @@ image:              mapa.png
     popupAnchor: [1, -54],
     shadowSize: [60, 60]
   });
-
-
 
   var urlParams = new URLSearchParams(window.location.search);
   let id = urlParams.get('id');
@@ -174,9 +174,11 @@ image:              mapa.png
     }
 
     // Calcular promedio del precio si no está en la URL
-    if (isNaN(pProm)||pProm==0) {
-      pProm = calcularPromedio(locations, 'precio');
-    }
+    if (isNaN(pProm)||pProm==0) {pProm = calcularPromedio(locations, 'precio');}
+
+    // 📊 Mostrar estadísticas en el panel
+    $('#total-inmuebles').text(locations.length);
+    $('#precio-promedio').text(pPromFormatted);
 
     // Crear el mapa
     var mymap = L.map('mapid');
@@ -285,11 +287,8 @@ image:              mapa.png
       // Calcular la diferencia porcentual del precio
       var priceDiffPercent = ((dato.precio - pProm) / pProm) * 100;
       var priceComparison;
-      if (priceDiffPercent > 0) {
-        priceComparison = `<span style="color: red;">↑${Math.ceil(priceDiffPercent)}%</span>`;
-      } else {
-        priceComparison = `<span style="color: green;">↓${Math.ceil(Math.abs(priceDiffPercent))}%</span>`;
-      }
+      if (priceDiffPercent > 0) {priceComparison = `<span style="color: red;">↑${Math.ceil(priceDiffPercent)}%</span>`;} 
+      else {priceComparison = `<span style="color: green;">↓${Math.ceil(Math.abs(priceDiffPercent))}%</span>`;}
 
       var popupContent = "<b>" + dato.nombre + " (" + distance + "m)</b> " + priceComparison + "<br>" +
         "<b>Dirección:</b> " + dato.dir + "<br>" +
@@ -308,7 +307,6 @@ image:              mapa.png
     mymap.fitBounds(group.getBounds());
   });
 
-
   // Función para calcular el promedio de una propiedad de un array de objetos
   function calcularPromedio(datos, prop) {
     if (!Array.isArray(datos) || datos.length === 0) { return 0; }
@@ -317,8 +315,6 @@ image:              mapa.png
     const suma = datosFiltrados.reduce((acc, item) => acc + item[prop], 0);
     return Math.round(suma / datosFiltrados.length);
   }
-
-
 
 
   $('#toolbox-btn').on('click', function() {$('#toolbox').toggle();});
@@ -337,11 +333,8 @@ image:              mapa.png
       }
     });
 
-    if (query) {
-      $('#search-count').text(matchCount).show();
-    } else {
-      $('#search-count').hide();
-    }
+    if (query) { $('#search-count').text(matchCount).show();} 
+    else {$('#search-count').hide();}
   });
 
 
