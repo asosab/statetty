@@ -165,9 +165,7 @@ image:              mapa.png
       let maxDistance = 0;
       locations.forEach(loc => {
         const distance = calculateDH(lat, lng, loc.lat, loc.lng);
-        if (distance > maxDistance) {
-          maxDistance = distance;
-        }
+        if (distance > maxDistance) { maxDistance = distance;}
       });
 
       radius = maxDistance * 1000; // Convertir a metros
@@ -178,7 +176,7 @@ image:              mapa.png
 
     // 📊 Mostrar estadísticas en el panel
     $('#total-inmuebles').text(locations.length);
-    $('#precio-promedio').text(pPromFormatted);
+    $('#precio-promedio').text(formatNumber(pProm));
 
     // Crear el mapa
     var mymap = L.map('mapid');
