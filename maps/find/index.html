@@ -99,10 +99,10 @@ image:              mapa.png
 
     $('#total-inmuebles').text(lista.length);
     $('#precio-promedio').text(formatNumber(promedio));
-    $('#mas-barato').text(`${masBarato.nombre} (USD${formatNumber(masBarato.precio)})`);
-    $('#mas-caro').text(`${masCaro.nombre} (USD${formatNumber(masCaro.precio)})`);
+    $('#mas-barato').text(`${masBarato.nombre}`);
+    $('#mas-caro').text(`${masCaro.nombre}`);
   }
-  
+
   function formatNumber(num) { return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") + ",00"; }
 
   var map;
