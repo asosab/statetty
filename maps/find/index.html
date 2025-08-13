@@ -56,12 +56,13 @@ image:              mapa.png
     <span>🔍</span>
     <input type="text" id="search-input" placeholder="Buscar...">
   </div>
+  <div id="search-count" style="font-size: 12px; color: #555; margin-bottom: 10px;">0 resultados</div>
   <!-- Aquí podrás añadir más herramientas -->
 </div>
 
 
 <div id="mapid"></div> <!-- Div donde se mostrará el mapa -->
-<div id="loading-indicator">Cargando....</div>
+<div id="loading-indicator">Cargando...</div>
 <script>
   var map;
   var locations = [];
@@ -302,16 +303,19 @@ image:              mapa.png
   $('#toolbox-btn').on('click', function() {$('#toolbox').toggle();});
   $('#search-input').on('input', function() {
     let query = $(this).val().toLowerCase();
+    let matchCount = 0;
     markers.forEach(obj => {
-      let texto = (obj.dato.des + ' ' + obj.dato.nombre + ' ' + obj.dato.dir + ' ' + obj.dato.agente + ' ' + obj.dato.numero).toLowerCase();
+      let texto = (obj.dato.des + ' ' + obj.dato.nombre + ' ' + obj.dato.dir).toLowerCase();
       if (query && texto.includes(query)) {
         obj.marker.setIcon(resultIcon);
-        obj.marker.setZIndexOffset(1000); // Traer al frente
+        obj.marker.setZIndexOffset(1000);
+        matchCount++;
       } else {
         obj.marker.setIcon(obj.iconOriginal);
-        obj.marker.setZIndexOffset(0); // Valor normal
+        obj.marker.setZIndexOffset(0);
       }
     });
+    $('#search-count').text(`${matchCount} resultado${matchCount !== 1 ? 's' : ''}`);
   });
 
 </script>
