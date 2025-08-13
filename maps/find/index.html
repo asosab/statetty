@@ -183,8 +183,8 @@ image:              mapa.png
     // 📊 Mostrar estadísticas en el panel
     $('#total-inmuebles').text(locations.length);
     $('#precio-promedio').text(formatNumber(pProm));
-    $('#mas-barato').text(`${masBarato.nombre} (USD${formatNumber(masBarato.precio)})`);
-    $('#mas-caro').text(`${masCaro.nombre} (USD${formatNumber(masCaro.precio)})`);
+    $('#mas-barato').text(`${masBarato.nombre}`);
+    $('#mas-caro').text(`${masCaro.nombre}`);
 
     // Crear el mapa
     var mymap = L.map('mapid');
