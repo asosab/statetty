@@ -10,33 +10,58 @@ image:              mapa.png
 ---
 
 <style>
-  /* Caja de herramientas flotante visible por defecto */
-  #toolbox {
+  /* Botón que abre la caja de herramientas */
+  #toolbox-btn {
     position: absolute;
     top: 10px;
     right: 10px;
-    width: 260px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: white;
+    border: 1px solid #ddd;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 1200;
+    font-size: 18px;
+  }
+  #toolbox-btn:active { transform: translateY(1px); }
+
+  /* Caja de herramientas oculta por defecto */
+  #toolbox {
+    position: absolute;
+    top: 60px;
+    right: 10px;
+    width: 280px;
     background: #fff;
     border: 1px solid #ddd;
     border-radius: 10px;
     padding: 10px;
-    z-index: 1100;
+    z-index: 1199;
     box-shadow: 0 6px 18px rgba(0,0,0,0.12);
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    display: none; /* oculto por defecto */
   }
   #toolbox h4 { margin: 0 0 8px 0; font-size: 14px; }
   #search-input { width: 100%; box-sizing: border-box; padding: 6px 8px; border: 1px solid #ccc; border-radius: 6px; }
   #toolbox-tools { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
   .tool-item { display: block; width: 100%; text-align: left; padding: 6px 8px; border-radius: 6px; border: 1px solid #f0f0f0; background: #fafafa; }
+
   /* Tamaño del mapa */
   #mapid { height: 80vh; }
-  #loading-indicator { position: absolute; left: 10px; top: 10px; z-index: 1200; background: rgba(255,255,255,0.9); padding: 6px 8px; border-radius: 6px; border: 1px solid #eee; display: none; }
+  #loading-indicator { position: absolute; left: 10px; top: 10px; z-index: 1200; background: rgba(255,255,255,0.95); padding: 6px 8px; border-radius: 6px; border: 1px solid #eee; display: none; }
 </style>
 
 <div id="mapid"></div> <!-- Div donde se mostrará el mapa -->
 <div id="loading-indicator">Cargando...</div>
 
-<!-- Caja de herramientas: buscador + contenedor para agregar más herramientas -->
+<!-- Botón para mostrar/ocultar la caja de herramientas -->
+<div id="toolbox-btn" role="button" aria-label="Abrir caja de herramientas" title="Herramientas">⚙️</div>
+
+<!-- Caja de herramientas: buscador + contenedor para agregar más herramientas (inicialmente oculta) -->
 <div id="toolbox" role="region" aria-label="Caja de herramientas">
   <h4>Caja de herramientas</h4>
   <input type="text" id="search-input" placeholder="Buscar en nombre, dirección o descripción..." aria-label="Buscar" />
@@ -51,6 +76,8 @@ image:              mapa.png
   var map;
   var locations = [];
   var markers = []; // guardará { marker, iconOriginal, dato, zIndexOriginal }
+  var resultIcon; // declarado en scope superior para ser accesible por handlers fuera de getJSON
+  var resultIconLarge; // idem
   var urlParams = new URLSearchParams(window.location.search);
   let id = urlParams.get('id');
   let key = urlParams.get('key');
@@ -122,123 +149,4 @@ image:              mapa.png
      * @param {number} num
      * @return {string}
      */
-    function formatNumber(num) { return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") + ",00"; }
-    var pPromFormatted = formatNumber(pProm);
-    crossMarker.bindPopup(`Coordenadas: ${lat},${lng}<br>Valor promedio: USD${pPromFormatted}`);
-
-    /**
-     * Calcula distancia en km entre dos coordenadas usando Haversine.
-     * @param {number} lat1
-     * @param {number} lng1
-     * @param {number} lat2
-     * @param {number} lng2
-     * @return {number} distancia en kilómetros
-     */
-    function calculateDH(lat1, lng1, lat2, lng2) {
-      const lat1Rad = lat1 * Math.PI / 180;
-      const lng1Rad = lng1 * Math.PI / 180;
-      const lat2Rad = lat2 * Math.PI / 180;
-      const lng2Rad = lng2 * Math.PI / 180;
-      const dLat = lat2Rad - lat1Rad;
-      const dLng = lng2Rad - lng1Rad;
-      const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos(lat1Rad) * Math.cos(lat2Rad) *
-        Math.sin(dLng / 2) * Math.sin(dLng / 2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      return 6371 * c;
-    }
-
-    var resultIcon = new L.Icon({ iconUrl: '../../assets/images/pointers/pointer_found.png', shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png', iconSize: [40, 60], iconAnchor: [20, 60], popupAnchor: [1, -54], shadowSize: [60, 60] });
-    var resultIconLarge = new L.Icon({ iconUrl: '../../assets/images/pointers/pointer_found_large.png', shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png', iconSize: [48, 72], iconAnchor: [24, 72], popupAnchor: [1, -64], shadowSize: [72, 72] });
-
-    locations.forEach(function (dato) {
-      let url = dato.URL;
-      if (!dato.URL.includes('http')) { url = `https://c21.com.bo${dato.URL}` }
-
-      var brand;
-      if (url.includes("c21.com")) { brand = 'C21'; } else if (url.includes("remax")) { brand = 'remax'; } else if (url.includes("bieninmuebles")) { brand = 'bieni'; } else if (url.includes("elfaro")) { brand = 'elfaro'; } else if (url.includes("dueodeinmueble")) { brand = 'IDI'; } else if (url.includes("ultracasas")) { brand = 'UC'; } else if (url.includes("uno.com")) { brand = 'uno'; } else if (url.includes("infocasas.com")) { brand = 'ic'; } else { brand = 'statetty'; }
-
-      var icon = new L.Icon({ iconUrl: '../../assets/images/pointers/pointer_' + brand + '.png', shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png', iconSize: [40, 60], iconAnchor: [20, 60], popupAnchor: [1, -54], shadowSize: [60, 60] });
-
-      var marker = L.marker([dato.lat, dato.lng], { icon }).addTo(mymap);
-
-      var nombre = dato?.agente ? ' ' + dato.agente.split(" ")[0] : '';
-      var cel = dato?.numero ? dato.numero.replace(/[^0-9]/g, "") : '';
-      let soyNa = na ? ` ${na}` : ''; let deAg = ag ? ` de ${ag}` : ''; let sc = ''; if (na || ag) { sc = ' te escribe, ' }
-      var msj = `Hola${nombre}, ${soyNa}${deAg}${sc}un gusto saludarte. \nPor favor, podría enviarme información sobre este inmueble, en caso de que siga disponible (${dato.nombre}) \n\nlink: ${url}\n\nGracias de antemano \n\n\n( Mensaje creado con Statetty https://statetty.com )`;
-      var msjWhatsapp = `https://wa.me/${cel}?text=${encodeURIComponent(msj)}`;
-      var linkWA = cel ? '<br/><a href="' + msjWhatsapp + '" target="_blank">Contacta al captador</a>' : '';
-
-      var distance = Math.round(calculateDH(circleCenter.lat, circleCenter.lng, dato.lat, dato.lng) * 1000);
-      var priceDiffPercent = ((dato.precio - pProm) / pProm) * 100;
-      var priceComparison = priceDiffPercent > 0 ? `<span style="color: red;">↑${Math.ceil(priceDiffPercent)}%</span>` : `<span style="color: green;">↓${Math.ceil(Math.abs(priceDiffPercent))}%</span>`;
-
-      var popupContent = "<b>" + dato.nombre + " (" + distance + "m)</b> " + priceComparison + "<br>" + "<b>Dirección:</b> " + dato.dir + "<br>" + "<b>Descripción:</b> " + dato.des + "<br>" + '<a href="' + url + '" target="_blank">Ver página de la captación</a>' + linkWA;
-
-      marker.bindPopup(popupContent);
-      markers.push({ marker, iconOriginal: icon, dato, zIndexOriginal: marker.options && marker.options.zIndexOffset ? marker.options.zIndexOffset : 0 });
-    });
-
-    var group = new L.featureGroup(locations.map(function (location) { return L.marker([location.lat, location.lng]); }));
-    mymap.fitBounds(group.getBounds());
-  });
-
-  /**
-   * Calcula el promedio de una propiedad numérica en un array de objetos.
-   * @param {Array} datos
-   * @param {string} prop
-   * @return {number}
-   */
-  function calcularPromedio(datos, prop) {
-    if (!Array.isArray(datos) || datos.length === 0) { return 0; }
-    const datosFiltrados = datos.filter(item => item && typeof item[prop] === 'number' && item[prop] >= 0);
-    if (datosFiltrados.length === 0) { return 0; }
-    const suma = datosFiltrados.reduce((acc, item) => acc + item[prop], 0);
-    return Math.round(suma / datosFiltrados.length);
-  }
-
-  /**
-   * Añade una herramienta visual dentro de la caja de herramientas.
-   * Devuelve el elemento creado (DOM) para que puedas añadir listeners u otras propiedades.
-   * @param {string} name - nombre/etiqueta de la herramienta
-   * @param {string} html - HTML string que representa la herramienta (por ejemplo: '<button>Mi acción</button>')
-   * @return {HTMLElement} elemento añadido
-   */
-  function addTool(name, html) {
-    var container = document.getElementById('toolbox-tools');
-    var wrapper = document.createElement('div');
-    wrapper.className = 'tool-item';
-    wrapper.setAttribute('data-tool-name', name);
-    wrapper.innerHTML = html;
-    container.appendChild(wrapper);
-    return wrapper;
-  }
-
-  // Evento de búsqueda: cambia iconos, agranda y trae al frente los punteros encontrados
-  $('#search-input').on('input', function() {
-    let query = $(this).val().toLowerCase();
-    markers.forEach(obj => {
-      let texto = ((obj.dato.des || '') + ' ' + (obj.dato.nombre || '') + ' ' + (obj.dato.dir || '')).toLowerCase();
-      if (query && texto.includes(query)) {
-        obj.marker.setIcon(resultIconLarge);
-        try { obj.marker.setZIndexOffset(1000); } catch (e) {}
-        try { if (obj.marker.bringToFront) obj.marker.bringToFront(); } catch (e) {}
-      } else {
-        obj.marker.setIcon(obj.iconOriginal);
-        try { obj.marker.setZIndexOffset(obj.zIndexOriginal || 0); } catch (e) {}
-        try { if (obj.marker.bringToBack) obj.marker.bringToBack(); } catch (e) {}
-      }
-    });
-  });
-
-  // Botón de ejemplo que limpia la búsqueda
-  document.getElementById('clear-search').addEventListener('click', function() {
-    document.getElementById('search-input').value = '';
-    $('#search-input').trigger('input');
-  });
-
-  // Ejemplo: cómo agregar otra herramienta desde código
-  // addTool('Export', '<button id="export-btn">Exportar resultados</button>');
-  // document.getElementById('export-btn')?.addEventListener('click', function(){ /* tu lógica */ });
-
-</script>
+    function formatNumber(num) { retu
