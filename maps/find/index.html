@@ -52,13 +52,34 @@ image:              mapa.png
 </style>
 <div id="toolbox-btn">⚙</div>
 <div id="toolbox">
-  <div class="search-container">
-    <span>🔍</span>
-    <input type="text" id="search-input" placeholder="Buscar...">
+
+
+<div class="search-container">
+  <span>🔍</span>
+  <div style="position: relative; flex: 1;">
+    <input type="text" id="search-input" placeholder="Buscar..." style="width: 100%; padding-right: 35px;">
+    <span id="search-count" style="
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 12px;
+      color: #555;
+      pointer-events: none;
+      display: none;
+    "></span>
   </div>
-  <div id="search-count" style="font-size: 12px; color: #555; margin-bottom: 10px;">0 resultados</div>
+</div>
+
+
   <!-- Aquí podrás añadir más herramientas -->
 </div>
+
+
+
+
+
+
 
 
 <div id="mapid"></div> <!-- Div donde se mostrará el mapa -->
@@ -315,8 +336,14 @@ image:              mapa.png
         obj.marker.setZIndexOffset(0);
       }
     });
-    $('#search-count').text(`${matchCount} resultado${matchCount !== 1 ? 's' : ''}`);
+
+    if (query) {
+      $('#search-count').text(matchCount).show();
+    } else {
+      $('#search-count').hide();
+    }
   });
+
 
 </script>
 
