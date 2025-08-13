@@ -176,15 +176,7 @@ image:              mapa.png
     // Calcular promedio del precio si no está en la URL
     if (isNaN(pProm)||pProm==0) {pProm = calcularPromedio(locations, 'precio');}
 
-    // Encontrar el más barato y el más caro
-    let masBarato = locations.reduce((min, loc) => (loc.precio && loc.precio < min.precio ? loc : min), locations[0]);
-    let masCaro = locations.reduce((max, loc) => (loc.precio && loc.precio > max.precio ? loc : max), locations[0]);
-
-    // 📊 Mostrar estadísticas en el panel
-    $('#total-inmuebles').text(locations.length);
-    $('#precio-promedio').text(formatNumber(pProm));
-    $('#mas-barato').text(`${masBarato.nombre}`);
-    $('#mas-caro').text(`${masCaro.nombre}`);
+    actualizarEstadisticas(locations);
 
     // Crear el mapa
     var mymap = L.map('mapid');
@@ -324,24 +316,55 @@ image:              mapa.png
 
 
   $('#toolbox-btn').on('click', function() {$('#toolbox').toggle();});
-  $('#search-input').on('input', function() {
-    let query = $(this).val().toLowerCase();
-    let matchCount = 0;
-    markers.forEach(obj => {
-      let texto = (obj.dato.des + ' ' + obj.dato.nombre + ' ' + obj.dato.dir).toLowerCase();
-      if (query && texto.includes(query)) {
-        obj.marker.setIcon(resultIcon);
-        obj.marker.setZIndexOffset(1000);
-        matchCount++;
-      } else {
-        obj.marker.setIcon(obj.iconOriginal);
-        obj.marker.setZIndexOffset(0);
-      }
-    });
 
-    if (query) { $('#search-count').text(matchCount).show();} 
-    else {$('#search-count').hide();}
+
+$('#search-input').on('input', function() {
+  let query = $(this).val().toLowerCase();
+  let matchCount = 0;
+  let filtrados = [];
+
+  markers.forEach(obj => {
+    let texto = (obj.dato.des + ' ' + obj.dato.nombre + ' ' + obj.dato.dir).toLowerCase();
+    if (query && texto.includes(query)) {
+      obj.marker.setIcon(resultIcon);
+      obj.marker.setZIndexOffset(1000);
+      matchCount++;
+      filtrados.push(obj.dato); // Guardamos coincidencia
+    } else {
+      obj.marker.setIcon(obj.iconOriginal);
+      obj.marker.setZIndexOffset(0);
+    }
   });
+
+  if (query) {
+    $('#search-count').text(matchCount).show();
+    actualizarEstadisticas(filtrados); // 🔹 Actualizar stats con resultados filtrados
+  } else {
+    $('#search-count').hide();
+    actualizarEstadisticas(locations); // 🔹 Restaurar stats originales
+  }
+});
+
+
+
+  function actualizarEstadisticas(lista) {
+    if (!lista || lista.length === 0) {
+      $('#total-inmuebles').text(0);
+      $('#precio-promedio').text("0,00");
+      $('#mas-barato').text("-");
+      $('#mas-caro').text("-");
+      return;
+    }
+
+    let promedio = calcularPromedio(lista, 'precio');
+    let masBarato = lista.reduce((min, loc) => (loc.precio && loc.precio < min.precio ? loc : min), lista[0]);
+    let masCaro = lista.reduce((max, loc) => (loc.precio && loc.precio > max.precio ? loc : max), lista[0]);
+
+    $('#total-inmuebles').text(lista.length);
+    $('#precio-promedio').text(formatNumber(promedio));
+    $('#mas-barato').text(`${masBarato.nombre} (USD${formatNumber(masBarato.precio)})`);
+    $('#mas-caro').text(`${masCaro.nombre} (USD${formatNumber(masCaro.precio)})`);
+  }
 
 
 </script>
