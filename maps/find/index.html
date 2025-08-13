@@ -23,6 +23,7 @@ image:              mapa.png
     line-height: 38px;
     cursor: pointer;
     z-index: 1000;
+    font-size: 18px;
   }
   #toolbox {
     position: absolute;
@@ -33,11 +34,29 @@ image:              mapa.png
     padding: 10px;
     display: none;
     z-index: 1000;
+    min-width: 220px;
+  }
+  .search-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .search-container span {
+    margin-right: 5px;
+    font-size: 16px;
+  }
+  .search-container input {
+    flex: 1;
+    padding: 3px 5px;
   }
 </style>
-<div id="toolbox-btn">🔍</div>
+<div id="toolbox-btn">⚙</div>
 <div id="toolbox">
-  <input type="text" id="search-input" placeholder="Buscar..." style="width: 200px;">
+  <div class="search-container">
+    <span>🔍</span>
+    <input type="text" id="search-input" placeholder="Buscar...">
+  </div>
+  <!-- Aquí podrás añadir más herramientas -->
 </div>
 
 
@@ -49,7 +68,7 @@ image:              mapa.png
 
   var markers = []; // guardará { marker, iconOriginal, dato }
   var resultIcon = new L.Icon({
-    iconUrl: '../../assets/images/pointers/pointer_statetty.png',
+    iconUrl: '../../assets/images/pointers/pointer_found.png',
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
     iconSize: [40, 60],
     iconAnchor: [20, 60],
@@ -281,13 +300,17 @@ image:              mapa.png
 
 
   $('#toolbox-btn').on('click', function() {$('#toolbox').toggle();});
-
   $('#search-input').on('input', function() {
     let query = $(this).val().toLowerCase();
     markers.forEach(obj => {
       let texto = (obj.dato.des + ' ' + obj.dato.nombre + ' ' + obj.dato.dir).toLowerCase();
-      if (query && texto.includes(query)) { obj.marker.setIcon(resultIcon);} 
-      else { obj.marker.setIcon(obj.iconOriginal);}
+      if (query && texto.includes(query)) {
+        obj.marker.setIcon(resultIcon);
+        obj.marker.setZIndexOffset(1000); // Traer al frente
+      } else {
+        obj.marker.setIcon(obj.iconOriginal);
+        obj.marker.setZIndexOffset(0); // Valor normal
+      }
     });
   });
 
