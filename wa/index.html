@@ -20,12 +20,13 @@
   <!-- Redirección automática a WhatsApp -->
   <script>
     const urlParams = new URLSearchParams(window.location.search);
-    const p = urlParams.get('p') || "5";
+    const p = urlParams.get('p') || "6";
 
     const mensajes = {
       "3": "Estuve en tu taller de Statetty y lo único que se me grabó fue una foto de tu polera",
       "4": "Estuve en tu presentación de Statetty y lo único que se me grabó fue una foto de tu polera",
-      "5": "Estuve en la Expo Real Estate 2025 y lo único que me llevé fue una foto de tu polera"
+      "5": "Estuve en la Expo Real Estate 2025 y lo único que me llevé fue una foto de tu polera",
+      "6": "¡Acabo de hacer una foto de tu polera!",
     };
 
     const mensaje = mensajes[p] || mensajes["4"];
