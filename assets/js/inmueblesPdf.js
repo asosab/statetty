@@ -130,7 +130,7 @@ async function generarBrochurePDF(seleccionados) {
     // Título
     doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
-    doc.text("Brochure Comparativo de Inmuebles", 148, 15, { align: "center" });
+    doc.text("Comparativa de Inmuebles", 148, 15, { align: "center" });
 
     // Leer columnas seleccionadas (foto primero, precio después)
     let seleccionadas = camposDisponibles.filter(c => {
