@@ -15,7 +15,7 @@ var checkOverlayIcon = L.divIcon({
   className: 'check-overlay',
   html: '✔️',
   iconSize: [20, 20],
-  iconAnchor: [15, 40]
+  iconAnchor: [1, 60] // ✔️ sobre la mitad superior del marker
 });
 
 // -------------------------------
@@ -122,11 +122,22 @@ $(document).ready(function () {
       location.agente = this[16];
       location.numero = this[17];
 
-      var stringOriginal = this[5] ? this[5] : '';
+      // limpiar descripción y eliminar números telefónicos
+      let rawDesc = this[5] ? this[5] : '';
+      rawDesc = rawDesc.replace(/\+591\d{8}/g, '[número eliminado]')
+                       .replace(/591\d{8}/g, '[número eliminado]')
+                       .replace(/\b\d{8}\b/g, '[número eliminado]')
+                       .replace(/\d{2,4}[-\s]\d{2,4}[-\s]\d{2,4}/g, '[número eliminado]')
+                       .replace(/\(\d{3,4}\)\s?\d{5,8}/g, '[número eliminado]')
+                       .replace(/00\s?591\d{8}/g, '[número eliminado]')
+                       .replace(/wa\.me\/\d+/gi, '[número eliminado]')
+                       .replace(/whatsapp\.com\/\d+/gi, '[número eliminado]');
+
+      // truncar después de limpiar
       var chrMax = 500;
-      var faltan = stringOriginal.length > chrMax ? stringOriginal.length - chrMax : 0;
+      var faltan = rawDesc.length > chrMax ? rawDesc.length - chrMax : 0;
       var frase = faltan > 0 ? '... (y ' + faltan + ' caracteres más)' : '';
-      location.des = stringOriginal.length > chrMax ? stringOriginal.substring(0, chrMax) + frase : stringOriginal;
+      location.des = rawDesc.length > chrMax ? rawDesc.substring(0, chrMax) + frase : rawDesc;
 
       locations.push(location);
     });
@@ -139,7 +150,7 @@ $(document).ready(function () {
       let latSum = 0, lngSum = 0;
       locations.forEach(loc => { latSum += loc.lat; lngSum += loc.lng; });
       lat = latSum / locations.length;
-      lng = lngSum / locations.length;
+      lng = latSum / locations.length;
       let maxDistance = 0;
       locations.forEach(loc => {
         const distance = calculateDH(lat, lng, loc.lat, loc.lng);
@@ -167,7 +178,7 @@ $(document).ready(function () {
 
     // agregar markers
     locations.forEach(function (dato) {
-      let url = dato.uid; // usar URL normalizada para todo
+      let url = dato.uid;
 
       var brand;
       if (url.includes("c21.com")) { brand = 'C21'; }
