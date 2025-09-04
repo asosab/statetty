@@ -101,47 +101,58 @@ async function generarBrochurePDF(seleccionados) {
     await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js");
 
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF("l", "mm", "a4"); // horizontal para más columnas
+    const doc = new jsPDF("l", "mm", "a4"); // horizontal
 
+    // Título
     doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
     doc.text("Brochure Comparativo de Inmuebles", 148, 15, { align: "center" });
 
+    // Leer columnas seleccionadas (foto primero si corresponde)
     let seleccionadas = camposDisponibles.filter(c => {
       const chk = document.getElementById("chk-" + c.key);
       return chk && chk.checked;
     });
-
+    if (seleccionadas.length === 0) {
+      alert("Debes seleccionar al menos un campo.");
+      hideLoader();
+      return;
+    }
     seleccionadas = seleccionadas.sort((a, b) => {
       if (a.key === "foto") return -1;
       if (b.key === "foto") return 1;
       return 0;
     });
 
-    if (seleccionadas.length === 0) {
-      alert("Debes seleccionar al menos un campo.");
-      hideLoader();
-      return;
-    }
+    // Encabezados: primera columna = Inmueble
+    const headers = ["Inmueble", ...seleccionadas.map(c => c.label)];
 
-    // Construcción de la tabla comparativa
-    const headers = ["Característica", ...seleccionados.map((s, i) => `Inmueble ${i + 1}`)];
-
-    const rows = seleccionadas.map(campo => {
-      return [campo.label, ...seleccionados.map(s => {
-        if (campo.key === "des") return s.des || "-"; // usar descripción sanitizada
-        if (campo.key === "foto") { if (s.foto) { return { content: "", fotoUrl: s.foto }; }return "-";}
-        return s[campo.key] || "-";
-      })];
+    // Filas: cada inmueble es una fila
+    const rows = seleccionados.map((s, i) => {
+      const fila = [`Inmueble ${i + 1}`];
+      seleccionadas.forEach(campo => {
+        if (campo.key === "des") {
+          fila.push(s.des || "-");
+        } else if (campo.key === "foto") {
+          if (s.foto) {
+            fila.push({ content: "", fotoUrl: s.foto });
+          } else {
+            fila.push("-");
+          }
+        } else {
+          fila.push(s[campo.key] || "-");
+        }
+      });
+      return fila;
     });
 
+    // Generar tabla
     doc.autoTable({
       head: [headers],
       body: rows,
       startY: 25,
       styles: { fontSize: 9, cellPadding: 3, valign: "top" },
       headStyles: { fillColor: [76, 175, 80], textColor: 255, halign: "center" },
-      columnStyles: { 0: { cellWidth: 40, fontStyle: "bold" } },
       theme: "grid",
       didDrawCell: async function (data) {
         if (data.cell.raw && data.cell.raw.fotoUrl) {
@@ -149,7 +160,7 @@ async function generarBrochurePDF(seleccionados) {
             const imgData = await fetch(data.cell.raw.fotoUrl).then(r => r.blob());
             const reader = new FileReader();
             reader.onload = function () {
-              let img = reader.result;
+              const img = reader.result;
               let cellWidth = data.cell.width - 2;
               let cellHeight = data.cell.height - 2;
               doc.addImage(img, "JPEG", data.cell.x + 1, data.cell.y + 1, cellWidth, cellHeight);
@@ -162,11 +173,11 @@ async function generarBrochurePDF(seleccionados) {
       }
     });
 
-    // Pie de página con datos del agente (si existen)
+    // Pie de página con agente, agencia y número si existen
     let footerText = "";
-    if (typeof na !== "undefined" && na) footerText += na ;
-    if (typeof ag !== "undefined" && ag) footerText += " | "  + ag;
-    if (typeof an !== "undefined" && an) footerText += " | "  + an;
+    if (typeof na !== "undefined" && na) footerText += na;
+    if (typeof ag !== "undefined" && ag) footerText += " | " + ag;
+    if (typeof an !== "undefined" && an) footerText += " | " + an;
 
     if (footerText) {
       doc.setFontSize(9);
@@ -175,13 +186,13 @@ async function generarBrochurePDF(seleccionados) {
       doc.text(footerText, 15, pageHeight - 10);
     }
 
-
-
-
+    // Guardar PDF
     doc.save("brochure-inmuebles.pdf");
+
   } catch (err) {
     alert("Hubo un error al generar el PDF: " + err.message);
   } finally {
     hideLoader();
   }
 }
+
