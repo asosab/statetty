@@ -88,15 +88,15 @@ function actualizarEstadisticas(lista) {
   let masCaro = lista.reduce((max, loc) => (loc.precio && loc.precio > max.precio ? loc : max), lista[0]);
   $('#total-inmuebles').text(lista.length);
   $('#precio-promedio').text(formatNumber(promedio));
-  $('#mas-barato').text(`${masBarato.nombre}`);
-  $('#mas-caro').text(`${masCaro.nombre}`);
+  $('#mas-barato').text(`${masBarato.Titulo}`);
+  $('#mas-caro').text(`${masCaro.Titulo}`);
 }
 
 function actualizarToolbox() {
   $("#sel-box").remove();
   let html = '';
   seleccionados.forEach((s, i) => {
-    html += `<div>${i + 1}. ${s.nombre} <span class="remove-sel" data-id="${s.uid}" style="cursor:pointer; color:red;">❌</span></div>`;
+    html += `<div>${i + 1}. ${s.Titulo} <span class="remove-sel" data-id="${s.uid}" style="cursor:pointer; color:red;">❌</span></div>`;
   });
   if (seleccionados.length > 0) {
     $("#stats-container").append(`
@@ -299,7 +299,7 @@ $(document).ready(function () {
       let deAg = ag ? ` de ${ag}` : '';
       let sc = (na || ag) ? ' te escribe, ' : '';
       const msj = `Hola${nombreCorto},${soyNa}${deAg}${sc}un gusto saludarte.
-      Por favor, podría enviarme información sobre este inmueble, en caso de que siga disponible (${dato.nombre})
+      Por favor, podría enviarme información sobre este inmueble, en caso de que siga disponible (${dato.Titulo})
 
       link: ${url}
 
@@ -320,7 +320,7 @@ $(document).ready(function () {
         ? `<span style="color: red;">↑${Math.ceil(priceDiffPercent)}%</span>`
         : `<span style="color: green;">↓${Math.ceil(Math.abs(priceDiffPercent))}%</span>`;
 
-      var popupContent = "<b>" + dato.nombre + " (" + distance + "m)</b> " + priceComparison + "<br>" +
+      var popupContent = "<b>" + dato.Titulo + " (" + distance + "m)</b> " + priceComparison + "<br>" +
         "<b>Dirección:</b> " + dato.dir + "<br>" +
         "<b>Descripción:</b> " + dato.des + "<br>" +
         '<a href="' + url + '" target="_blank">Ver página de la captación</a>' +
@@ -389,7 +389,7 @@ $(document).ready(function () {
 
     markers.forEach(obj => {
       let texto = (
-        obj.dato.des + ' ' + obj.dato.nombre + ' ' + obj.dato.dir + ' ' +
+        obj.dato.des + ' ' + obj.dato.nombre + ' ' + obj.dato.Titulo + ' ' + obj.dato.dir + ' ' +
         (obj.dato.agentName || '') + ' ' +
         (obj.dato.agentPhon || '')
       ).toLowerCase();
