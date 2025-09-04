@@ -21,6 +21,11 @@ var checkOverlayIcon = L.divIcon({
 // -------------------------------
 // Utilidades
 // -------------------------------
+function normalizeURL(u) {
+  if (!u) return '';
+  return u.includes('http') ? u : `https://c21.com.bo${u}`;
+}
+
 function formatNumber(num) {
   return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") + ",00";
 }
@@ -54,21 +59,19 @@ function actualizarToolbox() {
   $("#sel-box").remove();
   let html = '';
   seleccionados.forEach((s, i) => {
-    html += `<div>${i + 1}. ${s.nombre} <span class="remove-sel" data-id="${s.lat}-${s.lng}" style="cursor:pointer; color:red;">❌</span></div>`;
+    html += `<div>${i + 1}. ${s.nombre} <span class="remove-sel" data-id="${s.uid}" style="cursor:pointer; color:red;">❌</span></div>`;
   });
   if (seleccionados.length > 0) {
     $("#stats-container").append(`<div id="sel-box"><hr>✅ Seleccionados: ${seleccionados.length}${html}</div>`);
   }
   $(".remove-sel").off("click").on("click", function () {
-    let id = $(this).data("id");
-    let [lat, lng] = id.split("-");
-    lat = parseFloat(lat); lng = parseFloat(lng);
+    let id = $(this).data("id"); // uid (URL absoluta)
 
     // quitar del arreglo
-    seleccionados = seleccionados.filter(s => !(s.lat === lat && s.lng === lng));
+    seleccionados = seleccionados.filter(s => s.uid !== id);
 
-    // quitar overlay y animar rebote
-    let obj = markers.find(m => m.dato.lat === lat && m.dato.lng === lng);
+    // quitar overlay y animar rebote en el marker correcto (por uid)
+    let obj = markers.find(m => m.dato.uid === id);
     if (obj) {
       if (obj.overlay) { map.removeLayer(obj.overlay); obj.overlay = null; }
       let pos = obj.marker.getLatLng();
@@ -78,7 +81,7 @@ function actualizarToolbox() {
     }
 
     // desmarcar checkbox si el popup está abierto
-    $(".chk-sel[data-id='" + id + "']").prop("checked", false);
+    $(`.chk-sel[data-id='${id}']`).prop("checked", false);
 
     actualizarToolbox();
   });
@@ -114,6 +117,7 @@ $(document).ready(function () {
       location.lng = parseFloat(this[2]);
       location.dir = this[3];
       location.URL = this[4];
+      location.uid = normalizeURL(location.URL); // <<< UID por URL absoluta
       location.precio = parseInt(this[15]) || 0;
       location.agente = this[16];
       location.numero = this[17];
@@ -163,8 +167,7 @@ $(document).ready(function () {
 
     // agregar markers
     locations.forEach(function (dato) {
-      let url = dato.URL;
-      if (!dato.URL.includes('http')) { url = `https://c21.com.bo${dato.URL}`; }
+      let url = dato.uid; // usar URL normalizada para todo
 
       var brand;
       if (url.includes("c21.com")) { brand = 'C21'; }
@@ -205,25 +208,25 @@ $(document).ready(function () {
         "<b>Descripción:</b> " + dato.des + "<br>" +
         '<a href="' + url + '" target="_blank">Ver página de la captación</a>' +
         linkWA +
-        `<br><label><input type="checkbox" class="chk-sel" data-id="${dato.lat}-${dato.lng}"> Seleccionar</label>`;
+        `<br><label><input type="checkbox" class="chk-sel" data-id="${dato.uid}"> Seleccionar</label>`;
 
       marker.bindPopup(popupContent);
       markers.push({ marker, iconOriginal: icon, dato, overlay: null });
 
       marker.on("popupopen", function () {
-        let chk = $(".chk-sel[data-id='" + dato.lat + "-" + dato.lng + "']");
-        chk.prop("checked", seleccionados.some(s => s.lat === dato.lat && s.lng === dato.lng));
+        let chk = $(`.chk-sel[data-id='${dato.uid}']`);
+        chk.prop("checked", seleccionados.some(s => s.uid === dato.uid));
 
         chk.off("change").on("change", function () {
           if (this.checked) {
-            seleccionados.push(dato);
+            if (!seleccionados.some(s => s.uid === dato.uid)) seleccionados.push(dato);
             let overlay = L.marker([dato.lat, dato.lng], { icon: checkOverlayIcon, interactive: false }).addTo(map);
-            let obj = markers.find(m => m.dato.lat === dato.lat && m.dato.lng === dato.lng);
-            obj.overlay = overlay;
+            let obj = markers.find(m => m.dato.uid === dato.uid);
+            if (obj) obj.overlay = overlay;
           } else {
-            seleccionados = seleccionados.filter(s => !(s.lat === dato.lat && s.lng === dato.lng));
-            let obj = markers.find(m => m.dato.lat === dato.lat && m.dato.lng === dato.lng);
-            if (obj.overlay) { map.removeLayer(obj.overlay); obj.overlay = null; }
+            seleccionados = seleccionados.filter(s => s.uid !== dato.uid);
+            let obj = markers.find(m => m.dato.uid === dato.uid);
+            if (obj && obj.overlay) { map.removeLayer(obj.overlay); obj.overlay = null; }
           }
           actualizarToolbox();
         });
