@@ -158,7 +158,7 @@ async function generarBrochurePDF(seleccionados) {
 
     // Filas: cada inmueble es una fila
     const rows = seleccionados.map((s, i) => {
-      const fila = [`Inmueble ${i + 1}`];
+      const fila = [`${i + 1}`];
       seleccionadas.forEach(campo => {
         if (campo.key === "des") {
           fila.push(s.des || "-");
