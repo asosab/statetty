@@ -67,7 +67,7 @@ function renderColumnSelector() {
   // grid de 4 columnas
   const grid = document.createElement("div");
   grid.style.display = "grid";
-  grid.style.gridTemplateColumns = "repeat(4, 1fr)";
+  grid.style.gridTemplateColumns = "repeat(3, 1fr)";
   grid.style.gap = "6px 12px";  // filas y columnas
 
   camposDisponibles.forEach(campo => {
