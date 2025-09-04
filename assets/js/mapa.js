@@ -254,14 +254,14 @@ $(document).ready(function () {
 
       var marker = L.marker([dato.lat, dato.lng], { icon }).addTo(map);
 
-      var nombre = dato?.agente ? ' ' + dato.agente.split(" ")[0] : '';
-      var cel = dato?.numero ? dato.numero.replace(/[^0-9]/g, "") : '';
+      var nombre = dato?.agentName ? ' ' + dato.agentName.split(" ")[0] : '';
+      var cel = dato?.agentPhone ? dato.agentPhone.replace(/[^0-9]/g, "") : '';
       let soyNa = na ? ` ${na}` : '';
       let deAg = ag ? ` de ${ag}` : '';
       let sc = (na || ag) ? ' te escribe, ' : '';
-      var msj = `Hola${nombre}, ${soyNa}${deAg}${sc}un gusto saludarte. \nPor favor, podría enviarme información sobre este inmueble, en caso de que siga disponible (${dato.nombre}) \n\nlink: ${url}\n\nGracias de antemano \n\n\n( Mensaje creado con Statetty https://statetty.com )`;
+      var msj = `Hola${nombre},${soyNa}${deAg}${sc}un gusto saludarte. \nPor favor, podría enviarme información sobre este inmueble, en caso de que siga disponible (${dato.nombre}) \n\nlink: ${url}\n\nGracias de antemano \n\n\n( Mensaje creado con Statetty https://statetty.com )`;
       var msjWhatsapp = `https://wa.me/${cel}?text=${encodeURIComponent(msj)}`;
-      var linkWA = cel ? '<br/><a href="' + msjWhatsapp + '" target="_blank">Contacta al captador</a>' : '';
+      var linkWA = cel ? '<br/><a href="' + msjWhatsapp + '" target="_blank">📱 Contactar por WhatsApp</a>' : '';
 
       var distance = Math.round(calculateDH(circleCenter.lat, circleCenter.lng, dato.lat, dato.lng) * 1000);
       var priceDiffPercent = ((dato.precio - pProm) / pProm) * 100;
