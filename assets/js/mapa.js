@@ -62,15 +62,23 @@ function actualizarToolbox() {
     html += `<div>${i + 1}. ${s.nombre} <span class="remove-sel" data-id="${s.uid}" style="cursor:pointer; color:red;">❌</span></div>`;
   });
   if (seleccionados.length > 0) {
-    $("#stats-container").append(`<div id="sel-box"><hr>✅ Seleccionados: ${seleccionados.length}${html}</div>`);
+    $("#stats-container").append(`
+      <div id="sel-box">
+        <hr>
+        ✅ Seleccionados: ${seleccionados.length}
+        ${html}
+        <br>
+        <button id="btn-pdf" style="margin-top:10px; padding:5px 10px; border-radius:5px; background:#4CAF50; color:white; border:none; cursor:pointer;">
+          📄 Generar PDF
+        </button>
+      </div>
+    `);
+
+    $("#btn-pdf").off("click").on("click", function () { generarBrochurePDF(seleccionados);});
   }
   $(".remove-sel").off("click").on("click", function () {
-    let id = $(this).data("id"); // uid (URL absoluta)
-
-    // quitar del arreglo
+    let id = $(this).data("id");
     seleccionados = seleccionados.filter(s => s.uid !== id);
-
-    // quitar overlay y animar rebote en el marker correcto (por uid)
     let obj = markers.find(m => m.dato.uid === id);
     if (obj) {
       if (obj.overlay) { map.removeLayer(obj.overlay); obj.overlay = null; }
@@ -79,13 +87,11 @@ function actualizarToolbox() {
       obj.marker.setLatLng([pos.lat + offset, pos.lng]);
       setTimeout(() => obj.marker.setLatLng(pos), 150);
     }
-
-    // desmarcar checkbox si el popup está abierto
     $(`.chk-sel[data-id='${id}']`).prop("checked", false);
-
     actualizarToolbox();
   });
 }
+
 
 // -------------------------------
 // Inicialización del mapa
