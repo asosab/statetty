@@ -112,7 +112,7 @@ $(document).ready(function () {
   let ag = urlParams.get('ag');
   if (!id || !key) { throw new Error("ID o clave no proporcionados en la URL"); }
 
-  var valores = 'Sheet1!A2:R';
+  var valores = 'Sheet1!A2:R';  // asegúrate que cubra todas las columnas de la hoja
   var url = 'https://sheets.googleapis.com/v4/spreadsheets/' + id + '/values/' + valores + '?key=' + key;
 
   // Mostrar indicador de carga
@@ -121,20 +121,43 @@ $(document).ready(function () {
   $.getJSON(url, function (data) {
     $('#loading-indicator').hide();
 
-    $(data.values).each(function () {
-      var location = {};
-      location.nombre = this[0];
-      location.lat = parseFloat(this[1]);
-      location.lng = parseFloat(this[2]);
-      location.dir = this[3];
-      location.URL = this[4];
-      location.uid = normalizeURL(location.URL); // <<< UID por URL absoluta
-      location.precio = parseInt(this[15]) || 0;
-      location.agente = this[16];
-      location.numero = this[17];
+    // Definimos el orden de columnas según tu hoja
+    const columnas = [
+      "nombre",        // Titulo
+      "lat",           // latitud
+      "lng",           // longitud
+      "dir",           // dirección
+      "URL",           // URL
+      "des",           // Descripción
+      "ambientes",     // ambientes
+      "dormitorios",   // dormitorios
+      "baños",         // baños
+      "m2construccion",// m2 construcción
+      "m2terreno",     // m2 terreno
+      "nombreAlt",     // nombre (otro campo distinto al título)
+      "precioM2",      // precio del m2
+      "broker",        // broker
+      "foto",          // foto
+      "precio",        // precio
+      "agentName",     // agentName
+      "agentPhone"     // agentPhone
+    ];
 
-      // limpiar descripción y eliminar números telefónicos
-      let rawDesc = this[5] ? this[5] : '';
+    $(data.values).each(function () {
+      let location = {};
+      columnas.forEach((col, i) => location[col] = this[i] || "");
+
+      // Conversiones numéricas
+      location.lat = parseFloat(location.lat);
+      location.lng = parseFloat(location.lng);
+      location.precio = parseInt(location.precio) || 0;
+      location.precioM2 = parseFloat(location.precioM2) || 0;
+
+      // UID único por URL absoluta
+      location.uid = normalizeURL(location.URL);
+
+      // limpieza de descripción (eliminando teléfonos, truncando)
+      let rawDesc = location.des || '';
       rawDesc = rawDesc.replace(/\+591\d{8}/g, '[número eliminado]')
                        .replace(/591\d{8}/g, '[número eliminado]')
                        .replace(/\b\d{8}\b/g, '[número eliminado]')
@@ -144,10 +167,9 @@ $(document).ready(function () {
                        .replace(/wa\.me\/\d+/gi, '[número eliminado]')
                        .replace(/whatsapp\.com\/\d+/gi, '[número eliminado]');
 
-      // truncar después de limpiar
-      var chrMax = 500;
-      var faltan = rawDesc.length > chrMax ? rawDesc.length - chrMax : 0;
-      var frase = faltan > 0 ? '... (y ' + faltan + ' caracteres más)' : '';
+      const chrMax = 500;
+      const faltan = rawDesc.length > chrMax ? rawDesc.length - chrMax : 0;
+      const frase = faltan > 0 ? '... (y ' + faltan + ' caracteres más)' : '';
       location.des = rawDesc.length > chrMax ? rawDesc.substring(0, chrMax) + frase : rawDesc;
 
       locations.push(location);
