@@ -55,7 +55,7 @@ const camposDisponibles = [
   { key: "agentPhone", label: "Teléfono"} 
 ];
 
-// Dibuja los checkboxes debajo del botón PDF
+// Dibuja los checkboxes debajo del botón PDF (en grid de 4 columnas)
 function renderColumnSelector() {
   if (document.getElementById("column-selector")) return;
 
@@ -64,19 +64,28 @@ function renderColumnSelector() {
   container.style.marginTop = "10px";
   container.innerHTML = "<b>Selecciona campos a incluir:</b><br>";
 
+  // grid de 4 columnas
+  const grid = document.createElement("div");
+  grid.style.display = "grid";
+  grid.style.gridTemplateColumns = "repeat(4, 1fr)";
+  grid.style.gap = "6px 12px";  // filas y columnas
+
   camposDisponibles.forEach(campo => {
     const id = "chk-" + campo.key;
-    container.innerHTML += `
-      <label style="margin-right:10px;">
-        <input type="checkbox" id="${id}" data-key="${campo.key}" checked>
-        ${campo.label}
-      </label>
+    const label = document.createElement("label");
+    label.innerHTML = `
+      <input type="checkbox" id="${id}" data-key="${campo.key}" checked>
+      ${campo.label}
     `;
+    grid.appendChild(label);
   });
+
+  container.appendChild(grid);
 
   const box = document.getElementById("sel-box");
   if (box) box.appendChild(container);
 }
+
 
 async function generarBrochurePDF(seleccionados) {
   if (!seleccionados || seleccionados.length === 0) {
