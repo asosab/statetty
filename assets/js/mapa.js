@@ -14,7 +14,7 @@ var resultIcon = new L.Icon({
 var checkOverlayIcon = L.divIcon({
   className: 'check-overlay',
   html: '✔️',
-  iconSize: [20, 20],
+  iconSize: [30, 30],
   iconAnchor: [1, 60] // ✔️ sobre la mitad superior del marker
 });
 
