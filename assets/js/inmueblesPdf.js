@@ -110,6 +110,19 @@ function renderColumnSelector() {
   if (box) box.appendChild(container);
 }
 
+function formatCurrency(value, currency = "USD") {
+  if (value === null || value === undefined || value === "" || isNaN(value)) {
+    return "-";
+  }
+  const number = Number(value);
+  return new Intl.NumberFormat("es-ES", {
+    style: "currency",
+    currency: currency,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(number);
+}
+
 
 async function generarBrochurePDF(seleccionados) {
   if (!seleccionados || seleccionados.length === 0) {
@@ -171,7 +184,12 @@ async function generarBrochurePDF(seleccionados) {
             fila.push("-");
           }
         } else {
-          fila.push(s[campo.key] || "-");
+          // Si es un campo de precio, formatear
+          if (["precio", "precio_m2", "precioDelM2", "precioM2"].includes(campo.key)) {
+            fila.push(formatCurrency(s[campo.key]));
+          } else {
+            fila.push(s[campo.key] || "-");
+          }
         }
       });
       return fila;
