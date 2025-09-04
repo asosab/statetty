@@ -49,7 +49,7 @@ const camposDisponibles = [
   { key: "precioM2", label: "Precio del m2" },
   { key: "foto", label: "Foto (URL)" },
   { key: "precio", label: "Precio" },
-  { key: "broker", label: "Broker" }
+  { key: "broker", label: "Broker" },
   { key: "URL", label: "URL" },           
   { key: "agentName", label: "Agente" },  
   { key: "agentPhone", label: "Teléfono"} 
