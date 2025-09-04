@@ -15,7 +15,7 @@ var checkOverlayIcon = L.divIcon({
   className: 'check-overlay',
   html: '✔️',
   iconSize: [20, 20],
-  iconAnchor: [10, -10]
+  iconAnchor: [10, 20]
 });
 
 // -------------------------------
