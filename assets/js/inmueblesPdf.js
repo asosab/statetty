@@ -107,10 +107,15 @@ async function generarBrochurePDF(seleccionados) {
     doc.setFontSize(16);
     doc.text("Brochure Comparativo de Inmuebles", 148, 15, { align: "center" });
 
-    // Leer columnas seleccionadas
-    const seleccionadas = camposDisponibles.filter(c => {
+    let seleccionadas = camposDisponibles.filter(c => {
       const chk = document.getElementById("chk-" + c.key);
       return chk && chk.checked;
+    });
+
+    seleccionadas = seleccionadas.sort((a, b) => {
+      if (a.key === "foto") return -1;
+      if (b.key === "foto") return 1;
+      return 0;
     });
 
     if (seleccionadas.length === 0) {
@@ -156,6 +161,21 @@ async function generarBrochurePDF(seleccionados) {
         }
       }
     });
+
+    // Pie de página con datos del agente (si existen)
+    let footerText = "";
+    if (typeof na !== "undefined" && na) footerText += na ;
+    if (typeof ag !== "undefined" && ag) footerText += " | "  + ag;
+    if (typeof an !== "undefined" && an) footerText += " | "  + an;
+
+    if (footerText) {
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "normal");
+      const pageHeight = doc.internal.pageSize.getHeight();
+      doc.text(footerText, 15, pageHeight - 10);
+    }
+
+
 
 
     doc.save("brochure-inmuebles.pdf");

@@ -110,6 +110,7 @@ $(document).ready(function () {
   let pProm = Math.round(urlParams.get('p'));
   let na = urlParams.get('na');
   let ag = urlParams.get('ag');
+  let an = urlParams.get('an');
   if (!id || !key) { throw new Error("ID o clave no proporcionados en la URL"); }
 
   var valores = 'Sheet1!A2:R';  // asegúrate que cubra todas las columnas de la hoja
