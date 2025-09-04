@@ -72,13 +72,35 @@ function renderColumnSelector() {
 
   camposDisponibles.forEach(campo => {
     const id = "chk-" + campo.key;
+
+    // 1. Valor guardado en localStorage (si existe)
+    let saved = localStorage.getItem("col_" + campo.key);
+    if (saved !== null) {saved = saved === "true"; }
+
+    // 2. Si no hay en localStorage, usamos la config de mapa.js
+    const isChecked = saved !== null
+      ? saved
+      : (window.columnasConfig && campo.key in window.columnasConfig
+          ? window.columnasConfig[campo.key]
+          : true);
+
     const label = document.createElement("label");
     label.innerHTML = `
-      <input type="checkbox" id="${id}" data-key="${campo.key}" checked>
+      <input type="checkbox" id="${id}" data-key="${campo.key}" ${isChecked ? "checked" : ""}>
       ${campo.label}
     `;
     grid.appendChild(label);
+
+    // 3. Guardar cambios cuando el usuario lo modifique
+    setTimeout(() => {
+      const chk = document.getElementById(id);
+      chk.addEventListener("change", function () {
+        localStorage.setItem("col_" + campo.key, this.checked);
+      });
+    }, 0);
   });
+
+
 
   container.appendChild(grid);
 

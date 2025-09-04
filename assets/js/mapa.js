@@ -124,7 +124,7 @@ $(document).ready(function () {
 
     // Definimos el orden de columnas según tu hoja
     const columnas = [
-      "nombre",        // Titulo
+      "Titulo",        // Titulo
       "lat",           // latitud
       "lng",           // longitud
       "dir",           // dirección
@@ -135,7 +135,7 @@ $(document).ready(function () {
       "baños",         // baños
       "m2construccion",// m2 construcción
       "m2terreno",     // m2 terreno
-      "nombreAlt",     // nombre (otro campo distinto al título)
+      "nombre",        // nombre (otro campo distinto al título)
       "precioM2",      // precio del m2
       "broker",        // broker
       "foto",          // foto
@@ -143,6 +143,30 @@ $(document).ready(function () {
       "agentName",     // agentName
       "agentPhone"     // agentPhone
     ];
+
+    // Configuración inicial de visibilidad de columnas para PDF
+    // true = aparece marcado por defecto, false = desmarcado
+    window.columnasConfig = {
+      "nombre": true,
+      "lat": false,
+      "lng": false,
+      "dir": false,
+      "des": false,
+      "ambientes": false,
+      "dormitorios": true,
+      "baños": true,
+      "m2construccion": true,
+      "m2terreno": true,
+      "precioM2": true,
+      "foto": false,
+      "precio": true,
+      "broker": false,
+      "URL": false,
+      "agentName": false,
+      "agentPhone": false
+    };
+
+    
 
     $(data.values).each(function () {
       let location = {};
