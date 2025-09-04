@@ -108,21 +108,28 @@ async function generarBrochurePDF(seleccionados) {
     doc.setFontSize(16);
     doc.text("Brochure Comparativo de Inmuebles", 148, 15, { align: "center" });
 
-    // Leer columnas seleccionadas (foto primero si corresponde)
+    // Leer columnas seleccionadas (foto primero, precio después)
     let seleccionadas = camposDisponibles.filter(c => {
       const chk = document.getElementById("chk-" + c.key);
       return chk && chk.checked;
     });
+
     if (seleccionadas.length === 0) {
       alert("Debes seleccionar al menos un campo.");
       hideLoader();
       return;
     }
+
     seleccionadas = seleccionadas.sort((a, b) => {
-      if (a.key === "foto") return -1;
+      if (a.key === "foto") return -1; // foto siempre primero
       if (b.key === "foto") return 1;
+
+      if (a.key === "precio" && b.key !== "foto") return -1; 
+      if (b.key === "precio" && a.key !== "foto") return 1;
+
       return 0;
     });
+
 
     // Encabezados: primera columna = Inmueble
     const headers = ["Inmueble", ...seleccionadas.map(c => c.label)];
