@@ -74,8 +74,13 @@ function actualizarToolbox() {
       </div>
     `);
 
-    $("#btn-pdf").off("click").on("click", function () { generarBrochurePDF(seleccionados);});
+    renderColumnSelector(); // 👈 dibuja los checkboxes
+
+    $("#btn-pdf").off("click").on("click", function () {
+      generarBrochurePDF(seleccionados);
+    });
   }
+
   $(".remove-sel").off("click").on("click", function () {
     let id = $(this).data("id");
     seleccionados = seleccionados.filter(s => s.uid !== id);

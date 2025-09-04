@@ -1,5 +1,5 @@
 // ---------------------------------------------
-// inmueblesPdf.js - Generador de brochure PDF con loader
+// inmueblesPdf.js - Generador de brochure PDF con selección de columnas
 // ---------------------------------------------
 
 function loadScript(url) {
@@ -34,6 +34,50 @@ function hideLoader() {
   if (loader) loader.remove();
 }
 
+// Campos disponibles en la hoja
+const camposDisponibles = [
+  { key: "nombre", label: "Título" },
+  { key: "lat", label: "Latitud" },
+  { key: "lng", label: "Longitud" },
+  { key: "dir", label: "Dirección" },
+  { key: "des", label: "Descripción" }, // ya sanitizada
+  { key: "ambientes", label: "Ambientes" },
+  { key: "dormitorios", label: "Dormitorios" },
+  { key: "baños", label: "Baños" },
+  { key: "m2construccion", label: "m2 construcción" },
+  { key: "m2terreno", label: "m2 terreno" },
+  { key: "precioM2", label: "Precio del m2" },
+  { key: "foto", label: "Foto (URL)" },
+  { key: "precio", label: "Precio" },
+  { key: "broker", label: "Broker" }
+  { key: "URL", label: "URL" },           
+  { key: "agentName", label: "Agente" },  
+  { key: "agentPhone", label: "Teléfono"} 
+];
+
+// Dibuja los checkboxes debajo del botón PDF
+function renderColumnSelector() {
+  if (document.getElementById("column-selector")) return;
+
+  const container = document.createElement("div");
+  container.id = "column-selector";
+  container.style.marginTop = "10px";
+  container.innerHTML = "<b>Selecciona campos a incluir:</b><br>";
+
+  camposDisponibles.forEach(campo => {
+    const id = "chk-" + campo.key;
+    container.innerHTML += `
+      <label style="margin-right:10px;">
+        <input type="checkbox" id="${id}" data-key="${campo.key}" checked>
+        ${campo.label}
+      </label>
+    `;
+  });
+
+  const box = document.getElementById("sel-box");
+  if (box) box.appendChild(container);
+}
+
 async function generarBrochurePDF(seleccionados) {
   if (!seleccionados || seleccionados.length === 0) {
     alert("No hay inmuebles seleccionados para generar el PDF.");
@@ -54,15 +98,28 @@ async function generarBrochurePDF(seleccionados) {
     doc.setFontSize(16);
     doc.text("Brochure Comparativo de Inmuebles", 148, 15, { align: "center" });
 
+    // Leer columnas seleccionadas
+    const seleccionadas = camposDisponibles.filter(c => {
+      const chk = document.getElementById("chk-" + c.key);
+      return chk && chk.checked;
+    });
+
+    if (seleccionadas.length === 0) {
+      alert("Debes seleccionar al menos un campo.");
+      hideLoader();
+      return;
+    }
+
     // Construcción de la tabla comparativa
     const headers = ["Característica", ...seleccionados.map((s, i) => `Inmueble ${i + 1}`)];
 
-    const rows = [
-      ["Nombre", ...seleccionados.map(s => s.nombre || "-")],
-      ["Dirección", ...seleccionados.map(s => s.dir || "-")],
-      ["Descripción", ...seleccionados.map(s => s.des || "-")],
-      ["Precio (USD)", ...seleccionados.map(s => s.precio ? s.precio.toLocaleString("es-BO") : "-")]
-    ];
+    const rows = seleccionadas.map(campo => {
+      return [campo.label, ...seleccionados.map(s => {
+        if (campo.key === "des") return s.des || "-"; // usar descripción sanitizada
+        if (campo.key === "foto") { if (s.foto) { return { content: "", fotoUrl: s.foto }; }return "-";}
+        return s[campo.key] || "-";
+      })];
+    });
 
     doc.autoTable({
       head: [headers],
@@ -70,9 +127,27 @@ async function generarBrochurePDF(seleccionados) {
       startY: 25,
       styles: { fontSize: 9, cellPadding: 3, valign: "top" },
       headStyles: { fillColor: [76, 175, 80], textColor: 255, halign: "center" },
-      columnStyles: { 0: { cellWidth: 35, fontStyle: "bold" } },
+      columnStyles: { 0: { cellWidth: 40, fontStyle: "bold" } },
       theme: "grid",
+      didDrawCell: async function (data) {
+        if (data.cell.raw && data.cell.raw.fotoUrl) {
+          try {
+            const imgData = await fetch(data.cell.raw.fotoUrl).then(r => r.blob());
+            const reader = new FileReader();
+            reader.onload = function () {
+              let img = reader.result;
+              let cellWidth = data.cell.width - 2;
+              let cellHeight = data.cell.height - 2;
+              doc.addImage(img, "JPEG", data.cell.x + 1, data.cell.y + 1, cellWidth, cellHeight);
+            };
+            reader.readAsDataURL(imgData);
+          } catch (e) {
+            console.error("No se pudo cargar la imagen", e);
+          }
+        }
+      }
     });
+
 
     doc.save("brochure-inmuebles.pdf");
   } catch (err) {
