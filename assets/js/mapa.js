@@ -19,6 +19,43 @@ var checkOverlayIcon = L.divIcon({
 });
 
 // -------------------------------
+// Persistencia en localStorage
+// -------------------------------
+function guardarSeleccionados() {
+  const ids = seleccionados.map(s => s.uid);
+  localStorage.setItem("inmueblesSeleccionados", JSON.stringify(ids));
+}
+
+function cargarSeleccionados() {
+  try {
+    const data = JSON.parse(localStorage.getItem("inmueblesSeleccionados")) || [];
+    return Array.isArray(data) ? data : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function guardarMapa() {
+  if (map) {
+    const center = map.getCenter();
+    const zoom = map.getZoom();
+    localStorage.setItem("mapCenter", JSON.stringify([center.lat, center.lng]));
+    localStorage.setItem("mapZoom", zoom);
+  }
+}
+
+function cargarMapa() {
+  try {
+    const center = JSON.parse(localStorage.getItem("mapCenter"));
+    const zoom = parseInt(localStorage.getItem("mapZoom"));
+    if (Array.isArray(center) && !isNaN(zoom)) {
+      return { center, zoom };
+    }
+  } catch (e) {}
+  return null;
+}
+
+// -------------------------------
 // Utilidades
 // -------------------------------
 function normalizeURL(u) {
@@ -74,7 +111,7 @@ function actualizarToolbox() {
       </div>
     `);
 
-    renderColumnSelector(); // 👈 dibuja los checkboxes
+    renderColumnSelector();
 
     $("#btn-pdf").off("click").on("click", function () {
       generarBrochurePDF(seleccionados);
@@ -84,6 +121,8 @@ function actualizarToolbox() {
   $(".remove-sel").off("click").on("click", function () {
     let id = $(this).data("id");
     seleccionados = seleccionados.filter(s => s.uid !== id);
+    guardarSeleccionados(); // persistencia
+
     let obj = markers.find(m => m.dato.uid === id);
     if (obj) {
       if (obj.overlay) { map.removeLayer(obj.overlay); obj.overlay = null; }
@@ -96,7 +135,6 @@ function actualizarToolbox() {
     actualizarToolbox();
   });
 }
-
 
 // -------------------------------
 // Inicialización del mapa
@@ -113,75 +151,37 @@ $(document).ready(function () {
   window.an = urlParams.get('an');
   if (!id || !key) { throw new Error("ID o clave no proporcionados en la URL"); }
 
-  var valores = 'Sheet1!A2:R';  // asegúrate que cubra todas las columnas de la hoja
+  var valores = 'Sheet1!A2:R';
   var url = 'https://sheets.googleapis.com/v4/spreadsheets/' + id + '/values/' + valores + '?key=' + key;
 
-  // Mostrar indicador de carga
   $('#loading-indicator').show();
 
   $.getJSON(url, function (data) {
     $('#loading-indicator').hide();
 
-    // Definimos el orden de columnas según tu hoja
     const columnas = [
-      "Titulo",        // Titulo
-      "lat",           // latitud
-      "lng",           // longitud
-      "dir",           // dirección
-      "URL",           // URL
-      "des",           // Descripción
-      "ambientes",     // ambientes
-      "dormitorios",   // dormitorios
-      "baños",         // baños
-      "m2construccion",// m2 construcción
-      "m2terreno",     // m2 terreno
-      "nombre",        // nombre (otro campo distinto al título)
-      "precioM2",      // precio del m2
-      "broker",        // broker
-      "foto",          // foto
-      "precio",        // precio
-      "agentName",     // agentName
-      "agentPhone"     // agentPhone
+      "Titulo","lat","lng","dir","URL","des","ambientes","dormitorios","baños",
+      "m2construccion","m2terreno","nombre","precioM2","broker","foto",
+      "precio","agentName","agentPhone"
     ];
 
-    // Configuración inicial de visibilidad de columnas para PDF
-    // true = aparece marcado por defecto, false = desmarcado
     window.columnasConfig = {
-      "nombre": true,
-      "lat": false,
-      "lng": false,
-      "dir": false,
-      "des": false,
-      "ambientes": false,
-      "dormitorios": true,
-      "baños": true,
-      "m2construccion": true,
-      "m2terreno": true,
-      "precioM2": true,
-      "foto": false,
-      "precio": true,
-      "broker": false,
-      "URL": false,
-      "agentName": false,
-      "agentPhone": false
+      "nombre": true, "lat": false, "lng": false, "dir": false, "des": false,
+      "ambientes": false, "dormitorios": true, "baños": true, "m2construccion": true,
+      "m2terreno": true, "precioM2": true, "foto": false, "precio": true,
+      "broker": false, "URL": false, "agentName": false, "agentPhone": false
     };
-
-    
 
     $(data.values).each(function () {
       let location = {};
       columnas.forEach((col, i) => location[col] = this[i] || "");
 
-      // Conversiones numéricas
       location.lat = parseFloat(location.lat);
       location.lng = parseFloat(location.lng);
       location.precio = parseInt(location.precio) || 0;
       location.precioM2 = parseFloat(location.precioM2) || 0;
-
-      // UID único por URL absoluta
       location.uid = normalizeURL(location.URL);
 
-      // limpieza de descripción (eliminando teléfonos, truncando)
       let rawDesc = location.des || '';
       rawDesc = rawDesc.replace(/\+591\d{8}/g, '[número eliminado]')
                        .replace(/591\d{8}/g, '[número eliminado]')
@@ -200,7 +200,6 @@ $(document).ready(function () {
       locations.push(location);
     });
 
-    // calcular centro y radio
     var lat = urlParams.get('lat');
     var lng = urlParams.get('lng');
     var radius = urlParams.get('r');
@@ -218,7 +217,6 @@ $(document).ready(function () {
     }
     if (isNaN(pProm) || pProm == 0) { pProm = calcularPromedio(locations, 'precio'); }
 
-    // crear mapa
     map = L.map('mapid');
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap'
@@ -234,10 +232,9 @@ $(document).ready(function () {
     var crossMarker = L.marker(circleCenter, { icon: crossIcon }).addTo(map);
     crossMarker.bindPopup(`Coordenadas: ${lat},${lng}<br>Valor promedio: USD${formatNumber(pProm)}`);
 
-    // agregar markers
+    // markers
     locations.forEach(function (dato) {
       let url = dato.uid;
-
       var brand;
       if (url.includes("c21.com")) { brand = 'C21'; }
       else if (url.includes("remax")) { brand = 'remax'; }
@@ -297,16 +294,41 @@ $(document).ready(function () {
             let obj = markers.find(m => m.dato.uid === dato.uid);
             if (obj && obj.overlay) { map.removeLayer(obj.overlay); obj.overlay = null; }
           }
+          guardarSeleccionados();
           actualizarToolbox();
         });
       });
     });
 
-    var group = new L.featureGroup(locations.map(function (location) {
-      return L.marker([location.lat, location.lng]);
-    }));
-    map.fitBounds(group.getBounds());
+    // ✅ Restaurar seleccionados
+    const prevSel = cargarSeleccionados();
+    prevSel.forEach(id => {
+      let obj = markers.find(m => m.dato.uid === id);
+      if (obj) {
+        seleccionados.push(obj.dato);
+        let overlay = L.marker([obj.dato.lat, obj.dato.lng], { icon: checkOverlayIcon, interactive: false }).addTo(map);
+        obj.overlay = overlay;
+      }
+      $(`.chk-sel[data-id='${id}']`).prop("checked", true);
+    });
+    actualizarToolbox();
+
+    // ✅ Restaurar centro/zoom del mapa si existe
+    const savedMap = cargarMapa();
+    if (savedMap) {
+      map.setView(savedMap.center, savedMap.zoom);
+    } else {
+      var group = new L.featureGroup(locations.map(function (location) {
+        return L.marker([location.lat, location.lng]);
+      }));
+      map.fitBounds(group.getBounds());
+    }
+
     actualizarEstadisticas(locations);
+
+    // Guardar posición/zoom cada vez que se mueva o haga zoom
+    map.on("moveend", guardarMapa);
+    map.on("zoomend", guardarMapa);
   });
 
   // búsqueda
@@ -346,5 +368,5 @@ function calculateDH(lat1, lng1, lat2, lng2) {
   const dLat = lat2Rad - lat1Rad, dLng = lng2Rad - lng1Rad;
   const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1Rad) * Math.cos(lat2Rad) * Math.sin(dLng / 2) ** 2;
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return 6371 * c; // km
+  return 6371 * c;
 }
