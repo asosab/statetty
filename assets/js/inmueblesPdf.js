@@ -34,25 +34,27 @@ function hideLoader() {
   if (loader) loader.remove();
 }
 
+
 // Campos disponibles en la hoja
 const camposDisponibles = [
-  { key: "nombre", label: "Título" },
+  { key: "Titulo", label: "Título" },
   { key: "lat", label: "Latitud" },
   { key: "lng", label: "Longitud" },
   { key: "dir", label: "Dirección" },
+  { key: "URL", label: "URL" }, 
   { key: "des", label: "Descripción" }, 
   { key: "ambientes", label: "Ambientes" },
   { key: "dormitorios", label: "Dormitorios" },
   { key: "baños", label: "Baños" },
   { key: "m2construccion", label: "m2 construcción" },
   { key: "m2terreno", label: "m2 terreno" },
+  { key: "nombre", label: "Nombre original" },
   { key: "precioM2", label: "Precio del m2" },
+  { key: "broker", label: "Agencia" },
   { key: "foto", label: "Foto" },
   { key: "precio", label: "Precio" },
-  { key: "broker", label: "Broker" },
-  { key: "URL", label: "URL" },           
   { key: "agentName", label: "Agente" },  
-  { key: "agentPhone", label: "Teléfono"} 
+  { key: "agentPhon", label: "Teléfono"} 
 ];
 
 // Dibuja los checkboxes debajo del botón PDF (en grid de 4 columnas)
