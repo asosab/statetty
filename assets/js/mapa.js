@@ -160,16 +160,45 @@ $(document).ready(function () {
     $('#loading-indicator').hide();
 
     const columnas = [
-      "Titulo","lat","lng","dir","URL","des","ambientes","dormitorios","baños",
-      "m2construccion","m2terreno","nombre","precioM2","broker","foto",
-      "precio","agentName","agentPhone"
+      "Titulo",
+      "lat",
+      "lng",
+      "dir",
+      "URL",
+      "des",
+      "ambientes",
+      "dormitorios",
+      "baños",
+      "m2construccion",
+      "m2terreno",
+      "nombre",
+      "precioM2",
+      "broker",
+      "foto",
+      "precio",
+      "agentName",
+      "agentPhon"
     ];
 
     window.columnasConfig = {
-      "nombre": true, "lat": false, "lng": false, "dir": false, "des": false,
-      "ambientes": false, "dormitorios": true, "baños": true, "m2construccion": true,
-      "m2terreno": true, "precioM2": true, "foto": false, "precio": true,
-      "broker": false, "URL": false, "agentName": false, "agentPhone": false
+      "Titulo": true,
+      "lat": false, 
+      "lng": false, 
+      "dir": false, 
+      "URL": false, 
+      "des": false,
+      "ambientes": false, 
+      "dormitorios": true, 
+      "baños": true, 
+      "m2construccion": true,
+      "m2terreno": true, 
+      "nombre": false,
+      "precioM2": true, 
+      "broker": false,
+      "foto": false, 
+      "precio": true,
+      "agentName": false, 
+      "agentPhon": false
     };
 
     $(data.values).each(function () {
@@ -254,14 +283,36 @@ $(document).ready(function () {
 
       var marker = L.marker([dato.lat, dato.lng], { icon }).addTo(map);
 
-      var nombre = dato?.agentName ? ' ' + dato.agentName.split(" ")[0] : '';
-      var cel = dato?.agentPhone ? dato.agentPhone.replace(/[^0-9]/g, "") : '';
+      // Nombre del agente
+      const nombreAgente = (dato.agentName || '').trim();
+      const nombreCorto = nombreAgente ? ' ' + nombreAgente.split(' ')[0] : '';
+
+      // Teléfono del agente (ojo con la columna: agentPhon)
+      let cel = (dato.agentPhon || '').toString().replace(/\D/g, '');
+
+      // Normaliza para WhatsApp
+      if (cel.length === 8) cel = '591' + cel;
+      if (cel.length === 9 && cel.startsWith('0')) cel = '591' + cel.slice(1);
+
+      // Mensaje
       let soyNa = na ? ` ${na}` : '';
       let deAg = ag ? ` de ${ag}` : '';
       let sc = (na || ag) ? ' te escribe, ' : '';
-      var msj = `Hola${nombre},${soyNa}${deAg}${sc}un gusto saludarte. \nPor favor, podría enviarme información sobre este inmueble, en caso de que siga disponible (${dato.nombre}) \n\nlink: ${url}\n\nGracias de antemano \n\n\n( Mensaje creado con Statetty https://statetty.com )`;
-      var msjWhatsapp = `https://wa.me/${cel}?text=${encodeURIComponent(msj)}`;
-      var linkWA = cel ? '<br/><a href="' + msjWhatsapp + '" target="_blank">📱 Contactar por WhatsApp</a>' : '';
+      const msj = `Hola${nombreCorto},${soyNa}${deAg}${sc}un gusto saludarte.
+      Por favor, podría enviarme información sobre este inmueble, en caso de que siga disponible (${dato.nombre})
+
+      link: ${url}
+
+      Gracias de antemano
+
+      (Mensaje creado con Statetty https://statetty.com)`;
+
+      // Link WhatsApp
+      const linkWA = cel
+        ? `<br/><a href="https://wa.me/${cel}?text=${encodeURIComponent(msj)}" target="_blank" rel="noopener">📱 Contactar por WhatsApp</a>`
+        : '';
+
+
 
       var distance = Math.round(calculateDH(circleCenter.lat, circleCenter.lng, dato.lat, dato.lng) * 1000);
       var priceDiffPercent = ((dato.precio - pProm) / pProm) * 100;
@@ -337,7 +388,12 @@ $(document).ready(function () {
     let matchCount = 0, filtrados = [];
 
     markers.forEach(obj => {
-      let texto = (obj.dato.des + ' ' + obj.dato.nombre + ' ' + obj.dato.dir + ' ' + obj.dato.agente + ' ' + obj.dato.numero).toLowerCase();
+      let texto = (
+        obj.dato.des + ' ' + obj.dato.nombre + ' ' + obj.dato.dir + ' ' +
+        (obj.dato.agentName || '') + ' ' +
+        (obj.dato.agentPhon || '')
+      ).toLowerCase();
+
       if (query && texto.includes(query)) {
         obj.marker.setIcon(resultIcon);
         obj.marker.setZIndexOffset(1000);
