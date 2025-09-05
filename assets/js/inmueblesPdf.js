@@ -128,8 +128,8 @@ async function generarMapaInmuebles(inmuebles) {
 
   // Extraer coordenadas
   const coords = inmuebles
-    .filter(s => s.latitud && s.longitud)
-    .map(s => `${s.latitud},${s.longitud}`);
+    .filter(s => s.lat && s.lng)
+    .map(s => `${s.lat},${s.lng}`);
 
   if (coords.length === 0) return null;
 
