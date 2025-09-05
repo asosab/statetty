@@ -5,7 +5,7 @@
 function loadScript(url) {
   return new Promise((resolve, reject) => {
     if (document.querySelector(`script[src="${url}"]`)) {
-      resolve(); // ya está cargado
+      resolve();
       return;
     }
     const script = document.createElement("script");
@@ -34,7 +34,6 @@ function hideLoader() {
   if (loader) loader.remove();
 }
 
-
 // Campos disponibles en la hoja
 const camposDisponibles = [
   { key: "Titulo", label: "Título" },
@@ -57,7 +56,7 @@ const camposDisponibles = [
   { key: "agentPhon", label: "Teléfono"} 
 ];
 
-// Dibuja los checkboxes debajo del botón PDF (en grid de 4 columnas)
+// Renderiza los checkboxes de selección de columnas
 function renderColumnSelector() {
   if (document.getElementById("column-selector")) return;
 
@@ -66,20 +65,17 @@ function renderColumnSelector() {
   container.style.marginTop = "10px";
   container.innerHTML = "<b>Selecciona campos a incluir:</b><br>";
 
-  // grid de 4 columnas
   const grid = document.createElement("div");
   grid.style.display = "grid";
   grid.style.gridTemplateColumns = "repeat(3, 1fr)";
-  grid.style.gap = "6px 12px";  // filas y columnas
+  grid.style.gap = "6px 12px";
 
   camposDisponibles.forEach(campo => {
     const id = "chk-" + campo.key;
 
-    // 1. Valor guardado en localStorage (si existe)
     let saved = localStorage.getItem("col_" + campo.key);
-    if (saved !== null) {saved = saved === "true"; }
+    if (saved !== null) saved = saved === "true";
 
-    // 2. Si no hay en localStorage, usamos la config de mapa.js
     const isChecked = saved !== null
       ? saved
       : (window.columnasConfig && campo.key in window.columnasConfig
@@ -93,7 +89,6 @@ function renderColumnSelector() {
     `;
     grid.appendChild(label);
 
-    // 3. Guardar cambios cuando el usuario lo modifique
     setTimeout(() => {
       const chk = document.getElementById(id);
       chk.addEventListener("change", function () {
@@ -102,10 +97,7 @@ function renderColumnSelector() {
     }, 0);
   });
 
-
-
   container.appendChild(grid);
-
   const box = document.getElementById("sel-box");
   if (box) box.appendChild(container);
 }
@@ -123,46 +115,41 @@ function formatCurrency(value, currency = "USD") {
   }).format(number);
 }
 
+// ✅ Nueva versión: generar mapa en cliente con Leaflet + html2canvas
 async function generarMapaInmuebles(inmuebles) {
-  if (!inmuebles || inmuebles.length === 0) return null;
+  return new Promise(resolve => {
+    if (!inmuebles || inmuebles.length === 0) return resolve(null);
 
-  // Extraer coordenadas correctas (lat / lng)
-  const coords = inmuebles
-    .filter(s => s.lat && s.lng)
-    .map(s => `${s.lat},${s.lng}`);
+    const coords = inmuebles.filter(s => s.lat && s.lng);
+    if (coords.length === 0) return resolve(null);
 
-  if (coords.length === 0) return null;
+    const mapDiv = document.createElement("div");
+    mapDiv.style.width = "800px";
+    mapDiv.style.height = "400px";
+    mapDiv.style.position = "absolute";
+    mapDiv.style.left = "-9999px"; // oculto
+    document.body.appendChild(mapDiv);
 
-  // Calcular centro promedio
-  let latSum = 0, lngSum = 0;
-  coords.forEach(c => {
-    const [lat, lng] = c.split(",").map(Number);
-    latSum += lat;
-    lngSum += lng;
-  });
-  const latCentro = latSum / coords.length;
-  const lngCentro = lngSum / coords.length;
+    const center = [coords[0].lat, coords[0].lng];
+    const map = L.map(mapDiv).setView(center, 13);
 
-  // Marcadores (icono rojo)
-  const markers = coords.map(c => `markers=${c},red-pushpin`).join("&");
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "&copy; OpenStreetMap"
+    }).addTo(map);
 
-  // URL del mapa OSM
-  const url = `https://staticmap.openstreetmap.de/staticmap.php?center=${latCentro},${lngCentro}&zoom=13&size=800x400&maptype=mapnik&${markers}`;
-
-  try {
-    const blob = await fetch(url).then(r => r.blob());
-    return await new Promise(resolve => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result); // base64 image
-      reader.readAsDataURL(blob);
+    coords.forEach(s => {
+      L.marker([s.lat, s.lng]).addTo(map);
     });
-  } catch (err) {
-    console.error("Error generando mapa OSM:", err);
-    return null;
-  }
+
+    map.whenReady(() => {
+      html2canvas(mapDiv).then(canvas => {
+        const imgData = canvas.toDataURL("image/png");
+        document.body.removeChild(mapDiv);
+        resolve({ data: imgData, type: "image/png" });
+      });
+    });
+  });
 }
-
-
 
 async function generarBrochurePDF(seleccionados) {
   if (!seleccionados || seleccionados.length === 0) {
@@ -173,32 +160,29 @@ async function generarBrochurePDF(seleccionados) {
   try {
     showLoader();
 
-    // Cargar librerías si no están disponibles
     await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js");
     await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js");
+    await loadScript("https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js");
 
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF("l", "mm", "a4"); // horizontal
+    const doc = new jsPDF("l", "mm", "a4");
 
-    // Título
     doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
     doc.text("Comparativa de Inmuebles", 148, 15, { align: "center" });
 
     const fechaHoy = new Date().toLocaleDateString("es-ES", {
-      year: "numeric",
-      month: "long",
-      day: "numeric"
+      year: "numeric", month: "long", day: "numeric"
     });
     doc.setFont("helvetica", "normal");
     doc.setFontSize(11);
     doc.text(`${fechaHoy}`, 15, 22);
 
-
     const mapaImg = await generarMapaInmuebles(seleccionados);
-    if (mapaImg) { doc.addImage(mapaImg, "PNG", 15, 28, 260, 100); }
+    if (mapaImg) {
+      doc.addImage(mapaImg.data, "PNG", 15, 28, 260, 100);
+    }
 
-    // Leer columnas seleccionadas (foto primero, precio después)
     let seleccionadas = camposDisponibles.filter(c => {
       const chk = document.getElementById("chk-" + c.key);
       return chk && chk.checked;
@@ -211,20 +195,15 @@ async function generarBrochurePDF(seleccionados) {
     }
 
     seleccionadas = seleccionadas.sort((a, b) => {
-      if (a.key === "foto") return -1; // foto siempre primero
+      if (a.key === "foto") return -1;
       if (b.key === "foto") return 1;
-
       if (a.key === "precio" && b.key !== "foto") return -1; 
       if (b.key === "precio" && a.key !== "foto") return 1;
-
       return 0;
     });
 
-
-    // Encabezados: primera columna = Inmueble
     const headers = ["Inmueble", ...seleccionadas.map(c => c.label)];
 
-    // Filas: cada inmueble es una fila
     const rows = seleccionados.map((s, i) => {
       const fila = [`${i + 1}`];
       seleccionadas.forEach(campo => {
@@ -237,7 +216,6 @@ async function generarBrochurePDF(seleccionados) {
             fila.push("-");
           }
         } else {
-          // Si es un campo de precio, formatear
           if (["precio", "precio_m2", "precioDelM2", "precioM2"].includes(campo.key)) {
             fila.push(formatCurrency(s[campo.key]));
           } else {
@@ -248,7 +226,6 @@ async function generarBrochurePDF(seleccionados) {
       return fila;
     });
 
-    // Generar tabla
     doc.autoTable({
       head: [headers],
       body: rows,
@@ -275,7 +252,6 @@ async function generarBrochurePDF(seleccionados) {
       }
     });
 
-    // Pie de página con agente, agencia y número si existen
     let footerText = "";
     if (typeof na !== "undefined" && na) footerText += na;
     if (typeof ag !== "undefined" && ag) footerText += " | " + ag;
@@ -288,7 +264,6 @@ async function generarBrochurePDF(seleccionados) {
       doc.text(footerText, 15, pageHeight - 10);
     }
 
-    // Guardar PDF
     doc.save("brochure-inmuebles.pdf");
 
   } catch (err) {
@@ -297,4 +272,3 @@ async function generarBrochurePDF(seleccionados) {
     hideLoader();
   }
 }
-
