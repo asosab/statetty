@@ -98,6 +98,7 @@ function actualizarToolbox() {
   seleccionados.forEach((s, i) => {
     html += `<div>${i + 1}. ${s.Titulo} <span class="remove-sel" data-id="${s.uid}" style="cursor:pointer; color:red;">❌</span></div>`;
   });
+  
   if (seleccionados.length > 0) {
     $("#stats-container").append(`
       <div id="sel-box">
@@ -105,18 +106,26 @@ function actualizarToolbox() {
         ✅ Seleccionados: ${seleccionados.length}
         ${html}
         <br>
-        <button id="btn-pdf" style="margin-top:10px; padding:5px 10px; border-radius:5px; background:#4CAF50; color:white; border:none; cursor:pointer;">
-          📄 Generar PDF
+        <button id="btn-pdf-landscape" style="margin-top:10px; padding:5px 10px; border-radius:5px; background:#4CAF50; color:white; border:none; cursor:pointer; margin-right:5px;">
+          📄 PDF pantalla
+        </button>
+        <button id="btn-pdf-mobile" style="margin-top:10px; padding:5px 10px; border-radius:5px; background:#2196F3; color:white; border:none; cursor:pointer;">
+          📱 PDF móvil
         </button>
       </div>
     `);
 
     renderColumnSelector();
 
-    $("#btn-pdf").off("click").on("click", function () {
-      generarBrochurePDF(seleccionados);
+    $("#btn-pdf-landscape").off("click").on("click", function () {
+      generarBrochurePDF(seleccionados, "landscape");
+    });
+
+    $("#btn-pdf-mobile").off("click").on("click", function () {
+      generarBrochurePDF(seleccionados, "mobile");
     });
   }
+
 
   $(".remove-sel").off("click").on("click", function () {
     let id = $(this).data("id");

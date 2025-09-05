@@ -34,7 +34,6 @@ function hideLoader() {
   if (loader) loader.remove();
 }
 
-// Campos disponibles en la hoja
 const camposDisponibles = [
   { key: "Titulo", label: "Título" },
   { key: "lat", label: "Latitud" },
@@ -56,7 +55,6 @@ const camposDisponibles = [
   { key: "agentPhon", label: "Teléfono"} 
 ];
 
-// Renderiza los checkboxes de selección de columnas
 function renderColumnSelector() {
   if (document.getElementById("column-selector")) return;
 
@@ -72,7 +70,6 @@ function renderColumnSelector() {
 
   camposDisponibles.forEach(campo => {
     const id = "chk-" + campo.key;
-
     let saved = localStorage.getItem("col_" + campo.key);
     if (saved !== null) saved = saved === "true";
 
@@ -115,29 +112,26 @@ function formatCurrency(value, currency = "USD") {
   }).format(number);
 }
 
-// ✅ Generar mapa en cliente con Leaflet + html2canvas y escala automática
-async function generarMapaInmuebles(inmuebles) {
+// ✅ Generar mapa en cliente con Leaflet + html2canvas
+async function generarMapaInmuebles(inmuebles, vertical = false) {
   return new Promise(resolve => {
     if (!inmuebles || inmuebles.length === 0) return resolve(null);
-
     const coords = inmuebles.filter(s => s.lat && s.lng);
     if (coords.length === 0) return resolve(null);
 
     const mapDiv = document.createElement("div");
-    mapDiv.style.width = "800px";
-    mapDiv.style.height = "400px";
+    mapDiv.style.width = vertical ? "400px" : "800px";
+    mapDiv.style.height = vertical ? "600px" : "400px";
     mapDiv.style.position = "absolute";
-    mapDiv.style.left = "-9999px"; // oculto fuera de pantalla
+    mapDiv.style.left = "-9999px";
     document.body.appendChild(mapDiv);
 
-    const map = L.map(mapDiv);
-
+    const map = L.map(mapDiv, { zoomControl: !vertical });
     const tileLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: "&copy; OpenStreetMap",
       crossOrigin: true
     }).addTo(map);
 
-    // Añadir marcadores numerados y recolectar para bounds
     const group = [];
     coords.forEach((s, i) => {
       const icon = L.divIcon({
@@ -149,19 +143,12 @@ async function generarMapaInmuebles(inmuebles) {
         iconSize: [26, 26],
         iconAnchor: [13, 26]
       });
-      const marker = L.marker([s.lat, s.lng], { icon }).addTo(map);
-      group.push(marker);
+      group.push(L.marker([s.lat, s.lng], { icon }).addTo(map));
     });
 
-    // Ajustar vista para que todos los pines entren con margen
     const bounds = L.featureGroup(group).getBounds();
-    map.fitBounds(bounds, {
-      padding: [40, 40],
-      maxZoom: 16,
-      minZoom: 12
-    });
+    map.fitBounds(bounds, { padding: [40, 40], maxZoom: 16, minZoom: 12 });
 
-    // Esperar a que los tiles terminen de cargar antes de capturar
     tileLayer.on("load", () => {
       setTimeout(() => {
         html2canvas(mapDiv, { useCORS: true }).then(canvas => {
@@ -169,13 +156,15 @@ async function generarMapaInmuebles(inmuebles) {
           document.body.removeChild(mapDiv);
           resolve({ data: imgData, type: "image/png" });
         });
-      }, 500); // delay corto para asegurar render completo
+      }, 500);
     });
   });
 }
 
-
-async function generarBrochurePDF(seleccionados) {
+// ---------------------------------------------
+// Generar PDF (modo = "landscape" | "mobile")
+// ---------------------------------------------
+async function generarBrochurePDF(seleccionados, modo = "landscape") {
   if (!seleccionados || seleccionados.length === 0) {
     alert("No hay inmuebles seleccionados para generar el PDF.");
     return;
@@ -183,52 +172,45 @@ async function generarBrochurePDF(seleccionados) {
 
   try {
     showLoader();
-
     await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js");
     await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js");
     await loadScript("https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js");
 
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF("l", "mm", "a4");
+    const doc = new jsPDF(modo === "mobile" ? "p" : "l", "mm", "a4");
 
-    // Título
+    // Título y fecha
     doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
-    doc.text("Comparativa de Inmuebles", 148, 15, { align: "center" });
+    doc.text("Comparativa de Inmuebles", doc.internal.pageSize.getWidth() / 2, 15, { align: "center" });
+    const fechaHoy = new Date().toLocaleDateString("es-ES", { year: "numeric", month: "long", day: "numeric" });
+    doc.setFont("helvetica", "normal"); doc.setFontSize(11);
+    doc.text(fechaHoy, 15, 22);
 
-    const fechaHoy = new Date().toLocaleDateString("es-ES", {
-      year: "numeric", month: "long", day: "numeric"
-    });
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(11);
-    doc.text(`${fechaHoy}`, 15, 22);
+    // Ordenar inmuebles por precio
+    seleccionados.sort((a, b) => (parseFloat(a.precio) || 0) - (parseFloat(b.precio) || 0));
 
-    // ✅ Ordenar inmuebles por precio (menor → mayor)
-    seleccionados.sort((a, b) => {
-      const precioA = parseFloat(a.precio) || 0;
-      const precioB = parseFloat(b.precio) || 0;
-      return precioA - precioB;
-    });
-
-    // Generar mapa con el array ya ordenado
-    const mapaImg = await generarMapaInmuebles(seleccionados);
+    // Generar mapa
+    const mapaImg = await generarMapaInmuebles(seleccionados, modo === "mobile");
     if (mapaImg) {
-      doc.addImage(mapaImg.data, "PNG", 15, 28, 260, 100);
+      if (modo === "mobile") {
+        doc.addImage(mapaImg.data, "PNG", 15, 30, 180, 120);
+      } else {
+        doc.addImage(mapaImg.data, "PNG", 15, 28, 260, 100);
+      }
     }
 
-    // Leer columnas seleccionadas
+    // Campos seleccionados
     let seleccionadas = camposDisponibles.filter(c => {
       const chk = document.getElementById("chk-" + c.key);
       return chk && chk.checked;
     });
-
     if (seleccionadas.length === 0) {
       alert("Debes seleccionar al menos un campo.");
-      hideLoader();
-      return;
+      hideLoader(); return;
     }
 
-    // Orden de columnas: foto primero, luego precio
+    // Orden: foto primero, luego precio
     seleccionadas = seleccionadas.sort((a, b) => {
       if (a.key === "foto") return -1;
       if (b.key === "foto") return 1;
@@ -237,73 +219,85 @@ async function generarBrochurePDF(seleccionados) {
       return 0;
     });
 
-    // Encabezados
-    const headers = ["Inmueble", ...seleccionadas.map(c => c.label)];
+    // ✅ Landscape → tabla normal
+    if (modo === "landscape") {
+      const headers = ["Inmueble", ...seleccionadas.map(c => c.label)];
+      const rows = seleccionados.map((s, i) => {
+        const fila = [`${i + 1}`];
+        seleccionadas.forEach(campo => {
+          if (campo.key === "des") fila.push(s.des || "-");
+          else if (campo.key === "foto") fila.push(s.foto ? { content: "", fotoUrl: s.foto } : "-");
+          else fila.push(["precio","precio_m2","precioDelM2","precioM2"].includes(campo.key) ? formatCurrency(s[campo.key]) : (s[campo.key] || "-"));
+        });
+        return fila;
+      });
 
-    // Filas
-    const rows = seleccionados.map((s, i) => {
-      const fila = [`${i + 1}`];
-      seleccionadas.forEach(campo => {
-        if (campo.key === "des") {
-          fila.push(s.des || "-");
-        } else if (campo.key === "foto") {
-          if (s.foto) {
-            fila.push({ content: "", fotoUrl: s.foto });
-          } else {
-            fila.push("-");
-          }
-        } else {
-          if (["precio", "precio_m2", "precioDelM2", "precioM2"].includes(campo.key)) {
-            fila.push(formatCurrency(s[campo.key]));
-          } else {
-            fila.push(s[campo.key] || "-");
+      doc.autoTable({
+        head: [headers], body: rows, startY: mapaImg ? 135 : 30,
+        styles: { fontSize: 9, cellPadding: 3, valign: "top" },
+        headStyles: { fillColor: [76, 175, 80], textColor: 255, halign: "center" },
+        theme: "grid",
+        didDrawCell: async function (data) {
+          if (data.cell.raw && data.cell.raw.fotoUrl) {
+            try {
+              const imgData = await fetch(data.cell.raw.fotoUrl).then(r => r.blob());
+              const reader = new FileReader();
+              reader.onload = function () {
+                const img = reader.result;
+                doc.addImage(img, "JPEG", data.cell.x + 1, data.cell.y + 1, data.cell.width - 2, data.cell.height - 2);
+              };
+              reader.readAsDataURL(imgData);
+            } catch (e) { console.error("No se pudo cargar la imagen", e); }
           }
         }
       });
-      return fila;
-    });
+    }
 
-    // Tabla
-    doc.autoTable({
-      head: [headers],
-      body: rows,
-      startY: mapaImg ? 135 : 30,
-      styles: { fontSize: 9, cellPadding: 3, valign: "top" },
-      headStyles: { fillColor: [76, 175, 80], textColor: 255, halign: "center" },
-      theme: "grid",
-      didDrawCell: async function (data) {
-        if (data.cell.raw && data.cell.raw.fotoUrl) {
-          try {
-            const imgData = await fetch(data.cell.raw.fotoUrl).then(r => r.blob());
-            const reader = new FileReader();
-            reader.onload = function () {
-              const img = reader.result;
-              let cellWidth = data.cell.width - 2;
-              let cellHeight = data.cell.height - 2;
-              doc.addImage(img, "JPEG", data.cell.x + 1, data.cell.y + 1, cellWidth, cellHeight);
-            };
-            reader.readAsDataURL(imgData);
-          } catch (e) {
-            console.error("No se pudo cargar la imagen", e);
+    // ✅ Mobile → tabla girada (máx 5 inmuebles como columnas)
+    if (modo === "mobile") {
+      const inmueblesLimitados = seleccionados.slice(0, 5);
+      const headers = ["Campo", ...inmueblesLimitados.map((s, i) => `#${i + 1}`)];
+      const rows = seleccionadas.map(campo => {
+        const fila = [campo.label];
+        inmueblesLimitados.forEach(s => {
+          if (campo.key === "des") fila.push(s.des || "-");
+          else if (campo.key === "foto") fila.push(s.foto ? { content: "", fotoUrl: s.foto } : "-");
+          else fila.push(["precio","precio_m2","precioDelM2","precioM2"].includes(campo.key) ? formatCurrency(s[campo.key]) : (s[campo.key] || "-"));
+        });
+        return fila;
+      });
+
+      doc.autoTable({
+        head: [headers], body: rows, startY: mapaImg ? 160 : 30,
+        styles: { fontSize: 9, cellPadding: 3, valign: "top" },
+        headStyles: { fillColor: [76, 175, 80], textColor: 255, halign: "center" },
+        theme: "grid",
+        didDrawCell: async function (data) {
+          if (data.cell.raw && data.cell.raw.fotoUrl) {
+            try {
+              const imgData = await fetch(data.cell.raw.fotoUrl).then(r => r.blob());
+              const reader = new FileReader();
+              reader.onload = function () {
+                const img = reader.result;
+                doc.addImage(img, "JPEG", data.cell.x + 1, data.cell.y + 1, data.cell.width - 2, data.cell.height - 2);
+              };
+              reader.readAsDataURL(imgData);
+            } catch (e) { console.error("No se pudo cargar la imagen", e); }
           }
         }
-      }
-    });
+      });
+    }
 
-    // Pie de página
+    // Pie
     let footerText = "";
     if (typeof na !== "undefined" && na) footerText += na;
     if (typeof ag !== "undefined" && ag) footerText += " | " + ag;
     if (typeof an !== "undefined" && an) footerText += " | " + an;
-
     if (footerText) {
-      doc.setFontSize(9);
-      doc.setFont("helvetica", "normal");
-      const pageHeight = doc.internal.pageSize.getHeight();
-      doc.text(footerText, 15, pageHeight - 10);
+      doc.setFontSize(9); doc.setFont("helvetica", "normal");
+      doc.text(footerText, 15, doc.internal.pageSize.getHeight() - 10);
     }
 
-    // Guardar PDF
     doc.save("brochure-inmuebles.pdf");
 
   } catch (err) {
@@ -312,4 +306,3 @@ async function generarBrochurePDF(seleccionados) {
     hideLoader();
   }
 }
-
