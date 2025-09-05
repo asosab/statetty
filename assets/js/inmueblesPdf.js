@@ -39,24 +39,24 @@ function hideLoader() {
 // index => define posición relativa
 // ---------------------------------------------
 const camposDisponibles = [
-  { key: "Titulo", label: "Título", index: 1 },
-  { key: "foto", label: "Foto", index: 2 },
-  { key: "precio", label: "Precio", index: 3 },
-  { key: "precioM2", label: "Precio del m2", index: 4 },
-  { key: "dir", label: "Dirección", index: 5 },
-  { key: "des", label: "Descripción", index: 6 },
-  { key: "ambientes", label: "Ambientes", index: 7 },
-  { key: "dormitorios", label: "Dormitorios", index: 8 },
-  { key: "baños", label: "Baños", index: 9 },
-  { key: "m2construccion", label: "m2 construcción", index: 10 },
-  { key: "m2terreno", label: "m2 terreno", index: 11 },
-  { key: "nombre", label: "Nombre original", index: 12 },
-  { key: "lat", label: "Latitud", index: 13 },
-  { key: "lng", label: "Longitud", index: 14 },
-  { key: "URL", label: "URL", index: 15 }, 
-  { key: "broker", label: "Agencia", index: 16 },
-  { key: "agentName", label: "Agente", index: 17 },  
-  { key: "agentPhon", label: "Teléfono", index: 18 }
+  { key: "foto",            label: "Foto",            index: 1 },
+  { key: "Titulo",          label: "Título",          index: 2 },
+  { key: "nombre",          label: "Nombre",          index: 3 },
+  { key: "precio",          label: "Precio",          index: 4 },
+  { key: "dir",             label: "Dirección",       index: 5 },
+  { key: "des",             label: "Descripción",     index: 6 },
+  { key: "m2construccion",  label: "m2 construcción", index: 7 },
+  { key: "m2terreno",       label: "m2 terreno",      index: 8 },
+  { key: "precioM2",        label: "Precio del m2",   index: 9 },
+  { key: "ambientes",       label: "Ambientes",       index: 10 },
+  { key: "dormitorios",     label: "Dormitorios",     index: 11 },
+  { key: "baños",           label: "Baños",           index: 12 },
+  { key: "broker",          label: "Agencia",         index: 13 },
+  { key: "agentName",       label: "Agente",          index: 14 },  
+  { key: "agentPhon",       label: "Teléfono",        index: 15 },
+  { key: "URL",             label: "URL",             index: 16 },
+  { key: "lat",             label: "Latitud",         index: 17 },
+  { key: "lng",             label: "Longitud",        index: 18 },
 ];
 
 function renderColumnSelector() {
