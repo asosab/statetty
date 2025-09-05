@@ -192,6 +192,7 @@ async function generarBrochurePDF(seleccionados) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF("l", "mm", "a4");
 
+    // Título
     doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
     doc.text("Comparativa de Inmuebles", 148, 15, { align: "center" });
@@ -203,11 +204,13 @@ async function generarBrochurePDF(seleccionados) {
     doc.setFontSize(11);
     doc.text(`${fechaHoy}`, 15, 22);
 
+    // Insertar mapa
     const mapaImg = await generarMapaInmuebles(seleccionados);
     if (mapaImg) {
       doc.addImage(mapaImg.data, "PNG", 15, 28, 260, 100);
     }
 
+    // Leer columnas seleccionadas
     let seleccionadas = camposDisponibles.filter(c => {
       const chk = document.getElementById("chk-" + c.key);
       return chk && chk.checked;
@@ -219,16 +222,26 @@ async function generarBrochurePDF(seleccionados) {
       return;
     }
 
+    // Orden de columnas: foto primero, luego precio
     seleccionadas = seleccionadas.sort((a, b) => {
       if (a.key === "foto") return -1;
       if (b.key === "foto") return 1;
-      if (a.key === "precio" && b.key !== "foto") return -1; 
+      if (a.key === "precio" && b.key !== "foto") return -1;
       if (b.key === "precio" && a.key !== "foto") return 1;
       return 0;
     });
 
+    // ✅ Ordenar inmuebles por precio ascendente
+    seleccionados.sort((a, b) => {
+      const precioA = parseFloat(a.precio) || 0;
+      const precioB = parseFloat(b.precio) || 0;
+      return precioA - precioB;
+    });
+
+    // Encabezados
     const headers = ["Inmueble", ...seleccionadas.map(c => c.label)];
 
+    // Filas
     const rows = seleccionados.map((s, i) => {
       const fila = [`${i + 1}`];
       seleccionadas.forEach(campo => {
@@ -251,6 +264,7 @@ async function generarBrochurePDF(seleccionados) {
       return fila;
     });
 
+    // Tabla
     doc.autoTable({
       head: [headers],
       body: rows,
@@ -277,6 +291,7 @@ async function generarBrochurePDF(seleccionados) {
       }
     });
 
+    // Pie de página
     let footerText = "";
     if (typeof na !== "undefined" && na) footerText += na;
     if (typeof ag !== "undefined" && ag) footerText += " | " + ag;
@@ -289,6 +304,7 @@ async function generarBrochurePDF(seleccionados) {
       doc.text(footerText, 15, pageHeight - 10);
     }
 
+    // Guardar PDF
     doc.save("brochure-inmuebles.pdf");
 
   } catch (err) {
