@@ -175,7 +175,6 @@ async function generarMapaInmuebles(inmuebles) {
 }
 
 
-
 async function generarBrochurePDF(seleccionados) {
   if (!seleccionados || seleccionados.length === 0) {
     alert("No hay inmuebles seleccionados para generar el PDF.");
@@ -204,7 +203,14 @@ async function generarBrochurePDF(seleccionados) {
     doc.setFontSize(11);
     doc.text(`${fechaHoy}`, 15, 22);
 
-    // Insertar mapa
+    // ✅ Ordenar inmuebles por precio (menor → mayor)
+    seleccionados.sort((a, b) => {
+      const precioA = parseFloat(a.precio) || 0;
+      const precioB = parseFloat(b.precio) || 0;
+      return precioA - precioB;
+    });
+
+    // Generar mapa con el array ya ordenado
     const mapaImg = await generarMapaInmuebles(seleccionados);
     if (mapaImg) {
       doc.addImage(mapaImg.data, "PNG", 15, 28, 260, 100);
@@ -229,13 +235,6 @@ async function generarBrochurePDF(seleccionados) {
       if (a.key === "precio" && b.key !== "foto") return -1;
       if (b.key === "precio" && a.key !== "foto") return 1;
       return 0;
-    });
-
-    // ✅ Ordenar inmuebles por precio ascendente
-    seleccionados.sort((a, b) => {
-      const precioA = parseFloat(a.precio) || 0;
-      const precioB = parseFloat(b.precio) || 0;
-      return precioA - precioB;
     });
 
     // Encabezados
@@ -313,3 +312,4 @@ async function generarBrochurePDF(seleccionados) {
     hideLoader();
   }
 }
+
