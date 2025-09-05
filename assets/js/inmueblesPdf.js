@@ -223,7 +223,7 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
     // ---------------------------------------------
     if (modo === "landscape") {
       const camposLimitados = seleccionadas.slice(0, 7); // máximo 7 campos
-      const headers = ["Inmueble", ...camposLimitados.map(c => c.label)];
+      const headers = ["#", ...camposLimitados.map(c => c.label)];
       const rows = seleccionados.map((s, i) => {
         const fila = [`${i + 1}`];
         camposLimitados.forEach(campo => {
@@ -239,7 +239,7 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
         body: rows,
         startY: mapaImg ? 135 : 30,
         styles: { fontSize: 9, cellPadding: 3, valign: "top" },
-        columnStyles: { 0: { cellWidth: 'wrap' } }, // primera columna más compacta
+        columnStyles: { 0: { cellWidth: 12 } }, // primera columna compacta, 3 dígitos máx
         headStyles: { fillColor: [76, 175, 80], textColor: 255, halign: "center" },
         theme: "grid",
         didDrawCell: async function (data) {
@@ -259,10 +259,10 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
     }
 
     // ---------------------------------------------
-    // Mobile → tabla vertical con ancho fijo de columnas
+    // Mobile → tabla vertical con ancho medido
     // ---------------------------------------------
     if (modo === "mobile") {
-      const inmueblesLimitados = seleccionados.slice(0, 5); // máximo 5 inmuebles
+      const inmueblesLimitados = seleccionados.slice(0, 6); // máximo 6 inmuebles
       const headers = ["Campo", ...inmueblesLimitados.map((s, i) => `#${i + 1}`)];
       const rows = seleccionadas.map(campo => {
         const fila = [campo.label];
@@ -274,10 +274,13 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
         return fila;
       });
 
-      // Calcular anchos
+      // Medir ancho requerido para la primera columna (según etiqueta más larga)
+      doc.setFontSize(9);
+      const longestLabel = Math.max(...seleccionadas.map(c => doc.getTextWidth(c.label)));
+      const padding = 6;
+      const firstColWidth = Math.min(longestLabel + padding, 50); // tope de 50 mm
       const margin = 20;
       const usableWidth = pageWidth - margin * 2;
-      const firstColWidth = 40; // ancho fijo para etiquetas
       const otherColsWidth = (usableWidth - firstColWidth) / inmueblesLimitados.length;
 
       const colStyles = { 0: { cellWidth: firstColWidth } };
@@ -327,4 +330,5 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
     hideLoader();
   }
 }
+
 
