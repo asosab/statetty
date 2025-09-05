@@ -123,6 +123,45 @@ function formatCurrency(value, currency = "USD") {
   }).format(number);
 }
 
+async function generarMapaInmuebles(inmuebles) {
+  if (!inmuebles || inmuebles.length === 0) return null;
+
+  // Extraer coordenadas
+  const coords = inmuebles
+    .filter(s => s.latitud && s.longitud)
+    .map(s => `${s.latitud},${s.longitud}`);
+
+  if (coords.length === 0) return null;
+
+  // Calcular centro promedio
+  let latSum = 0, lngSum = 0;
+  coords.forEach(c => {
+    const [lat, lng] = c.split(",").map(Number);
+    latSum += lat;
+    lngSum += lng;
+  });
+  const latCentro = latSum / coords.length;
+  const lngCentro = lngSum / coords.length;
+
+  // Marcadores (icono rojo)
+  const markers = coords.map(c => `markers=${c},red-pushpin`).join("&");
+
+  // URL del mapa OSM
+  const url = `https://staticmap.openstreetmap.de/staticmap.php?center=${latCentro},${lngCentro}&zoom=13&size=800x400&maptype=mapnik&${markers}`;
+
+  try {
+    const blob = await fetch(url).then(r => r.blob());
+    return await new Promise(resolve => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result); // base64 image
+      reader.readAsDataURL(blob);
+    });
+  } catch (err) {
+    console.error("Error generando mapa OSM:", err);
+    return null;
+  }
+}
+
 
 async function generarBrochurePDF(seleccionados) {
   if (!seleccionados || seleccionados.length === 0) {
@@ -144,6 +183,19 @@ async function generarBrochurePDF(seleccionados) {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
     doc.text("Comparativa de Inmuebles", 148, 15, { align: "center" });
+
+    const fechaHoy = new Date().toLocaleDateString("es-ES", {
+      year: "numeric",
+      month: "long",
+      day: "numeric"
+    });
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(11);
+    doc.text(`Fecha: ${fechaHoy}`, 15, 22);
+
+
+    const mapaImg = await generarMapaInmuebles(seleccionados);
+    if (mapaImg) { doc.addImage(mapaImg, "PNG", 15, 28, 260, 100); }
 
     // Leer columnas seleccionadas (foto primero, precio después)
     let seleccionadas = camposDisponibles.filter(c => {
@@ -199,7 +251,7 @@ async function generarBrochurePDF(seleccionados) {
     doc.autoTable({
       head: [headers],
       body: rows,
-      startY: 25,
+      startY: mapaImg ? 135 : 30,
       styles: { fontSize: 9, cellPadding: 3, valign: "top" },
       headStyles: { fillColor: [76, 175, 80], textColor: 255, halign: "center" },
       theme: "grid",
