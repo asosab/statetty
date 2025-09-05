@@ -115,7 +115,6 @@ function formatCurrency(value, currency = "USD") {
   }).format(number);
 }
 
-// ✅ Nueva versión: generar mapa en cliente con Leaflet + html2canvas
 async function generarMapaInmuebles(inmuebles) {
   return new Promise(resolve => {
     if (!inmuebles || inmuebles.length === 0) return resolve(null);
@@ -133,23 +132,38 @@ async function generarMapaInmuebles(inmuebles) {
     const center = [coords[0].lat, coords[0].lng];
     const map = L.map(mapDiv).setView(center, 13);
 
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: "&copy; OpenStreetMap"
+    const tileLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "&copy; OpenStreetMap",
+      crossOrigin: true
     }).addTo(map);
 
-    coords.forEach(s => {
-      L.marker([s.lat, s.lng]).addTo(map);
+    // 👇 numerar los inmuebles
+    coords.forEach((s, i) => {
+      const icon = L.divIcon({
+        className: "custom-pin",
+        html: `<div style="background:#ff5722; color:white; border-radius:50%; width:26px; height:26px; 
+                display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:bold;">
+                 ${i + 1}
+               </div>`,
+        iconSize: [26, 26],
+        iconAnchor: [13, 26]
+      });
+      L.marker([s.lat, s.lng], { icon }).addTo(map);
     });
 
-    map.whenReady(() => {
-      html2canvas(mapDiv).then(canvas => {
-        const imgData = canvas.toDataURL("image/png");
-        document.body.removeChild(mapDiv);
-        resolve({ data: imgData, type: "image/png" });
-      });
+    // ✅ Esperar a que los tiles estén listos
+    tileLayer.on("load", () => {
+      setTimeout(() => {
+        html2canvas(mapDiv, { useCORS: true }).then(canvas => {
+          const imgData = canvas.toDataURL("image/png");
+          document.body.removeChild(mapDiv);
+          resolve({ data: imgData, type: "image/png" });
+        });
+      }, 500); // un pequeño delay ayuda a evitar cortes
     });
   });
 }
+
 
 async function generarBrochurePDF(seleccionados) {
   if (!seleccionados || seleccionados.length === 0) {
