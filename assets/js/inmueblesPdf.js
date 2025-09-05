@@ -115,6 +115,7 @@ function formatCurrency(value, currency = "USD") {
   }).format(number);
 }
 
+// ✅ Generar mapa en cliente con Leaflet + html2canvas y escala automática
 async function generarMapaInmuebles(inmuebles) {
   return new Promise(resolve => {
     if (!inmuebles || inmuebles.length === 0) return resolve(null);
@@ -126,18 +127,18 @@ async function generarMapaInmuebles(inmuebles) {
     mapDiv.style.width = "800px";
     mapDiv.style.height = "400px";
     mapDiv.style.position = "absolute";
-    mapDiv.style.left = "-9999px"; // oculto
+    mapDiv.style.left = "-9999px"; // oculto fuera de pantalla
     document.body.appendChild(mapDiv);
 
-    const center = [coords[0].lat, coords[0].lng];
-    const map = L.map(mapDiv).setView(center, 13);
+    const map = L.map(mapDiv);
 
     const tileLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: "&copy; OpenStreetMap",
       crossOrigin: true
     }).addTo(map);
 
-    // 👇 numerar los inmuebles
+    // Añadir marcadores numerados y recolectar para bounds
+    const group = [];
     coords.forEach((s, i) => {
       const icon = L.divIcon({
         className: "custom-pin",
@@ -148,10 +149,19 @@ async function generarMapaInmuebles(inmuebles) {
         iconSize: [26, 26],
         iconAnchor: [13, 26]
       });
-      L.marker([s.lat, s.lng], { icon }).addTo(map);
+      const marker = L.marker([s.lat, s.lng], { icon }).addTo(map);
+      group.push(marker);
     });
 
-    // ✅ Esperar a que los tiles estén listos
+    // Ajustar vista para que todos los pines entren con margen
+    const bounds = L.featureGroup(group).getBounds();
+    map.fitBounds(bounds, {
+      padding: [40, 40],
+      maxZoom: 16,
+      minZoom: 12
+    });
+
+    // Esperar a que los tiles terminen de cargar antes de capturar
     tileLayer.on("load", () => {
       setTimeout(() => {
         html2canvas(mapDiv, { useCORS: true }).then(canvas => {
@@ -159,10 +169,11 @@ async function generarMapaInmuebles(inmuebles) {
           document.body.removeChild(mapDiv);
           resolve({ data: imgData, type: "image/png" });
         });
-      }, 500); // un pequeño delay ayuda a evitar cortes
+      }, 500); // delay corto para asegurar render completo
     });
   });
 }
+
 
 
 async function generarBrochurePDF(seleccionados) {
