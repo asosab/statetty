@@ -126,7 +126,7 @@ function formatCurrency(value, currency = "USD") {
 async function generarMapaInmuebles(inmuebles) {
   if (!inmuebles || inmuebles.length === 0) return null;
 
-  // Extraer coordenadas
+  // Extraer coordenadas correctas (lat / lng)
   const coords = inmuebles
     .filter(s => s.lat && s.lng)
     .map(s => `${s.lat},${s.lng}`);
@@ -161,6 +161,7 @@ async function generarMapaInmuebles(inmuebles) {
     return null;
   }
 }
+
 
 
 async function generarBrochurePDF(seleccionados) {
