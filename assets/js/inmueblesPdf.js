@@ -191,7 +191,7 @@ async function generarBrochurePDF(seleccionados) {
     });
     doc.setFont("helvetica", "normal");
     doc.setFontSize(11);
-    doc.text(`Fecha: ${fechaHoy}`, 15, 22);
+    doc.text(`${fechaHoy}`, 15, 22);
 
 
     const mapaImg = await generarMapaInmuebles(seleccionados);
