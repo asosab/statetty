@@ -34,25 +34,29 @@ function hideLoader() {
   if (loader) loader.remove();
 }
 
+// ---------------------------------------------
+// Campos disponibles para selección
+// index => define posición relativa
+// ---------------------------------------------
 const camposDisponibles = [
-  { key: "Titulo", label: "Título" },
-  { key: "lat", label: "Latitud" },
-  { key: "lng", label: "Longitud" },
-  { key: "dir", label: "Dirección" },
-  { key: "URL", label: "URL" }, 
-  { key: "des", label: "Descripción" }, 
-  { key: "ambientes", label: "Ambientes" },
-  { key: "dormitorios", label: "Dormitorios" },
-  { key: "baños", label: "Baños" },
-  { key: "m2construccion", label: "m2 construcción" },
-  { key: "m2terreno", label: "m2 terreno" },
-  { key: "nombre", label: "Nombre original" },
-  { key: "precioM2", label: "Precio del m2" },
-  { key: "broker", label: "Agencia" },
-  { key: "foto", label: "Foto" },
-  { key: "precio", label: "Precio" },
-  { key: "agentName", label: "Agente" },  
-  { key: "agentPhon", label: "Teléfono"} 
+  { key: "Titulo", label: "Título", index: 1 },
+  { key: "foto", label: "Foto", index: 2 },
+  { key: "precio", label: "Precio", index: 3 },
+  { key: "precioM2", label: "Precio del m2", index: 4 },
+  { key: "dir", label: "Dirección", index: 5 },
+  { key: "des", label: "Descripción", index: 6 },
+  { key: "ambientes", label: "Ambientes", index: 7 },
+  { key: "dormitorios", label: "Dormitorios", index: 8 },
+  { key: "baños", label: "Baños", index: 9 },
+  { key: "m2construccion", label: "m2 construcción", index: 10 },
+  { key: "m2terreno", label: "m2 terreno", index: 11 },
+  { key: "nombre", label: "Nombre original", index: 12 },
+  { key: "lat", label: "Latitud", index: 13 },
+  { key: "lng", label: "Longitud", index: 14 },
+  { key: "URL", label: "URL", index: 15 }, 
+  { key: "broker", label: "Agencia", index: 16 },
+  { key: "agentName", label: "Agente", index: 17 },  
+  { key: "agentPhon", label: "Teléfono", index: 18 }
 ];
 
 function renderColumnSelector() {
@@ -210,14 +214,8 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
       hideLoader(); return;
     }
 
-    // Orden: foto primero, luego precio
-    seleccionadas = seleccionadas.sort((a, b) => {
-      if (a.key === "foto") return -1;
-      if (b.key === "foto") return 1;
-      if (a.key === "precio" && b.key !== "foto") return -1;
-      if (b.key === "precio" && a.key !== "foto") return 1;
-      return 0;
-    });
+    // ✅ Ordenar por index
+    seleccionadas.sort((a, b) => a.index - b.index);
 
     // ✅ Landscape → tabla normal
     if (modo === "landscape") {
