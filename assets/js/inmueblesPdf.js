@@ -182,11 +182,12 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
 
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF(modo === "mobile" ? "p" : "l", "mm", "a4");
+    const pageWidth = doc.internal.pageSize.getWidth();
 
     // Título y fecha
     doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
-    doc.text("Comparativa de Inmuebles", doc.internal.pageSize.getWidth() / 2, 15, { align: "center" });
+    doc.text("Comparativa de Inmuebles", pageWidth / 2, 15, { align: "center" });
     const fechaHoy = new Date().toLocaleDateString("es-ES", { year: "numeric", month: "long", day: "numeric" });
     doc.setFont("helvetica", "normal"); doc.setFontSize(11);
     doc.text(fechaHoy, 15, 22);
@@ -214,15 +215,18 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
       hideLoader(); return;
     }
 
-    // ✅ Ordenar por index
+    // Orden por index
     seleccionadas.sort((a, b) => a.index - b.index);
 
-    // ✅ Landscape → tabla normal
+    // ---------------------------------------------
+    // Landscape → tabla horizontal con máx 7 columnas
+    // ---------------------------------------------
     if (modo === "landscape") {
-      const headers = ["Inmueble", ...seleccionadas.map(c => c.label)];
+      const camposLimitados = seleccionadas.slice(0, 7); // máximo 7 campos
+      const headers = ["Inmueble", ...camposLimitados.map(c => c.label)];
       const rows = seleccionados.map((s, i) => {
         const fila = [`${i + 1}`];
-        seleccionadas.forEach(campo => {
+        camposLimitados.forEach(campo => {
           if (campo.key === "des") fila.push(s.des || "-");
           else if (campo.key === "foto") fila.push(s.foto ? { content: "", fotoUrl: s.foto } : "-");
           else fila.push(["precio","precio_m2","precioDelM2","precioM2"].includes(campo.key) ? formatCurrency(s[campo.key]) : (s[campo.key] || "-"));
@@ -231,8 +235,11 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
       });
 
       doc.autoTable({
-        head: [headers], body: rows, startY: mapaImg ? 135 : 30,
+        head: [headers],
+        body: rows,
+        startY: mapaImg ? 135 : 30,
         styles: { fontSize: 9, cellPadding: 3, valign: "top" },
+        columnStyles: { 0: { cellWidth: 'wrap' } }, // primera columna más compacta
         headStyles: { fillColor: [76, 175, 80], textColor: 255, halign: "center" },
         theme: "grid",
         didDrawCell: async function (data) {
@@ -251,9 +258,11 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
       });
     }
 
-    // ✅ Mobile → tabla girada (máx 5 inmuebles como columnas)
+    // ---------------------------------------------
+    // Mobile → tabla vertical con ancho fijo de columnas
+    // ---------------------------------------------
     if (modo === "mobile") {
-      const inmueblesLimitados = seleccionados.slice(0, 5);
+      const inmueblesLimitados = seleccionados.slice(0, 5); // máximo 5 inmuebles
       const headers = ["Campo", ...inmueblesLimitados.map((s, i) => `#${i + 1}`)];
       const rows = seleccionadas.map(campo => {
         const fila = [campo.label];
@@ -265,9 +274,23 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
         return fila;
       });
 
+      // Calcular anchos
+      const margin = 20;
+      const usableWidth = pageWidth - margin * 2;
+      const firstColWidth = 40; // ancho fijo para etiquetas
+      const otherColsWidth = (usableWidth - firstColWidth) / inmueblesLimitados.length;
+
+      const colStyles = { 0: { cellWidth: firstColWidth } };
+      inmueblesLimitados.forEach((_, idx) => {
+        colStyles[idx + 1] = { cellWidth: otherColsWidth };
+      });
+
       doc.autoTable({
-        head: [headers], body: rows, startY: mapaImg ? 160 : 30,
+        head: [headers],
+        body: rows,
+        startY: mapaImg ? 160 : 30,
         styles: { fontSize: 9, cellPadding: 3, valign: "top" },
+        columnStyles: colStyles,
         headStyles: { fillColor: [76, 175, 80], textColor: 255, halign: "center" },
         theme: "grid",
         didDrawCell: async function (data) {
@@ -304,3 +327,4 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
     hideLoader();
   }
 }
+
