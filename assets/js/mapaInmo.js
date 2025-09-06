@@ -282,7 +282,7 @@ $(document).ready(function () {
         <b>Broker:</b> ${escapeHtml(a.broker)}<br>
         <b>Región:</b> ${escapeHtml(a.region)} | <b>País:</b> ${escapeHtml(a.pais)}<br>
         <b>Dirección:</b> ${escapeHtml(a.dir)}<br>
-        <b>Agentes:</b> ${a.cantAg} | ✅ ${a.activos} | ❌ ${a.inactivos} | 🚫 ${a.sinCuenta}<br>
+        <b>Agentes:</b> ${a.cantAg} | 🟢 ${a.activos} | 🟡 ${a.inactivos} | 🔴 ${a.sinCuenta}<br>
         ${fullUrl ? `<a href="${fullUrl}" target="_blank">Ver sitio de la agencia</a><br>` : ''}
         ${wa ? `<a href="${wa}" target="_blank">Contactar por WhatsApp</a>` : ''}
         <br><label><input type="checkbox" class="chk-sel" data-id="${a.uid}"> Seleccionar</label>
@@ -345,7 +345,7 @@ $(document).ready(function () {
     let matchCount = 0, filtrados = [];
 
     markers.forEach(obj => {
-      let texto = (obj.dato.nombre + ' ' + obj.dato.broker + ' ' + obj.dato.region + ' ' + obj.dato.pais).toLowerCase();
+      let texto = (obj.dato.nombre + ' ' + obj.dato.broker + ' ' + obj.dato.region + ' ' + obj.dato.pais + ' ' + obj.dato.estado + ' ' + obj.dato.phone + ' ' + obj.dato.dir).toLowerCase();
       if (query && texto.includes(query)) {
         obj.marker.setIcon(resultIcon);
         obj.marker.setZIndexOffset(1000);
