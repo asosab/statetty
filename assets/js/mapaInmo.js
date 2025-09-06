@@ -6,7 +6,7 @@ var map, locations = [], markers = [], seleccionados = [];
 
 // Iconos
 var resultIcon = new L.Icon({
-  iconUrl: '././assets/images/pointers/pointer_found.png',
+  iconUrl: '../../assets/images/pointers/pointer_found.png',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
   iconSize: [40, 60], iconAnchor: [20, 60], popupAnchor: [1, -54], shadowSize: [60, 60]
 });
@@ -157,7 +157,7 @@ $(document).ready(function () {
 
     var center = L.latLng(lat, lng);
     L.circle(center, { color: 'green', weight: 1, fillOpacity: 0, radius: radius }).addTo(map);
-    var crossIcon = L.icon({ iconUrl: '././assets/images/cross_green.png', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] });
+    var crossIcon = L.icon({ iconUrl: '../../assets/images/cross_green.png', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] });
     var crossMarker = L.marker(center, { icon: crossIcon }).addTo(map).bindPopup(`Centro aproximado`);
 
     // Marcadores
@@ -175,7 +175,7 @@ $(document).ready(function () {
       else brand = 'statetty';
 
       var icon = new L.Icon({
-        iconUrl: '././assets/images/pointers/pointer_' + brand + '.png',
+        iconUrl: '../../assets/images/pointers/pointer_' + brand + '.png',
         shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
         iconSize: [40, 60], iconAnchor: [20, 60], popupAnchor: [1, -54], shadowSize: [60, 60]
       });
