@@ -76,20 +76,29 @@ function escapeHtml(s) {
 
 function actualizarEstadisticas(lista) {
   if (!lista || lista.length === 0) {
-    $('#total-agencias').text(0); $('#prom-agentes').text(0);
-    $('#cnt-activas').text(0); $('#cnt-inactivas').text(0); $('#cnt-sincuenta').text(0); return;
+    $('#total-agencias').text(0);
+    $('#prom-agentes').text(0);
+    $('#total-agentes-all').text(0);
+    $('#cnt-activas').text(0);
+    $('#cnt-inactivas').text(0);
+    $('#cnt-sincuenta').text(0);
+    return;
   }
-  const total = lista.length;
-  const promAg = Math.round(lista.reduce((a, b) => a + (b.cantAg || 0), 0) / total);
+  const totalAgencias = lista.length;
+  const promAg = Math.round(lista.reduce((a, b) => a + (b.cantAg || 0), 0) / totalAgencias);
   const act = lista.reduce((a, b) => a + (b.activos || 0), 0);
   const inact = lista.reduce((a, b) => a + (b.inactivos || 0), 0);
   const sinC = lista.reduce((a, b) => a + (b.sinCuenta || 0), 0);
-  $('#total-agencias').text(total);
+  const totalAgentes = act + inact + sinC;
+
+  $('#total-agencias').text(totalAgencias);
   $('#prom-agentes').text(promAg);
+  $('#total-agentes-all').text(totalAgentes);
   $('#cnt-activas').text(act);
   $('#cnt-inactivas').text(inact);
   $('#cnt-sincuenta').text(sinC);
 }
+
 
 function actualizarToolbox() {
   $("#stats-container").empty();
