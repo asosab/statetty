@@ -99,12 +99,11 @@ function actualizarEstadisticas(lista) {
   $('#cnt-sincuenta').text(sinC);
 }
 
-
 function actualizarToolbox() {
-  $("#stats-container").empty();
+  $("#sel-container").empty();
   if (seleccionados.length > 0) {
     let html = seleccionados.map(s => `<div>${s.nombre} <span class="remove-sel" data-id="${s.uid}" style="cursor:pointer; color:red;">❌</span></div>`).join("");
-    $("#stats-container").append(`
+    $("#sel-container").append(`
       <div id="sel-box">
         <hr>
         ✅ Seleccionados: ${seleccionados.length}
@@ -117,14 +116,13 @@ function actualizarToolbox() {
       seleccionados = seleccionados.filter(s => s.uid !== id);
       guardarSeleccionados();
       let obj = markers.find(m => m.dato.uid === id);
-      if (obj) {
-        if (obj.overlay) { map.removeLayer(obj.overlay); obj.overlay = null; }
-      }
+      if (obj && obj.overlay) { map.removeLayer(obj.overlay); obj.overlay = null; }
       $(`.chk-sel[data-id='${id}']`).prop("checked", false);
       actualizarToolbox();
     });
   }
 }
+
 
 // -------------------------------
 // Índice de columnas de la hoja Agencias_Bolivia
