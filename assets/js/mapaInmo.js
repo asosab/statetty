@@ -1,5 +1,5 @@
 // ---------------------------------------------
-// mapaInmo.js - Lógica completa del mapa de agencias
+// mapaInmo.js - Lógica completa del mapa de agencias con UID
 // ---------------------------------------------
 
 var map, locations = [], markers = [], seleccionados = [];
@@ -22,7 +22,7 @@ var checkOverlayIcon = L.divIcon({
 // Persistencia en localStorage
 // -------------------------------
 function guardarSeleccionados() {
-  const ids = seleccionados.map(s => s.nombre);
+  const ids = seleccionados.map(s => s.uid);
   localStorage.setItem("agenciasSeleccionadas", JSON.stringify(ids));
 }
 
@@ -58,6 +58,11 @@ function cargarMapa() {
 // -------------------------------
 // Utilidades
 // -------------------------------
+function normalizeURL(u) {
+  if (!u) return '';
+  return u.includes('http') ? u : `https://c21.com.bo${u}`;
+}
+
 function calculateDH(lat1, lng1, lat2, lng2) {
   const toRad = d => d * Math.PI / 180;
   const dLat = toRad(lat2 - lat1), dLng = toRad(lng2 - lng1);
@@ -89,7 +94,7 @@ function actualizarEstadisticas(lista) {
 function actualizarToolbox() {
   $("#stats-container").empty();
   if (seleccionados.length > 0) {
-    let html = seleccionados.map(s => `<div>${s.nombre} <span class="remove-sel" data-id="${s.nombre}" style="cursor:pointer; color:red;">❌</span></div>`).join("");
+    let html = seleccionados.map(s => `<div>${s.nombre} <span class="remove-sel" data-id="${s.uid}" style="cursor:pointer; color:red;">❌</span></div>`).join("");
     $("#stats-container").append(`
       <div id="sel-box">
         <hr>
@@ -100,9 +105,9 @@ function actualizarToolbox() {
 
     $(".remove-sel").off("click").on("click", function () {
       let id = $(this).data("id");
-      seleccionados = seleccionados.filter(s => s.nombre !== id);
+      seleccionados = seleccionados.filter(s => s.uid !== id);
       guardarSeleccionados();
-      let obj = markers.find(m => m.dato.nombre === id);
+      let obj = markers.find(m => m.dato.uid === id);
       if (obj) {
         if (obj.overlay) { map.removeLayer(obj.overlay); obj.overlay = null; }
       }
@@ -142,6 +147,7 @@ $(document).ready(function () {
         phone: row[12] || '', region: row[13] || ''
       };
       if (!isFinite(a.lat) || !isFinite(a.lng)) return;
+      a.uid = normalizeURL(a.URL || a.nombre);
       locations.push(a);
     });
 
@@ -162,7 +168,7 @@ $(document).ready(function () {
 
     // Marcadores
     locations.forEach(function (a) {
-      let fullUrl = a.URL; if (fullUrl && !/^https?:\/\//i.test(fullUrl)) { fullUrl = 'https://c21.com.bo' + fullUrl; }
+      let fullUrl = normalizeURL(a.URL);
       var brand;
       if ((fullUrl || '').includes("c21.com")) brand = 'C21';
       else if ((fullUrl || '').includes("remax")) brand = 'remax';
@@ -195,25 +201,25 @@ $(document).ready(function () {
         <b>Agentes:</b> ${a.cantAg} | ✅ ${a.activos} | ❌ ${a.inactivos} | 🚫 ${a.sinCuenta}<br>
         ${fullUrl ? `<a href="${fullUrl}" target="_blank">Ver sitio de la agencia</a><br>` : ''}
         ${wa ? `<a href="${wa}" target="_blank">Contactar por WhatsApp</a>` : ''}
-        <br><label><input type="checkbox" class="chk-sel" data-id="${a.nombre}"> Seleccionar</label>
+        <br><label><input type="checkbox" class="chk-sel" data-id="${a.uid}"> Seleccionar</label>
       `;
 
       marker.bindPopup(popup);
       markers.push({ marker, iconOriginal: icon, dato: a, overlay: null });
 
       marker.on("popupopen", function () {
-        let chk = $(`.chk-sel[data-id='${a.nombre}']`);
-        chk.prop("checked", seleccionados.some(s => s.nombre === a.nombre));
+        let chk = $(`.chk-sel[data-id='${a.uid}']`);
+        chk.prop("checked", seleccionados.some(s => s.uid === a.uid));
 
         chk.off("change").on("change", function () {
           if (this.checked) {
-            if (!seleccionados.some(s => s.nombre === a.nombre)) seleccionados.push(a);
+            if (!seleccionados.some(s => s.uid === a.uid)) seleccionados.push(a);
             let overlay = L.marker([a.lat, a.lng], { icon: checkOverlayIcon, interactive: false }).addTo(map);
-            let obj = markers.find(m => m.dato.nombre === a.nombre);
+            let obj = markers.find(m => m.dato.uid === a.uid);
             if (obj) obj.overlay = overlay;
           } else {
-            seleccionados = seleccionados.filter(s => s.nombre !== a.nombre);
-            let obj = markers.find(m => m.dato.nombre === a.nombre);
+            seleccionados = seleccionados.filter(s => s.uid !== a.uid);
+            let obj = markers.find(m => m.dato.uid === a.uid);
             if (obj && obj.overlay) { map.removeLayer(obj.overlay); obj.overlay = null; }
           }
           guardarSeleccionados();
@@ -225,7 +231,7 @@ $(document).ready(function () {
     // Restaurar seleccionados
     const prevSel = cargarSeleccionados();
     prevSel.forEach(id => {
-      let obj = markers.find(m => m.dato.nombre === id);
+      let obj = markers.find(m => m.dato.uid === id);
       if (obj) {
         seleccionados.push(obj.dato);
         let overlay = L.marker([obj.dato.lat, obj.dato.lng], { icon: checkOverlayIcon, interactive: false }).addTo(map);
