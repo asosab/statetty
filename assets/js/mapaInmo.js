@@ -402,4 +402,17 @@ $(document).ready(function () {
     }
   });
 
+  // Eventos sobre textos de estadísticas
+  $("#stats-container").on("click", function(e) {
+    let t = e.target;
+    if (!t) return;
+    if (t.id === "cnt-activas") {$("#search-input").val("activa").trigger("input");}
+    if (t.id === "cnt-inactivas") { $("#search-input").val("latente").trigger("input");}
+    if (t.id === "cnt-sincuenta") { $("#search-input").val("desconectada").trigger("input");}
+  });
+
+
+
+
+
 });
