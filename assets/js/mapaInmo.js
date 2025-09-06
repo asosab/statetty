@@ -2,7 +2,7 @@
 // mapaInmo.js - Lógica completa del mapa de agencias con UID e índice de columnas
 // ---------------------------------------------
 
-var map, locations = [], markers = [], seleccionados = [];
+var map, locations = [], markers = [], seleccionados = [], ultimosFiltrados = [];
 
 // Iconos
 var resultIcon = new L.Icon({
@@ -82,8 +82,10 @@ function actualizarEstadisticas(lista) {
     $('#cnt-activas').text(0);
     $('#cnt-inactivas').text(0);
     $('#cnt-sincuenta').text(0);
+    $('#stats-actions').remove(); // quitar botones si no hay datos
     return;
   }
+
   const totalAgencias = lista.length;
   const promAg = Math.round(lista.reduce((a, b) => a + (b.cantAg || 0), 0) / totalAgencias);
   const act = lista.reduce((a, b) => a + (b.activos || 0), 0);
@@ -97,7 +99,43 @@ function actualizarEstadisticas(lista) {
   $('#cnt-activas').text(act);
   $('#cnt-inactivas').text(inact);
   $('#cnt-sincuenta').text(sinC);
+
+  // botones de acción
+  if ($('#stats-actions').length === 0) {
+    $('#stats-container').append(`
+      <div id="stats-actions" style="margin-top:8px;">
+        <button id="btn-add-sel">Agregar a selección</button>
+        <button id="btn-remove-sel">Quitar de selección</button>
+      </div>
+    `);
+
+    $('#btn-add-sel').on('click', function () {
+      ultimosFiltrados.forEach(a => {
+        if (!seleccionados.some(s => s.uid === a.uid)) {
+          seleccionados.push(a);
+          let overlay = L.marker([a.lat, a.lng], { icon: checkOverlayIcon, interactive: false }).addTo(map);
+          let obj = markers.find(m => m.dato.uid === a.uid);
+          if (obj) obj.overlay = overlay;
+          $(`.chk-sel[data-id='${a.uid}']`).prop("checked", true);
+        }
+      });
+      guardarSeleccionados();
+      actualizarToolbox();
+    });
+
+    $('#btn-remove-sel').on('click', function () {
+      ultimosFiltrados.forEach(a => {
+        seleccionados = seleccionados.filter(s => s.uid !== a.uid);
+        let obj = markers.find(m => m.dato.uid === a.uid);
+        if (obj && obj.overlay) { map.removeLayer(obj.overlay); obj.overlay = null; }
+        $(`.chk-sel[data-id='${a.uid}']`).prop("checked", false);
+      });
+      guardarSeleccionados();
+      actualizarToolbox();
+    });
+  }
 }
+
 
 function actualizarToolbox() {
   $("#sel-container").empty();
@@ -319,12 +357,16 @@ $(document).ready(function () {
       }
     });
 
+    ultimosFiltrados = filtrados; 
+
     if (query) {
       $('#search-count').text(matchCount).show();
       actualizarEstadisticas(filtrados);
     } else {
       $('#search-count').hide();
       actualizarEstadisticas(locations);
+      ultimosFiltrados = locations; // <<< por si se limpia el buscador
     }
   });
+
 });
