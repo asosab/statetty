@@ -168,7 +168,7 @@ function actualizarToolbox() {
 const columnas = [
   "lat",            // 0 latitud
   "lng",            // 1 longitud
-  "broker",         // 2 broker
+  "agencia",         // 2 agencia
   "nombre",         // 3 nombre de la agencia
   "dir",            // 4 dirección
   "pais",           // 5 país
@@ -185,7 +185,7 @@ const columnas = [
 window.columnasConfig = {
   "lat": false,
   "lng": false,
-  "broker": false,
+  "agencia": false,
   "nombre": true,
   "dir": true,
   "pais": true,
@@ -279,7 +279,7 @@ $(document).ready(function () {
 
       var popup = `
         <b>${escapeHtml(a.nombre)}</b> (${distance} m)<br>
-        <b>Broker:</b> ${escapeHtml(a.broker)}<br>
+        <b>Agencia:</b> ${escapeHtml(a.agencia)}<br>
         <b>Región:</b> ${escapeHtml(a.region)} | <b>País:</b> ${escapeHtml(a.pais)}<br>
         <b>Dirección:</b> ${escapeHtml(a.dir)}<br>
         <b>Agentes:</b> ${a.cantAg} | 🟢 ${a.activos} | 🟡 ${a.inactivos} | 🔴 ${a.sinCuenta}<br>
@@ -345,7 +345,7 @@ $(document).ready(function () {
     let matchCount = 0, filtrados = [];
 
     markers.forEach(obj => {
-      let texto = (obj.dato.nombre + ' ' + obj.dato.broker + ' ' + obj.dato.region + ' ' + obj.dato.pais + ' ' + obj.dato.estado + ' ' + obj.dato.phone + ' ' + obj.dato.dir).toLowerCase();
+      let texto = (obj.dato.nombre + ' ' + obj.dato.agencia + ' ' + obj.dato.region + ' ' + obj.dato.pais + ' ' + obj.dato.estado + ' ' + obj.dato.phone + ' ' + obj.dato.dir).toLowerCase();
       if (query && texto.includes(query)) {
         obj.marker.setIcon(resultIcon);
         obj.marker.setZIndexOffset(1000);
