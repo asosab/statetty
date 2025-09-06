@@ -1,5 +1,5 @@
 // ---------------------------------------------
-// mapaInmo.js - Lógica completa del mapa de agencias con UID
+// mapaInmo.js - Lógica completa del mapa de agencias con UID e índice de columnas
 // ---------------------------------------------
 
 var map, locations = [], markers = [], seleccionados = [];
@@ -118,6 +118,43 @@ function actualizarToolbox() {
 }
 
 // -------------------------------
+// Índice de columnas de la hoja Agencias_Bolivia
+// -------------------------------
+const columnas = [
+  "lat",            // 0 latitud
+  "lng",            // 1 longitud
+  "broker",         // 2 broker
+  "nombre",         // 3 nombre de la agencia
+  "dir",            // 4 dirección
+  "pais",           // 5 país
+  "cantAg",         // 6 cantidad de agentes
+  "estado",         // 7 Estado (activa/inactiva)
+  "activos",        // 8 número de agentes activos
+  "inactivos",      // 9 número de agentes inactivos
+  "sinCuenta",      // 10 agentes sin cuenta
+  "URL",            // 11 sitio web
+  "phone",          // 12 teléfono
+  "region"          // 13 región
+];
+
+window.columnasConfig = {
+  "lat": false,
+  "lng": false,
+  "broker": false,
+  "nombre": true,
+  "dir": true,
+  "pais": true,
+  "cantAg": true,
+  "estado": true,
+  "activos": true,
+  "inactivos": true,
+  "sinCuenta": true,
+  "URL": false,
+  "phone": false,
+  "region": true
+};
+
+// -------------------------------
 // Inicialización del mapa
 // -------------------------------
 $(document).ready(function () {
@@ -136,18 +173,20 @@ $(document).ready(function () {
     $('#loading-indicator').hide();
 
     (data.values || []).forEach(function (row) {
-      if (!row || row.length < 4) return;
-      var a = {
-        lat: parseFloat(row[0]), lng: parseFloat(row[1]),
-        brocker: row[2] || '', nombre: row[3] || '',
-        dir: row[4] || '', pais: row[5] || '',
-        cantAg: parseInt(row[6]) || 0, estado: (row[7] || '').toLowerCase(),
-        activos: parseInt(row[8]) || 0, inactivos: parseInt(row[9]) || 0,
-        sinCuenta: parseInt(row[10]) || 0, URL: row[11] || '',
-        phone: row[12] || '', region: row[13] || ''
-      };
-      if (!isFinite(a.lat) || !isFinite(a.lng)) return;
+      if (!row || row.length < columnas.length) return;
+      var a = {};
+      columnas.forEach((col, i) => a[col] = row[i] || "");
+
+      a.lat = parseFloat(a.lat);
+      a.lng = parseFloat(a.lng);
+      a.cantAg = parseInt(a.cantAg) || 0;
+      a.activos = parseInt(a.activos) || 0;
+      a.inactivos = parseInt(a.inactivos) || 0;
+      a.sinCuenta = parseInt(a.sinCuenta) || 0;
+      a.estado = (a.estado || '').toLowerCase();
       a.uid = normalizeURL(a.URL || a.nombre);
+
+      if (!isFinite(a.lat) || !isFinite(a.lng)) return;
       locations.push(a);
     });
 
@@ -195,7 +234,7 @@ $(document).ready(function () {
 
       var popup = `
         <b>${escapeHtml(a.nombre)}</b> (${distance} m)<br>
-        <b>Broker:</b> ${escapeHtml(a.brocker)}<br>
+        <b>Broker:</b> ${escapeHtml(a.broker)}<br>
         <b>Región:</b> ${escapeHtml(a.region)} | <b>País:</b> ${escapeHtml(a.pais)}<br>
         <b>Dirección:</b> ${escapeHtml(a.dir)}<br>
         <b>Agentes:</b> ${a.cantAg} | ✅ ${a.activos} | ❌ ${a.inactivos} | 🚫 ${a.sinCuenta}<br>
@@ -261,7 +300,7 @@ $(document).ready(function () {
     let matchCount = 0, filtrados = [];
 
     markers.forEach(obj => {
-      let texto = (obj.dato.nombre + ' ' + obj.dato.brocker + ' ' + obj.dato.region + ' ' + obj.dato.pais).toLowerCase();
+      let texto = (obj.dato.nombre + ' ' + obj.dato.broker + ' ' + obj.dato.region + ' ' + obj.dato.pais).toLowerCase();
       if (query && texto.includes(query)) {
         obj.marker.setIcon(resultIcon);
         obj.marker.setZIndexOffset(1000);
