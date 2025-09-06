@@ -1,85 +1,191 @@
-  var map, locations=[], markers=[];
-  var resultIcon = new L.Icon({
-    iconUrl:'../../assets/images/pointers/pointer_found.png',
-    shadowUrl:'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-    iconSize:[40,60],iconAnchor:[20,60],popupAnchor:[1,-54],shadowSize:[60,60]
-  });
+// ---------------------------------------------
+// mapaInmo.js - Lógica completa del mapa de agencias
+// ---------------------------------------------
+
+var map, locations = [], markers = [], seleccionados = [];
+
+// Iconos
+var resultIcon = new L.Icon({
+  iconUrl: '././assets/images/pointers/pointer_found.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+  iconSize: [40, 60], iconAnchor: [20, 60], popupAnchor: [1, -54], shadowSize: [60, 60]
+});
+
+var checkOverlayIcon = L.divIcon({
+  className: 'check-overlay',
+  html: '✔️',
+  iconSize: [30, 30],
+  iconAnchor: [1, 60]
+});
+
+// -------------------------------
+// Persistencia en localStorage
+// -------------------------------
+function guardarSeleccionados() {
+  const ids = seleccionados.map(s => s.nombre);
+  localStorage.setItem("agenciasSeleccionadas", JSON.stringify(ids));
+}
+
+function cargarSeleccionados() {
+  try {
+    const data = JSON.parse(localStorage.getItem("agenciasSeleccionadas")) || [];
+    return Array.isArray(data) ? data : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function guardarMapa() {
+  if (map) {
+    const center = map.getCenter();
+    const zoom = map.getZoom();
+    localStorage.setItem("mapInmoCenter", JSON.stringify([center.lat, center.lng]));
+    localStorage.setItem("mapInmoZoom", zoom);
+  }
+}
+
+function cargarMapa() {
+  try {
+    const center = JSON.parse(localStorage.getItem("mapInmoCenter"));
+    const zoom = parseInt(localStorage.getItem("mapInmoZoom"));
+    if (Array.isArray(center) && !isNaN(zoom)) {
+      return { center, zoom };
+    }
+  } catch (e) {}
+  return null;
+}
+
+// -------------------------------
+// Utilidades
+// -------------------------------
+function calculateDH(lat1, lng1, lat2, lng2) {
+  const toRad = d => d * Math.PI / 180;
+  const dLat = toRad(lat2 - lat1), dLng = toRad(lng2 - lng1);
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return 6371 * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))); // km
+}
+
+function escapeHtml(s) {
+  return (s || '').toString().replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+}
+
+function actualizarEstadisticas(lista) {
+  if (!lista || lista.length === 0) {
+    $('#total-agencias').text(0); $('#prom-agentes').text(0);
+    $('#cnt-activas').text(0); $('#cnt-inactivas').text(0); $('#cnt-sincuenta').text(0); return;
+  }
+  const total = lista.length;
+  const promAg = Math.round(lista.reduce((a, b) => a + (b.cantAg || 0), 0) / total);
+  const act = lista.reduce((a, b) => a + (b.activos || 0), 0);
+  const inact = lista.reduce((a, b) => a + (b.inactivos || 0), 0);
+  const sinC = lista.reduce((a, b) => a + (b.sinCuenta || 0), 0);
+  $('#total-agencias').text(total);
+  $('#prom-agentes').text(promAg);
+  $('#cnt-activas').text(act);
+  $('#cnt-inactivas').text(inact);
+  $('#cnt-sincuenta').text(sinC);
+}
+
+function actualizarToolbox() {
+  $("#stats-container").empty();
+  if (seleccionados.length > 0) {
+    let html = seleccionados.map(s => `<div>${s.nombre} <span class="remove-sel" data-id="${s.nombre}" style="cursor:pointer; color:red;">❌</span></div>`).join("");
+    $("#stats-container").append(`
+      <div id="sel-box">
+        <hr>
+        ✅ Seleccionados: ${seleccionados.length}
+        ${html}
+      </div>
+    `);
+
+    $(".remove-sel").off("click").on("click", function () {
+      let id = $(this).data("id");
+      seleccionados = seleccionados.filter(s => s.nombre !== id);
+      guardarSeleccionados();
+      let obj = markers.find(m => m.dato.nombre === id);
+      if (obj) {
+        if (obj.overlay) { map.removeLayer(obj.overlay); obj.overlay = null; }
+      }
+      $(`.chk-sel[data-id='${id}']`).prop("checked", false);
+      actualizarToolbox();
+    });
+  }
+}
+
+// -------------------------------
+// Inicialización del mapa
+// -------------------------------
+$(document).ready(function () {
+  $('#toolbox-btn').on('click', () => $('#toolbox').toggle());
 
   var urlParams = new URLSearchParams(window.location.search);
   let id = urlParams.get('id'), key = urlParams.get('key');
-  if(!id||!key){ throw new Error("ID o key no proporcionados en la URL"); }
+  if (!id || !key) { throw new Error("ID o key no proporcionados en la URL"); }
 
-  // Leer hoja Agencias_Bolivia (A2:N = 14 columnas)
   var valores = 'Agencias_Bolivia!A2:N';
-  var url = 'https://sheets.googleapis.com/v4/spreadsheets/'+id+'/values/'+valores+'?key='+key;
+  var url = 'https://sheets.googleapis.com/v4/spreadsheets/' + id + '/values/' + valores + '?key=' + key;
 
   $('#loading-indicator').show();
 
   $.getJSON(url, function (data) {
     $('#loading-indicator').hide();
 
-    // Columnas esperadas (14):
-    // 0 lat | 1 lon | 2 brocker | 3 nombre | 4 direccion | 5 pais | 6 cantidadAgentes
-    // 7 Estado | 8 Activos | 9 Inactivos | 10 SinCuenta | 11 URL | 12 phone | 13 region
-    (data.values||[]).forEach(function(row){
-      if(!row || row.length<4) return;
+    (data.values || []).forEach(function (row) {
+      if (!row || row.length < 4) return;
       var a = {
         lat: parseFloat(row[0]), lng: parseFloat(row[1]),
-        brocker: row[2]||'', nombre: row[3]||'',
-        dir: row[4]||'', pais: row[5]||'',
-        cantAg: parseInt(row[6])||0, estado: (row[7]||'').toLowerCase(),
-        activos: parseInt(row[8])||0, inactivos: parseInt(row[9])||0,
-        sinCuenta: parseInt(row[10])||0, URL: row[11]||'',
-        phone: row[12]||'', region: row[13]||''
+        brocker: row[2] || '', nombre: row[3] || '',
+        dir: row[4] || '', pais: row[5] || '',
+        cantAg: parseInt(row[6]) || 0, estado: (row[7] || '').toLowerCase(),
+        activos: parseInt(row[8]) || 0, inactivos: parseInt(row[9]) || 0,
+        sinCuenta: parseInt(row[10]) || 0, URL: row[11] || '',
+        phone: row[12] || '', region: row[13] || ''
       };
-      if(!isFinite(a.lat)||!isFinite(a.lng)) return;
+      if (!isFinite(a.lat) || !isFinite(a.lng)) return;
       locations.push(a);
     });
 
-    // Centroide y radio (si no llegan por URL)
     var lat = parseFloat(urlParams.get('lat')), lng = parseFloat(urlParams.get('lng')), radius = parseFloat(urlParams.get('r'));
-    if(!isFinite(lat)||!isFinite(lng)||!isFinite(radius)){
-      let latSum=0,lngSum=0; locations.forEach(l=>{latSum+=l.lat;lngSum+=l.lng;});
-      lat = latSum/locations.length; lng = lngSum/locations.length;
-      let maxD=0; locations.forEach(l=>{ const d=calculateDH(lat,lng,l.lat,l.lng); if(d>maxD) maxD=d; }); radius = maxD*1000;
+    if (!isFinite(lat) || !isFinite(lng) || !isFinite(radius)) {
+      let latSum = 0, lngSum = 0; locations.forEach(l => { latSum += l.lat; lngSum += l.lng; });
+      lat = latSum / locations.length; lng = lngSum / locations.length;
+      let maxD = 0; locations.forEach(l => { const d = calculateDH(lat, lng, l.lat, l.lng); if (d > maxD) maxD = d; }); radius = maxD * 1000;
     }
 
-    // Crear mapa
-    var mymap = L.map('mapid');
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-      {attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'}
-    ).addTo(mymap);
+    map = L.map('mapid');
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(map);
 
-    // Círculo y cruz centrales
-    var center = L.latLng(lat,lng);
-    L.circle(center,{color:'green',weight:1,fillOpacity:0,radius:radius}).addTo(mymap);
-    var crossIcon = L.icon({iconUrl:'../../assets/images/cross_green.png',iconSize:[20,20],iconAnchor:[10,10],popupAnchor:[0,-10]});
-    var crossMarker = L.marker(center,{icon:crossIcon}).addTo(mymap).bindPopup(`Centro aproximado`);
+    var center = L.latLng(lat, lng);
+    L.circle(center, { color: 'green', weight: 1, fillOpacity: 0, radius: radius }).addTo(map);
+    var crossIcon = L.icon({ iconUrl: '././assets/images/cross_green.png', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] });
+    var crossMarker = L.marker(center, { icon: crossIcon }).addTo(map).bindPopup(`Centro aproximado`);
 
     // Marcadores
-    locations.forEach(function(a){
-      let fullUrl = a.URL; if(fullUrl && !/^https?:\/\//i.test(fullUrl)){ fullUrl = 'https://c21.com.bo'+fullUrl; }
+    locations.forEach(function (a) {
+      let fullUrl = a.URL; if (fullUrl && !/^https?:\/\//i.test(fullUrl)) { fullUrl = 'https://c21.com.bo' + fullUrl; }
       var brand;
-           if((fullUrl||'').includes("c21.com")) brand='C21';
-      else if((fullUrl||'').includes("remax")) brand='remax';
-      else if((fullUrl||'').includes("bieninmuebles")) brand='bieni';
-      else if((fullUrl||'').includes("elfaro")) brand='elfaro';
-      else if((fullUrl||'').includes("dueodeinmueble")) brand='IDI';
-      else if((fullUrl||'').includes("ultracasas")) brand='UC';
-      else if((fullUrl||'').includes("uno.com")) brand='uno';
-      else if((fullUrl||'').includes("infocasas.com")) brand='ic';
-      else brand='statetty';
+      if ((fullUrl || '').includes("c21.com")) brand = 'C21';
+      else if ((fullUrl || '').includes("remax")) brand = 'remax';
+      else if ((fullUrl || '').includes("bieninmuebles")) brand = 'bieni';
+      else if ((fullUrl || '').includes("elfaro")) brand = 'elfaro';
+      else if ((fullUrl || '').includes("dueodeinmueble")) brand = 'IDI';
+      else if ((fullUrl || '').includes("ultracasas")) brand = 'UC';
+      else if ((fullUrl || '').includes("uno.com")) brand = 'uno';
+      else if ((fullUrl || '').includes("infocasas.com")) brand = 'ic';
+      else brand = 'statetty';
 
-      var icon = new L.Icon({iconUrl:'../../assets/images/pointers/pointer_'+brand+'.png',
-        shadowUrl:'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-        iconSize:[40,60],iconAnchor:[20,60],popupAnchor:[1,-54],shadowSize:[60,60]});
+      var icon = new L.Icon({
+        iconUrl: '././assets/images/pointers/pointer_' + brand + '.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+        iconSize: [40, 60], iconAnchor: [20, 60], popupAnchor: [1, -54], shadowSize: [60, 60]
+      });
 
-      var marker = L.marker([a.lat,a.lng],{icon}).addTo(mymap);
+      var marker = L.marker([a.lat, a.lng], { icon }).addTo(map);
 
-      var cel = (a.phone||'').replace(/\D/g,'');
+      var cel = (a.phone || '').replace(/\D/g, '');
       var waTxt = `Hola, me gustaría contactar con la agencia ${a.nombre}. (Enviado desde Statetty https://statetty.com)`;
-      var wa = cel? 'https://wa.me/'+cel+'?text='+encodeURIComponent(waTxt) : '';
-      var distance = Math.round(calculateDH(center.lat,center.lng,a.lat,a.lng)*1000);
+      var wa = cel ? 'https://wa.me/' + cel + '?text=' + encodeURIComponent(waTxt) : '';
+      var distance = Math.round(calculateDH(center.lat, center.lng, a.lat, a.lng) * 1000);
 
       var popup = `
         <b>${escapeHtml(a.nombre)}</b> (${distance} m)<br>
@@ -87,55 +193,86 @@
         <b>Región:</b> ${escapeHtml(a.region)} | <b>País:</b> ${escapeHtml(a.pais)}<br>
         <b>Dirección:</b> ${escapeHtml(a.dir)}<br>
         <b>Agentes:</b> ${a.cantAg} | ✅ ${a.activos} | ❌ ${a.inactivos} | 🚫 ${a.sinCuenta}<br>
-        ${fullUrl? `<a href="${fullUrl}" target="_blank">Ver sitio de la agencia</a><br>`:''}
-        ${wa? `<a href="${wa}" target="_blank">Contactar por WhatsApp</a>`:''}
+        ${fullUrl ? `<a href="${fullUrl}" target="_blank">Ver sitio de la agencia</a><br>` : ''}
+        ${wa ? `<a href="${wa}" target="_blank">Contactar por WhatsApp</a>` : ''}
+        <br><label><input type="checkbox" class="chk-sel" data-id="${a.nombre}"> Seleccionar</label>
       `;
+
       marker.bindPopup(popup);
-      markers.push({marker,iconOriginal:icon,dato:a});
+      markers.push({ marker, iconOriginal: icon, dato: a, overlay: null });
+
+      marker.on("popupopen", function () {
+        let chk = $(`.chk-sel[data-id='${a.nombre}']`);
+        chk.prop("checked", seleccionados.some(s => s.nombre === a.nombre));
+
+        chk.off("change").on("change", function () {
+          if (this.checked) {
+            if (!seleccionados.some(s => s.nombre === a.nombre)) seleccionados.push(a);
+            let overlay = L.marker([a.lat, a.lng], { icon: checkOverlayIcon, interactive: false }).addTo(map);
+            let obj = markers.find(m => m.dato.nombre === a.nombre);
+            if (obj) obj.overlay = overlay;
+          } else {
+            seleccionados = seleccionados.filter(s => s.nombre !== a.nombre);
+            let obj = markers.find(m => m.dato.nombre === a.nombre);
+            if (obj && obj.overlay) { map.removeLayer(obj.overlay); obj.overlay = null; }
+          }
+          guardarSeleccionados();
+          actualizarToolbox();
+        });
+      });
     });
 
-    var group = new L.featureGroup(locations.map(l=> L.marker([l.lat,l.lng])));
-    mymap.fitBounds(group.getBounds());
-    actualizarEstadisticas(locations);
-  });
+    // Restaurar seleccionados
+    const prevSel = cargarSeleccionados();
+    prevSel.forEach(id => {
+      let obj = markers.find(m => m.dato.nombre === id);
+      if (obj) {
+        seleccionados.push(obj.dato);
+        let overlay = L.marker([obj.dato.lat, obj.dato.lng], { icon: checkOverlayIcon, interactive: false }).addTo(map);
+        obj.overlay = overlay;
+      }
+      $(`.chk-sel[data-id='${id}']`).prop("checked", true);
+    });
+    actualizarToolbox();
 
-  // ===== Utilidades y UI =====
-  function calculateDH(lat1,lng1,lat2,lng2){
-    const toRad=d=>d*Math.PI/180, dLat=toRad(lat2-lat1), dLng=toRad(lng2-lng1);
-    const a=Math.sin(dLat/2)**2+Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLng/2)**2;
-    return 6371*(2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a))); // km
-  }
-  function escapeHtml(s){return (s||'').toString().replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));}
-
-  function actualizarEstadisticas(lista){
-    if(!lista||!lista.length){
-      $('#total-agencias').text(0); $('#prom-agentes').text(0);
-      $('#cnt-activas').text(0); $('#cnt-inactivas').text(0); $('#cnt-sincuenta').text(0); return;
+    // Restaurar centro/zoom del mapa si existe
+    const savedMap = cargarMapa();
+    if (savedMap) {
+      map.setView(savedMap.center, savedMap.zoom);
+    } else {
+      var group = new L.featureGroup(locations.map(function (l) { return L.marker([l.lat, l.lng]); }));
+      map.fitBounds(group.getBounds());
     }
-    const total = lista.length;
-    const promAg = Math.round(lista.reduce((a,b)=>a+(b.cantAg||0),0)/total);
-    const act = lista.reduce((a,b)=>a+(b.estado==='activa'?1:0),0);
-    const inact = lista.reduce((a,b)=>a+(b.estado==='inactiva'?1:0),0);
-    const sin = lista.reduce((a,b)=>a+(b.sinCuenta||0),0);
-    $('#total-agencias').text(total);
-    $('#prom-agentes').text(promAg);
-    $('#cnt-activas').text(act);
-    $('#cnt-inactivas').text(inact);
-    $('#cnt-sincuenta').text(sin);
-  }
 
-  $('#toolbox-btn').on('click', function(){ $('#toolbox').toggle(); });
-
-  $('#search-input').on('input', function(){
-    let q = ($(this).val()||'').toLowerCase().trim(), matchCount=0, filtrados=[];
-    markers.forEach(obj=>{
-      let t = [
-        obj.dato.nombre,obj.dato.dir,obj.dato.region,obj.dato.brocker,
-        obj.dato.pais,obj.dato.phone,obj.dato.estado
-      ].join(' ').toLowerCase();
-      if(q && t.includes(q)){ obj.marker.setIcon(resultIcon); obj.marker.setZIndexOffset(1000); matchCount++; filtrados.push(obj.dato); }
-      else { obj.marker.setIcon(obj.iconOriginal); obj.marker.setZIndexOffset(0); }
-    });
-    if(q){ $('#search-count').text(matchCount).show(); actualizarEstadisticas(filtrados); }
-    else { $('#search-count').hide(); actualizarEstadisticas(locations); }
+    actualizarEstadisticas(locations);
+    map.on("moveend", guardarMapa);
+    map.on("zoomend", guardarMapa);
   });
+
+  // búsqueda
+  $('#search-input').on('input', function () {
+    let query = $(this).val().toLowerCase();
+    let matchCount = 0, filtrados = [];
+
+    markers.forEach(obj => {
+      let texto = (obj.dato.nombre + ' ' + obj.dato.brocker + ' ' + obj.dato.region + ' ' + obj.dato.pais).toLowerCase();
+      if (query && texto.includes(query)) {
+        obj.marker.setIcon(resultIcon);
+        obj.marker.setZIndexOffset(1000);
+        matchCount++;
+        filtrados.push(obj.dato);
+      } else {
+        obj.marker.setIcon(obj.iconOriginal);
+        obj.marker.setZIndexOffset(0);
+      }
+    });
+
+    if (query) {
+      $('#search-count').text(matchCount).show();
+      actualizarEstadisticas(filtrados);
+    } else {
+      $('#search-count').hide();
+      actualizarEstadisticas(locations);
+    }
+  });
+});
