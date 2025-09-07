@@ -311,7 +311,7 @@ $(document).ready(function () {
       var distance = Math.round(calculateDH(center.lat, center.lng, a.lat, a.lng) * 1000);
 
       var popup = `
-        <b>${escapeHtml(a.nombre)}</b> (${distance} m)<br>
+        <b>${escapeHtml(a.nombre)}</b><br>
         <b>Agencia:</b> ${escapeHtml(a.agencia)}<br>
         <b>Región:</b> ${escapeHtml(a.region)} | <b>País:</b> ${escapeHtml(a.pais)}<br>
         <b>Dirección:</b> ${escapeHtml(a.dir)}<br>
