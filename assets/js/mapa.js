@@ -94,6 +94,33 @@ function actualizarEstadisticas(lista) {
   // botones de acción
   if ($('#stats-actions').length === 0) {
 
+    // Agregar todos
+    $('#btn-add-all').on('click', function () {
+      locations.forEach(a => {
+        if (!seleccionados.some(s => s.uid === a.uid)) {
+          seleccionados.push(a);
+          let overlay = L.marker([a.lat, a.lng], { icon: checkOverlayIcon, interactive: false }).addTo(map);
+          let obj = markers.find(m => m.dato.uid === a.uid);
+          if (obj) obj.overlay = overlay;
+          $(`.chk-sel[data-id='${a.uid}']`).prop("checked", true);
+        }
+      });
+      guardarSeleccionados();
+      actualizarToolbox();
+    });
+
+    // Quitar todos
+    $('#btn-remove-all').on('click', function () {
+      seleccionados.slice().forEach(s => {
+        const obj = markers.find(m => m.dato.uid === s.uid);
+        if (obj && obj.overlay) { map.removeLayer(obj.overlay); obj.overlay = null; }
+        $(`.chk-sel[data-id='${s.uid}']`).prop("checked", false);
+      });
+      seleccionados = [];
+      guardarSeleccionados();
+      actualizarToolbox();
+    });
+
     // Agregar a selección
     $('#btn-add-sel').on('click', function () {
       ultimosFiltrados.forEach(a => {
