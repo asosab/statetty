@@ -2,7 +2,7 @@
 // mapa.js - Lógica completa del mapa y selección
 // ---------------------------------------------
 
-var map, locations = [], markers = [], seleccionados = [];
+var map, locations = [], markers = [], seleccionados = [], filtradosGlobal = [];
 
 // Iconos
 var resultIcon = new L.Icon({
@@ -91,6 +91,63 @@ function actualizarEstadisticas(lista) {
   $('#mas-barato').text(`${masBarato.Titulo}`);
   $('#mas-caro').text(`${masCaro.Titulo}`);
 }
+
+// -------------------------------
+// Botones de acción sobre resultados filtrados
+// -------------------------------
+$(document).on("click", "#btn-add-results", function () {
+  filtradosGlobal.forEach(dato => {
+    if (!seleccionados.some(s => s.uid === dato.uid)) {
+      seleccionados.push(dato);
+      let overlay = L.marker([dato.lat, dato.lng], { icon: checkOverlayIcon, interactive: false }).addTo(map);
+      let obj = markers.find(m => m.dato.uid === dato.uid);
+      if (obj) obj.overlay = overlay;
+      $(`.chk-sel[data-id='${dato.uid}']`).prop("checked", true);
+    }
+  });
+  guardarSeleccionados();
+  actualizarToolbox();
+});
+
+$(document).on("click", "#btn-remove-results", function () {
+  seleccionados = seleccionados.filter(s => !filtradosGlobal.some(f => f.uid === s.uid));
+  filtradosGlobal.forEach(dato => {
+    let obj = markers.find(m => m.dato.uid === dato.uid);
+    if (obj && obj.overlay) { map.removeLayer(obj.overlay); obj.overlay = null; }
+    $(`.chk-sel[data-id='${dato.uid}']`).prop("checked", false);
+  });
+  guardarSeleccionados();
+  actualizarToolbox();
+});
+
+function keepOnlyResults() {
+  if (!Array.isArray(filtradosGlobal)) filtradosGlobal = [];
+  const filtradosUids = new Set(filtradosGlobal.map(f => f.uid));
+  const toRemove = seleccionados.filter(s => !filtradosUids.has(s.uid));
+  toRemove.forEach(sel => {
+    const obj = markers.find(m => m.dato.uid === sel.uid);
+    if (obj && obj.overlay) { map.removeLayer(obj.overlay); obj.overlay = null; }
+    $(`.chk-sel[data-id='${sel.uid}']`).prop('checked', false);
+  });
+  seleccionados = seleccionados.filter(s => filtradosUids.has(s.uid));
+  guardarSeleccionados();
+  actualizarToolbox();
+}
+
+$(document).off("click", "#btn-keep-only-results").on("click", "#btn-keep-only-results", keepOnlyResults);
+
+// -------------------------------
+// Funciones auxiliares
+// -------------------------------
+function calculateDH(lat1, lng1, lat2, lng2) {
+  const lat1Rad = lat1 * Math.PI / 180, lng1Rad = lng1 * Math.PI / 180;
+  const lat2Rad = lat2 * Math.PI / 180, lng2Rad = lng2 * Math.PI / 180;
+  const dLat = lat2Rad - lat1Rad, dLng = lng2Rad - lng1Rad;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1Rad) * Math.cos(lat2Rad) * Math.sin(dLng / 2) ** 2;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return 6371 * c;
+}
+
 
 function actualizarToolbox() {
   $("#sel-box").remove();
@@ -424,14 +481,4 @@ $(document).ready(function () {
   });
 });
 
-// -------------------------------
-// Funciones auxiliares
-// -------------------------------
-function calculateDH(lat1, lng1, lat2, lng2) {
-  const lat1Rad = lat1 * Math.PI / 180, lng1Rad = lng1 * Math.PI / 180;
-  const lat2Rad = lat2 * Math.PI / 180, lng2Rad = lng2 * Math.PI / 180;
-  const dLat = lat2Rad - lat1Rad, dLng = lng2Rad - lng1Rad;
-  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1Rad) * Math.cos(lat2Rad) * Math.sin(dLng / 2) ** 2;
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return 6371 * c;
-}
+
