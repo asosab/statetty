@@ -101,72 +101,68 @@ function actualizarEstadisticas(lista) {
   $('#cnt-sincuenta').text(sinC);
 
   // botones de acción
-if ($('#stats-actions').length === 0) {
-  $('#stats-container').append(`
-    <div id="stats-actions" style="margin-top:8px;">
-      <button id="btn-add-sel">Agregar a selección</button>
-      <button id="btn-remove-sel">Quitar de selección</button>
-      <button id="btn-keep-only">Quitar todos excepto estos</button>
-    </div>
-  `);
+  if ($('#stats-actions').length === 0) {
+    $('#stats-container').append(`
+      <div id="stats-actions" style="margin-top:8px;">
+        <button id="btn-add-sel">Agregar a selección</button>
+        <button id="btn-remove-sel">Quitar de selección</button>
+        <button id="btn-keep-only">Quitar todos excepto estos</button>
+      </div>
+    `);
 
-  // Agregar a selección
-  $('#btn-add-sel').on('click', function () {
-    ultimosFiltrados.forEach(a => {
-      if (!seleccionados.some(s => s.uid === a.uid)) {
-        seleccionados.push(a);
-        let overlay = L.marker([a.lat, a.lng], { icon: checkOverlayIcon, interactive: false }).addTo(map);
+    // Agregar a selección
+    $('#btn-add-sel').on('click', function () {
+      ultimosFiltrados.forEach(a => {
+        if (!seleccionados.some(s => s.uid === a.uid)) {
+          seleccionados.push(a);
+          let overlay = L.marker([a.lat, a.lng], { icon: checkOverlayIcon, interactive: false }).addTo(map);
+          let obj = markers.find(m => m.dato.uid === a.uid);
+          if (obj) obj.overlay = overlay;
+          $(`.chk-sel[data-id='${a.uid}']`).prop("checked", true);
+        }
+      });
+      guardarSeleccionados();
+      actualizarToolbox();
+    });
+
+    // Quitar de selección
+    $('#btn-remove-sel').on('click', function () {
+      ultimosFiltrados.forEach(a => {
+        seleccionados = seleccionados.filter(s => s.uid !== a.uid);
         let obj = markers.find(m => m.dato.uid === a.uid);
-        if (obj) obj.overlay = overlay;
-        $(`.chk-sel[data-id='${a.uid}']`).prop("checked", true);
-      }
-    });
-    guardarSeleccionados();
-    actualizarToolbox();
-  });
-
-  // Quitar de selección
-  $('#btn-remove-sel').on('click', function () {
-    ultimosFiltrados.forEach(a => {
-      seleccionados = seleccionados.filter(s => s.uid !== a.uid);
-      let obj = markers.find(m => m.dato.uid === a.uid);
-      if (obj && obj.overlay) { map.removeLayer(obj.overlay); obj.overlay = null; }
-      $(`.chk-sel[data-id='${a.uid}']`).prop("checked", false);
-    });
-    guardarSeleccionados();
-    actualizarToolbox();
-  });
-
-  // Quitar todos excepto estos (solo elimina los que NO están en el filtro actual)
-  $('#btn-keep-only').off('click').on('click', function () {
-    const keepUIDs = new Set((ultimosFiltrados || []).map(a => a.uid));
-
-    // Si no hay resultados filtrados, no hacemos nada (protección)
-    if (keepUIDs.size === 0) return;
-
-    // Recorremos una copia porque vamos a mutar 'seleccionados'
-    seleccionados.slice().forEach(s => {
-      if (!keepUIDs.has(s.uid)) {
-        // 1) quitar del arreglo de seleccionados
-        seleccionados = seleccionados.filter(x => x.uid !== s.uid);
-
-        // 2) quitar overlay del mapa
-        const obj = markers.find(m => m.dato.uid === s.uid);
         if (obj && obj.overlay) { map.removeLayer(obj.overlay); obj.overlay = null; }
-
-        // 3) desmarcar checkbox si está presente en el DOM
-        $(`.chk-sel[data-id='${s.uid}']`).prop('checked', false);
-      }
+        $(`.chk-sel[data-id='${a.uid}']`).prop("checked", false);
+      });
+      guardarSeleccionados();
+      actualizarToolbox();
     });
 
-    guardarSeleccionados();
-    actualizarToolbox();
-  });
+    // Quitar todos excepto estos (solo elimina los que NO están en el filtro actual)
+    $('#btn-keep-only').off('click').on('click', function () {
+      const keepUIDs = new Set((ultimosFiltrados || []).map(a => a.uid));
 
-}
+      // Si no hay resultados filtrados, no hacemos nada (protección)
+      if (keepUIDs.size === 0) return;
 
+      // Recorremos una copia porque vamos a mutar 'seleccionados'
+      seleccionados.slice().forEach(s => {
+        if (!keepUIDs.has(s.uid)) {
+          // 1) quitar del arreglo de seleccionados
+          seleccionados = seleccionados.filter(x => x.uid !== s.uid);
 
+          // 2) quitar overlay del mapa
+          const obj = markers.find(m => m.dato.uid === s.uid);
+          if (obj && obj.overlay) { map.removeLayer(obj.overlay); obj.overlay = null; }
 
+          // 3) desmarcar checkbox si está presente en el DOM
+          $(`.chk-sel[data-id='${s.uid}']`).prop('checked', false);
+        }
+      });
+
+      guardarSeleccionados();
+      actualizarToolbox();
+    });
+  }
 }
 
 
@@ -398,7 +394,7 @@ $(document).ready(function () {
     } else {
       $('#search-count').hide();
       actualizarEstadisticas(locations);
-      ultimosFiltrados = locations; // <<< por si se limpia el buscador
+      ultimosFiltrados = locations; 
     }
   });
 
