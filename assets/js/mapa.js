@@ -148,7 +148,7 @@ function actualizarEstadisticas(lista) {
       actualizarToolbox();
     });
 
-    // Quitar todos excepto estos (solo elimina los que NO están en el filtro actual)
+    // Quitar todos excepto estos 
     $('#btn-keep-only').off('click').on('click', function () {
       const keepUIDs = new Set((ultimosFiltrados || []).map(a => a.uid));
 
@@ -173,6 +173,27 @@ function actualizarEstadisticas(lista) {
       guardarSeleccionados();
       actualizarToolbox();
     });
+
+    // Agregar todos excepto estos
+    $('#btn-add-all-except').on('click', function () {
+      const excludeUIDs = new Set((ultimosFiltrados || []).map(a => a.uid));
+
+      locations.forEach(a => {
+        if (excludeUIDs.has(a.uid)) return; // saltar los filtrados
+        if (!seleccionados.some(s => s.uid === a.uid)) {
+          seleccionados.push(a);
+          let overlay = L.marker([a.lat, a.lng], { icon: checkOverlayIcon, interactive: false }).addTo(map);
+          let obj = markers.find(m => m.dato.uid === a.uid);
+          if (obj) obj.overlay = overlay;
+          $(`.chk-sel[data-id='${a.uid}']`).prop("checked", true);
+        }
+      });
+
+      guardarSeleccionados();
+      actualizarToolbox();
+    });
+
+
   }
 }
 
