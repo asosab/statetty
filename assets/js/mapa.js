@@ -93,13 +93,6 @@ function actualizarEstadisticas(lista) {
 
   // botones de acción
   if ($('#stats-actions').length === 0) {
-    $('#stats-container').append(`
-      <div id="stats-actions" style="margin-top:8px;">
-        <button id="btn-add-sel">Agregar a selección</button>
-        <button id="btn-remove-sel">Quitar de selección</button>
-        <button id="btn-keep-only">Quitar todos excepto estos</button>
-      </div>
-    `);
 
     // Agregar a selección
     $('#btn-add-sel').on('click', function () {
