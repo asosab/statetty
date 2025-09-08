@@ -271,7 +271,7 @@ $(document).ready(function () {
       let maxD = 0; locations.forEach(l => { const d = calculateDH(lat, lng, l.lat, l.lng); if (d > maxD) maxD = d; }); radius = maxD * 1000;
     }
 
-    map = L.map('mapid');
+    map = L.map('mapid', { zoomControl: false });
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(map);
 
     var center = L.latLng(lat, lng);
