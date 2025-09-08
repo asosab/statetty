@@ -462,7 +462,7 @@ $(document).ready(function () {
 
     markers.forEach(obj => {
       let texto = (
-        obj.dato.des + ' ' + obj.dato.nombre + ' ' + obj.dato.Titulo + ' ' + obj.dato.dir + ' ' +
+        obj.dato.des + ' ' + obj.dato.nombre + ' ' + obj.dato.Titulo + ' ' + obj.dato.dir + ' ' + obj.dato.broker + ' ' + 
         (obj.dato.agentName || '') + ' ' +
         (obj.dato.agentPhon || '')
       ).toLowerCase();
