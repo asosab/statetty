@@ -75,14 +75,24 @@ function calcularPromedio(datos, prop) {
   return Math.round(suma / datosFiltrados.length);
 }
 
+/**
+ * Actualiza las estadísticas visuales y se asegura de que los
+ * botones de acción existan y estén inicializados.
+ * @param {Array} lista - Lista de inmuebles a usar para calcular estadísticas.
+ * @returns {void}
+ */
 function actualizarEstadisticas(lista) {
   if (!lista || lista.length === 0) {
     $('#total-inmuebles').text(0);
     $('#precio-promedio').text("0,00");
     $('#mas-barato').text("-");
     $('#mas-caro').text("-");
+    // Aseguramos botones aunque lista esté vacía (para inicializar handlers)
+    ensureStatsActions();
+    updateButtonsState();
     return;
   }
+
   let promedio = calcularPromedio(lista, 'precio');
   let masBarato = lista.reduce((min, loc) => (loc.precio && loc.precio < min.precio ? loc : min), lista[0]);
   let masCaro = lista.reduce((max, loc) => (loc.precio && loc.precio > max.precio ? loc : max), lista[0]);
@@ -91,111 +101,177 @@ function actualizarEstadisticas(lista) {
   $('#mas-barato').text(`${masBarato.Titulo}`);
   $('#mas-caro').text(`${masCaro.Titulo}`);
 
-  // botones de acción
+  // Asegurar existencia de botones y sus handlers (idempotente)
+  ensureStatsActions();
+
+  // Ajustar habilitación / visibilidad según estado actual
+  updateButtonsState();
+}
+
+/**
+ * Asegura que exista #stats-actions y enlaza los handlers una sola vez.
+ * Si el contenedor ya está en el HTML, no lo recrea; solo agrega handlers
+ * la primera vez que se llama.
+ * @returns {void}
+ */
+function ensureStatsActions() {
+  // Si no existe el contenedor, lo creamos (por seguridad)
   if ($('#stats-actions').length === 0) {
+    $('#stats-container').append(`
+      <div id="stats-actions" style="margin-top:8px;">
+        <button id="btn-add-sel">Agregar a selección</button>
+        <button id="btn-remove-sel">Quitar de selección</button>
+        <button id="btn-keep-only">Mantener estos</button>
+        <br>
+        <button id="btn-add-all">Agregar todos</button>
+        <button id="btn-remove-all">Quitar todos</button>
+        <button id="btn-add-all-except" title="Agregar todos menos los filtrados">➕ Otros</button>
+      </div>
+    `);
+  }
 
-    // Agregar todos
-    $('#btn-add-all').on('click', function () {
-      locations.forEach(a => {
-        if (!seleccionados.some(s => s.uid === a.uid)) {
-          seleccionados.push(a);
-          let overlay = L.marker([a.lat, a.lng], { icon: checkOverlayIcon, interactive: false }).addTo(map);
-          let obj = markers.find(m => m.dato.uid === a.uid);
-          if (obj) obj.overlay = overlay;
-          $(`.chk-sel[data-id='${a.uid}']`).prop("checked", true);
-        }
-      });
-      guardarSeleccionados();
-      actualizarToolbox();
+  // Evitar volver a atar handlers
+  if (window.statsButtonsInit) return;
+  window.statsButtonsInit = true;
+
+  // --- handlers (usar .off para evitar duplicados si por alguna razón se vuelve a llamar) ---
+  $('#btn-add-all').off('click').on('click', function () {
+    locations.forEach(a => {
+      if (!seleccionados.some(s => s.uid === a.uid)) {
+        seleccionados.push(a);
+        let overlay = L.marker([a.lat, a.lng], { icon: checkOverlayIcon, interactive: false }).addTo(map);
+        let obj = markers.find(m => m.dato.uid === a.uid);
+        if (obj) obj.overlay = overlay;
+        $(`.chk-sel[data-id='${a.uid}']`).prop("checked", true);
+      }
     });
+    guardarSeleccionados();
+    actualizarToolbox();
+    updateButtonsState();
+  });
 
-    // Quitar todos
-    $('#btn-remove-all').on('click', function () {
-      seleccionados.slice().forEach(s => {
+  $('#btn-remove-all').off('click').on('click', function () {
+    seleccionados.slice().forEach(s => {
+      const obj = markers.find(m => m.dato.uid === s.uid);
+      if (obj && obj.overlay) { map.removeLayer(obj.overlay); obj.overlay = null; }
+      $(`.chk-sel[data-id='${s.uid}']`).prop("checked", false);
+    });
+    seleccionados = [];
+    guardarSeleccionados();
+    actualizarToolbox();
+    updateButtonsState();
+  });
+
+  $('#btn-add-sel').off('click').on('click', function () {
+    (ultimosFiltrados || []).forEach(a => {
+      if (!seleccionados.some(s => s.uid === a.uid)) {
+        seleccionados.push(a);
+        let overlay = L.marker([a.lat, a.lng], { icon: checkOverlayIcon, interactive: false }).addTo(map);
+        let obj = markers.find(m => m.dato.uid === a.uid);
+        if (obj) obj.overlay = overlay;
+        $(`.chk-sel[data-id='${a.uid}']`).prop("checked", true);
+      }
+    });
+    guardarSeleccionados();
+    actualizarToolbox();
+    updateButtonsState();
+  });
+
+  $('#btn-remove-sel').off('click').on('click', function () {
+    (ultimosFiltrados || []).forEach(a => {
+      seleccionados = seleccionados.filter(s => s.uid !== a.uid);
+      let obj = markers.find(m => m.dato.uid === a.uid);
+      if (obj && obj.overlay) { map.removeLayer(obj.overlay); obj.overlay = null; }
+      $(`.chk-sel[data-id='${a.uid}']`).prop("checked", false);
+    });
+    guardarSeleccionados();
+    actualizarToolbox();
+    updateButtonsState();
+  });
+
+  $('#btn-keep-only').off('click').on('click', function () {
+    const keepUIDs = new Set((ultimosFiltrados || []).map(a => a.uid));
+
+    // Protección: si no hay resultados filtrados, no hacemos nada
+    if (keepUIDs.size === 0) return;
+
+    // Eliminar seleccionados que no estén en keepUIDs
+    seleccionados.slice().forEach(s => {
+      if (!keepUIDs.has(s.uid)) {
+        seleccionados = seleccionados.filter(x => x.uid !== s.uid);
         const obj = markers.find(m => m.dato.uid === s.uid);
         if (obj && obj.overlay) { map.removeLayer(obj.overlay); obj.overlay = null; }
-        $(`.chk-sel[data-id='${s.uid}']`).prop("checked", false);
-      });
-      seleccionados = [];
-      guardarSeleccionados();
-      actualizarToolbox();
+        $(`.chk-sel[data-id='${s.uid}']`).prop('checked', false);
+      }
     });
 
-    // Agregar a selección
-    $('#btn-add-sel').on('click', function () {
-      ultimosFiltrados.forEach(a => {
-        if (!seleccionados.some(s => s.uid === a.uid)) {
-          seleccionados.push(a);
-          let overlay = L.marker([a.lat, a.lng], { icon: checkOverlayIcon, interactive: false }).addTo(map);
-          let obj = markers.find(m => m.dato.uid === a.uid);
-          if (obj) obj.overlay = overlay;
-          $(`.chk-sel[data-id='${a.uid}']`).prop("checked", true);
-        }
-      });
-      guardarSeleccionados();
-      actualizarToolbox();
-    });
+    guardarSeleccionados();
+    actualizarToolbox();
+    updateButtonsState();
+  });
 
-    // Quitar de selección
-    $('#btn-remove-sel').on('click', function () {
-      ultimosFiltrados.forEach(a => {
-        seleccionados = seleccionados.filter(s => s.uid !== a.uid);
+  $('#btn-add-all-except').off('click').on('click', function () {
+    const excludeUIDs = new Set((ultimosFiltrados || []).map(a => a.uid));
+    locations.forEach(a => {
+      if (excludeUIDs.has(a.uid)) return; // saltar los filtrados
+      if (!seleccionados.some(s => s.uid === a.uid)) {
+        seleccionados.push(a);
+        let overlay = L.marker([a.lat, a.lng], { icon: checkOverlayIcon, interactive: false }).addTo(map);
         let obj = markers.find(m => m.dato.uid === a.uid);
-        if (obj && obj.overlay) { map.removeLayer(obj.overlay); obj.overlay = null; }
-        $(`.chk-sel[data-id='${a.uid}']`).prop("checked", false);
-      });
-      guardarSeleccionados();
-      actualizarToolbox();
+        if (obj) obj.overlay = overlay;
+        $(`.chk-sel[data-id='${a.uid}']`).prop("checked", true);
+      }
     });
-
-    // Quitar todos excepto estos 
-    $('#btn-keep-only').off('click').on('click', function () {
-      const keepUIDs = new Set((ultimosFiltrados || []).map(a => a.uid));
-
-      // Si no hay resultados filtrados, no hacemos nada (protección)
-      if (keepUIDs.size === 0) return;
-
-      // Recorremos una copia porque vamos a mutar 'seleccionados'
-      seleccionados.slice().forEach(s => {
-        if (!keepUIDs.has(s.uid)) {
-          // 1) quitar del arreglo de seleccionados
-          seleccionados = seleccionados.filter(x => x.uid !== s.uid);
-
-          // 2) quitar overlay del mapa
-          const obj = markers.find(m => m.dato.uid === s.uid);
-          if (obj && obj.overlay) { map.removeLayer(obj.overlay); obj.overlay = null; }
-
-          // 3) desmarcar checkbox si está presente en el DOM
-          $(`.chk-sel[data-id='${s.uid}']`).prop('checked', false);
-        }
-      });
-
-      guardarSeleccionados();
-      actualizarToolbox();
-    });
-
-    // Agregar todos excepto estos
-    $('#btn-add-all-except').on('click', function () {
-      const excludeUIDs = new Set((ultimosFiltrados || []).map(a => a.uid));
-
-      locations.forEach(a => {
-        if (excludeUIDs.has(a.uid)) return; // saltar los filtrados
-        if (!seleccionados.some(s => s.uid === a.uid)) {
-          seleccionados.push(a);
-          let overlay = L.marker([a.lat, a.lng], { icon: checkOverlayIcon, interactive: false }).addTo(map);
-          let obj = markers.find(m => m.dato.uid === a.uid);
-          if (obj) obj.overlay = overlay;
-          $(`.chk-sel[data-id='${a.uid}']`).prop("checked", true);
-        }
-      });
-
-      guardarSeleccionados();
-      actualizarToolbox();
-    });
-
-
-  }
+    guardarSeleccionados();
+    actualizarToolbox();
+    updateButtonsState();
+  });
 }
+
+/**
+ * Actualiza enabled/disabled de los botones según el estado actual:
+ * - habilita operaciones de 'agregar' cuando tiene sentido
+ * - deshabilita operaciones 'quitar' si no hay selección
+ * - deshabilita acciones ligadas al filtro si no hay resultados filtrados
+ * @returns {void}
+ */
+function updateButtonsState() {
+  // referencias
+  const $addSel = $('#btn-add-sel'), $removeSel = $('#btn-remove-sel'),
+        $keepOnly = $('#btn-keep-only'), $addAll = $('#btn-add-all'),
+        $removeAll = $('#btn-remove-all'), $addAllExcept = $('#btn-add-all-except');
+
+  // seguridad: si no existen los botones, nada que hacer
+  if ($addSel.length === 0) return;
+
+  const selCount = seleccionados.length;
+  const filtCount = (ultimosFiltrados || []).length;
+  const totalCount = (locations || []).length;
+
+  // desactivar todo por defecto
+  [$addSel,$removeSel,$keepOnly,$addAll,$removeAll,$addAllExcept].forEach($b => { if ($b.length) $b.prop('disabled', true); });
+
+  // reglas:
+  // - Si hay resultados filtrados: permitir agregar/quitar sobre esos filtrados (según exista selección)
+  if (filtCount > 0) {
+    if ($addSel.length) $addSel.prop('disabled', false);             // siempre se puede 'Agregar a selección' los filtrados
+    if ($removeSel.length) $removeSel.prop('disabled', selCount === 0); // quitar filtrados solo si hay seleccionados
+    if ($keepOnly.length) $keepOnly.prop('disabled', selCount === 0);   // mantener estos solo si hay seleccionados
+    if ($addAllExcept.length) $addAllExcept.prop('disabled', false);   // agregar todos excepto filtrados (siempre permitido cuando hay filtros)
+  }
+
+  // - Agregar todos (si existen inmuebles en el mapa)
+  if (totalCount > 0 && $addAll.length) $addAll.prop('disabled', false);
+
+  // - Quitar todos (solo si hay elementos seleccionados)
+  if (selCount > 0 && $removeAll.length) $removeAll.prop('disabled', false);
+
+  // Nota: si quieres el comportamiento estricto que mencionaste
+  // (cuando seleccionados === 0, SOLO habilitar 'Agregar a selección'),
+  // activa la siguiente opción: (descomenta la línea siguiente)
+  // if (selCount === 0) { [$addAll,$addAllExcept,$removeSel,$keepOnly,$removeAll].forEach($b => $b.prop('disabled', true)); }
+}
+
 
 function actualizarToolbox() {
   $("#sel-box").remove();
