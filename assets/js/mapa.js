@@ -275,6 +275,10 @@ function updateButtonsState() {
 
 function actualizarToolbox() {
   $("#sel-box").remove();
+
+  // ✅ ordenar seleccionados por precio ascendente
+  seleccionados.sort((a, b) => (parseFloat(a.precio) || 0) - (parseFloat(b.precio) || 0));
+
   let html = '';
   seleccionados.forEach((s, i) => {
     html += `<div>${i + 1}. ${s.Titulo} <span class="remove-sel" data-id="${s.uid}" style="cursor:pointer; color:red;">❌</span></div>`;
@@ -307,24 +311,17 @@ function actualizarToolbox() {
     });
   }
 
-
   $(".remove-sel").off("click").on("click", function () {
     let id = $(this).data("id");
     seleccionados = seleccionados.filter(s => s.uid !== id);
-    guardarSeleccionados(); // persistencia
-
+    guardarSeleccionados();
     let obj = markers.find(m => m.dato.uid === id);
-    if (obj) {
-      if (obj.overlay) { map.removeLayer(obj.overlay); obj.overlay = null; }
-      let pos = obj.marker.getLatLng();
-      let offset = 0.0001;
-      obj.marker.setLatLng([pos.lat + offset, pos.lng]);
-      setTimeout(() => obj.marker.setLatLng(pos), 150);
-    }
+    if (obj && obj.overlay) { map.removeLayer(obj.overlay); obj.overlay = null; }
     $(`.chk-sel[data-id='${id}']`).prop("checked", false);
     actualizarToolbox();
   });
 }
+
 
 // -------------------------------
 // Inicialización del mapa
