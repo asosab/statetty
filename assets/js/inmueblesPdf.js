@@ -2,6 +2,22 @@
 // inmueblesPdf.js - Generador de brochure PDF con selección de columnas
 // ---------------------------------------------
 
+function proxify(url) {
+  if (!url) return url;
+  return `https://ekvilibrolab.netlify.app/.netlify/functions/proxy-image?url=${encodeURIComponent(url)}`;
+}
+
+async function urlToBase64(url) {
+  const resp = await fetch(proxify(url));
+  const blob = await resp.blob();
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
 function loadScript(url) {
   return new Promise((resolve, reject) => {
     if (document.querySelector(`script[src="${url}"]`)) {
@@ -245,13 +261,13 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
         didDrawCell: async function (data) {
           if (data.cell.raw && data.cell.raw.fotoUrl) {
             try {
-              const imgData = await fetch(data.cell.raw.fotoUrl).then(r => r.blob());
-              const reader = new FileReader();
-              reader.onload = function () {
-                const img = reader.result;
-                doc.addImage(img, "JPEG", data.cell.x + 1, data.cell.y + 1, data.cell.width - 2, data.cell.height - 2);
-              };
-              reader.readAsDataURL(imgData);
+              const base64Img = await urlToBase64(data.cell.raw.fotoUrl);
+              doc.addImage(base64Img, "JPEG",
+                data.cell.x + 1,
+                data.cell.y + 1,
+                data.cell.width - 2,
+                data.cell.height - 2
+              );
             } catch (e) { console.error("No se pudo cargar la imagen", e); }
           }
         }
@@ -299,13 +315,13 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
         didDrawCell: async function (data) {
           if (data.cell.raw && data.cell.raw.fotoUrl) {
             try {
-              const imgData = await fetch(data.cell.raw.fotoUrl).then(r => r.blob());
-              const reader = new FileReader();
-              reader.onload = function () {
-                const img = reader.result;
-                doc.addImage(img, "JPEG", data.cell.x + 1, data.cell.y + 1, data.cell.width - 2, data.cell.height - 2);
-              };
-              reader.readAsDataURL(imgData);
+              const base64Img = await urlToBase64(data.cell.raw.fotoUrl);
+              doc.addImage(base64Img, "JPEG",
+                data.cell.x + 1,
+                data.cell.y + 1,
+                data.cell.width - 2,
+                data.cell.height - 2
+              );
             } catch (e) { console.error("No se pudo cargar la imagen", e); }
           }
         }
@@ -330,5 +346,7 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
     hideLoader();
   }
 }
+
+
 
 
