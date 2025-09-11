@@ -183,7 +183,7 @@ async function generarMapaInmuebles(inmuebles, vertical = false) {
 
 // ---------------------------------------------
 // Generar PDF (modo = "landscape" | "mobile")
-// con celdas ajustadas a imágenes más grandes
+// con imágenes más grandes y espacio dinámico
 // ---------------------------------------------
 async function generarBrochurePDF(seleccionados, modo = "landscape") {
   if (!seleccionados || seleccionados.length === 0) {
@@ -287,7 +287,7 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
     }
 
     // ---------------------------------------------
-    // Landscape
+    // Landscape dinámico
     // ---------------------------------------------
     if (modo === "landscape") {
       const camposLimitados = seleccionadas.slice(0, 7);
@@ -312,7 +312,11 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
         theme: "grid",
         didParseCell: function (data) {
           if (data.cell.raw && data.cell.raw.fotoBase64) {
-            data.cell.styles.minCellHeight = 55; // mm
+            // 🔹 altura proporcional a columnas visibles
+            const baseHeight = 50; // mm
+            const colCount = camposLimitados.length;
+            const scaleFactor = Math.max(1, 7 / colCount);
+            data.cell.styles.minCellHeight = baseHeight * scaleFactor;
           }
         },
         didDrawCell: function (data) {
@@ -324,10 +328,11 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
     }
 
     // ---------------------------------------------
-    // Mobile
+    // Mobile dinámico (máx. 5 inmuebles)
     // ---------------------------------------------
     if (modo === "mobile") {
-      const inmueblesLimitados = seleccionados.slice(0, 6);
+      const inmueblesLimitados = seleccionados.slice(0, 5);
+
       const headers = ["Campo", ...inmueblesLimitados.map((s, i) => `#${i + 1}`)];
       const rows = seleccionadas.map(campo => {
         const fila = [campo.label];
@@ -348,7 +353,11 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
         theme: "grid",
         didParseCell: function (data) {
           if (data.cell.raw && data.cell.raw.fotoBase64) {
-            data.cell.styles.minCellHeight = 70; // mm
+            // 🔹 altura proporcional a inmuebles visibles (máx. 5)
+            const baseHeight = 65; // mm
+            const count = inmueblesLimitados.length;
+            const scaleFactor = 5 / count;
+            data.cell.styles.minCellHeight = baseHeight * scaleFactor;
           }
         },
         didDrawCell: function (data) {
@@ -377,5 +386,7 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
     hideLoader();
   }
 }
+
+
 
 
