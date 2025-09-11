@@ -211,6 +211,18 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
     // Ordenar inmuebles por precio
     seleccionados.sort((a, b) => (parseFloat(a.precio) || 0) - (parseFloat(b.precio) || 0));
 
+    // 🔹 Pre-cargar imágenes en base64
+    for (let s of seleccionados) {
+      if (s.foto) {
+        try {
+          s.fotoBase64 = await urlToBase64(s.foto);
+        } catch (e) {
+          console.error("Error precargando foto", e);
+          s.fotoBase64 = null;
+        }
+      }
+    }
+
     // Generar mapa
     const mapaImg = await generarMapaInmuebles(seleccionados, modo === "mobile");
     if (mapaImg) {
@@ -230,21 +242,19 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
       alert("Debes seleccionar al menos un campo.");
       hideLoader(); return;
     }
-
-    // Orden por index
     seleccionadas.sort((a, b) => a.index - b.index);
 
     // ---------------------------------------------
     // Landscape → tabla horizontal con máx 7 columnas
     // ---------------------------------------------
     if (modo === "landscape") {
-      const camposLimitados = seleccionadas.slice(0, 7); // máximo 7 campos
+      const camposLimitados = seleccionadas.slice(0, 7);
       const headers = ["#", ...camposLimitados.map(c => c.label)];
       const rows = seleccionados.map((s, i) => {
         const fila = [`${i + 1}`];
         camposLimitados.forEach(campo => {
           if (campo.key === "des") fila.push(s.des || "-");
-          else if (campo.key === "foto") fila.push(s.foto ? { content: "", fotoUrl: s.foto } : "-");
+          else if (campo.key === "foto") fila.push(s.fotoBase64 ? { fotoBase64: s.fotoBase64 } : "-");
           else fila.push(["precio","precio_m2","precioDelM2","precioM2"].includes(campo.key) ? formatCurrency(s[campo.key]) : (s[campo.key] || "-"));
         });
         return fila;
@@ -255,20 +265,17 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
         body: rows,
         startY: mapaImg ? 135 : 30,
         styles: { fontSize: 9, cellPadding: 3, valign: "top" },
-        columnStyles: { 0: { cellWidth: 12 } }, // primera columna compacta, 3 dígitos máx
+        columnStyles: { 0: { cellWidth: 12 } },
         headStyles: { fillColor: [76, 175, 80], textColor: 255, halign: "center" },
         theme: "grid",
-        didDrawCell: async function (data) {
-          if (data.cell.raw && data.cell.raw.fotoUrl) {
-            try {
-              const base64Img = await urlToBase64(data.cell.raw.fotoUrl);
-              doc.addImage(base64Img, "JPEG",
-                data.cell.x + 1,
-                data.cell.y + 1,
-                data.cell.width - 2,
-                data.cell.height - 2
-              );
-            } catch (e) { console.error("No se pudo cargar la imagen", e); }
+        didDrawCell: function (data) {
+          if (data.cell.raw && data.cell.raw.fotoBase64) {
+            doc.addImage(data.cell.raw.fotoBase64, "JPEG",
+              data.cell.x + 1,
+              data.cell.y + 1,
+              data.cell.width - 2,
+              data.cell.height - 2
+            );
           }
         }
       });
@@ -278,23 +285,23 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
     // Mobile → tabla vertical con ancho medido
     // ---------------------------------------------
     if (modo === "mobile") {
-      const inmueblesLimitados = seleccionados.slice(0, 6); // máximo 6 inmuebles
+      const inmueblesLimitados = seleccionados.slice(0, 6);
       const headers = ["Campo", ...inmueblesLimitados.map((s, i) => `#${i + 1}`)];
       const rows = seleccionadas.map(campo => {
         const fila = [campo.label];
         inmueblesLimitados.forEach(s => {
           if (campo.key === "des") fila.push(s.des || "-");
-          else if (campo.key === "foto") fila.push(s.foto ? { content: "", fotoUrl: s.foto } : "-");
+          else if (campo.key === "foto") fila.push(s.fotoBase64 ? { fotoBase64: s.fotoBase64 } : "-");
           else fila.push(["precio","precio_m2","precioDelM2","precioM2"].includes(campo.key) ? formatCurrency(s[campo.key]) : (s[campo.key] || "-"));
         });
         return fila;
       });
 
-      // Medir ancho requerido para la primera columna (según etiqueta más larga)
+      // medir ancho
       doc.setFontSize(9);
       const longestLabel = Math.max(...seleccionadas.map(c => doc.getTextWidth(c.label)));
       const padding = 6;
-      const firstColWidth = Math.min(longestLabel + padding, 50); // tope de 50 mm
+      const firstColWidth = Math.min(longestLabel + padding, 50);
       const margin = 20;
       const usableWidth = pageWidth - margin * 2;
       const otherColsWidth = (usableWidth - firstColWidth) / inmueblesLimitados.length;
@@ -312,17 +319,14 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
         columnStyles: colStyles,
         headStyles: { fillColor: [76, 175, 80], textColor: 255, halign: "center" },
         theme: "grid",
-        didDrawCell: async function (data) {
-          if (data.cell.raw && data.cell.raw.fotoUrl) {
-            try {
-              const base64Img = await urlToBase64(data.cell.raw.fotoUrl);
-              doc.addImage(base64Img, "JPEG",
-                data.cell.x + 1,
-                data.cell.y + 1,
-                data.cell.width - 2,
-                data.cell.height - 2
-              );
-            } catch (e) { console.error("No se pudo cargar la imagen", e); }
+        didDrawCell: function (data) {
+          if (data.cell.raw && data.cell.raw.fotoBase64) {
+            doc.addImage(data.cell.raw.fotoBase64, "JPEG",
+              data.cell.x + 1,
+              data.cell.y + 1,
+              data.cell.width - 2,
+              data.cell.height - 2
+            );
           }
         }
       });
