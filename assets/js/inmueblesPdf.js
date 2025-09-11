@@ -244,6 +244,25 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
     }
     seleccionadas.sort((a, b) => a.index - b.index);
 
+    // Función para dibujar imágenes escaladas
+    function drawScaledImage(base64, cell, doc) {
+      const img = new Image();
+      img.src = base64;
+      img.onload = () => {
+        const fixedHeight = 23.8; // 90px en mm
+        const maxWidth = 31.7;    // 120px en mm
+        let w = (img.width * fixedHeight) / img.height;
+        let h = fixedHeight;
+        if (w > maxWidth) {
+          w = maxWidth;
+          h = (img.height * maxWidth) / img.width;
+        }
+        const x = cell.x + (cell.width - w) / 2;
+        const y = cell.y + (cell.height - h) / 2;
+        doc.addImage(base64, "JPEG", x, y, w, h);
+      };
+    }
+
     // ---------------------------------------------
     // Landscape → tabla horizontal con máx 7 columnas
     // ---------------------------------------------
@@ -270,26 +289,7 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
         theme: "grid",
         didDrawCell: function (data) {
           if (data.cell.raw && data.cell.raw.fotoBase64) {
-            try {
-              const img = new Image();
-              img.src = data.cell.raw.fotoBase64;
-              img.onload = () => {
-                const fixedHeight = 24; // 90px en mm
-                const maxWidth = 32;    // 120px en mm
-                let w = (img.width * fixedHeight) / img.height;
-                let h = fixedHeight;
-                if (w > maxWidth) {
-                  w = maxWidth;
-                  h = (img.height * maxWidth) / img.width;
-                }
-
-                // centrado dentro de la celda
-                const x = data.cell.x + (data.cell.width - w) / 2;
-                const y = data.cell.y + (data.cell.height - h) / 2;
-
-                doc.addImage(data.cell.raw.fotoBase64, "JPEG", x, y, w, h);
-              };
-            } catch (e) {console.error("Error dibujando imagen", e);} 
+            drawScaledImage(data.cell.raw.fotoBase64, data.cell, doc);
           }
         }
       });
@@ -335,26 +335,7 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
         theme: "grid",
         didDrawCell: function (data) {
           if (data.cell.raw && data.cell.raw.fotoBase64) {
-            try {
-              const img = new Image();
-              img.src = data.cell.raw.fotoBase64;
-              img.onload = () => {
-                const fixedHeight = 24; // 90px en mm
-                const maxWidth = 32;    // 120px en mm
-                let w = (img.width * fixedHeight) / img.height;
-                let h = fixedHeight;
-                if (w > maxWidth) {
-                  w = maxWidth;
-                  h = (img.height * maxWidth) / img.width;
-                }
-
-                // centrado dentro de la celda
-                const x = data.cell.x + (data.cell.width - w) / 2;
-                const y = data.cell.y + (data.cell.height - h) / 2;
-
-                doc.addImage(data.cell.raw.fotoBase64, "JPEG", x, y, w, h);
-              };
-            } catch (e) {console.error("Error dibujando imagen", e);} 
+            drawScaledImage(data.cell.raw.fotoBase64, data.cell, doc);
           }
         }
       });
