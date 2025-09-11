@@ -183,7 +183,7 @@ async function generarMapaInmuebles(inmuebles, vertical = false) {
 
 // ---------------------------------------------
 // Generar PDF (modo = "landscape" | "mobile")
-// con celdas ajustadas a imágenes
+// con celdas ajustadas a imágenes más grandes
 // ---------------------------------------------
 async function generarBrochurePDF(seleccionados, modo = "landscape") {
   if (!seleccionados || seleccionados.length === 0) {
@@ -212,7 +212,7 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
     // Ordenar inmuebles por precio
     seleccionados.sort((a, b) => (parseFloat(a.precio) || 0) - (parseFloat(b.precio) || 0));
 
-    // 🔹 Precargar imágenes con caché en localStorage
+    // 🔹 Precargar imágenes con caché
     for (let s of seleccionados) {
       if (s.foto) {
         try {
@@ -266,13 +266,14 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
     }
     seleccionadas.sort((a, b) => a.index - b.index);
 
-    // Helper para dibujar imágenes
+    // Helper para dibujar imágenes más grandes
     function drawImageFromRaw(raw, cell, doc) {
       const base64 = raw.fotoBase64;
       if (!base64 || !raw.fotoW || !raw.fotoH) return;
 
-      const fixedHeight = 160 * 0.264583; // ≈42 mm
-      const maxWidth = 220 * 0.264583;    // ≈58 mm
+      // 🔹 tamaños distintos según el modo
+      const fixedHeight = (modo === "mobile") ? 70 : 55; // mm
+      const maxWidth    = (modo === "mobile") ? 90 : 95; // mm
 
       let w = (raw.fotoW * fixedHeight) / raw.fotoH;
       let h = fixedHeight;
@@ -311,7 +312,7 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
         theme: "grid",
         didParseCell: function (data) {
           if (data.cell.raw && data.cell.raw.fotoBase64) {
-            data.cell.styles.minCellHeight = 42; // altura en mm
+            data.cell.styles.minCellHeight = 55; // mm
           }
         },
         didDrawCell: function (data) {
@@ -347,7 +348,7 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
         theme: "grid",
         didParseCell: function (data) {
           if (data.cell.raw && data.cell.raw.fotoBase64) {
-            data.cell.styles.minCellHeight = 42; // altura en mm
+            data.cell.styles.minCellHeight = 70; // mm
           }
         },
         didDrawCell: function (data) {
@@ -376,4 +377,5 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
     hideLoader();
   }
 }
+
 
