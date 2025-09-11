@@ -266,21 +266,18 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
     }
     seleccionadas.sort((a, b) => a.index - b.index);
 
-    // Helper para dibujar imágenes más grandes
-    function drawImageFromRaw(raw, cell, doc) {
+    // Helper para dibujar imágenes
+    function drawImageFromRaw(raw, cell, doc, isMobile = false) {
       const base64 = raw.fotoBase64;
       if (!base64 || !raw.fotoW || !raw.fotoH) return;
 
-      // 🔹 tamaños distintos según el modo
-      const fixedHeight = (modo === "mobile") ? 70 : 55; // mm
-      const maxWidth    = (modo === "mobile") ? 90 : 95; // mm
-
-      let w = (raw.fotoW * fixedHeight) / raw.fotoH;
-      let h = fixedHeight;
-      if (w > maxWidth) { w = maxWidth; h = (raw.fotoH * maxWidth) / raw.fotoW; }
+      const maxWidth = cell.width - 6; // ancho de celda
+      let w = maxWidth;
+      let h = (raw.fotoH * w) / raw.fotoW;
 
       const x = cell.x + (cell.width - w) / 2;
-      const y = cell.y + (cell.height - h) / 2;
+      // en mobile dejamos espacio extra para el título "Foto"
+      const y = cell.y + (isMobile ? 6 : (cell.height - h) / 2);
 
       const type = /^data:image\/png/i.test(base64) ? "PNG" : "JPEG";
       doc.addImage(base64, type, x, y, w, h);
@@ -312,16 +309,14 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
         theme: "grid",
         didParseCell: function (data) {
           if (data.cell.raw && data.cell.raw.fotoBase64) {
-            // 🔹 altura proporcional a columnas visibles
-            const baseHeight = 50; // mm
-            const colCount = camposLimitados.length;
-            const scaleFactor = Math.max(1, 7 / colCount);
-            data.cell.styles.minCellHeight = baseHeight * scaleFactor;
+            const imgW = data.cell.width - 6;
+            const imgH = (data.cell.raw.fotoH * imgW) / data.cell.raw.fotoW;
+            data.cell.styles.minCellHeight = imgH + 4;
           }
         },
         didDrawCell: function (data) {
           if (data.cell.raw && data.cell.raw.fotoBase64) {
-            drawImageFromRaw(data.cell.raw, data.cell, doc);
+            drawImageFromRaw(data.cell.raw, data.cell, doc, false);
           }
         }
       });
@@ -353,16 +348,15 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
         theme: "grid",
         didParseCell: function (data) {
           if (data.cell.raw && data.cell.raw.fotoBase64) {
-            // 🔹 altura proporcional a inmuebles visibles (máx. 5)
-            const baseHeight = 65; // mm
-            const count = inmueblesLimitados.length;
-            const scaleFactor = 5 / count;
-            data.cell.styles.minCellHeight = baseHeight * scaleFactor;
+            const imgW = data.cell.width - 6;
+            const imgH = (data.cell.raw.fotoH * imgW) / data.cell.raw.fotoW;
+            const extraTop = 6; // espacio para título "Foto"
+            data.cell.styles.minCellHeight = imgH + extraTop + 4;
           }
         },
         didDrawCell: function (data) {
           if (data.cell.raw && data.cell.raw.fotoBase64) {
-            drawImageFromRaw(data.cell.raw, data.cell, doc);
+            drawImageFromRaw(data.cell.raw, data.cell, doc, true);
           }
         }
       });
