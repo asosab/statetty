@@ -275,7 +275,7 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
         if (!base64) return;
 
         const fixedHeight = 200 * 0.264583; 
-        const maxWidth = 300 * 0.264583;   
+        const maxWidth = 300 * 0.264583;  
         let imgW = raw.fotoW;
         let imgH = raw.fotoH;
 
