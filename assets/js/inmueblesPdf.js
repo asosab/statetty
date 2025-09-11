@@ -270,12 +270,26 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
         theme: "grid",
         didDrawCell: function (data) {
           if (data.cell.raw && data.cell.raw.fotoBase64) {
-            doc.addImage(data.cell.raw.fotoBase64, "JPEG",
-              data.cell.x + 1,
-              data.cell.y + 1,
-              data.cell.width - 2,
-              data.cell.height - 2
-            );
+            try {
+              const img = new Image();
+              img.src = data.cell.raw.fotoBase64;
+              img.onload = () => {
+                const fixedHeight = 24; // 90px en mm
+                const maxWidth = 32;    // 120px en mm
+                let w = (img.width * fixedHeight) / img.height;
+                let h = fixedHeight;
+                if (w > maxWidth) {
+                  w = maxWidth;
+                  h = (img.height * maxWidth) / img.width;
+                }
+
+                // centrado dentro de la celda
+                const x = data.cell.x + (data.cell.width - w) / 2;
+                const y = data.cell.y + (data.cell.height - h) / 2;
+
+                doc.addImage(data.cell.raw.fotoBase64, "JPEG", x, y, w, h);
+              };
+            } catch (e) {console.error("Error dibujando imagen", e);} 
           }
         }
       });
@@ -321,12 +335,26 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
         theme: "grid",
         didDrawCell: function (data) {
           if (data.cell.raw && data.cell.raw.fotoBase64) {
-            doc.addImage(data.cell.raw.fotoBase64, "JPEG",
-              data.cell.x + 1,
-              data.cell.y + 1,
-              data.cell.width - 2,
-              data.cell.height - 2
-            );
+            try {
+              const img = new Image();
+              img.src = data.cell.raw.fotoBase64;
+              img.onload = () => {
+                const fixedHeight = 24; // 90px en mm
+                const maxWidth = 32;    // 120px en mm
+                let w = (img.width * fixedHeight) / img.height;
+                let h = fixedHeight;
+                if (w > maxWidth) {
+                  w = maxWidth;
+                  h = (img.height * maxWidth) / img.width;
+                }
+
+                // centrado dentro de la celda
+                const x = data.cell.x + (data.cell.width - w) / 2;
+                const y = data.cell.y + (data.cell.height - h) / 2;
+
+                doc.addImage(data.cell.raw.fotoBase64, "JPEG", x, y, w, h);
+              };
+            } catch (e) {console.error("Error dibujando imagen", e);} 
           }
         }
       });
