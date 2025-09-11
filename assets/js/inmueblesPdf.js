@@ -211,14 +211,26 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
     // Ordenar inmuebles por precio
     seleccionados.sort((a, b) => (parseFloat(a.precio) || 0) - (parseFloat(b.precio) || 0));
 
-    // 🔹 Pre-cargar imágenes en base64
+    // 🔹 Pre-cargar imágenes en base64 y obtener dimensiones (esperado antes de autoTable)
     for (let s of seleccionados) {
       if (s.foto) {
         try {
-          s.fotoBase64 = await urlToBase64(s.foto);
+          const base64 = await urlToBase64(s.foto);
+          s.fotoBase64 = base64;
+          // obtener dimensiones cargando la imagen (esto también se espera)
+          const dims = await new Promise(resolve => {
+            const img = new Image();
+            img.onload = () => resolve({ w: img.width, h: img.height });
+            img.onerror = () => resolve({ w: null, h: null });
+            img.src = base64;
+          });
+          s.fotoW = dims.w;
+          s.fotoH = dims.h;
         } catch (e) {
           console.error("Error precargando foto", e);
           s.fotoBase64 = null;
+          s.fotoW = null;
+          s.fotoH = null;
         }
       }
     }
@@ -244,23 +256,54 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
     }
     seleccionadas.sort((a, b) => a.index - b.index);
 
-    // Función para dibujar imágenes escaladas
-    function drawScaledImage(base64, cell, doc) {
-      const img = new Image();
-      img.src = base64;
-      img.onload = () => {
-        const fixedHeight = 23.8; // 90px en mm
-        const maxWidth = 31.7;    // 120px en mm
-        let w = (img.width * fixedHeight) / img.height;
-        let h = fixedHeight;
-        if (w > maxWidth) {
-          w = maxWidth;
-          h = (img.height * maxWidth) / img.width;
+    // Helper para dibujar imagen ya conocida (dimensiones y base64)
+    function drawImageFromRaw(raw, cell, doc) {
+      try {
+        const base64 = raw.fotoBase64;
+        if (!base64) return;
+        // mm conversions: 1 px ≈ 0.264583 mm (uso aproximado)
+        const fixedHeight = 90 * 0.264583; // ≈ 23.81247 mm
+        const maxWidth = 120 * 0.264583;   // ≈ 31.74996 mm
+
+        let imgW = raw.fotoW;
+        let imgH = raw.fotoH;
+
+        // fallback si no hay dimensiones: ajustamos al espacio disponible
+        if (!imgW || !imgH) {
+          const wFallback = Math.min(maxWidth, cell.width - 2);
+          const hFallback = Math.min(fixedHeight, cell.height - 2);
+          const xF = cell.x + (cell.width - wFallback) / 2;
+          const yF = cell.y + (cell.height - hFallback) / 2;
+          const typeF = /^data:image\/png/i.test(base64) ? "PNG" : "JPEG";
+          doc.addImage(base64, typeF, xF, yF, wFallback, hFallback);
+          return;
         }
+
+        // calcular manteniendo proporción con altura fija
+        let w = (imgW * fixedHeight) / imgH;
+        let h = fixedHeight;
+        if (w > maxWidth) { w = maxWidth; h = (imgH * maxWidth) / imgW; }
+
+        // si la celda es más pequeña que la imagen planificada, escalar hacia abajo
+        if (h > cell.height - 2) {
+          const scale = (cell.height - 2) / h;
+          h = h * scale;
+          w = w * scale;
+        }
+        if (w > cell.width - 2) {
+          const scale = (cell.width - 2) / w;
+          w = w * scale;
+          h = h * scale;
+        }
+
         const x = cell.x + (cell.width - w) / 2;
         const y = cell.y + (cell.height - h) / 2;
-        doc.addImage(base64, "JPEG", x, y, w, h);
-      };
+
+        const imgType = /^data:image\/png/i.test(base64) ? "PNG" : "JPEG";
+        doc.addImage(base64, imgType, x, y, w, h);
+      } catch (e) {
+        console.error("drawImageFromRaw error:", e);
+      }
     }
 
     // ---------------------------------------------
@@ -273,8 +316,12 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
         const fila = [`${i + 1}`];
         camposLimitados.forEach(campo => {
           if (campo.key === "des") fila.push(s.des || "-");
-          else if (campo.key === "foto") fila.push(s.fotoBase64 ? { fotoBase64: s.fotoBase64 } : "-");
-          else fila.push(["precio","precio_m2","precioDelM2","precioM2"].includes(campo.key) ? formatCurrency(s[campo.key]) : (s[campo.key] || "-"));
+          else if (campo.key === "foto") {
+            if (s.fotoBase64) fila.push({ content: "", fotoBase64: s.fotoBase64, fotoW: s.fotoW, fotoH: s.fotoH });
+            else fila.push("-"); 
+          } else {
+            fila.push(["precio","precio_m2","precioDelM2","precioM2"].includes(campo.key) ? formatCurrency(s[campo.key]) : (s[campo.key] || "-"));
+          }
         });
         return fila;
       });
@@ -288,8 +335,8 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
         headStyles: { fillColor: [76, 175, 80], textColor: 255, halign: "center" },
         theme: "grid",
         didDrawCell: function (data) {
-          if (data.cell.raw && data.cell.raw.fotoBase64) {
-            drawScaledImage(data.cell.raw.fotoBase64, data.cell, doc);
+          if (data.cell && data.cell.raw && data.cell.raw.fotoBase64) {
+            drawImageFromRaw(data.cell.raw, data.cell, doc);
           }
         }
       });
@@ -305,8 +352,10 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
         const fila = [campo.label];
         inmueblesLimitados.forEach(s => {
           if (campo.key === "des") fila.push(s.des || "-");
-          else if (campo.key === "foto") fila.push(s.fotoBase64 ? { fotoBase64: s.fotoBase64 } : "-");
-          else fila.push(["precio","precio_m2","precioDelM2","precioM2"].includes(campo.key) ? formatCurrency(s[campo.key]) : (s[campo.key] || "-"));
+          else if (campo.key === "foto") {
+            if (s.fotoBase64) fila.push({ content: "", fotoBase64: s.fotoBase64, fotoW: s.fotoW, fotoH: s.fotoH });
+            else fila.push("-");
+          } else fila.push(["precio","precio_m2","precioDelM2","precioM2"].includes(campo.key) ? formatCurrency(s[campo.key]) : (s[campo.key] || "-"));
         });
         return fila;
       });
@@ -321,9 +370,7 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
       const otherColsWidth = (usableWidth - firstColWidth) / inmueblesLimitados.length;
 
       const colStyles = { 0: { cellWidth: firstColWidth } };
-      inmueblesLimitados.forEach((_, idx) => {
-        colStyles[idx + 1] = { cellWidth: otherColsWidth };
-      });
+      inmueblesLimitados.forEach((_, idx) => { colStyles[idx + 1] = { cellWidth: otherColsWidth }; });
 
       doc.autoTable({
         head: [headers],
@@ -334,8 +381,8 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
         headStyles: { fillColor: [76, 175, 80], textColor: 255, halign: "center" },
         theme: "grid",
         didDrawCell: function (data) {
-          if (data.cell.raw && data.cell.raw.fotoBase64) {
-            drawScaledImage(data.cell.raw.fotoBase64, data.cell, doc);
+          if (data.cell && data.cell.raw && data.cell.raw.fotoBase64) {
+            drawImageFromRaw(data.cell.raw, data.cell, doc);
           }
         }
       });
@@ -354,12 +401,11 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
     doc.save("brochure-inmuebles.pdf");
 
   } catch (err) {
-    alert("Hubo un error al generar el PDF: " + err.message);
+    alert("Hubo un error al generar el PDF: " + (err && err.message ? err.message : err));
   } finally {
     hideLoader();
   }
 }
-
 
 
 
