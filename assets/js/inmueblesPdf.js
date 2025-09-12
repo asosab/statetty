@@ -290,53 +290,18 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
     }
     seleccionadas.sort((a, b) => a.index - b.index);
 
-    // Helper para dibujar imágenes cuadradas
-
-    /*
-    function drawImageFromRaw(raw, cell, doc, isMobile = false, fixedSide = null) {
-      const base64 = raw.fotoBase64;
-      if (!base64 || !raw.fotoW || !raw.fotoH) return;
-
-      let side = (isMobile && fixedSide) ? fixedSide : Math.min(cell.width - 6, cell.height - 6);
-
-      // Crear un canvas cuadrado para recortar
-      const canvas = document.createElement("canvas");
-      canvas.width = canvas.height = Math.min(raw.fotoW, raw.fotoH);
-      const ctx = canvas.getContext("2d");
-
-      const img = new Image();
-      img.onload = function () {
-        // Calcular recorte centrado
-        const sx = (raw.fotoW - canvas.width) / 2;
-        const sy = (raw.fotoH - canvas.height) / 2;
-        ctx.drawImage(img, sx, sy, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
-
-        // Convertir a base64 cuadrado
-        const croppedBase64 = canvas.toDataURL("image/jpeg");
-
-        // Posicionar en celda
-        const x = cell.x + (cell.width - side) / 2;
-        const y = cell.y + (isMobile ? 6 : (cell.height - side) / 2);
-
-        doc.addImage(croppedBase64, "JPEG", x, y, side, side);
-      };
-      img.src = base64;
-    }
-    */
-
-    function drawImageFromRaw(raw, cell, doc, isMobile = false, fixedSide = null) {
+    // Helper para dibujar imágenes cuadradas de 3 cm (≈30 mm)
+    function drawImageFromRaw(raw, cell, doc) {
       const base64 = raw.fotoBase64Cropped || raw.fotoBase64;
       if (!base64) return;
-      let side = (isMobile && fixedSide) ? fixedSide : Math.min(cell.width - 6, cell.height - 6);
+      const side = 30; // mm = 3 cm
       const x = cell.x + (cell.width - side) / 2;
-      const y = cell.y + (isMobile ? 6 : (cell.height - side) / 2);
+      const y = cell.y + (cell.height - side) / 2;
       doc.addImage(base64, "JPEG", x, y, side, side);
     }
 
-
-
     // ---------------------------------------------
-    // Landscape dinámico
+    // Landscape
     // ---------------------------------------------
     if (modo === "landscape") {
       const camposLimitados = seleccionadas.slice(0, 7);
@@ -361,30 +326,22 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
         theme: "grid",
         didParseCell: function (data) {
           if (data.cell.raw && data.cell.raw.fotoBase64) {
-            const imgW = data.cell.width - 6;
-            const imgH = (data.cell.raw.fotoH * imgW) / data.cell.raw.fotoW;
-            data.cell.styles.minCellHeight = imgH + 4;
+            data.cell.styles.minCellHeight = 32; // un poco más que 30 mm
           }
         },
         didDrawCell: function (data) {
           if (data.cell.raw && data.cell.raw.fotoBase64) {
-            drawImageFromRaw(data.cell.raw, data.cell, doc, false);
+            drawImageFromRaw(data.cell.raw, data.cell, doc);
           }
         }
       });
     }
 
     // ---------------------------------------------
-    // Mobile dinámico (máx. 5 inmuebles)
+    // Mobile (máx. 5 inmuebles)
     // ---------------------------------------------
     if (modo === "mobile") {
       const inmueblesLimitados = seleccionados.slice(0, 5);
-
-      // Ancho útil igual al mapa en mobile (180mm)
-      const anchoUtil = 180;
-      const columnasFotos = inmueblesLimitados.length;
-      const fixedSide = anchoUtil / columnasFotos;
-
       const headers = ["Campo", ...inmueblesLimitados.map((s, i) => `#${i + 1}`)];
       const rows = seleccionadas.map(campo => {
         const fila = [campo.label];
@@ -405,13 +362,12 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
         theme: "grid",
         didParseCell: function (data) {
           if (data.cell.raw && data.cell.raw.fotoBase64) {
-            const extraTop = 6;
-            data.cell.styles.minCellHeight = fixedSide + extraTop + 4;
+            data.cell.styles.minCellHeight = 32; // 30 mm + margen
           }
         },
         didDrawCell: function (data) {
           if (data.cell.raw && data.cell.raw.fotoBase64) {
-            drawImageFromRaw(data.cell.raw, data.cell, doc, true, fixedSide);
+            drawImageFromRaw(data.cell.raw, data.cell, doc);
           }
         }
       });
