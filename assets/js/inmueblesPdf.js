@@ -344,7 +344,7 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
     }
 
     // ---------------------------------------------
-    // Mobile (igual que antes, sin cambios)
+    // Mobile (máx. 5 inmuebles, con ajustes)
     // ---------------------------------------------
     if (modo === "mobile") {
       const inmueblesLimitados = seleccionados.slice(0, 5);
@@ -361,12 +361,20 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
 
       const colAnchoFoto = 30;
       const tableWidth = doc.internal.pageSize.getWidth() - 30; // margen lateral
-      const anchoCampo = tableWidth - (inmueblesLimitados.length * colAnchoFoto);
+      let anchoCampo = tableWidth - (inmueblesLimitados.length * colAnchoFoto);
+
+      // 🔹 reducir la primera columna (Campo) una cuarta parte
+      anchoCampo = anchoCampo * 0.75;
+
+      // 🔹 redibujar el mapa con menos altura
+      if (mapaImg) {
+        doc.addImage(mapaImg.data, "PNG", 15, 30, 180, 90); // antes 120mm → ahora 90mm
+      }
 
       doc.autoTable({
         head: [headers],
         body: rows,
-        startY: mapaImg ? 160 : 30,
+        startY: mapaImg ? 130 : 30, // ajustado tras reducir mapa
         styles: { fontSize: 9, cellPadding: 3, valign: "top" },
         headStyles: { fillColor: [76, 175, 80], textColor: 255, halign: "center" },
         theme: "grid",
@@ -388,6 +396,7 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
         }
       });
     }
+
 
     // Pie
     let footerText = "";
