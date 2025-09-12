@@ -275,7 +275,9 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
       if (modo === "mobile") {
         doc.addImage(mapaImg.data, "PNG", 15, 30, 180, 120);
       } else {
-        doc.addImage(mapaImg.data, "PNG", 15, 28, 260, 100);
+        // 👉 primera página solo para el mapa en landscape
+        doc.addImage(mapaImg.data, "PNG", 15, 28, 260, 160);
+        doc.addPage(); // 👉 arrancar tabla en nueva página
       }
     }
 
@@ -301,7 +303,7 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
     }
 
     // ---------------------------------------------
-    // Landscape
+    // Landscape (tabla en segunda página)
     // ---------------------------------------------
     if (modo === "landscape") {
       const camposLimitados = seleccionadas.slice(0, 7);
@@ -319,7 +321,8 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
       doc.autoTable({
         head: [headers],
         body: rows,
-        startY: mapaImg ? 135 : 30,
+        startY: 30, // 👉 tabla arranca arriba en nueva página
+        margin: { bottom: 32 }, // 👉 reserva espacio = alto de foto
         styles: { fontSize: 9, cellPadding: 3, valign: "top" },
         columnStyles: {
           0: { cellWidth: 12 },   // índice
@@ -341,7 +344,7 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
     }
 
     // ---------------------------------------------
-    // Mobile (máx. 5 inmuebles)
+    // Mobile (igual que antes, sin cambios)
     // ---------------------------------------------
     if (modo === "mobile") {
       const inmueblesLimitados = seleccionados.slice(0, 5);
@@ -356,7 +359,6 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
         return fila;
       });
 
-      // definir anchos: primera columna = resto, demás = 30mm
       const colAnchoFoto = 30;
       const tableWidth = doc.internal.pageSize.getWidth() - 30; // margen lateral
       const anchoCampo = tableWidth - (inmueblesLimitados.length * colAnchoFoto);
