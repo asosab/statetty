@@ -18,6 +18,26 @@ async function urlToBase64(url) {
   });
 }
 
+async function cropToSquare(base64, w, h) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = function () {
+      const side = Math.min(img.width, img.height);
+      const sx = (img.width - side) / 2;
+      const sy = (img.height - side) / 2;
+
+      const canvas = document.createElement("canvas");
+      canvas.width = canvas.height = side;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, sx, sy, side, side, 0, 0, side, side);
+
+      resolve(canvas.toDataURL("image/jpeg"));
+    };
+    img.src = base64;
+  });
+}
+
+
 function loadScript(url) {
   return new Promise((resolve, reject) => {
     if (document.querySelector(`script[src="${url}"]`)) {
@@ -221,10 +241,11 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
           const cacheKey = "fotoCache_" + s.foto;
           let cached = localStorage.getItem(cacheKey);
           if (cached) {
-            const [w, h, base64] = cached.split("|");
+            const [w, h, base64, cropped] = cached.split("|");
             s.fotoBase64 = base64;
             s.fotoW = parseInt(w, 10);
             s.fotoH = parseInt(h, 10);
+            s.fotoBase64Cropped = cropped || base64;
           } else {
             const base64 = await urlToBase64(s.foto);
             const dims = await new Promise(resolve => {
@@ -237,7 +258,8 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
             s.fotoW = dims.w;
             s.fotoH = dims.h;
             if (dims.w && dims.h) {
-              localStorage.setItem(cacheKey, `${dims.w}|${dims.h}|${base64}`);
+              s.fotoBase64Cropped = await cropToSquare(base64, dims.w, dims.h);
+              localStorage.setItem(cacheKey, `${dims.w}|${dims.h}|${base64}|${s.fotoBase64Cropped}`);
             }
           }
         } catch (e) {
@@ -269,6 +291,8 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
     seleccionadas.sort((a, b) => a.index - b.index);
 
     // Helper para dibujar imágenes cuadradas
+
+    /*
     function drawImageFromRaw(raw, cell, doc, isMobile = false, fixedSide = null) {
       const base64 = raw.fotoBase64;
       if (!base64 || !raw.fotoW || !raw.fotoH) return;
@@ -297,6 +321,16 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
         doc.addImage(croppedBase64, "JPEG", x, y, side, side);
       };
       img.src = base64;
+    }
+    */
+
+    function drawImageFromRaw(raw, cell, doc, isMobile = false, fixedSide = null) {
+      const base64 = raw.fotoBase64Cropped || raw.fotoBase64;
+      if (!base64) return;
+      let side = (isMobile && fixedSide) ? fixedSide : Math.min(cell.width - 6, cell.height - 6);
+      const x = cell.x + (cell.width - side) / 2;
+      const y = cell.y + (isMobile ? 6 : (cell.height - side) / 2);
+      doc.addImage(base64, "JPEG", x, y, side, side);
     }
 
 
