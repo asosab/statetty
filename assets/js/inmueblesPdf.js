@@ -143,9 +143,13 @@ async function generarMapaInmuebles(inmuebles, vertical = false) {
     mapDiv.style.height = vertical ? "600px" : "400px";
     mapDiv.style.position = "absolute";
     mapDiv.style.left = "-9999px";
+    mapDiv.style.transform = "none"; // 🔹 Evita transformaciones 3D
+    mapDiv.style.perspective = "none"; // 🔹 Quita cualquier perspectiva
+    mapDiv.style.webkitTransform = "none";
+    mapDiv.style.webkitPerspective = "none";
     document.body.appendChild(mapDiv);
 
-    const map = L.map(mapDiv, { zoomControl: !vertical });
+    const map = L.map(mapDiv, { zoomControl: !vertical, preferCanvas: true });
     const tileLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: "&copy; OpenStreetMap",
       crossOrigin: true
@@ -170,7 +174,7 @@ async function generarMapaInmuebles(inmuebles, vertical = false) {
 
     tileLayer.on("load", () => {
       setTimeout(() => {
-        html2canvas(mapDiv, { useCORS: true }).then(canvas => {
+        html2canvas(mapDiv, { useCORS: true, backgroundColor: "#fff", removeContainer: true }).then(canvas => {
           const imgData = canvas.toDataURL("image/png");
           document.body.removeChild(mapDiv);
           resolve({ data: imgData, type: "image/png" });
@@ -269,19 +273,32 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
       const base64 = raw.fotoBase64;
       if (!base64 || !raw.fotoW || !raw.fotoH) return;
 
-      let side;
-      if (isMobile && fixedSide) {
-        side = fixedSide;
-      } else {
-        side = Math.min(cell.width - 6, cell.height - 6);
-      }
+      let side = (isMobile && fixedSide) ? fixedSide : Math.min(cell.width - 6, cell.height - 6);
 
+      // Crear un canvas cuadrado para recortar
+      const canvas = document.createElement("canvas");
+      canvas.width = canvas.height = Math.min(raw.fotoW, raw.fotoH);
+      const ctx = canvas.getContext("2d");
+
+      // Calcular recorte centrado
+      const sx = (raw.fotoW - canvas.width) / 2;
+      const sy = (raw.fotoH - canvas.height) / 2;
+      ctx.drawImage(
+        (() => { let img = new Image(); img.src = base64; return img; })(),
+        sx, sy, canvas.width, canvas.height,
+        0, 0, canvas.width, canvas.height
+      );
+
+      // Convertir a base64 cuadrado
+      const croppedBase64 = canvas.toDataURL("image/jpeg");
+
+      // Posicionar en celda
       const x = cell.x + (cell.width - side) / 2;
       const y = cell.y + (isMobile ? 6 : (cell.height - side) / 2);
 
-      const type = /^data:image\/png/i.test(base64) ? "PNG" : "JPEG";
-      doc.addImage(base64, type, x, y, side, side);
+      doc.addImage(croppedBase64, "JPEG", x, y, side, side);
     }
+
 
     // ---------------------------------------------
     // Landscape dinámico
