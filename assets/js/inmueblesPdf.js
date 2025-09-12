@@ -280,24 +280,25 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
       canvas.width = canvas.height = Math.min(raw.fotoW, raw.fotoH);
       const ctx = canvas.getContext("2d");
 
-      // Calcular recorte centrado
-      const sx = (raw.fotoW - canvas.width) / 2;
-      const sy = (raw.fotoH - canvas.height) / 2;
-      ctx.drawImage(
-        (() => { let img = new Image(); img.src = base64; return img; })(),
-        sx, sy, canvas.width, canvas.height,
-        0, 0, canvas.width, canvas.height
-      );
+      const img = new Image();
+      img.onload = function () {
+        // Calcular recorte centrado
+        const sx = (raw.fotoW - canvas.width) / 2;
+        const sy = (raw.fotoH - canvas.height) / 2;
+        ctx.drawImage(img, sx, sy, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
 
-      // Convertir a base64 cuadrado
-      const croppedBase64 = canvas.toDataURL("image/jpeg");
+        // Convertir a base64 cuadrado
+        const croppedBase64 = canvas.toDataURL("image/jpeg");
 
-      // Posicionar en celda
-      const x = cell.x + (cell.width - side) / 2;
-      const y = cell.y + (isMobile ? 6 : (cell.height - side) / 2);
+        // Posicionar en celda
+        const x = cell.x + (cell.width - side) / 2;
+        const y = cell.y + (isMobile ? 6 : (cell.height - side) / 2);
 
-      doc.addImage(croppedBase64, "JPEG", x, y, side, side);
+        doc.addImage(croppedBase64, "JPEG", x, y, side, side);
+      };
+      img.src = base64;
     }
+
 
 
     // ---------------------------------------------
