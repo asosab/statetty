@@ -52,7 +52,6 @@ function hideLoader() {
 
 // ---------------------------------------------
 // Campos disponibles para selección
-// index => define posición relativa
 // ---------------------------------------------
 const camposDisponibles = [
   { key: "foto",            label: "Foto",            index: 1 },
@@ -183,7 +182,6 @@ async function generarMapaInmuebles(inmuebles, vertical = false) {
 
 // ---------------------------------------------
 // Generar PDF (modo = "landscape" | "mobile")
-// con imágenes más grandes y espacio dinámico
 // ---------------------------------------------
 async function generarBrochurePDF(seleccionados, modo = "landscape") {
   if (!seleccionados || seleccionados.length === 0) {
@@ -212,7 +210,7 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
     // Ordenar inmuebles por precio
     seleccionados.sort((a, b) => (parseFloat(a.precio) || 0) - (parseFloat(b.precio) || 0));
 
-    // 🔹 Precargar imágenes con caché
+    // 🔹 Precargar imágenes
     for (let s of seleccionados) {
       if (s.foto) {
         try {
@@ -266,21 +264,23 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
     }
     seleccionadas.sort((a, b) => a.index - b.index);
 
-    // Helper para dibujar imágenes
-    function drawImageFromRaw(raw, cell, doc, isMobile = false) {
+    // Helper para dibujar imágenes cuadradas
+    function drawImageFromRaw(raw, cell, doc, isMobile = false, fixedSide = null) {
       const base64 = raw.fotoBase64;
       if (!base64 || !raw.fotoW || !raw.fotoH) return;
 
-      const maxWidth = cell.width - 6; // ancho de celda
-      let w = maxWidth;
-      let h = (raw.fotoH * w) / raw.fotoW;
+      let side;
+      if (isMobile && fixedSide) {
+        side = fixedSide;
+      } else {
+        side = Math.min(cell.width - 6, cell.height - 6);
+      }
 
-      const x = cell.x + (cell.width - w) / 2;
-      // en mobile dejamos espacio extra para el título "Foto"
-      const y = cell.y + (isMobile ? 6 : (cell.height - h) / 2);
+      const x = cell.x + (cell.width - side) / 2;
+      const y = cell.y + (isMobile ? 6 : (cell.height - side) / 2);
 
       const type = /^data:image\/png/i.test(base64) ? "PNG" : "JPEG";
-      doc.addImage(base64, type, x, y, w, h);
+      doc.addImage(base64, type, x, y, side, side);
     }
 
     // ---------------------------------------------
@@ -328,6 +328,11 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
     if (modo === "mobile") {
       const inmueblesLimitados = seleccionados.slice(0, 5);
 
+      // Ancho útil igual al mapa en mobile (180mm)
+      const anchoUtil = 180;
+      const columnasFotos = inmueblesLimitados.length;
+      const fixedSide = anchoUtil / columnasFotos;
+
       const headers = ["Campo", ...inmueblesLimitados.map((s, i) => `#${i + 1}`)];
       const rows = seleccionadas.map(campo => {
         const fila = [campo.label];
@@ -348,15 +353,13 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
         theme: "grid",
         didParseCell: function (data) {
           if (data.cell.raw && data.cell.raw.fotoBase64) {
-            const imgW = data.cell.width - 6;
-            const imgH = (data.cell.raw.fotoH * imgW) / data.cell.raw.fotoW;
-            const extraTop = 6; // espacio para título "Foto"
-            data.cell.styles.minCellHeight = imgH + extraTop + 4;
+            const extraTop = 6;
+            data.cell.styles.minCellHeight = fixedSide + extraTop + 4;
           }
         },
         didDrawCell: function (data) {
           if (data.cell.raw && data.cell.raw.fotoBase64) {
-            drawImageFromRaw(data.cell.raw, data.cell, doc, true);
+            drawImageFromRaw(data.cell.raw, data.cell, doc, true, fixedSide);
           }
         }
       });
@@ -380,7 +383,5 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
     hideLoader();
   }
 }
-
-
 
 
