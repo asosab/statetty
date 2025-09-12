@@ -294,7 +294,7 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
     function drawImageFromRaw(raw, cell, doc) {
       const base64 = raw.fotoBase64Cropped || raw.fotoBase64;
       if (!base64) return;
-      const side = 30; // mm = 3 cm
+      const side = 30; // mm
       const x = cell.x + (cell.width - side) / 2;
       const y = cell.y + (cell.height - side) / 2;
       doc.addImage(base64, "JPEG", x, y, side, side);
@@ -321,12 +321,15 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
         body: rows,
         startY: mapaImg ? 135 : 30,
         styles: { fontSize: 9, cellPadding: 3, valign: "top" },
-        columnStyles: { 0: { cellWidth: 12 } },
+        columnStyles: {
+          0: { cellWidth: 12 },   // índice
+          1: { cellWidth: 30 }    // fotos fijo 30mm
+        },
         headStyles: { fillColor: [76, 175, 80], textColor: 255, halign: "center" },
         theme: "grid",
         didParseCell: function (data) {
           if (data.cell.raw && data.cell.raw.fotoBase64) {
-            data.cell.styles.minCellHeight = 32; // un poco más que 30 mm
+            data.cell.styles.minCellHeight = 32; // un poco más que 30mm
           }
         },
         didDrawCell: function (data) {
@@ -353,6 +356,11 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
         return fila;
       });
 
+      // definir anchos: primera columna = resto, demás = 30mm
+      const colAnchoFoto = 30;
+      const tableWidth = doc.internal.pageSize.getWidth() - 30; // margen lateral
+      const anchoCampo = tableWidth - (inmueblesLimitados.length * colAnchoFoto);
+
       doc.autoTable({
         head: [headers],
         body: rows,
@@ -360,9 +368,15 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
         styles: { fontSize: 9, cellPadding: 3, valign: "top" },
         headStyles: { fillColor: [76, 175, 80], textColor: 255, halign: "center" },
         theme: "grid",
+        columnStyles: Object.assign(
+          { 0: { cellWidth: anchoCampo } },
+          Object.fromEntries(
+            inmueblesLimitados.map((_, i) => [i + 1, { cellWidth: colAnchoFoto }])
+          )
+        ),
         didParseCell: function (data) {
           if (data.cell.raw && data.cell.raw.fotoBase64) {
-            data.cell.styles.minCellHeight = 32; // 30 mm + margen
+            data.cell.styles.minCellHeight = 32; // 30mm + margen
           }
         },
         didDrawCell: function (data) {
