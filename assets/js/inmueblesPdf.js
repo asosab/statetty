@@ -317,8 +317,8 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
       doc.autoTable({
         head: [headers],
         body: rows,
-        startY: 30, // 👉 tabla arranca arriba en nueva página
-        margin: { bottom: 32 }, // 👉 reserva espacio = alto de foto
+        startY: 30,
+        margin: { bottom: 32 }, // espacio para foto
         styles: { fontSize: 9, cellPadding: 3, valign: "top" },
         columnStyles: {
           0: { cellWidth: 12 },   // índice
@@ -326,9 +326,16 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
         },
         headStyles: { fillColor: [76, 175, 80], textColor: 255, halign: "center" },
         theme: "grid",
+        // 🔹 aquí forzamos 4 filas máximo por página
+        willDrawCell: function (data) {
+          if (data.section === 'body' && data.row.index > 0 && data.row.index % 4 === 0 && data.column.index === 0) {
+            doc.addPage();
+            doc.autoTable.previous.finalY = 30; // reiniciar posición en nueva página
+          }
+        },
         didParseCell: function (data) {
           if (data.cell.raw && data.cell.raw.fotoBase64) {
-            data.cell.styles.minCellHeight = 32; // un poco más que 30mm
+            data.cell.styles.minCellHeight = 32;
           }
         },
         didDrawCell: function (data) {
@@ -337,6 +344,7 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
           }
         }
       });
+
     }
 
     // ---------------------------------------------
