@@ -299,53 +299,78 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
     if (modo === "landscape") {
       const camposLimitados = seleccionadas.slice(0, 7);
       const headers = ["#", ...camposLimitados.map(c => c.label)];
+
+      // Armar filas
       const rows = seleccionados.map((s, i) => {
         const fila = [`${i + 1}`];
         camposLimitados.forEach(campo => {
-          if (campo.key === "des") fila.push(s.des || "-");
-          else if (campo.key === "foto") fila.push(s.fotoBase64 ? { content: "", ...s } : "-");
-          else fila.push(["precio","precio_m2","precioDelM2","precioM2"].includes(campo.key) ? formatCurrency(s[campo.key]) : (s[campo.key] || "-"));
+          if (campo.key === "des") {
+            fila.push(s.des || "-");
+          } else if (campo.key === "foto") {
+            fila.push(s.fotoBase64 ? { content: "", ...s } : "-");
+          } else {
+            fila.push(
+              ["precio", "precio_m2", "precioDelM2", "precioM2"].includes(campo.key)
+                ? formatCurrency(s[campo.key])
+                : (s[campo.key] || "-")
+            );
+          }
         });
         return fila;
       });
 
+      // Insertar mapa en la primera página
       if (mapaImg) {
         doc.addImage(mapaImg.data, "PNG", 15, 28, 260, 160);
-        doc.addPage(); // 👉 tabla en segunda página
+        doc.addPage(); // 👉 tabla arranca en la segunda página
       }
 
-      doc.autoTable({
-        head: [headers],
-        body: rows,
-        startY: 30,
-        margin: { bottom: 32 }, // espacio para foto
-        styles: { fontSize: 9, cellPadding: 3, valign: "top" },
-        columnStyles: {
-          0: { cellWidth: 12 },   // índice
-          1: { cellWidth: 30 }    // fotos fijo 30mm
-        },
-        headStyles: { fillColor: [76, 175, 80], textColor: 255, halign: "center" },
-        theme: "grid",
-        // 🔹 aquí forzamos 4 filas máximo por página
-        willDrawCell: function (data) {
-          if (data.section === 'body' && data.row.index > 0 && data.row.index % 4 === 0 && data.column.index === 0) {
-            doc.addPage();
-            doc.autoTable.previous.finalY = 30; // reiniciar posición en nueva página
-          }
-        },
-        didParseCell: function (data) {
-          if (data.cell.raw && data.cell.raw.fotoBase64) {
-            data.cell.styles.minCellHeight = 32;
-          }
-        },
-        didDrawCell: function (data) {
-          if (data.cell.raw && data.cell.raw.fotoBase64) {
-            drawImageFromRaw(data.cell.raw, data.cell, doc);
-          }
-        }
-      });
+      // Helper para dibujar imágenes cuadradas de 3 cm (≈30 mm)
+      function drawImageFromRaw(raw, cell, doc) {
+        const base64 = raw.fotoBase64Cropped || raw.fotoBase64;
+        if (!base64) return;
+        const side = 30; // mm
+        const x = cell.x + (cell.width - side) / 2;
+        const y = cell.y + (cell.height - side) / 2;
+        doc.addImage(base64, "JPEG", x, y, side, side);
+      }
 
+      // Dividir filas en bloques de 4
+      const chunkSize = 4;
+      for (let i = 0; i < rows.length; i += chunkSize) {
+        const chunk = rows.slice(i, i + chunkSize);
+
+        doc.autoTable({
+          head: [headers],
+          body: chunk,
+          startY: 30,
+          margin: { bottom: 32 },
+          styles: { fontSize: 9, cellPadding: 3, valign: "top" },
+          columnStyles: {
+            0: { cellWidth: 12 },   // índice
+            1: { cellWidth: 30 }    // fotos fijo 30mm
+          },
+          headStyles: { fillColor: [76, 175, 80], textColor: 255, halign: "center" },
+          theme: "grid",
+          didParseCell: function (data) {
+            if (data.cell.raw && data.cell.raw.fotoBase64) {
+              data.cell.styles.minCellHeight = 32;
+            }
+          },
+          didDrawCell: function (data) {
+            if (data.cell.raw && data.cell.raw.fotoBase64) {
+              drawImageFromRaw(data.cell.raw, data.cell, doc);
+            }
+          }
+        });
+
+        // Si quedan más filas, abrir una nueva página
+        if (i + chunkSize < rows.length) {
+          doc.addPage();
+        }
+      }
     }
+
 
     // ---------------------------------------------
     // Mobile (máx. 5 inmuebles, con ajustes)
