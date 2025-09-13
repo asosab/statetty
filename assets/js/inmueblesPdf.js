@@ -271,15 +271,6 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
 
     // Generar mapa
     const mapaImg = await generarMapaInmuebles(seleccionados, modo === "mobile");
-    if (mapaImg) {
-      if (modo === "mobile") {
-        doc.addImage(mapaImg.data, "PNG", 15, 30, 180, 120);
-      } else {
-        // 👉 primera página solo para el mapa en landscape
-        doc.addImage(mapaImg.data, "PNG", 15, 28, 260, 160);
-        doc.addPage(); // 👉 arrancar tabla en nueva página
-      }
-    }
 
     // Campos seleccionados
     let seleccionadas = camposDisponibles.filter(c => {
@@ -317,6 +308,11 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
         });
         return fila;
       });
+
+      if (mapaImg) {
+        doc.addImage(mapaImg.data, "PNG", 15, 28, 260, 160);
+        doc.addPage(); // 👉 tabla en segunda página
+      }
 
       doc.autoTable({
         head: [headers],
