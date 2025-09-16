@@ -627,7 +627,8 @@ $(document).ready(function () {
     for (let ag in agencies) {
       if (ag === "statetty") continue; // no mostrar
       let label = agencyNames[ag] || ag;
-      let checked = !prevAgencias || prevAgencias.includes(ag); // por defecto todas activas
+      let checked = (!prevAgencias && ag !== "ic") || (prevAgencias && prevAgencias.includes(ag));
+
       $('#agency-filter').append(
         `<div><label><input type="checkbox" class="chk-agency" data-ag="${ag}" ${checked ? "checked" : ""}> ${label}</label></div>`
       );
