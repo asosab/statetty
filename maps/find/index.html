@@ -48,13 +48,14 @@ image:              mapa.png
     .section.active .section-body { display: block; }
 
 
-
+    
   </style>
 
   <div id="toolbox-btn">⚙</div>
   <div id="toolbox">
+    <!-- Bloque 1: Buscar + Estadísticas -->
     <div class="section">
-      <div class="section-header">🔍 Buscar</div>
+      <div class="section-header">🔍 Buscar & 📊 Estadísticas</div>
       <div class="section-body">
         <div class="search-container">
           <span>🔍</span>
@@ -63,7 +64,7 @@ image:              mapa.png
             <span id="search-count" style="position:absolute; right:0; top:50%; transform:translateY(-50%); font-size:12px; color:#555; pointer-events:none; display:none;"></span>
           </div>
         </div>
-        <div id="stats-container" style="font-size: 14px; line-height: 1.4;">
+        <div id="stats-container" style="font-size: 14px; line-height: 1.4; margin-top:6px;">
           🏙 Total inmuebles: <span id="total-inmuebles">0</span><br>
           💲 Precio promedio: USD<span id="precio-promedio">0</span><br>
           🏷️ Más económico: <span id="mas-barato">-</span><br>
@@ -73,13 +74,15 @@ image:              mapa.png
       </div>
     </div>
 
+    <!-- Bloque 2: Seleccionados + PDF -->
     <div class="section">
-      <div class="section-header">📊 Selección y PDF</div>
+      <div class="section-header">✅ Seleccionados & 📄 PDF</div>
       <div class="section-body">
-
+        <div id="sel-box"><!-- generado dinámicamente por mapa.js --></div>
       </div>
     </div>
 
+    <!-- Bloque 3: Agencias -->
     <div class="section">
       <div class="section-header">🏢 Agencias</div>
       <div class="section-body" id="agency-filter">
@@ -87,6 +90,7 @@ image:              mapa.png
       </div>
     </div>
   </div>
+
 
 
   <div id="mapid"></div>

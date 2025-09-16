@@ -303,9 +303,12 @@ function actualizarToolbox() {
   seleccionados.forEach((s, i) => {
     html += `<div>${i + 1}. ${s.Titulo} <span class="remove-sel" data-id="${s.uid}" style="cursor:pointer; color:red;">❌</span></div>`;
   });
-  
+
   if (seleccionados.length > 0) {
-    $("#stats-container").append(`
+    $("#agency-filter").parent().prev(".section-header"); // solo para mantener referencia
+
+    // ✅ insertamos sel-box en su propio bloque (segunda sección)
+    $(".section-body:has(#sel-box)").html(`
       <div id="sel-box">
         <hr>
         ✅ Seleccionados: ${seleccionados.length}
@@ -329,6 +332,9 @@ function actualizarToolbox() {
     $("#btn-pdf-mobile").off("click").on("click", function () {
       generarBrochurePDF(seleccionados, "mobile");
     });
+  } else {
+    // Si no hay seleccionados, vaciar el bloque de seleccionados
+    $(".section-body:has(#sel-box)").html("");
   }
 
   $(".remove-sel").off("click").on("click", function () {
@@ -341,6 +347,7 @@ function actualizarToolbox() {
     actualizarToolbox();
   });
 }
+
 
 function agenciasActivas() {
   const activas = [];
