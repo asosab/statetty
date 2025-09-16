@@ -55,6 +55,26 @@ function cargarMapa() {
   return null;
 }
 
+function guardarAgencias() {
+  const seleccionadas = [];
+  $(".chk-agency").each(function () {
+    if (this.checked) seleccionadas.push($(this).data("ag"));
+  });
+  localStorage.setItem("agenciasSeleccionadas", JSON.stringify(seleccionadas));
+}
+
+function cargarAgencias() {
+  try {
+    const data = JSON.parse(localStorage.getItem("agenciasSeleccionadas")) || null;
+    return Array.isArray(data) ? data : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+
+
+
 // -------------------------------
 // Utilidades
 // -------------------------------
@@ -329,6 +349,21 @@ function actualizarToolbox() {
 $(document).ready(function () {
   $('#toolbox-btn').on('click', () => $('#toolbox').toggle());
 
+  // Diccionario de agencias para mostrar nombres correctos
+  const agencyNames = {
+    "ic":     "Info Casas",
+    "UC":     "Ultra Casas",
+    "C21":    "Century 21",
+    "remax":  "RE/MAX",
+    "bieni":  "Bien Inmuebles",
+    "IDI":    "Inversionistas e Impacto",
+    "elfaro": "El Faro"
+    // statetty no se coloca en los checkboxes
+  };
+
+
+
+
   var urlParams = new URLSearchParams(window.location.search);
   let id = urlParams.get('id');
   let key = urlParams.get('key');
@@ -552,11 +587,29 @@ $(document).ready(function () {
       agencies[brand] = true;
     });
 
-    // renderizar checkboxes
+    // cargar estado previo si existe
+    const prevAgencias = cargarAgencias();
+
+    // renderizar checkboxes con nombres bonitos, excluyendo statetty
     for (let ag in agencies) {
+      if (ag === "statetty") continue; // no mostrar
+      let label = agencyNames[ag] || ag;
+      let checked = !prevAgencias || prevAgencias.includes(ag); // por defecto todas activas
       $('#agency-filter').append(
-        `<div><label><input type="checkbox" class="chk-agency" data-ag="${ag}" checked> ${ag}</label></div>`
+        `<div><label><input type="checkbox" class="chk-agency" data-ag="${ag}" ${checked ? "checked" : ""}> ${label}</label></div>`
       );
+
+      // aplicar estado inicial
+      markers.forEach(m => {
+        let brand = m.iconOriginal.options.iconUrl.split("pointer_")[1].split(".")[0];
+        if (brand === ag) {
+          if (checked) {
+            map.addLayer(m.marker);
+          } else {
+            map.removeLayer(m.marker);
+          }
+        }
+      });
     }
 
     // --- filtro por agencias ---
@@ -573,8 +626,8 @@ $(document).ready(function () {
           }
         }
       });
+      guardarAgencias();
     });
-
 
 
 
