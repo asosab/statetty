@@ -310,7 +310,6 @@ function actualizarToolbox() {
     // ✅ siempre apunta a la sección de seleccionados
     $("#toolbox .section:nth-child(2) .section-body").html(`
       <div id="sel-box">
-        <hr>
         ✅ Seleccionados: ${seleccionados.length}
         ${html}
         <br>
