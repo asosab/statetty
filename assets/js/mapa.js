@@ -385,7 +385,7 @@ $(document).ready(function () {
     "C21":    "Century 21",
     "remax":  "RE/MAX",
     "bieni":  "Bien Inmuebles",
-    "IDI":    "Inversionistas e Impacto",
+    "IDI":    "Inversionistas de Impacto",
     "elfaro": "El Faro"
     // statetty no se coloca en los checkboxes
   };
