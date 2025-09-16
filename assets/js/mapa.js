@@ -342,6 +342,35 @@ function actualizarToolbox() {
   });
 }
 
+function agenciasActivas() {
+  const activas = [];
+  $(".chk-agency").each(function () {
+    if (this.checked) activas.push($(this).data("ag"));
+  });
+  return activas;
+}
+
+function getVisibleLocations() {
+  const activas = agenciasActivas();
+  return locations.filter(loc => {
+    let url = loc.uid || "";
+    let brand = "statetty";
+    if (url.includes("c21.com")) brand = "C21";
+    else if (url.includes("remax")) brand = "remax";
+    else if (url.includes("bieninmuebles")) brand = "bieni";
+    else if (url.includes("elfaro")) brand = "elfaro";
+    else if (url.includes("dueodeinmueble")) brand = "IDI";
+    else if (url.includes("ultracasas")) brand = "UC";
+    else if (url.includes("uno.com")) brand = "uno";
+    else if (url.includes("infocasas.com")) brand = "ic";
+    else brand = "statetty";
+
+    // statetty siempre visible
+    if (brand === "statetty") return true;
+    return activas.includes(brand);
+  });
+}
+
 
 // -------------------------------
 // Inicialización del mapa
@@ -627,6 +656,7 @@ $(document).ready(function () {
         }
       });
       guardarAgencias();
+      actualizarEstadisticas(getVisibleLocations());
     });
 
 
@@ -657,7 +687,8 @@ $(document).ready(function () {
       map.fitBounds(group.getBounds());
     }
 
-    actualizarEstadisticas(locations);
+    actualizarEstadisticas(getVisibleLocations());
+
 
     // Guardar posición/zoom cada vez que se mueva o haga zoom
     map.on("moveend", guardarMapa);
@@ -689,14 +720,14 @@ $(document).ready(function () {
 
     ultimosFiltrados = filtrados;
 
-    if (query) {
-      $('#search-count').text(matchCount).show();
-      actualizarEstadisticas(filtrados);
-    } else {
+    if (query) {$('#search-count').text(matchCount).show();actualizarEstadisticas(filtrados);} 
+    else {
       $('#search-count').hide();
-      actualizarEstadisticas(locations);
-      ultimosFiltrados = locations;
+      const visibles = getVisibleLocations();
+      actualizarEstadisticas(visibles);
+      ultimosFiltrados = visibles;
     }
+
   });
 });
 
