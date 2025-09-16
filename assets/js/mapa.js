@@ -307,21 +307,18 @@ function actualizarToolbox() {
   if (seleccionados.length > 0) {
     $("#agency-filter").parent().prev(".section-header"); // solo para mantener referencia
 
-    // ✅ insertamos sel-box en su propio bloque (segunda sección)
-    $(".section-body:has(#sel-box)").html(`
+    // ✅ siempre apunta a la sección de seleccionados
+    $("#toolbox .section:nth-child(2) .section-body").html(`
       <div id="sel-box">
         <hr>
         ✅ Seleccionados: ${seleccionados.length}
         ${html}
         <br>
-        <button id="btn-pdf-landscape" style="margin-top:10px; padding:5px 10px; border-radius:5px; background:#4CAF50; color:white; border:none; cursor:pointer; margin-right:5px;">
-          📄 PDF pantalla
-        </button>
-        <button id="btn-pdf-mobile" style="margin-top:10px; padding:5px 10px; border-radius:5px; background:#2196F3; color:white; border:none; cursor:pointer;">
-          📱 PDF móvil
-        </button>
+        <button id="btn-pdf-landscape" ...>📄 PDF pantalla</button>
+        <button id="btn-pdf-mobile" ...>📱 PDF móvil</button>
       </div>
     `);
+
 
     renderColumnSelector();
 
