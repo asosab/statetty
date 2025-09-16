@@ -40,34 +40,53 @@ image:              mapa.png
       padding: 10px 20px; border-radius: 8px;
       font-weight: bold; display: none; z-index: 2000;
     }
+    .section { border-top: 1px solid #ddd; }
+    .section-header {
+      cursor: pointer; font-weight: bold; padding: 5px; background: #f0f0f0;
+    }
+    .section-body { display: none; padding: 5px; }
+    .section.active .section-body { display: block; }
+
+
+    
   </style>
 
   <div id="toolbox-btn">⚙</div>
   <div id="toolbox">
-    <div class="search-container">
-      <span>🔍</span>
-      <div style="position: relative; flex: 1;">
-        <input type="text" id="search-input" placeholder="Buscar..." style="width: 98%; padding-right: -5px;">
-        <span id="search-count" style="position:absolute; right:0; top:50%; transform:translateY(-50%); font-size:12px; color:#555; pointer-events:none; display:none;"></span>
+    <div class="section">
+      <div class="section-header">🔍 Buscar</div>
+      <div class="section-body">
+        <div class="search-container">
+          <span>🔍</span>
+          <div style="position: relative; flex: 1;">
+            <input type="text" id="search-input" placeholder="Buscar..." style="width: 98%;">
+            <span id="search-count" style="position:absolute; right:0; top:50%; transform:translateY(-50%); font-size:12px; color:#555; pointer-events:none; display:none;"></span>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div id="stats-container" style="font-size: 14px; line-height: 1.4;">
-      🏙 Total inmuebles: <span id="total-inmuebles">0</span><br>
-      💲 Precio promedio: USD<span id="precio-promedio">0</span><br>
-      🏷️ Más económico: <span id="mas-barato">-</span><br>
-      💎 Más costoso: <span id="mas-caro">-</span><br>
+    <div class="section">
+      <div class="section-header">📊 Selección y PDF</div>
+      <div class="section-body">
+        <div id="stats-container" style="font-size: 14px; line-height: 1.4;">
+          🏙 Total inmuebles: <span id="total-inmuebles">0</span><br>
+          💲 Precio promedio: USD<span id="precio-promedio">0</span><br>
+          🏷️ Más económico: <span id="mas-barato">-</span><br>
+          💎 Más costoso: <span id="mas-caro">-</span><br>
+          <div id="stats-actions" style="margin-top:8px;"></div>
+        </div>
+      </div>
+    </div>
 
-      <div id="stats-actions" style="margin-top:8px;">
-        <button id="btn-add-sel">Agregar a selección</button>
-        <button id="btn-remove-sel">Quitar de selección</button><br>
-        <button id="btn-add-all-except">Agregar otros</button>
-        <button id="btn-keep-only">Mantener estos</button><br>
-        <button id="btn-add-all">Agregar todos</button>
-        <button id="btn-remove-all">Quitar todos</button>
+    <div class="section">
+      <div class="section-header">🏢 Agencias</div>
+      <div class="section-body" id="agency-filter">
+        <!-- checkboxes dinámicos -->
       </div>
     </div>
   </div>
+
 
   <div id="mapid"></div>
   <div id="loading-indicator">Cargando...</div>

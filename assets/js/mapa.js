@@ -538,6 +538,48 @@ $(document).ready(function () {
       });
     });
 
+
+    // --- inicializar acordeón ---
+    $(document).on('click', '.section-header', function () {
+      $('.section').removeClass('active'); // cerrar todas
+      $(this).parent().addClass('active'); // abrir esta
+    });
+
+    // --- agencias únicas ---
+    let agencies = {};
+    markers.forEach(obj => {
+      let brand = obj.iconOriginal.options.iconUrl.split("pointer_")[1].split(".")[0];
+      agencies[brand] = true;
+    });
+
+    // renderizar checkboxes
+    for (let ag in agencies) {
+      $('#agency-filter').append(
+        `<div><label><input type="checkbox" class="chk-agency" data-ag="${ag}" checked> ${ag}</label></div>`
+      );
+    }
+
+    // --- filtro por agencias ---
+    $(document).on('change', '.chk-agency', function () {
+      let ag = $(this).data('ag');
+      let checked = this.checked;
+      markers.forEach(m => {
+        let brand = m.iconOriginal.options.iconUrl.split("pointer_")[1].split(".")[0];
+        if (brand === ag) {
+          if (checked) {
+            map.addLayer(m.marker);
+          } else {
+            map.removeLayer(m.marker);
+          }
+        }
+      });
+    });
+
+
+
+
+
+
     // ✅ Restaurar seleccionados
     const prevSel = cargarSeleccionados();
     prevSel.forEach(id => {
