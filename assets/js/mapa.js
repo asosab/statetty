@@ -462,11 +462,14 @@ $(document).ready(function () {
       let location = {};
       columnas.forEach((col, i) => location[col] = this[i] || "");
 
-      location.lat = parseFloat(location.lat);
-      location.lng = parseFloat(location.lng);
-      location.precio = parseInt(location.precio) || 0;
-      location.precioM2 = parseFloat(location.precioM2) || 0;
-      location.uid = normalizeURL(location.URL);
+      location.lat            = parseFloat(location.lat);
+      location.lng            = parseFloat(location.lng);
+      location.precio         = parseInt(location.precio) || 0;
+      location.precioM2       = parseInt(location.precioM2) || 0;
+      location.uid            = normalizeURL(location.URL);
+      location.m2terreno      = parseInt(location.m2terreno) || 0;
+      location.m2construccion = parseInt(location.m2construccion) || 0;
+
 
       let rawDesc = location.des || '';
       rawDesc = rawDesc.replace(/\+591\d{8}/g, '[número eliminado]')
