@@ -125,22 +125,22 @@ function detectarTipoInmueble(loc) {
 
 
 // ---------------------------------------------
-// Formulario dinámico de cálculo ACM
+// Formulario dinámico de cálculo ACM reducido
 // ---------------------------------------------
 function initACMTools() {
   if ($("#acm-form").length > 0) return; // evitar duplicar
 
   $("#acm-container").append(`
-    <div id="acm-form" style="margin-top:10px; padding:6px; border-top:1px solid #ddd;">
-      <label>Selecciona tipo de inmueble:</label><br>
-      <select id="acm-tipo" style="width:100%; margin-bottom:6px;">
-        <option value="">-- Seleccionar --</option>
+    <div id="acm-form" style="margin-top:8px; padding:4px; border-top:1px solid #ddd; font-size:13px;">
+      <label>Tipo:</label><br>
+      <select id="acm-tipo" style="max-width:12ch; margin-bottom:4px; font-size:13px;">
+        <option value="">--</option>
         <option value="terreno">Terreno</option>
-        <option value="departamento">Departamento</option>
+        <option value="departamento">Depto</option>
         <option value="casa">Casa</option>
       </select>
       <div id="acm-inputs"></div>
-      <div id="acm-result" style="margin-top:6px; font-weight:bold;"></div>
+      <div id="acm-result" style="margin-top:4px; font-weight:bold;"></div>
     </div>
   `);
 
@@ -155,28 +155,30 @@ function renderACMInputs(tipo) {
   $inputs.empty();
   $("#acm-result").empty();
 
+  const baseStyle = "max-width:12ch; font-size:13px; margin-bottom:3px;";
+
   if (tipo === "terreno") {
     $inputs.append(`
-      <label>Metros² de terreno:</label>
-      <input type="number" id="acm-m2-terreno" min="1" style="width:100%; margin-bottom:4px;">
+      <label>m² Terreno:</label>
+      <input type="number" id="acm-m2-terreno" min="1" maxlength="12" style="${baseStyle}">
     `);
     $("#acm-m2-terreno").on("input", calcularEstimado);
   }
 
   if (tipo === "departamento") {
     $inputs.append(`
-      <label>Metros² de construcción:</label>
-      <input type="number" id="acm-m2-construccion" min="1" style="width:100%; margin-bottom:4px;">
+      <label>m² Const.:</label>
+      <input type="number" id="acm-m2-construccion" min="1" maxlength="12" style="${baseStyle}">
     `);
     $("#acm-m2-construccion").on("input", calcularEstimado);
   }
 
   if (tipo === "casa") {
     $inputs.append(`
-      <label>Metros² de terreno:</label>
-      <input type="number" id="acm-m2-terreno" min="1" style="width:100%; margin-bottom:4px;">
-      <label>Metros² de construcción:</label>
-      <input type="number" id="acm-m2-construccion" min="1" style="width:100%; margin-bottom:4px;">
+      <label>m² Terreno:</label>
+      <input type="number" id="acm-m2-terreno" min="1" maxlength="12" style="${baseStyle}"><br>
+      <label>m² Const.:</label>
+      <input type="number" id="acm-m2-construccion" min="1" maxlength="12" style="${baseStyle}">
     `);
     $("#acm-m2-terreno, #acm-m2-construccion").on("input", calcularEstimado);
   }
