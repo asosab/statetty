@@ -122,3 +122,99 @@ function detectarTipoInmueble(loc) {
 
   return "otro"; // si no encaja en ninguna categoría
 }
+
+
+// ---------------------------------------------
+// Formulario dinámico de cálculo ACM
+// ---------------------------------------------
+function initACMTools() {
+  if ($("#acm-form").length > 0) return; // evitar duplicar
+
+  $("#acm-container").append(`
+    <div id="acm-form" style="margin-top:10px; padding:6px; border-top:1px solid #ddd;">
+      <label>Selecciona tipo de inmueble:</label><br>
+      <select id="acm-tipo" style="width:100%; margin-bottom:6px;">
+        <option value="">-- Seleccionar --</option>
+        <option value="terreno">Terreno</option>
+        <option value="departamento">Departamento</option>
+        <option value="casa">Casa</option>
+      </select>
+      <div id="acm-inputs"></div>
+      <div id="acm-result" style="margin-top:6px; font-weight:bold;"></div>
+    </div>
+  `);
+
+  // Escucha cambios
+  $("#acm-tipo").on("change", function() {
+    renderACMInputs($(this).val());
+  });
+}
+
+function renderACMInputs(tipo) {
+  const $inputs = $("#acm-inputs");
+  $inputs.empty();
+  $("#acm-result").empty();
+
+  if (tipo === "terreno") {
+    $inputs.append(`
+      <label>Metros² de terreno:</label>
+      <input type="number" id="acm-m2-terreno" min="1" style="width:100%; margin-bottom:4px;">
+    `);
+    $("#acm-m2-terreno").on("input", calcularEstimado);
+  }
+
+  if (tipo === "departamento") {
+    $inputs.append(`
+      <label>Metros² de construcción:</label>
+      <input type="number" id="acm-m2-construccion" min="1" style="width:100%; margin-bottom:4px;">
+    `);
+    $("#acm-m2-construccion").on("input", calcularEstimado);
+  }
+
+  if (tipo === "casa") {
+    $inputs.append(`
+      <label>Metros² de terreno:</label>
+      <input type="number" id="acm-m2-terreno" min="1" style="width:100%; margin-bottom:4px;">
+      <label>Metros² de construcción:</label>
+      <input type="number" id="acm-m2-construccion" min="1" style="width:100%; margin-bottom:4px;">
+    `);
+    $("#acm-m2-terreno, #acm-m2-construccion").on("input", calcularEstimado);
+  }
+}
+
+function calcularEstimado() {
+  const tipo = $("#acm-tipo").val();
+  let total = 0;
+
+  if (tipo === "terreno") {
+    const m2 = parseFloat($("#acm-m2-terreno").val()) || 0;
+    const promM2 = extraerValorPromedio("#acm-prom-m2t");
+    total = m2 * promM2;
+  }
+
+  if (tipo === "departamento") {
+    const m2 = parseFloat($("#acm-m2-construccion").val()) || 0;
+    const promM2 = extraerValorPromedio("#acm-prom-m2d");
+    total = m2 * promM2;
+  }
+
+  if (tipo === "casa") {
+    const m2Terreno = parseFloat($("#acm-m2-terreno").val()) || 0;
+    const m2Construccion = parseFloat($("#acm-m2-construccion").val()) || 0;
+    const promTerreno = extraerValorPromedio("#acm-prom-m2c-terreno");
+    const promConstruccion = extraerValorPromedio("#acm-prom-m2c-construccion");
+    total = (m2Terreno * promTerreno) + (m2Construccion * promConstruccion);
+  }
+
+  $("#acm-result").text(total > 0 ? `Estimado: USD ${formatNumber(total)}` : "");
+}
+
+// Extrae el valor numérico de los spans tipo "USD 123 [5]"
+function extraerValorPromedio(selector) {
+  const txt = $(selector).text() || "";
+  const match = txt.match(/USD\s*([\d.,]+)/);
+  if (match) {
+    return parseFloat(match[1].replace(/\./g, "").replace(",", "."));
+  }
+  return 0;
+}
