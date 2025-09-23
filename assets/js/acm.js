@@ -10,32 +10,35 @@ function actualizarACM() {
 
   if (!seleccionados.length) {
     $("#acm-prom-precio").text("0");
-    $("#acm-prom-m2c").text("0");
     $("#acm-prom-m2t").text("0");
+    $("#acm-prom-m2c").text("0");
+    $("#acm-prom-m2d").text("0");
     $("#acm-rango").text("-");
     return;
   }
 
   // Clasificación
-  const terrenos = seleccionados.filter(s => detectarTipoInmueble(s) === "terreno");
-  const casas     = seleccionados.filter(s => detectarTipoInmueble(s) === "casa");
-  const deptos    = seleccionados.filter(s => detectarTipoInmueble(s) === "departamento");
+  const terrenos = seleccionados.filter(s => detectarTipoInmueble(s) === "terreno" && s.m2terreno > 0);
+  const casas = seleccionados.filter(s => detectarTipoInmueble(s) === "casa" && s.m2construccion > 0);
+  const deptos = seleccionados.filter(s => detectarTipoInmueble(s) === "departamento" && s.m2construccion > 0);
 
-  // Promedio precio general
+  // Promedio general de precios
   const avgPrecio = calcularPromedio(seleccionados, "precio");
   $("#acm-prom-precio").text(`USD ${formatNumber(avgPrecio)}`);
 
-  // Precio por m² construcción (casas + departamentos)
-  const inmueblesConM2c = casas.concat(deptos).filter(s => s.m2construccion > 0);
-  const promM2c = calcularPromedio(inmueblesConM2c, "precioM2");
-  $("#acm-prom-m2c").text(promM2c > 0 ? `USD ${formatNumber(promM2c)}` : "-");
-
-  // Precio por m² terreno (terrenos + casas con lote)
-  const inmueblesConM2t = terrenos.concat(casas).filter(s => s.m2terreno > 0);
-  const promM2t = calcularPromedio(inmueblesConM2t, "precioM2");
+  // Precio por m² terrenos
+  const promM2t = calcularPromedio(terrenos, "precioM2");
   $("#acm-prom-m2t").text(promM2t > 0 ? `USD ${formatNumber(promM2t)}` : "-");
 
-  // Rango de precios
+  // Precio por m² casas
+  const promM2c = calcularPromedio(casas, "precioM2");
+  $("#acm-prom-m2c").text(promM2c > 0 ? `USD ${formatNumber(promM2c)}` : "-");
+
+  // Precio por m² departamentos
+  const promM2d = calcularPromedio(deptos, "precioM2");
+  $("#acm-prom-m2d").text(promM2d > 0 ? `USD ${formatNumber(promM2d)}` : "-");
+
+  // Rango general
   const precios = seleccionados.map(s => s.precio || 0).filter(p => p > 0);
   if (precios.length > 0) {
     const min = Math.min(...precios);
