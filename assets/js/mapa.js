@@ -83,9 +83,13 @@ function normalizeURL(u) {
   return u.includes('http') ? u : `https://c21.com.bo${u}`;
 }
 
+//function formatNumber(num) { return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") + ",00";}
+
 function formatNumber(num) {
-  return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") + ",00";
+  if (isNaN(num)) return "0";
+  return new Intl.NumberFormat("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(num);
 }
+
 
 function calcularPromedio(datos, prop) {
   if (!Array.isArray(datos) || datos.length === 0) return 0;
