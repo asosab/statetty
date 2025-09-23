@@ -474,6 +474,17 @@ $(document).ready(function () {
       location.m2terreno      = parseInt(location.m2terreno) || 0;
       location.m2construccion = parseInt(location.m2construccion) || 0;
 
+      // ✅ renombramos precioM2 a precioM2C
+      location.precioM2C = (location.precio > 0 && location.m2construccion > 0)? location.precio / location.m2construccion: 0;
+      delete location.precioM2;
+
+      // ✅ calculamos precioM2T si es posible
+      location.precioM2T = (location.precio > 0 && location.m2terreno > 0)? location.precio / location.m2terreno: 0;
+
+
+
+
+
 
       let rawDesc = location.des || '';
       rawDesc = rawDesc.replace(/\+591\d{8}/g, '[número eliminado]')

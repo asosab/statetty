@@ -81,17 +81,18 @@ const camposDisponibles = [
   { key: "dir",             label: "Dirección",       index: 5 },
   { key: "m2construccion",  label: "m² construc.",    index: 6 },
   { key: "m2terreno",       label: "m² terreno",      index: 7 },
-  { key: "precioM2",        label: "USD/m²",          index: 8 },
-  { key: "ambientes",       label: "Ambientes",       index: 9 },
-  { key: "dormitorios",     label: "Dormitorios",     index: 10 },
-  { key: "baños",           label: "Baños",           index: 11 },
-  { key: "broker",          label: "Agencia",         index: 12 },
-  { key: "agentName",       label: "Agente",          index: 13 },  
-  { key: "agentPhon",       label: "Teléfono",        index: 14 },
-  { key: "URL",             label: "URL",             index: 15 },
-  { key: "lat",             label: "Latitud",         index: 16 },
-  { key: "lng",             label: "Longitud",        index: 17 },
-  { key: "des",             label: "Descripción",     index: 18 },
+  { key: "precioM2C",       label: "USD/m² constr.",  index: 8 },
+  { key: "precioM2T",       label: "USD/m² terr.",    index: 9 },
+  { key: "ambientes",       label: "Ambientes",       index: 10 },
+  { key: "dormitorios",     label: "Dormitorios",     index: 11 },
+  { key: "baños",           label: "Baños",           index: 12 },
+  { key: "broker",          label: "Agencia",         index: 13 },
+  { key: "agentName",       label: "Agente",          index: 14 },  
+  { key: "agentPhon",       label: "Teléfono",        index: 15 },
+  { key: "URL",             label: "URL",             index: 16 },
+  { key: "lat",             label: "Latitud",         index: 17 },
+  { key: "lng",             label: "Longitud",        index: 18 },
+  { key: "des",             label: "Descripción",     index: 19 },
 ];
 
 function renderColumnSelector() {
@@ -310,7 +311,7 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
             fila.push(s.fotoBase64 ? { content: "", ...s } : "-");
           } else {
             fila.push(
-              ["precio", "precio_m2", "precioDelM2", "precioM2"].includes(campo.key)
+              ["precio", "precio_m2", "precioDelM2", "precioM2", "precioM2C", "precioM2T"].includes(campo.key)
                 ? formatCurrency(s[campo.key])
                 : (s[campo.key] || "-")
             );
@@ -383,7 +384,7 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
         inmueblesLimitados.forEach(s => {
           if (campo.key === "des") fila.push(s.des || "-");
           else if (campo.key === "foto") fila.push(s.fotoBase64 ? { content: "", ...s } : "-");
-          else fila.push(["precio","precio_m2","precioDelM2","precioM2"].includes(campo.key) ? formatCurrency(s[campo.key]) : (s[campo.key] || "-"));
+          else fila.push(["precio","precio_m2","precioDelM2","precioM2", "precioM2C", "precioM2T"].includes(campo.key) ? formatCurrency(s[campo.key]) : (s[campo.key] || "-"));
         });
         return fila;
       });
