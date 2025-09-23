@@ -1,0 +1,113 @@
+---
+layout:             map
+title:              "Resultados de búsqueda"
+date:               2024-06-28
+categories:         mapas,Búsquedas
+description:        "Este mapa muestra resultados de una búsqueda en Statetty. Para usarlo conversa con @statettybot en telegram"
+tags:               [búsquedas,mapa,query,resultados]
+published:          true
+image:              mapa.png
+---
+
+  <style>
+    #toolbox-btn {
+      position: absolute; top: 10px; right: 10px;
+      background: white; border: 1px solid #ccc;
+      border-radius: 50%; width: 40px; height: 40px;
+      text-align: center; line-height: 38px;
+      cursor: pointer; z-index: 1000; font-size: 18px;
+    }
+    #toolbox {
+      position: absolute; top: 60px; right: 10px;
+      background: white; border: 1px solid #ccc;
+      padding: 10px; display: none; z-index: 1000;
+      min-width: 220px;
+    }
+    .search-container { display: flex; align-items: center; margin-bottom: 10px; }
+    .search-container span { margin-right: 5px; font-size: 16px; }
+    .search-container input { flex: 1; padding: 3px 5px; }
+
+    .check-overlay {
+      font-size: 18px; color: green; font-weight: bold;
+      text-shadow: 1px 1px 2px #fff;
+    }
+
+    #mapid { width: 100%; height: 100vh; }
+    #loading-indicator {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(255, 255, 255, 0.9);
+      padding: 10px 20px; border-radius: 8px;
+      font-weight: bold; display: none; z-index: 2000;
+    }
+    .section { border-top: 1px solid #ddd; }
+    .section-header {
+      cursor: pointer; font-weight: bold; padding: 5px; background: #f0f0f0;
+    }
+    .section-body { display: none; padding: 5px; }
+    .section.active .section-body { display: block; }
+
+
+
+  </style>
+
+  <div id="toolbox-btn">⚙</div>
+  <div id="toolbox">
+    <!-- Bloque 1: Buscar + Estadísticas -->
+    <div class="section">
+      <div class="section-header">🔍 Buscar & 📊 Estadísticas</div>
+      <div class="section-body">
+        <div class="search-container">
+          <span>🔍</span>
+          <div style="position: relative; flex: 1;">
+            <input type="text" id="search-input" placeholder="Buscar..." style="width: 98%;">
+            <span id="search-count" style="position:absolute; right:0; top:50%; transform:translateY(-50%); font-size:12px; color:#555; pointer-events:none; display:none;"></span>
+          </div>
+        </div>
+        <div id="stats-container" style="font-size: 14px; line-height: 1.4; margin-top:6px;">
+          🏙 Total inmuebles: <span id="total-inmuebles">0</span><br>
+          💲 Precio promedio: USD<span id="precio-promedio">0</span><br>
+          🏷️ Más económico: <span id="mas-barato">-</span><br>
+          💎 Más costoso: <span id="mas-caro">-</span><br>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Bloque 2: Seleccionados + PDF -->
+    <div class="section">
+      <div class="section-header">✅ Seleccionados & 📄 PDF</div>
+      <div class="section-body">
+        <div id="sel-box"><!-- generado dinámicamente por mapa.js --></div>
+      </div>
+    </div>
+
+    <!-- Bloque 3: Agencias -->
+    <div class="section">
+      <div class="section-header">🏢 Agencias</div>
+      <div class="section-body" id="agency-filter">
+        <!-- checkboxes dinámicos -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Bloque 4: ACM -->
+  <div class="section">
+    <div class="section-header">📈 ACM (Análisis Comparativo de Mercado)</div>
+    <div class="section-body" id="acm-tools">
+      <!-- botones generados dinámicamente -->
+    </div>
+  </div>
+
+
+
+
+  <div id="mapid"></div>
+  <div id="loading-indicator">Cargando...</div>
+
+
+  <!-- Lógica principal -->
+  <script src="../../assets/js/mapa.js"></script>
+  <script src="../../assets/js/inmueblesPdf.js"></script>
+  <script src="../../assets/js/acm.js"></script>
+

@@ -733,6 +733,7 @@ $(document).ready(function () {
     }
 
   });
+  if (typeof initACMTools === "function") {initACMTools();}
 });
 
 // -------------------------------

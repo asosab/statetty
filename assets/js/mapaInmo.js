@@ -210,7 +210,7 @@ const columnas = [
   "phone",          // 12 teléfono
   "region"          // 13 región
 ];
-
+                      
 window.columnasConfig = {
   "lat": false,
   "lng": false,
