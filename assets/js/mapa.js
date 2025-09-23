@@ -342,6 +342,9 @@ function actualizarToolbox() {
     $(`.chk-sel[data-id='${id}']`).prop("checked", false);
     actualizarToolbox();
   });
+
+  if (typeof actualizarACM === "function") {actualizarACM();}
+
 }
 
 

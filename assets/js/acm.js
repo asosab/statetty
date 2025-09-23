@@ -1,61 +1,35 @@
 // ---------------------------------------------
-// acm.js - Herramientas para análisis comparativo de mercado
+// acm.js - Análisis Comparativo de Mercado
 // ---------------------------------------------
 
 /**
- * Inicializa el bloque ACM en el toolbox
+ * Recalcula los valores ACM y actualiza el HTML
  */
-function initACMTools() {
-  if ($("#acm-tools").length === 0) return;
+function actualizarACM() {
+  if ($("#acm-container").length === 0) return; // si no existe, no hacer nada
 
-  // Renderizar botones
-  $("#acm-tools").html(`
-    <button id="btn-acm-precios" style="margin:5px 0; width:100%;">📊 Promedio de precios</button>
-    <button id="btn-acm-m2" style="margin:5px 0; width:100%;">📏 Precio por m²</button>
-    <button id="btn-acm-rango" style="margin:5px 0; width:100%;">📉 Rango de precios</button>
-    <button id="btn-acm-export" style="margin:5px 0; width:100%;">⬇ Exportar comparativo</button>
-  `);
+  if (!seleccionados.length) {
+    $("#acm-prom-precio").text("0");
+    $("#acm-prom-m2").text("0");
+    $("#acm-rango").text("-");
+    return;
+  }
 
-  // Eventos
-  $("#btn-acm-precios").off("click").on("click", mostrarPromedioPrecios);
-  $("#btn-acm-m2").off("click").on("click", mostrarPromedioM2);
-  $("#btn-acm-rango").off("click").on("click", mostrarRangoPrecios);
-  $("#btn-acm-export").off("click").on("click", exportarACM);
-}
+  // Promedio de precios
+  const avgPrecio = calcularPromedio(seleccionados, "precio");
+  $("#acm-prom-precio").text(`USD ${formatNumber(avgPrecio)}`);
 
-/**
- * 📊 Promedio de precios
- */
-function mostrarPromedioPrecios() {
-  if (!seleccionados.length) return alert("No hay seleccionados.");
-  const avg = calcularPromedio(seleccionados, "precio");
-  alert(`📊 Promedio de precios: USD ${formatNumber(avg)}`);
-}
+  // Promedio por m²
+  const avgM2 = calcularPromedio(seleccionados, "precioM2");
+  $("#acm-prom-m2").text(`USD ${formatNumber(avgM2)}`);
 
-/**
- * 📏 Precio por m²
- */
-function mostrarPromedioM2() {
-  if (!seleccionados.length) return alert("No hay seleccionados.");
-  const avg = calcularPromedio(seleccionados, "precioM2");
-  alert(`📏 Promedio por m²: USD ${formatNumber(avg)}`);
-}
-
-/**
- * 📉 Rango de precios (mínimo y máximo)
- */
-function mostrarRangoPrecios() {
-  if (!seleccionados.length) return alert("No hay seleccionados.");
+  // Rango de precios
   const precios = seleccionados.map(s => s.precio || 0).filter(p => p > 0);
-  const min = Math.min(...precios);
-  const max = Math.max(...precios);
-  alert(`📉 Rango de precios: USD ${formatNumber(min)} - USD ${formatNumber(max)}`);
-}
-
-/**
- * ⬇ Exportar comparativo (ejemplo: PDF usando tu generador)
- */
-function exportarACM() {
-  if (!seleccionados.length) return alert("No hay seleccionados.");
-  generarBrochurePDF(seleccionados, "landscape");
+  if (precios.length > 0) {
+    const min = Math.min(...precios);
+    const max = Math.max(...precios);
+    $("#acm-rango").text(`USD ${formatNumber(min)} - USD ${formatNumber(max)}`);
+  } else {
+    $("#acm-rango").text("-");
+  }
 }
