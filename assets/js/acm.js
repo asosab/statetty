@@ -10,9 +10,9 @@ function actualizarACM() {
 
   if (!seleccionados.length) {
     $("#acm-prom-precio").text("0");
-    $("#acm-prom-m2t").text("0");
-    $("#acm-prom-m2c-construccion").text("0");
-    $("#acm-prom-m2d").text("0");
+    $("#acm-prom-m2t").html(`<input type="number" step="0.01" value="" style="max-width:12ch;">`);
+    $("#acm-prom-m2c-construccion").html(`<input type="number" step="0.01" value="" style="max-width:12ch;">`);
+    $("#acm-prom-m2d").html(`<input type="number" step="0.01" value="" style="max-width:12ch;">`);
     $("#acm-rango").text("-");
     return;
   }
@@ -23,15 +23,19 @@ function actualizarACM() {
 
   // Promedio general de precios
   const avgPrecio = calcularPromedio(seleccionados, "precio");
-  $("#acm-prom-precio").text(`USD ${formatNumber(avgPrecio)} [${seleccionados.length}]`);
+  $("#acm-prom-precio").text(`Promedio de precios: USD ${formatNumber(avgPrecio)} [${seleccionados.length}]`);
 
-  // Precio por m² terrenos (solo lotes sin construcción)
+  // Precio por m² terrenos
   const valoresM2t = terrenos
     .filter(t => t.precio > 0 && t.m2terreno > 20 && t.m2terreno < 20000)
     .map(t => t.precio / t.m2terreno);
 
   const promM2t = valoresM2t.length ? valoresM2t.reduce((a,b)=>a+b,0) / valoresM2t.length : 0;
-  $("#acm-prom-m2t").text(promM2t > 0 ? `USD ${formatNumber(promM2t)} [${valoresM2t.length}]` : "-");
+  $("#acm-prom-m2t").html(
+    `[caja de texto] Precio promedio por m² terrenos ` +
+    (valoresM2t.length ? `[${valoresM2t.length}]` : "[-]") +
+    `<br><input type="number" step="0.01" value="${promM2t > 0 ? promM2t.toFixed(2) : ""}" style="max-width:12ch;">`
+  );
 
   // Precio por m² departamentos (construcción)
   const valoresM2d = deptos
@@ -39,7 +43,11 @@ function actualizarACM() {
     .map(d => d.precio / d.m2construccion);
 
   const promM2d = valoresM2d.length ? valoresM2d.reduce((a,b)=>a+b,0) / valoresM2d.length : 0;
-  $("#acm-prom-m2d").text(promM2d > 0 ? `USD ${formatNumber(promM2d)} [${valoresM2d.length}]` : "-");
+  $("#acm-prom-m2d").html(
+    `[caja de texto] Precio promedio por m² departamentos ` +
+    (valoresM2d.length ? `[${valoresM2d.length}]` : "[-]") +
+    `<br><input type="number" step="0.01" value="${promM2d > 0 ? promM2d.toFixed(2) : ""}" style="max-width:12ch;">`
+  );
 
   // Precio por m² casas (construcción ajustado con valor de terreno)
   let valoresM2cConstruccion = [];
@@ -61,18 +69,23 @@ function actualizarACM() {
     ? valoresM2cConstruccion.reduce((a,b)=>a+b,0) / valoresM2cConstruccion.length
     : 0;
 
-  $("#acm-prom-m2c-construccion").text(promM2cConstruccion > 0 ? `USD ${formatNumber(promM2cConstruccion)} [${valoresM2cConstruccion.length}]` : "-");
+  $("#acm-prom-m2c-construccion").html(
+    `[caja de texto] Precio promedio por m² casas (construcción) ` +
+    (valoresM2cConstruccion.length ? `[${valoresM2cConstruccion.length}]` : "[-]") +
+    `<br><input type="number" step="0.01" value="${promM2cConstruccion > 0 ? promM2cConstruccion.toFixed(2) : ""}" style="max-width:12ch;">`
+  );
 
   // Rango de precios general
   const precios = seleccionados.map(s => s.precio || 0).filter(p => p > 0);
   if (precios.length > 0) {
     const min = Math.min(...precios);
     const max = Math.max(...precios);
-    $("#acm-rango").text(`USD ${formatNumber(min)} - USD ${formatNumber(max)}`);
+    $("#acm-rango").text(`Rango de precios: USD ${formatNumber(min)} - USD ${formatNumber(max)}`);
   } else {
-    $("#acm-rango").text("-");
+    $("#acm-rango").text("Rango de precios: -");
   }
 }
+
 
 
 
@@ -219,12 +232,12 @@ function calcularEstimado() {
 }
 
 
-// Extrae el valor numérico de los spans tipo "USD 123 [5]"
+// Extrae el valor numérico de los <input> dentro de los spans de ACM
 function extraerValorPromedio(selector) {
-  const txt = $(selector).text() || "";
-  const match = txt.match(/USD\s*([\d.,]+)/);
-  if (match) {
-    return parseFloat(match[1].replace(/\./g, "").replace(",", "."));
+  const $input = $(selector).find("input");
+  if ($input.length) {
+    const val = parseFloat($input.val());
+    return isNaN(val) ? 0 : val;
   }
   return 0;
 }
