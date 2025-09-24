@@ -21,7 +21,7 @@ function actualizarACM() {
   const casas    = seleccionados.filter(s => detectarTipoInmueble(s) === "casa" && (s.m2terreno > 0 || s.m2construccion > 0));
   const deptos   = seleccionados.filter(s => detectarTipoInmueble(s) === "departamento" && s.m2construccion > 0);
 
-  // Promedio general de precios
+  // Promedio general de precios (se mantiene promedio simple por ahora)
   const avgPrecio = calcularPromedio(seleccionados, "precio");
   $("#acm-prom-precio").text(`Promedio de precios: USD ${formatNumber(avgPrecio)} [${seleccionados.length}]`);
 
@@ -30,7 +30,7 @@ function actualizarACM() {
     .filter(t => t.precio > 0 && t.m2terreno > 20 && t.m2terreno < 20000)
     .map(t => t.precio / t.m2terreno);
 
-  const promM2t = valoresM2t.length ? valoresM2t.reduce((a,b)=>a+b,0) / valoresM2t.length : 0;
+  const promM2t = mediaPonderada(valoresM2t, 15);
   $("#acm-prom-m2t").html(
     `<input type="number" step="0.01" value="${promM2t > 0 ? promM2t.toFixed(2) : ""}" style="max-width:12ch;">` +
     ` Precio promedio por m² terrenos ` +
@@ -43,7 +43,7 @@ function actualizarACM() {
     .filter(d => d.precio > 0 && d.m2construccion > 20 && d.m2construccion < 2000)
     .map(d => d.precio / d.m2construccion);
 
-  const promM2d = valoresM2d.length ? valoresM2d.reduce((a,b)=>a+b,0) / valoresM2d.length : 0;
+  const promM2d = mediaPonderada(valoresM2d, 15);
   $("#acm-prom-m2d").html(
     `<input type="number" step="0.01" value="${promM2d > 0 ? promM2d.toFixed(2) : ""}" style="max-width:12ch;">` +
     ` Precio promedio por m² departamentos ` +
@@ -67,9 +67,7 @@ function actualizarACM() {
       .filter(v => v !== null);
   }
 
-  const promM2cConstruccion = valoresM2cConstruccion.length
-    ? valoresM2cConstruccion.reduce((a,b)=>a+b,0) / valoresM2cConstruccion.length
-    : 0;
+  const promM2cConstruccion = mediaPonderada(valoresM2cConstruccion, 15);
   $("#acm-prom-m2c-construccion").html(
     `<input type="number" step="0.01" value="${promM2cConstruccion > 0 ? promM2cConstruccion.toFixed(2) : ""}" style="max-width:12ch;">` +
     ` Precio promedio por m² casas (construcción) ` +
@@ -88,6 +86,7 @@ function actualizarACM() {
   }
   calcularEstimado();
 }
+
 
 function guardarEstadoACM() {
   const estado = {
@@ -121,6 +120,25 @@ function restaurarEstadoACM() {
   calcularEstimado();
 }
 
+function mediaPonderada(valores, porcentaje = 15) {
+  if (!valores || valores.length === 0) return 0;
+
+  // ordenar de menor a mayor
+  const ordenados = [...valores].sort((a, b) => a - b);
+
+  const n = ordenados.length;
+  const recorte = Math.floor(n * (porcentaje / 100));
+
+  // si son pocos inmuebles, no recortamos nada
+  if (n < 7 || recorte === 0) {
+    return ordenados.reduce((s, v) => s + v, 0) / n;
+  }
+
+  // quitar extremos
+  const recortados = ordenados.slice(recorte, n - recorte);
+
+  return recortados.reduce((s, v) => s + v, 0) / recortados.length;
+}
 
 
 /**
