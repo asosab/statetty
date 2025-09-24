@@ -348,7 +348,7 @@ function actualizarToolbox() {
   });
 
   if (typeof actualizarACM === "function") {actualizarACM();}
-  if (typeof restaurarEstadoACM === "function") {restaurarEstadoACM();}
+  //if (typeof restaurarEstadoACM === "function") {restaurarEstadoACM();}
 }
 
 
@@ -769,6 +769,7 @@ $(document).ready(function () {
 
   });
   if (typeof initACMTools === "function") {initACMTools();}
+  if (typeof restaurarEstadoACM === "function") {restaurarEstadoACM();}
 });
 
 // -------------------------------

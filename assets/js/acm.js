@@ -120,26 +120,15 @@ function restaurarEstadoACM() {
   calcularEstimado();
 }
 
-function mediaPonderada(valores, porcentaje = 15) {
+function mediaPonderada(valores, porcentaje = 10) {
   if (!valores || valores.length === 0) return 0;
-
-  // ordenar de menor a mayor
   const ordenados = [...valores].sort((a, b) => a - b);
-
   const n = ordenados.length;
   const recorte = Math.floor(n * (porcentaje / 100));
-
-  // si son pocos inmuebles, no recortamos nada
-  if (n < 7 || recorte === 0) {
-    return ordenados.reduce((s, v) => s + v, 0) / n;
-  }
-
-  // quitar extremos
+  if (n < 7 || recorte === 0) {return ordenados.reduce((s, v) => s + v, 0) / n;}
   const recortados = ordenados.slice(recorte, n - recorte);
-
   return recortados.reduce((s, v) => s + v, 0) / recortados.length;
 }
-
 
 /**
  * Calcula el promedio de precio por m² dado un campo (m2terreno o m2construccion).
