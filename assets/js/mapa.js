@@ -485,6 +485,8 @@ $(document).ready(function () {
       location.uid            = normalizeURL(location.URL);
       location.m2terreno      = parseInt(location.m2terreno) || 0;
       location.m2construccion = parseInt(location.m2construccion) || 0;
+      location.tiempoOfertado = parseInt(location.tiempoOfertado) || 0;
+
 
       // ✅ renombramos precioM2 a precioM2C
       location.precioM2C = (location.precio > 0 && location.m2construccion > 0)? location.precio / location.m2construccion: 0;
