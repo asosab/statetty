@@ -32,9 +32,9 @@ function actualizarACM() {
 
   const promM2t = valoresM2t.length ? valoresM2t.reduce((a,b)=>a+b,0) / valoresM2t.length : 0;
   $("#acm-prom-m2t").html(
-    `[caja de texto] Precio promedio por m² terrenos ` +
-    (valoresM2t.length ? `[${valoresM2t.length}]` : "[-]") +
-    `<br><input type="number" step="0.01" value="${promM2t > 0 ? promM2t.toFixed(2) : ""}" style="max-width:12ch;">`
+    `<input type="number" step="0.01" value="${promM2t > 0 ? promM2t.toFixed(2) : ""}" style="max-width:12ch;">` +
+    ` Precio promedio por m² terrenos ` +
+    (valoresM2t.length ? `[${valoresM2t.length}]` : "[-]")
   );
 
   // Precio por m² departamentos (construcción)
@@ -44,9 +44,9 @@ function actualizarACM() {
 
   const promM2d = valoresM2d.length ? valoresM2d.reduce((a,b)=>a+b,0) / valoresM2d.length : 0;
   $("#acm-prom-m2d").html(
-    `[caja de texto] Precio promedio por m² departamentos ` +
-    (valoresM2d.length ? `[${valoresM2d.length}]` : "[-]") +
-    `<br><input type="number" step="0.01" value="${promM2d > 0 ? promM2d.toFixed(2) : ""}" style="max-width:12ch;">`
+    `<input type="number" step="0.01" value="${promM2d > 0 ? promM2d.toFixed(2) : ""}" style="max-width:12ch;">` +
+    ` Precio promedio por m² departamentos ` +
+    (valoresM2d.length ? `[${valoresM2d.length}]` : "[-]")
   );
 
   // Precio por m² casas (construcción ajustado con valor de terreno)
@@ -68,13 +68,11 @@ function actualizarACM() {
   const promM2cConstruccion = valoresM2cConstruccion.length
     ? valoresM2cConstruccion.reduce((a,b)=>a+b,0) / valoresM2cConstruccion.length
     : 0;
-
   $("#acm-prom-m2c-construccion").html(
-    `[caja de texto] Precio promedio por m² casas (construcción) ` +
-    (valoresM2cConstruccion.length ? `[${valoresM2cConstruccion.length}]` : "[-]") +
-    `<br><input type="number" step="0.01" value="${promM2cConstruccion > 0 ? promM2cConstruccion.toFixed(2) : ""}" style="max-width:12ch;">`
+    `<input type="number" step="0.01" value="${promM2cConstruccion > 0 ? promM2cConstruccion.toFixed(2) : ""}" style="max-width:12ch;">` +
+    ` Precio promedio por m² casas (construcción) ` +
+    (valoresM2cConstruccion.length ? `[${valoresM2cConstruccion.length}]` : "[-]")
   );
-
   // Rango de precios general
   const precios = seleccionados.map(s => s.precio || 0).filter(p => p > 0);
   if (precios.length > 0) {
