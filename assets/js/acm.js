@@ -197,6 +197,11 @@ function initACMTools() {
 
 function renderACMInputs(tipo) {
   const $inputs = $("#acm-inputs");
+
+  // 🔹 Guardar valores actuales antes de vaciar
+  const prevTerreno = $("#acm-m2-terreno").val();
+  const prevConstruccion = $("#acm-m2-construccion").val();
+
   $inputs.empty();
   $("#acm-result").empty();
 
@@ -207,6 +212,7 @@ function renderACMInputs(tipo) {
       <label>m² Terreno:</label>
       <input type="number" id="acm-m2-terreno" min="1" maxlength="12" style="${baseStyle}">
     `);
+    if (prevTerreno) $("#acm-m2-terreno").val(prevTerreno);   // 🔹 restaurar
     $("#acm-m2-terreno").on("input", calcularEstimado);
   }
 
@@ -215,6 +221,7 @@ function renderACMInputs(tipo) {
       <label>m² Const.:</label>
       <input type="number" id="acm-m2-construccion" min="1" maxlength="12" style="${baseStyle}">
     `);
+    if (prevConstruccion) $("#acm-m2-construccion").val(prevConstruccion);   // 🔹 restaurar
     $("#acm-m2-construccion").on("input", calcularEstimado);
   }
 
@@ -225,9 +232,14 @@ function renderACMInputs(tipo) {
       <label>m² Const.:</label>
       <input type="number" id="acm-m2-construccion" min="1" maxlength="12" style="${baseStyle}">
     `);
+    if (prevTerreno) $("#acm-m2-terreno").val(prevTerreno);   // 🔹 restaurar
+    if (prevConstruccion) $("#acm-m2-construccion").val(prevConstruccion);   // 🔹 restaurar
     $("#acm-m2-terreno, #acm-m2-construccion").on("input", calcularEstimado);
   }
+
+  calcularEstimado(); // recalcular al renderizar
 }
+
 
 function calcularEstimado() {
   const tipo = $("#acm-tipo").val();
