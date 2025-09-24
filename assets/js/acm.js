@@ -36,6 +36,7 @@ function actualizarACM() {
     ` Precio promedio por m² terrenos ` +
     (valoresM2t.length ? `[${valoresM2t.length}]` : "[-]")
   );
+  $("#acm-prom-m2t input").on("input", calcularEstimado);
 
   // Precio por m² departamentos (construcción)
   const valoresM2d = deptos
@@ -48,6 +49,7 @@ function actualizarACM() {
     ` Precio promedio por m² departamentos ` +
     (valoresM2d.length ? `[${valoresM2d.length}]` : "[-]")
   );
+  $("#acm-prom-m2d input").on("input", calcularEstimado);
 
   // Precio por m² casas (construcción ajustado con valor de terreno)
   let valoresM2cConstruccion = [];
@@ -73,6 +75,8 @@ function actualizarACM() {
     ` Precio promedio por m² casas (construcción) ` +
     (valoresM2cConstruccion.length ? `[${valoresM2cConstruccion.length}]` : "[-]")
   );
+  $("#acm-prom-m2c-construccion input").on("input", calcularEstimado);
+
   // Rango de precios general
   const precios = seleccionados.map(s => s.precio || 0).filter(p => p > 0);
   if (precios.length > 0) {
