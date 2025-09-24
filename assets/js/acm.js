@@ -86,6 +86,7 @@ function actualizarACM() {
   } else {
     $("#acm-rango").text("Rango de precios: -");
   }
+  calcularEstimado();
 }
 
 
