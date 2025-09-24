@@ -89,6 +89,37 @@ function actualizarACM() {
   calcularEstimado();
 }
 
+function guardarEstadoACM() {
+  const estado = {
+    tipo: $("#acm-tipo").val(),
+    m2Terreno: $("#acm-m2-terreno").val(),
+    m2Construccion: $("#acm-m2-construccion").val(),
+    promM2t: $("#acm-prom-m2t input").val(),
+    promM2d: $("#acm-prom-m2d input").val(),
+    promM2c: $("#acm-prom-m2c-construccion input").val()
+  };
+  localStorage.setItem("estadoACM", JSON.stringify(estado));
+}
+
+function restaurarEstadoACM() {
+  const data = localStorage.getItem("estadoACM");
+  if (!data) return;
+  const estado = JSON.parse(data);
+
+  if (estado.tipo) {
+    $("#acm-tipo").val(estado.tipo);
+    renderACMInputs(estado.tipo);
+  }
+
+  if (estado.m2Terreno) $("#acm-m2-terreno").val(estado.m2Terreno);
+  if (estado.m2Construccion) $("#acm-m2-construccion").val(estado.m2Construccion);
+
+  if (estado.promM2t) $("#acm-prom-m2t input").val(estado.promM2t);
+  if (estado.promM2d) $("#acm-prom-m2d input").val(estado.promM2d);
+  if (estado.promM2c) $("#acm-prom-m2c-construccion input").val(estado.promM2c);
+
+  calcularEstimado();
+}
 
 
 
@@ -160,6 +191,8 @@ function initACMTools() {
   $("#acm-tipo").on("change", function() {
     renderACMInputs($(this).val());
   });
+  restaurarEstadoACM();
+  $(document).on("input change", "#acm-form input, #acm-form select", function () {guardarEstadoACM();});
 }
 
 function renderACMInputs(tipo) {

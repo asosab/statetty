@@ -348,7 +348,7 @@ function actualizarToolbox() {
   });
 
   if (typeof actualizarACM === "function") {actualizarACM();}
-
+  if (typeof restaurarEstadoACM === "function") {restaurarEstadoACM();}
 }
 
 
