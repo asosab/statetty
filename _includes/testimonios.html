@@ -15,6 +15,38 @@
           </div><!--//speech-bubble-->            
         </div><!--//testigo-message-->
 
+        <div class="testigo-message">            
+          <div class="profile">
+            <img class="img-fluid lazyload" 
+                 data-src="{{'/assets/images/realtors/gabriel_perez.jpg'|prepend: site.url}}" 
+                 alt="Gabriel Pérez" width="100" height="100">
+          </div><!--//profile-->
+          <div class="speech-bubble">
+            <h3 class="sub-title">¡La búsqueda por WhatsApp me da más tiempo para el B2B!</h3>
+            <p>
+              Una de las herramientas más potentes de Statetty es la búsqueda por WhatsApp. 
+              Gracias a esta herramienta como asesor y agente inmobiliario tengo mucho más 
+              tiempo para el B2B, ya que me mantiene al día con todos los requerimientos del rubro. 
+              ¡Los invito a que utilicen Statetty!
+            </p>
+            <p class="info text-right">
+              <a href="https://c21.com.bo/asesor/2903_hector-gabriel-perez" target="_blank">Gabriel Pérez</a> | CENTURY 21 Expansión 
+              <span id="play-audio-gabriel" style="cursor:pointer; margin-left:8px;">
+                <i class="fa-solid fa-volume-high"></i>
+              </span>
+            </p>
+          </div><!--//speech-bubble-->            
+        </div><!--//testigo-message-->
+
+        <audio id="audio-gabriel" src="/assets/audio/gabriel_perez_01.mp3" preload="auto"></audio>
+
+        <script>
+          document.getElementById('play-audio-gabriel').addEventListener('click', () => {
+            const audio = document.getElementById('audio-gabriel');
+            audio.currentTime = 0;
+            audio.play();
+          });
+        </script>
 
 
 
