@@ -31,6 +31,12 @@ function actualizarACM() {
     .map(t => t.precio / t.m2terreno);
 
   const promM2t = mediaPonderada(valoresM2t, 15);
+  if (promM2t <= 0 && window.M2T) {
+    const m2tManual = parseInt(window.M2T);
+    if (!isNaN(m2tManual) && m2tManual > 0) {promM2t = m2tManual;}
+  }
+
+
   $("#acm-prom-m2t").html(
     `<input type="number" step="0.01" value="${promM2t > 0 ? promM2t.toFixed(2) : ""}" style="max-width:12ch;">` +
     ` Precio promedio por m² terrenos ` +
@@ -278,7 +284,55 @@ function calcularEstimado() {
     total = valorTerreno + valorConstruccion;
   }
 
-  $("#acm-result").text(total > 0 ? `Estimado: USD ${formatNumber(total)}` : "");
+  if (total > 0) {
+    $("#acm-result").text(`Estimado: USD ${formatNumber(total)}`);
+
+    const tipo = $("#acm-tipo").val();
+    const m2Terreno = parseFloat($("#acm-m2-terreno").val()) || 0;
+    const m2Construccion = parseFloat($("#acm-m2-construccion").val()) || 0;
+
+    const meses = calcularTiempoOfertado(tipo, m2Terreno, m2Construccion, total);
+    if (meses !== null) {
+      $("#acm-result").append(` | Tiempo ofertado aprox: ${meses} meses`);
+    }
+  } else {
+    $("#acm-result").text("");
+  }
+
+
+  //$("#acm-result").text(total > 0 ? `Estimado: USD ${formatNumber(total)}` : "");
+}
+
+function calcularTiempoOfertado(tipo, m2Terreno, m2Construccion, precioEstimado) {
+  if (!Array.isArray(locations) || locations.length === 0) return null;
+
+  // Filtrar por tipo de inmueble
+  let comparables = locations.filter(loc => {
+    return (loc.tipoInmueble || "").toLowerCase().includes(tipo);
+  });
+
+  if (comparables.length === 0) return null;
+
+  // Calcular "distancia" respecto al inmueble en análisis
+  comparables.forEach(loc => {
+    let dTerreno = (m2Terreno && loc.m2terreno) ? Math.abs(loc.m2terreno - m2Terreno) / m2Terreno : 0;
+    let dConstruccion = (m2Construccion && loc.m2construccion) ? Math.abs(loc.m2construccion - m2Construccion) / m2Construccion : 0;
+    let dPrecio = (precioEstimado && loc.precio) ? Math.abs(loc.precio - precioEstimado) / precioEstimado : 0;
+    loc._distancia = dTerreno + dConstruccion + dPrecio; // suma simple como métrica
+  });
+
+  // Ordenar por similitud (menor distancia primero)
+  comparables.sort((a, b) => a._distancia - b._distancia);
+
+  // Tomar los N más parecidos (ejemplo: 5 más cercanos)
+  const N = 5;
+  const top = comparables.slice(0, N);
+
+  // Promediar tiempo ofertado
+  const tiempos = top.map(x => parseInt(x.tiempoOfertado) || 0).filter(v => v > 0);
+  if (!tiempos.length) return null;
+
+  return Math.round(tiempos.reduce((s, v) => s + v, 0) / tiempos.length);
 }
 
 
