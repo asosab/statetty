@@ -410,9 +410,11 @@ $(document).ready(function () {
   window.na = urlParams.get('na');
   window.ag = urlParams.get('ag');
   window.an = urlParams.get('an');
+  window.M2T = urlParams.get('M2T');
+
   if (!id || !key) { throw new Error("ID o clave no proporcionados en la URL"); }
 
-  var valores = 'Sheet1!A2:R';
+  var valores = 'Sheet1!A2:W';
   var url = 'https://sheets.googleapis.com/v4/spreadsheets/' + id + '/values/' + valores + '?key=' + key;
 
   $('#loading-indicator').show();
