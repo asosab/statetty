@@ -198,46 +198,41 @@ function initACMTools() {
 function renderACMInputs(tipo) {
   const $inputs = $("#acm-inputs");
 
-  // 🔹 Guardar valores actuales antes de vaciar
-  const prevTerreno = $("#acm-m2-terreno").val();
-  const prevConstruccion = $("#acm-m2-construccion").val();
-
-  $inputs.empty();
-  $("#acm-result").empty();
-
-  const baseStyle = "max-width:12ch; font-size:13px; margin-bottom:3px;";
-
-  if (tipo === "terreno") {
+  // ⚡ Crear inputs una sola vez si no existen
+  if ($inputs.children().length === 0) {
+    const baseStyle = "max-width:12ch; font-size:13px; margin-bottom:3px;";
     $inputs.append(`
-      <label>m² Terreno:</label>
-      <input type="number" id="acm-m2-terreno" min="1" maxlength="12" style="${baseStyle}">
+      <div id="grupo-terreno" style="display:none; margin-bottom:4px;">
+        <label>m² Terreno:</label>
+        <input type="number" id="acm-m2-terreno" min="1" maxlength="12" style="${baseStyle}">
+      </div>
+      <div id="grupo-construccion" style="display:none; margin-bottom:4px;">
+        <label>m² Const.:</label>
+        <input type="number" id="acm-m2-construccion" min="1" maxlength="12" style="${baseStyle}">
+      </div>
     `);
-    if (prevTerreno) $("#acm-m2-terreno").val(prevTerreno);   // 🔹 restaurar
-    $("#acm-m2-terreno").on("input", calcularEstimado);
-  }
 
-  if (tipo === "departamento") {
-    $inputs.append(`
-      <label>m² Const.:</label>
-      <input type="number" id="acm-m2-construccion" min="1" maxlength="12" style="${baseStyle}">
-    `);
-    if (prevConstruccion) $("#acm-m2-construccion").val(prevConstruccion);   // 🔹 restaurar
-    $("#acm-m2-construccion").on("input", calcularEstimado);
-  }
-
-  if (tipo === "casa") {
-    $inputs.append(`
-      <label>m² Terreno:</label>
-      <input type="number" id="acm-m2-terreno" min="1" maxlength="12" style="${baseStyle}"><br>
-      <label>m² Const.:</label>
-      <input type="number" id="acm-m2-construccion" min="1" maxlength="12" style="${baseStyle}">
-    `);
-    if (prevTerreno) $("#acm-m2-terreno").val(prevTerreno);   // 🔹 restaurar
-    if (prevConstruccion) $("#acm-m2-construccion").val(prevConstruccion);   // 🔹 restaurar
+    // ⚡ Atar eventos una sola vez
     $("#acm-m2-terreno, #acm-m2-construccion").on("input", calcularEstimado);
   }
 
-  calcularEstimado(); // recalcular al renderizar
+  // Ocultar todo primero
+  $("#grupo-terreno, #grupo-construccion").hide();
+
+  // Mostrar solo lo que corresponde
+  if (tipo === "terreno") {
+    $("#grupo-terreno").show();
+  }
+
+  if (tipo === "departamento") {
+    $("#grupo-construccion").show();
+  }
+
+  if (tipo === "casa") {
+    $("#grupo-terreno, #grupo-construccion").show();
+  }
+
+  calcularEstimado(); // recalcular siempre al cambiar
 }
 
 
