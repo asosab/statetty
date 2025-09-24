@@ -93,6 +93,11 @@ const camposDisponibles = [
   { key: "lat",             label: "Latitud",         index: 17 },
   { key: "lng",             label: "Longitud",        index: 18 },
   { key: "des",             label: "Descripción",     index: 19 },
+  { key: "fechaIngreso",    label: "Fecha ingreso",   index: 20 },
+  { key: "tiempoOfertado",  label: "Meses ofertado",  index: 21 },
+  { key: "tipoInmueble",    label: "Tipo inmueble",   index: 22 },
+  { key: "tipoNegocio",     label: "Tipo negocio",    index: 23 },
+  { key: "anoc",            label: "Año de construc.",index: 24 },
 ];
 
 function renderColumnSelector() {

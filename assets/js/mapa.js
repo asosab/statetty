@@ -420,47 +420,59 @@ $(document).ready(function () {
   $.getJSON(url, function (data) {
     $('#loading-indicator').hide();
 
-    const columnas = [
-      "Titulo",
-      "lat",
-      "lng",
-      "dir",
-      "URL",
-      "des",
-      "ambientes",
-      "dormitorios",
-      "baños",
-      "m2construccion",
-      "m2terreno",
-      "nombre",
-      "precioM2",
-      "broker",
-      "foto",
-      "precio",
-      "agentName",
-      "agentPhon"
-    ];
+  const columnas = [
+    "Titulo",
+    "lat",
+    "lng",
+    "dir",
+    "URL",
+    "des",
+    "ambientes",
+    "dormitorios",
+    "baños",
+    "m2construccion",
+    "m2terreno",
+    "nombre",
+    "precioM2",
+    "broker",
+    "foto",
+    "precio",
+    "agentName",
+    "agentPhon",
+    "fechaIngreso",
+    "tiempoOfertado",
+    "tipoInmueble",
+    "tipoNegocio",
+    "anoc"
+  ];
 
-    window.columnasConfig = {
-      "Titulo": true,
-      "lat": false, 
-      "lng": false, 
-      "dir": false, 
-      "URL": false, 
-      "des": false,
-      "ambientes": false, 
-      "dormitorios": true, 
-      "baños": true, 
-      "m2construccion": true,
-      "m2terreno": true, 
-      "nombre": false,
-      "precioM2": true, 
-      "broker": false,
-      "foto": false, 
-      "precio": true,
-      "agentName": false, 
-      "agentPhon": false
-    };
+
+  window.columnasConfig = {
+    "Titulo": true,
+    "lat": false, 
+    "lng": false, 
+    "dir": false, 
+    "URL": false, 
+    "des": false,
+    "ambientes": false, 
+    "dormitorios": true, 
+    "baños": true, 
+    "m2construccion": true,
+    "m2terreno": true, 
+    "nombre": false,
+    "precioM2": true, 
+    "broker": false,
+    "foto": false, 
+    "precio": true,
+    "agentName": false, 
+    "agentPhon": false,
+    "fechaIngreso": false,       
+    "tiempoOfertado": true,     
+    "tipoInmueble": false,       
+    "tipoNegocio": false,
+    "anoc": false          
+  };
+
 
     $(data.values).each(function () {
       let location = {};
