@@ -407,46 +407,48 @@ function getVisibleLocations() {
 }
 
 
-// -------------------------------
-// Inicialización del mapa
-// -------------------------------
-$(document).ready(function () {
-  // 📦 Copia de seguridad de todo localStorage en memoria
-  window.__backupLocalStorage = {};
+/**
+ * Limpia el localStorage preservando solo las claves necesarias
+ * (estado ACM, seleccionados, agencias, mapa y columnas personalizadas).
+ */
+function resetLocalStoragePreservingState() {
+  // Copia actual de localStorage en memoria
+  const backup = {};
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
-    try { window.__backupLocalStorage[key] = localStorage.getItem(key); }
+    try { backup[key] = localStorage.getItem(key); }
     catch (e) { console.warn("No se pudo copiar", key, e); }
   }
 
-  // ✅ Claves que queremos preservar (puedes ampliar la lista)
+  // Claves importantes a preservar
   const preserveKeys = [
-    "estadoACM",                // tipo y m² ACM
-    "inmueblesSeleccionados",   // selección del mapa
-    "agenciasSeleccionadas",    // agencias chequeadas
-    "mapCenter", "mapZoom"      // vista del mapa
+    "estadoACM",
+    "inmueblesSeleccionados",
+    "agenciasSeleccionadas",
+    "mapCenter",
+    "mapZoom"
   ];
 
-  // También todas las columnas personalizadas (col_*)
-  for (let k in window.__backupLocalStorage) {
+  // También todas las columnas personalizadas
+  Object.keys(backup).forEach(k => {
     if (k.startsWith("col_")) preserveKeys.push(k);
-  }
+  });
 
-  // 📥 Extraer valores antes de limpiar
+  // Guardar los valores a restaurar
   const preserved = {};
-  preserveKeys.forEach(k => {
-    if (window.__backupLocalStorage[k]) preserved[k] = window.__backupLocalStorage[k];
-  });
+  preserveKeys.forEach(k => { if (backup[k]) preserved[k] = backup[k]; });
 
-  // 🧹 Limpiar localStorage
+  // Limpiar localStorage
   localStorage.clear();
-  console.log("🧹 localStorage limpiado, se restaurarán claves permitidas");
+  console.log("🧹 localStorage limpiado, restaurando claves útiles");
 
-  // 🔄 Restaurar solo lo necesario
-  Object.entries(preserved).forEach(([k, v]) => {
-    localStorage.setItem(k, v);
-  });
+  // Restaurar solo lo necesario
+  Object.entries(preserved).forEach(([k, v]) => localStorage.setItem(k, v));
+}
 
+$(document).ready(function () {
+  // 🔹 aquí ya queda limpio
+  resetLocalStoragePreservingState();
   
   $('#toolbox-btn').on('click', () => $('#toolbox').toggle());
 
