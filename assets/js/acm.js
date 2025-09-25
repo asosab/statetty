@@ -39,7 +39,7 @@ function actualizarACM() {
 
   $("#acm-prom-m2t").html(
     `<input type="number" step="0.01" value="${promM2t > 0 ? promM2t.toFixed(2) : ""}" style="max-width:12ch;">` +
-    ` Precio promedio por m² terrenos ` +
+    ` Promedio USD/m² terrenos ` +
     (valoresM2t.length ? `[${valoresM2t.length}]` : "[-]")
   );
   $("#acm-prom-m2t input").on("input", calcularEstimado);
@@ -52,7 +52,7 @@ function actualizarACM() {
   let promM2d = mediaPonderada(valoresM2d, 15);
   $("#acm-prom-m2d").html(
     `<input type="number" step="0.01" value="${promM2d > 0 ? promM2d.toFixed(2) : ""}" style="max-width:12ch;">` +
-    ` Precio promedio por m² departamentos ` +
+    ` Promedio USD/m² departamentos ` +
     (valoresM2d.length ? `[${valoresM2d.length}]` : "[-]")
   );
   $("#acm-prom-m2d input").on("input", calcularEstimado);
@@ -76,7 +76,7 @@ function actualizarACM() {
   const promM2cConstruccion = mediaPonderada(valoresM2cConstruccion, 15);
   $("#acm-prom-m2c-construccion").html(
     `<input type="number" step="0.01" value="${promM2cConstruccion > 0 ? promM2cConstruccion.toFixed(2) : ""}" style="max-width:12ch;">` +
-    ` Precio promedio por m² casas (construcción) ` +
+    ` Promedio USD/m² casas ` +
     (valoresM2cConstruccion.length ? `[${valoresM2cConstruccion.length}]` : "[-]")
   );
   $("#acm-prom-m2c-construccion input").on("input", calcularEstimado);
