@@ -183,19 +183,24 @@ function detectarTipoInmueble(loc) {
 function initACMTools() {
   if ($("#acm-form").length > 0) return; // evitar duplicar
 
-  $("#acm-container").append(`
-    <div id="acm-form" style="margin-top:8px; padding:4px; border-top:1px solid #ddd; font-size:13px;">
-      <label>Tipo:</label><br>
-      <select id="acm-tipo" style="max-width:12ch; margin-bottom:4px; font-size:13px;">
-        <option value="">--</option>
-        <option value="terreno">Terreno</option>
-        <option value="departamento">Depto</option>
-        <option value="casa">Casa</option>
-      </select>
-      <div id="acm-inputs"></div>
-      <div id="acm-result" style="margin-top:4px; font-weight:bold;"></div>
+$("#acm-container").append(`
+  <div id="acm-form" style="margin-top:8px; padding:4px; border-top:1px solid #ddd; font-size:13px;">
+    <div style="display:flex; align-items:center; gap:12px; margin-bottom:4px;">
+      <div id="grupo-tipo" style="display:flex; align-items:center;">
+        <label style="margin-right:4px; min-width:50px;">Tipo:</label>
+        <select id="acm-tipo" style="max-width:12ch; font-size:13px;">
+          <option value="">--</option>
+          <option value="terreno">Terreno</option>
+          <option value="departamento">Depto</option>
+          <option value="casa">Casa</option>
+        </select>
+      </div>
+      <div id="acm-inputs" style="display:flex; gap:8px;"></div>
     </div>
-  `);
+    <div id="acm-result" style="margin-top:4px; font-weight:bold;"></div>
+  </div>
+`);
+
 
   // Escucha cambios
   restaurarEstadoACM();
@@ -210,18 +215,17 @@ function renderACMInputs(tipo) {
   // ⚡ Crear inputs una sola vez si no existen
   if ($inputs.children().length === 0) {
     const baseStyle = "max-width:12ch; font-size:13px; margin-bottom:3px;";
-    $inputs.append(`
-      <div style="display:flex; gap:8px; margin-bottom:4px;">
-        <div id="grupo-terreno" style="display:none; align-items:center;">
-          <label style="margin-right:4px;">m² T.:</label>
-          <input type="number" id="acm-m2-terreno" min="1" maxlength="10" style="${baseStyle}">
-        </div>
-        <div id="grupo-construccion" style="display:none; align-items:center;">
-          <label style="margin-right:4px;">m² C.:</label>
-          <input type="number" id="acm-m2-construccion" min="1" maxlength="10" style="${baseStyle}">
-        </div>
-      </div>
-    `);
+$inputs.append(`
+  <div id="grupo-terreno" style="display:none; display:flex; align-items:center;">
+    <label style="margin-right:4px; min-width:50px;">m² T.:</label>
+    <input type="number" id="acm-m2-terreno" min="1" maxlength="10" style="${baseStyle}">
+  </div>
+  <div id="grupo-construccion" style="display:none; display:flex; align-items:center;">
+    <label style="margin-right:4px; min-width:50px;">m² C.:</label>
+    <input type="number" id="acm-m2-construccion" min="1" maxlength="10" style="${baseStyle}">
+  </div>
+`);
+
 
 
     // ⚡ Atar eventos una sola vez
