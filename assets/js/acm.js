@@ -151,12 +151,12 @@ function promedioPrecioM2(lista, campo) {
 
 const tipoInmuebleDic = {
   departamento: {
-    incluye: ["departamento", "dpto", "edificio", "apartamento", "flat"],
+    incluye: ["departamento", "dpto", "edificio", "apartamento", "flat", "mono" ],
     excluye: []
   },
   casa: {
     incluye: ["casa", "chalet", "quinta"],
-    excluye: ["departamento", "dpto", "edificio", "apartamento", "flat"]
+    excluye: ["departamento", "dpto", "edificio", "apartamento", "flat", "mono"]
   },
   terreno: {
     incluye: ["lote", "terreno", "parcela"],
