@@ -93,7 +93,6 @@ function actualizarACM() {
   calcularEstimado();
 }
 
-
 function guardarEstadoACM() {
   const estado = {
     tipo: $("#acm-tipo").val(),
@@ -146,8 +145,6 @@ function promedioPrecioM2(lista, campo) {
 
   return valores.length ? valores.reduce((a,b)=>a+b,0) / valores.length : 0;
 }
-
-
 
 const tipoInmuebleDic = {
   departamento: {
@@ -214,15 +211,18 @@ function renderACMInputs(tipo) {
   if ($inputs.children().length === 0) {
     const baseStyle = "max-width:12ch; font-size:13px; margin-bottom:3px;";
     $inputs.append(`
-      <div id="grupo-terreno" style="display:none; margin-bottom:4px;">
-        <label>m² Terreno:</label>
-        <input type="number" id="acm-m2-terreno" min="1" maxlength="12" style="${baseStyle}">
-      </div>
-      <div id="grupo-construccion" style="display:none; margin-bottom:4px;">
-        <label>m² Const.:</label>
-        <input type="number" id="acm-m2-construccion" min="1" maxlength="12" style="${baseStyle}">
+      <div style="display:flex; gap:8px; margin-bottom:4px;">
+        <div id="grupo-terreno" style="display:none; align-items:center;">
+          <label style="margin-right:4px;">m² T.:</label>
+          <input type="number" id="acm-m2-terreno" min="1" maxlength="10" style="${baseStyle}">
+        </div>
+        <div id="grupo-construccion" style="display:none; align-items:center;">
+          <label style="margin-right:4px;">m² C.:</label>
+          <input type="number" id="acm-m2-construccion" min="1" maxlength="10" style="${baseStyle}">
+        </div>
       </div>
     `);
+
 
     // ⚡ Atar eventos una sola vez
     $("#acm-m2-terreno, #acm-m2-construccion").on("input", calcularEstimado);
