@@ -37,6 +37,33 @@ async function cropToSquare(base64, w, h) {
   });
 }
 
+/**
+ * Mantiene limpio el cache de fotos en localStorage
+ * - Conserva solo las últimas N entradas
+ * - Borra las más antiguas para evitar QuotaExceededError
+ */
+function limpiarFotoCache(max = 50) {
+  const keys = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith("fotoCache_")) {
+      keys.push({ key: k, time: localStorage.getItem(k + "_ts") || 0 });
+    }
+  }
+
+  // ordenar por timestamp ascendente (antiguos primero)
+  keys.sort((a, b) => parseInt(a.time) - parseInt(b.time));
+
+  if (keys.length > max) {
+    const toDelete = keys.slice(0, keys.length - max);
+    toDelete.forEach(obj => {
+      localStorage.removeItem(obj.key);
+      localStorage.removeItem(obj.key + "_ts");
+    });
+    console.log(`🧹 Cache fotos limpiado, eliminadas ${toDelete.length} entradas antiguas`);
+  }
+}
+
 
 function loadScript(url) {
   return new Promise((resolve, reject) => {
@@ -240,61 +267,50 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
     // Ordenar inmuebles por precio
     seleccionados.sort((a, b) => (parseFloat(a.precio) || 0) - (parseFloat(b.precio) || 0));
 
-    // 🔹 Precargar imágenes
+    // 🔹 Precargar imágenes con caché seguro
     for (let s of seleccionados) {
       if (s.foto) {
         try {
           const cacheKey = "fotoCache_" + s.foto;
-          let cached = localStorage.getItem(cacheKey);
+          window.__fotoCache = window.__fotoCache || {};
+
+          // buscar en localStorage o memoria
+          let cached = localStorage.getItem(cacheKey) || window.__fotoCache[cacheKey];
+
           if (cached) {
-            s.fotoBase64Cropped = cached;   // directamente el recortado
+            s.fotoBase64Cropped = cached;
           } else {
             const base64 = await urlToBase64(s.foto);
+
+            // medir dimensiones
             const dims = await new Promise(resolve => {
               const img = new Image();
               img.onload = () => resolve({ w: img.width, h: img.height });
               img.onerror = () => resolve({ w: null, h: null });
               img.src = base64;
             });
+
             if (dims.w && dims.h) {
               s.fotoBase64Cropped = await cropToSquare(base64, dims.w, dims.h);
-              localStorage.setItem(cacheKey, s.fotoBase64Cropped);
+
+              // intentar guardar en localStorage con limpieza automática
+              try {
+                localStorage.setItem(cacheKey, s.fotoBase64Cropped);
+                localStorage.setItem(cacheKey + "_ts", Date.now().toString());
+                limpiarFotoCache(50); // conservar solo 50 últimas
+              } catch (e) {
+                if (e.name === "QuotaExceededError" || e.code === 22) {
+                  console.warn("⚠️ localStorage lleno, usando caché en memoria para", s.foto);
+                  window.__fotoCache[cacheKey] = s.fotoBase64Cropped;
+                } else {
+                  console.error("Error guardando foto en cache", e);
+                }
+              }
             }
           }
-
-/*
-          const cacheKey = "fotoCache_" + s.foto;
-          let cached = localStorage.getItem(cacheKey);
-          if (cached) {
-            const [w, h, base64, cropped] = cached.split("|");
-            s.fotoBase64 = base64;
-            s.fotoW = parseInt(w, 10);
-            s.fotoH = parseInt(h, 10);
-            s.fotoBase64Cropped = cropped || base64;
-          } else {
-            const base64 = await urlToBase64(s.foto);
-            const dims = await new Promise(resolve => {
-              const img = new Image();
-              img.onload = () => resolve({ w: img.width, h: img.height });
-              img.onerror = () => resolve({ w: null, h: null });
-              img.src = base64;
-            });
-            s.fotoBase64 = base64;
-            s.fotoW = dims.w;
-            s.fotoH = dims.h;
-            if (dims.w && dims.h) {
-              s.fotoBase64Cropped = await cropToSquare(base64, dims.w, dims.h);
-              localStorage.setItem(cacheKey, s.fotoBase64Cropped);
-            }
-          }
-*/
-
-
-
-
         } catch (e) {
           console.error("Error precargando foto", e);
-          s.fotoBase64 = null;
+          s.fotoBase64Cropped = null;
         }
       }
     }
@@ -315,7 +331,7 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
 
     // Helper para dibujar imágenes cuadradas de 3 cm (≈30 mm)
     function drawImageFromRaw(raw, cell, doc) {
-      const base64 = raw.fotoBase64Cropped || raw.fotoBase64;
+      const base64 = raw.fotoBase64Cropped;
       if (!base64) return;
       const side = 30; // mm
       const x = cell.x + (cell.width - side) / 2;
@@ -334,17 +350,13 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
       const rows = seleccionados.map((s, i) => {
         const fila = [`${i + 1}`];
         camposLimitados.forEach(campo => {
-          if (campo.key === "des") {
-            fila.push(s.des || "-");
-          } else if (campo.key === "foto") {
-            fila.push(s.fotoBase64 ? { content: "", ...s } : "-");
-          } else {
-            fila.push(
-              ["precio", "precio_m2", "precioDelM2", "precioM2", "precioM2C", "precioM2T"].includes(campo.key)
-                ? formatCurrency(s[campo.key])
-                : (s[campo.key] || "-")
-            );
-          }
+          if (campo.key === "des") fila.push(s.des || "-");
+          else if (campo.key === "foto") fila.push(s.fotoBase64Cropped ? { content: "", ...s } : "-");
+          else fila.push(
+            ["precio","precio_m2","precioDelM2","precioM2","precioM2C","precioM2T"].includes(campo.key)
+              ? formatCurrency(s[campo.key])
+              : (s[campo.key] || "-")
+          );
         });
         return fila;
       });
@@ -353,16 +365,6 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
       if (mapaImg) {
         doc.addImage(mapaImg.data, "PNG", 15, 28, 260, 160);
         doc.addPage(); // 👉 tabla arranca en la segunda página
-      }
-
-      // Helper para dibujar imágenes cuadradas de 3 cm (≈30 mm)
-      function drawImageFromRaw(raw, cell, doc) {
-        const base64 = raw.fotoBase64Cropped || raw.fotoBase64;
-        if (!base64) return;
-        const side = 30; // mm
-        const x = cell.x + (cell.width - side) / 2;
-        const y = cell.y + (cell.height - side) / 2;
-        doc.addImage(base64, "JPEG", x, y, side, side);
       }
 
       // Dividir filas en bloques de 4
@@ -383,24 +385,20 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
           headStyles: { fillColor: [76, 175, 80], textColor: 255, halign: "center" },
           theme: "grid",
           didParseCell: function (data) {
-            if (data.cell.raw && data.cell.raw.fotoBase64) {
+            if (data.cell.raw && data.cell.raw.fotoBase64Cropped) {
               data.cell.styles.minCellHeight = 32;
             }
           },
           didDrawCell: function (data) {
-            if (data.cell.raw && data.cell.raw.fotoBase64) {
+            if (data.cell.raw && data.cell.raw.fotoBase64Cropped) {
               drawImageFromRaw(data.cell.raw, data.cell, doc);
             }
           }
         });
 
-        // Si quedan más filas, abrir una nueva página
-        if (i + chunkSize < rows.length) {
-          doc.addPage();
-        }
+        if (i + chunkSize < rows.length) doc.addPage();
       }
     }
-
 
     // ---------------------------------------------
     // Mobile (máx. 5 inmuebles, con ajustes)
@@ -412,8 +410,12 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
         const fila = [campo.label];
         inmueblesLimitados.forEach(s => {
           if (campo.key === "des") fila.push(s.des || "-");
-          else if (campo.key === "foto") fila.push(s.fotoBase64 ? { content: "", ...s } : "-");
-          else fila.push(["precio","precio_m2","precioDelM2","precioM2", "precioM2C", "precioM2T"].includes(campo.key) ? formatCurrency(s[campo.key]) : (s[campo.key] || "-"));
+          else if (campo.key === "foto") fila.push(s.fotoBase64Cropped ? { content: "", ...s } : "-");
+          else fila.push(
+            ["precio","precio_m2","precioDelM2","precioM2","precioM2C","precioM2T"].includes(campo.key)
+              ? formatCurrency(s[campo.key])
+              : (s[campo.key] || "-")
+          );
         });
         return fila;
       });
@@ -421,41 +423,33 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
       const colAnchoFoto = 30;
       const tableWidth = doc.internal.pageSize.getWidth() - 30; // margen lateral
       let anchoCampo = tableWidth - (inmueblesLimitados.length * colAnchoFoto);
+      anchoCampo = anchoCampo * 0.75; // reducir la primera columna
 
-      // 🔹 reducir la primera columna (Campo) una cuarta parte
-      anchoCampo = anchoCampo * 0.75;
-
-      // 🔹 redibujar el mapa con menos altura
-      if (mapaImg) {
-        doc.addImage(mapaImg.data, "PNG", 15, 30, 180, 90); // antes 120mm → ahora 90mm
-      }
+      if (mapaImg) doc.addImage(mapaImg.data, "PNG", 15, 30, 180, 90);
 
       doc.autoTable({
         head: [headers],
         body: rows,
-        startY: mapaImg ? 130 : 30, // ajustado tras reducir mapa
+        startY: mapaImg ? 130 : 30,
         styles: { fontSize: 9, cellPadding: 3, valign: "top" },
         headStyles: { fillColor: [76, 175, 80], textColor: 255, halign: "center" },
         theme: "grid",
         columnStyles: Object.assign(
           { 0: { cellWidth: anchoCampo } },
-          Object.fromEntries(
-            inmueblesLimitados.map((_, i) => [i + 1, { cellWidth: colAnchoFoto }])
-          )
+          Object.fromEntries(inmueblesLimitados.map((_, i) => [i + 1, { cellWidth: colAnchoFoto }]))
         ),
         didParseCell: function (data) {
-          if (data.cell.raw && data.cell.raw.fotoBase64) {
-            data.cell.styles.minCellHeight = 32; // 30mm + margen
+          if (data.cell.raw && data.cell.raw.fotoBase64Cropped) {
+            data.cell.styles.minCellHeight = 32;
           }
         },
         didDrawCell: function (data) {
-          if (data.cell.raw && data.cell.raw.fotoBase64) {
+          if (data.cell.raw && data.cell.raw.fotoBase64Cropped) {
             drawImageFromRaw(data.cell.raw, data.cell, doc);
           }
         }
       });
     }
-
 
     // Pie
     let footerText = "";
@@ -468,12 +462,10 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
     }
 
     doc.save("brochure-inmuebles.pdf");
-
   } catch (err) {
     alert("Hubo un error al generar el PDF: " + (err && err.message ? err.message : err));
   } finally {
     hideLoader();
   }
 }
-
 
