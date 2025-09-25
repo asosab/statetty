@@ -411,23 +411,41 @@ function getVisibleLocations() {
 // Inicialización del mapa
 // -------------------------------
 $(document).ready(function () {
-  // Copia de seguridad de todo localStorage en memoria
+  // 📦 Copia de seguridad de todo localStorage en memoria
   window.__backupLocalStorage = {};
-
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
-    try {
-      window.__backupLocalStorage[key] = localStorage.getItem(key);
-    } catch (e) {
-      console.warn("No se pudo copiar", key, e);
-    }
+    try { window.__backupLocalStorage[key] = localStorage.getItem(key); }
+    catch (e) { console.warn("No se pudo copiar", key, e); }
   }
 
-  // Borrar todo para controlar mejor lo que se guarda
+  // ✅ Claves que queremos preservar (puedes ampliar la lista)
+  const preserveKeys = [
+    "estadoACM",                // tipo y m² ACM
+    "inmueblesSeleccionados",   // selección del mapa
+    "agenciasSeleccionadas",    // agencias chequeadas
+    "mapCenter", "mapZoom"      // vista del mapa
+  ];
+
+  // También todas las columnas personalizadas (col_*)
+  for (let k in window.__backupLocalStorage) {
+    if (k.startsWith("col_")) preserveKeys.push(k);
+  }
+
+  // 📥 Extraer valores antes de limpiar
+  const preserved = {};
+  preserveKeys.forEach(k => {
+    if (window.__backupLocalStorage[k]) preserved[k] = window.__backupLocalStorage[k];
+  });
+
+  // 🧹 Limpiar localStorage
   localStorage.clear();
+  console.log("🧹 localStorage limpiado, se restaurarán claves permitidas");
 
-  console.log("📦 Backup de localStorage hecho y limpiado");
-
+  // 🔄 Restaurar solo lo necesario
+  Object.entries(preserved).forEach(([k, v]) => {
+    localStorage.setItem(k, v);
+  });
 
   
   $('#toolbox-btn').on('click', () => $('#toolbox').toggle());
