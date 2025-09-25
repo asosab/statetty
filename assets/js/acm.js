@@ -30,7 +30,7 @@ function actualizarACM() {
     .filter(t => t.precio > 0 && t.m2terreno > 20 && t.m2terreno < 20000)
     .map(t => t.precio / t.m2terreno);
 
-  const promM2t = mediaPonderada(valoresM2t, 15);
+  let promM2t = mediaPonderada(valoresM2t, 15);
   if (promM2t <= 0 && window.M2T) {
     const m2tManual = parseInt(window.M2T);
     if (!isNaN(m2tManual) && m2tManual > 0) {promM2t = m2tManual;}
@@ -45,11 +45,11 @@ function actualizarACM() {
   $("#acm-prom-m2t input").on("input", calcularEstimado);
 
   // Precio por m² departamentos (construcción)
-  const valoresM2d = deptos
+  let valoresM2d = deptos
     .filter(d => d.precio > 0 && d.m2construccion > 20 && d.m2construccion < 2000)
     .map(d => d.precio / d.m2construccion);
 
-  const promM2d = mediaPonderada(valoresM2d, 15);
+  let promM2d = mediaPonderada(valoresM2d, 15);
   $("#acm-prom-m2d").html(
     `<input type="number" step="0.01" value="${promM2d > 0 ? promM2d.toFixed(2) : ""}" style="max-width:12ch;">` +
     ` Precio promedio por m² departamentos ` +
