@@ -286,18 +286,12 @@ function calcularEstimado() {
 
   if (total > 0) {
     $("#acm-result").text(`Estimado: USD ${formatNumber(total)}`);
-
     const tipo = $("#acm-tipo").val();
     const m2Terreno = parseFloat($("#acm-m2-terreno").val()) || 0;
     const m2Construccion = parseFloat($("#acm-m2-construccion").val()) || 0;
-
     const meses = calcularTiempoOfertado(tipo, m2Terreno, m2Construccion, total);
-    if (meses !== null) {
-      $("#acm-result").append(` | Tiempo ofertado aprox: ${meses} meses`);
-    }
-  } else {
-    $("#acm-result").text("");
-  }
+    if (meses !== null) {$("#acm-result").append(` | Tiempo ofertado aprox: ${meses} meses`);}
+  } else {$("#acm-result").text("");}
 
 
   //$("#acm-result").text(total > 0 ? `Estimado: USD ${formatNumber(total)}` : "");
