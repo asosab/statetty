@@ -772,8 +772,9 @@ $(document).ready(function () {
     }
 
   });
-  if (typeof initACMTools === "function") {initACMTools();}
-  if (typeof restaurarEstadoACM === "function") {restaurarEstadoACM();}
+    if (typeof restaurarEstadoACM === "function") {restaurarEstadoACM();}
+    if (typeof initACMTools === "function") {initACMTools();}
+
 });
 
 // -------------------------------
