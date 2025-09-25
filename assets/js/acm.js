@@ -201,11 +201,10 @@ function initACMTools() {
   `);
 
   // Escucha cambios
-  $("#acm-tipo").on("change", function() {
-    renderACMInputs($(this).val());
-  });
   restaurarEstadoACM();
+  $("#acm-tipo").on("change", function() {renderACMInputs($(this).val());});
   $(document).on("input change", "#acm-form input, #acm-form select", function () {guardarEstadoACM();});
+  return true;
 }
 
 function renderACMInputs(tipo) {
