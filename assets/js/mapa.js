@@ -22,40 +22,43 @@ var checkOverlayIcon = L.divIcon({
 // Persistencia en localStorage
 // -------------------------------
 function guardarSeleccionados() {
-  try {
-    // Solo guardar los UID
-    const ids = seleccionados.map(s => s.uid);
+  const MAX_SEL = 200; // límite de IDs
+  let ids = seleccionados.map(s => s.uid);
 
-    // Intentar guardar todos
+  if (ids.length > MAX_SEL) {
+    ids = ids.slice(-MAX_SEL); // solo últimos 200
+  }
+
+  try {
     localStorage.setItem("inmueblesSeleccionados", JSON.stringify(ids));
+    console.log(`✅ Guardados ${ids.length} seleccionados en localStorage`);
   } catch (e) {
     if (e.name === "QuotaExceededError" || e.code === 22) {
-      console.warn("⚠️ QuotaExceededError: demasiados seleccionados, guardando solo los últimos 200");
+      console.warn("⚠️ localStorage lleno, usando backup en memoria");
 
-      // Guardar solo los últimos N para no exceder la cuota
-      const N = 200;
-      const idsReducidos = seleccionados.slice(-N).map(s => s.uid);
-
-      try {
-        localStorage.setItem("inmueblesSeleccionados", JSON.stringify(idsReducidos));
-      } catch (err2) {
-        console.error("No se pudo guardar ni la versión reducida en localStorage", err2);
-      }
+      // Guardar en backup de memoria
+      window.__backupLocalStorage["inmueblesSeleccionados"] = JSON.stringify(ids);
     } else {
       console.error("Error inesperado al guardar seleccionados", e);
     }
   }
 }
 
-
 function cargarSeleccionados() {
+  let data = localStorage.getItem("inmueblesSeleccionados");
+
+  if (!data && window.__backupLocalStorage["inmueblesSeleccionados"]) {
+    console.warn("⚠️ Recuperando desde backup en memoria");
+    data = window.__backupLocalStorage["inmueblesSeleccionados"];
+  }
+
   try {
-    const data = JSON.parse(localStorage.getItem("inmueblesSeleccionados")) || [];
-    return Array.isArray(data) ? data : [];
+    return JSON.parse(data || "[]");
   } catch (e) {
     return [];
   }
 }
+
 
 function guardarMapa() {
   if (map) {
@@ -408,6 +411,25 @@ function getVisibleLocations() {
 // Inicialización del mapa
 // -------------------------------
 $(document).ready(function () {
+  // Copia de seguridad de todo localStorage en memoria
+  window.__backupLocalStorage = {};
+
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    try {
+      window.__backupLocalStorage[key] = localStorage.getItem(key);
+    } catch (e) {
+      console.warn("No se pudo copiar", key, e);
+    }
+  }
+
+  // Borrar todo para controlar mejor lo que se guarda
+  localStorage.clear();
+
+  console.log("📦 Backup de localStorage hecho y limpiado");
+
+
+  
   $('#toolbox-btn').on('click', () => $('#toolbox').toggle());
 
   // Diccionario de agencias para mostrar nombres correctos
