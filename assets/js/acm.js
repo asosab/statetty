@@ -187,7 +187,7 @@ $("#acm-container").append(`
   <div id="acm-form" style="margin-top:8px; padding:4px; border-top:1px solid #ddd; font-size:13px;">
     <div style="display:flex; align-items:center; gap:12px; margin-bottom:4px;">
       <div id="grupo-tipo" style="display:flex; align-items:center;">
-        <label style="margin-right:4px; min-width:50px;">Tipo:</label>
+        <label style="margin-right:1px; min-width:30px;">Tipo:</label>
         <select id="acm-tipo" style="max-width:12ch; font-size:13px;">
           <option value="">--</option>
           <option value="terreno">Terreno</option>
