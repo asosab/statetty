@@ -88,7 +88,7 @@ const camposDisponibles = [
   { key: "baños",           label: "Baños",           index: 12 },
   { key: "broker",          label: "Agencia",         index: 13 },
   { key: "agentName",       label: "Agente",          index: 14 },  
-  { key: "agentPhon",       label: "Teléfono",        index: 15 },
+  { key: "agentPhone",       label: "Teléfono",        index: 15 },
   { key: "URL",             label: "URL",             index: 16 },
   { key: "lat",             label: "Latitud",         index: 17 },
   { key: "lng",             label: "Longitud",        index: 18 },
@@ -247,6 +247,25 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
           const cacheKey = "fotoCache_" + s.foto;
           let cached = localStorage.getItem(cacheKey);
           if (cached) {
+            s.fotoBase64Cropped = cached;   // directamente el recortado
+          } else {
+            const base64 = await urlToBase64(s.foto);
+            const dims = await new Promise(resolve => {
+              const img = new Image();
+              img.onload = () => resolve({ w: img.width, h: img.height });
+              img.onerror = () => resolve({ w: null, h: null });
+              img.src = base64;
+            });
+            if (dims.w && dims.h) {
+              s.fotoBase64Cropped = await cropToSquare(base64, dims.w, dims.h);
+              localStorage.setItem(cacheKey, s.fotoBase64Cropped);
+            }
+          }
+
+/*
+          const cacheKey = "fotoCache_" + s.foto;
+          let cached = localStorage.getItem(cacheKey);
+          if (cached) {
             const [w, h, base64, cropped] = cached.split("|");
             s.fotoBase64 = base64;
             s.fotoW = parseInt(w, 10);
@@ -265,9 +284,14 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
             s.fotoH = dims.h;
             if (dims.w && dims.h) {
               s.fotoBase64Cropped = await cropToSquare(base64, dims.w, dims.h);
-              localStorage.setItem(cacheKey, `${dims.w}|${dims.h}|${base64}|${s.fotoBase64Cropped}`);
+              localStorage.setItem(cacheKey, s.fotoBase64Cropped);
             }
           }
+*/
+
+
+
+
         } catch (e) {
           console.error("Error precargando foto", e);
           s.fotoBase64 = null;

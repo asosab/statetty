@@ -3,6 +3,7 @@
 // ---------------------------------------------
 
 var map, locations = [], markers = [], seleccionados = [], ultimosFiltrados = [];
+window.__backupLocalStorage = window.__backupLocalStorage || {};
 
 // Iconos
 var resultIcon = new L.Icon({
@@ -22,11 +23,11 @@ var checkOverlayIcon = L.divIcon({
 // Persistencia en localStorage
 // -------------------------------
 function guardarSeleccionados() {
-  const MAX_SEL = 200; // límite de IDs
+  const MAX_SEL = 200;
   let ids = seleccionados.map(s => s.uid);
 
   if (ids.length > MAX_SEL) {
-    ids = ids.slice(-MAX_SEL); // solo últimos 200
+    ids = ids.slice(-MAX_SEL);
   }
 
   try {
@@ -36,7 +37,8 @@ function guardarSeleccionados() {
     if (e.name === "QuotaExceededError" || e.code === 22) {
       console.warn("⚠️ localStorage lleno, usando backup en memoria");
 
-      // Guardar en backup de memoria
+      // inicializar y guardar en backup
+      window.__backupLocalStorage = window.__backupLocalStorage || {};
       window.__backupLocalStorage["inmueblesSeleccionados"] = JSON.stringify(ids);
     } else {
       console.error("Error inesperado al guardar seleccionados", e);
@@ -44,7 +46,11 @@ function guardarSeleccionados() {
   }
 }
 
+
 function cargarSeleccionados() {
+  // asegurar inicialización del backup
+  window.__backupLocalStorage = window.__backupLocalStorage || {};
+
   let data = localStorage.getItem("inmueblesSeleccionados");
 
   if (!data && window.__backupLocalStorage["inmueblesSeleccionados"]) {
@@ -448,7 +454,6 @@ function resetLocalStoragePreservingState() {
 
 $(document).ready(function () {
   // 🔹 aquí ya queda limpio
-  resetLocalStoragePreservingState();
   
   $('#toolbox-btn').on('click', () => $('#toolbox').toggle());
 
@@ -504,7 +509,7 @@ $(document).ready(function () {
     "foto",
     "precio",
     "agentName",
-    "agentPhon",
+    "agentPhone",
     "fechaIngreso",
     "tiempoOfertado",
     "tipoInmueble",
@@ -531,7 +536,7 @@ $(document).ready(function () {
     "foto": false, 
     "precio": true,
     "agentName": false, 
-    "agentPhon": false,
+    "agentPhone": false,
     "fechaIngreso": false,       
     "tiempoOfertado": true,     
     "tipoInmueble": false,       
@@ -642,8 +647,8 @@ $(document).ready(function () {
       const nombreAgente = (dato.agentName || '').trim();
       const nombreCorto = nombreAgente ? ' ' + nombreAgente.split(' ')[0] : '';
 
-      // Teléfono del agente (ojo con la columna: agentPhon)
-      let cel = (dato.agentPhon || '').toString().replace(/\D/g, '');
+      // Teléfono del agente (ojo con la columna: agentPhone)
+      let cel = (dato.agentPhone || '').toString().replace(/\D/g, '');
 
       // Normaliza para WhatsApp
       if (cel.length === 8) cel = '591' + cel;
@@ -811,7 +816,7 @@ $(document).ready(function () {
       let texto = (
         obj.dato.des + ' ' + obj.dato.nombre + ' ' + obj.dato.Titulo + ' ' + obj.dato.dir + ' ' + obj.dato.broker + ' ' + 
         (obj.dato.agentName || '') + ' ' +
-        (obj.dato.agentPhon || '')
+        (obj.dato.agentPhone || '')
       ).toLowerCase();
 
       if (query && texto.includes(query)) {
@@ -834,10 +839,12 @@ $(document).ready(function () {
       actualizarEstadisticas(visibles);
       ultimosFiltrados = visibles;
     }
+    resetLocalStoragePreservingState();
+
 
   });
   if (typeof initACMTools === "function") {initACMTools();}
-  if (typeof restaurarEstadoACM === "function") {restaurarEstadoACM();}
+  //if (typeof restaurarEstadoACM === "function") {restaurarEstadoACM();}
 });
 
 // -------------------------------
