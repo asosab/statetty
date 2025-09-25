@@ -214,15 +214,15 @@ function renderACMInputs(tipo) {
 
   // ⚡ Crear inputs una sola vez si no existen
   if ($inputs.children().length === 0) {
-    const baseStyle = "max-width:12ch; font-size:13px; margin-bottom:3px;";
+    const baseStyle = "max-width:7ch; font-size:13px; margin-bottom:3px;";
 $inputs.append(`
   <div id="grupo-terreno" style="display:none; display:flex; align-items:center;">
-    <label style="margin-right:4px; min-width:50px;">m² T.:</label>
-    <input type="number" id="acm-m2-terreno" min="1" maxlength="10" style="${baseStyle}">
+    <label style="margin-right:1px; min-width:30px;">m² T.:</label>
+    <input type="number" id="acm-m2-terreno" min="1" maxlength="8" style="${baseStyle}">
   </div>
   <div id="grupo-construccion" style="display:none; display:flex; align-items:center;">
-    <label style="margin-right:4px; min-width:50px;">m² C.:</label>
-    <input type="number" id="acm-m2-construccion" min="1" maxlength="10" style="${baseStyle}">
+    <label style="margin-right:1px; min-width:30px;">m² C.:</label>
+    <input type="number" id="acm-m2-construccion" min="1" maxlength="8" style="${baseStyle}">
   </div>
 `);
 
