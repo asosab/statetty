@@ -22,9 +22,31 @@ var checkOverlayIcon = L.divIcon({
 // Persistencia en localStorage
 // -------------------------------
 function guardarSeleccionados() {
-  const ids = seleccionados.map(s => s.uid);
-  localStorage.setItem("inmueblesSeleccionados", JSON.stringify(ids));
+  try {
+    // Solo guardar los UID
+    const ids = seleccionados.map(s => s.uid);
+
+    // Intentar guardar todos
+    localStorage.setItem("inmueblesSeleccionados", JSON.stringify(ids));
+  } catch (e) {
+    if (e.name === "QuotaExceededError" || e.code === 22) {
+      console.warn("⚠️ QuotaExceededError: demasiados seleccionados, guardando solo los últimos 200");
+
+      // Guardar solo los últimos N para no exceder la cuota
+      const N = 200;
+      const idsReducidos = seleccionados.slice(-N).map(s => s.uid);
+
+      try {
+        localStorage.setItem("inmueblesSeleccionados", JSON.stringify(idsReducidos));
+      } catch (err2) {
+        console.error("No se pudo guardar ni la versión reducida en localStorage", err2);
+      }
+    } else {
+      console.error("Error inesperado al guardar seleccionados", e);
+    }
+  }
 }
+
 
 function cargarSeleccionados() {
   try {
