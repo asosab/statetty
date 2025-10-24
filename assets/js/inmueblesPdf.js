@@ -193,7 +193,7 @@ async function generarMapaInmuebles(inmuebles, vertical = false) {
 
     const mapDiv = document.createElement("div");
     mapDiv.style.width = vertical ? "400px" : "800px";
-    mapDiv.style.height = vertical ? "400px" : "400px";
+    mapDiv.style.height = vertical ? "350px" : "400px";
     mapDiv.style.position = "absolute";
     mapDiv.style.left = "-9999px";
     mapDiv.style.transform = "none"; // 🔹 Evita transformaciones 3D
@@ -425,7 +425,7 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
       let anchoCampo = tableWidth - (inmueblesLimitados.length * colAnchoFoto);
       anchoCampo = anchoCampo * 0.75; // reducir la primera columna
 
-      if (mapaImg) doc.addImage(mapaImg.data, "PNG", 15, 30, 190, 80);
+      if (mapaImg) doc.addImage(mapaImg.data, "PNG", 15, 30, 185, 80);
 
       doc.autoTable({
         head: [headers],
