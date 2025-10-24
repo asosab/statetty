@@ -425,12 +425,12 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
       let anchoCampo = tableWidth - (inmueblesLimitados.length * colAnchoFoto);
       anchoCampo = anchoCampo * 0.75; // reducir la primera columna
 
-      if (mapaImg) doc.addImage(mapaImg.data, "PNG", 15, 30, 185, 80);
+      if (mapaImg) doc.addImage(mapaImg.data, "PNG", 14, 30, 187, 80);
 
       doc.autoTable({
         head: [headers],
         body: rows,
-        startY: mapaImg ? 100 : 30,
+        startY: mapaImg ? 110 : 30,
         styles: { fontSize: 9, cellPadding: 3, valign: "top" },
         headStyles: { fillColor: [76, 175, 80], textColor: 255, halign: "center" },
         theme: "grid",
