@@ -368,15 +368,15 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
       }
 
       // Dividir filas en bloques de 4
-      const chunkSize = 4;
+      const chunkSize = 5;
       for (let i = 0; i < rows.length; i += chunkSize) {
         const chunk = rows.slice(i, i + chunkSize);
 
         doc.autoTable({
           head: [headers],
           body: chunk,
-          startY: 30,
-          margin: { bottom: 32 },
+          startY: 10,
+          margin: { bottom: 15 },
           styles: { fontSize: 9, cellPadding: 3, valign: "top" },
           columnStyles: {
             0: { cellWidth: 12 },   // índice
