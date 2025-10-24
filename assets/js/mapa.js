@@ -571,19 +571,39 @@ $(document).ready(function () {
 
 
 
-      let rawDesc = location.des || '';
-      rawDesc = rawDesc.replace(/\+591\d{8}/g, '[número eliminado]')
-                       .replace(/591\d{8}/g, '[número eliminado]')
-                       .replace(/\b\d{8}\b/g, '[número eliminado]')
-                       .replace(/\d{2,4}[-\s]\d{2,4}[-\s]\d{2,4}/g, '[número eliminado]')
-                       .replace(/\(\d{3,4}\)\s?\d{5,8}/g, '[número eliminado]')
-                       .replace(/00\s?591\d{8}/g, '[número eliminado]')
-                       .replace(/wa\.me\/\d+/gi, '[número eliminado]')
-                       .replace(/whatsapp\.com\/\d+/gi, '[número eliminado]');
+      let rawDesc = location.des || "";
 
+      // 🔹 Limpieza general de caracteres corruptos o superfluos
+      rawDesc = rawDesc
+        // elimina secuencias típicas de errores de codificación o símbolos rotos
+        .replace(/Ø[=<>][ÜÝÐ°Í]/g, " ")
+        .replace(/[•·•`´¨^~¬]+/g, " ")
+        .replace(/[“”"']/g, "'")
+        .replace(/[`´¨]/g, "")
+        .replace(/[\u0000-\u001F\u007F-\u009F]/g, " ") // caracteres invisibles
+        .replace(/[^\x20-\x7EÀ-ÿ\n\r]/g, " ") // elimina caracteres fuera de rango latino
+        // elimina frases o símbolos repetidos
+        .replace(/\s{2,}/g, " ")
+        .replace(/(\r\n|\r|\n){2,}/g, "\n")
+        .replace(/\n\s+/g, "\n")
+        .replace(/\s+\n/g, "\n")
+        .trim();
+
+      // 🔹 Eliminación de números telefónicos y enlaces de WhatsApp
+      rawDesc = rawDesc
+        .replace(/\+591\d{8}/g, "[número eliminado]")
+        .replace(/591\d{8}/g, "[número eliminado]")
+        .replace(/\b\d{8}\b/g, "[número eliminado]")
+        .replace(/\d{2,4}[-\s]\d{2,4}[-\s]\d{2,4}/g, "[número eliminado]")
+        .replace(/\(\d{3,4}\)\s?\d{5,8}/g, "[número eliminado]")
+        .replace(/00\s?591\d{8}/g, "[número eliminado]")
+        .replace(/wa\.me\/\d+/gi, "[número eliminado]")
+        .replace(/whatsapp\.com\/\d+/gi, "[número eliminado]");
+
+      // 🔹 Limitar longitud (manteniendo contexto)
       const chrMax = 500;
       const faltan = rawDesc.length > chrMax ? rawDesc.length - chrMax : 0;
-      const frase = faltan > 0 ? '... (y ' + faltan + ' caracteres más)' : '';
+      const frase = faltan > 0 ? `... (y ${faltan} caracteres más)` : "";
       location.des = rawDesc.length > chrMax ? rawDesc.substring(0, chrMax) + frase : rawDesc;
 
       locations.push(location);
