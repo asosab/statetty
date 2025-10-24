@@ -591,14 +591,14 @@ $(document).ready(function () {
 
       // 🔹 Eliminación de números telefónicos y enlaces de WhatsApp
       rawDesc = rawDesc
-        .replace(/\+591\d{8}/g, "[número eliminado]")
-        .replace(/591\d{8}/g, "[número eliminado]")
-        .replace(/\b\d{8}\b/g, "[número eliminado]")
-        .replace(/\d{2,4}[-\s]\d{2,4}[-\s]\d{2,4}/g, "[número eliminado]")
-        .replace(/\(\d{3,4}\)\s?\d{5,8}/g, "[número eliminado]")
-        .replace(/00\s?591\d{8}/g, "[número eliminado]")
-        .replace(/wa\.me\/\d+/gi, "[número eliminado]")
-        .replace(/whatsapp\.com\/\d+/gi, "[número eliminado]");
+        .replace(/\+591\d{8}/g, "[...]")
+        .replace(/591\d{8}/g, "[...]")
+        .replace(/\b\d{8}\b/g, "[...]")
+        .replace(/\d{2,4}[-\s]\d{2,4}[-\s]\d{2,4}/g, "[...]")
+        .replace(/\(\d{3,4}\)\s?\d{5,8}/g, "[...]")
+        .replace(/00\s?591\d{8}/g, "[...]")
+        .replace(/wa\.me\/\d+/gi, "[...]")
+        .replace(/whatsapp\.com\/\d+/gi, "[...]");
 
       // 🔹 Limitar longitud (manteniendo contexto)
       const chrMax = 500;
