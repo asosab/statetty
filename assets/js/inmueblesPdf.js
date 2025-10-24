@@ -425,7 +425,7 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
       let anchoCampo = tableWidth - (inmueblesLimitados.length * colAnchoFoto);
       anchoCampo = anchoCampo * 0.75; // reducir la primera columna
 
-      if (mapaImg) doc.addImage(mapaImg.data, "PNG", 15, 30, 180, 90);
+      if (mapaImg) doc.addImage(mapaImg.data, "PNG", 15, 30, 180, 80);
 
       doc.autoTable({
         head: [headers],
