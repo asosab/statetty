@@ -193,7 +193,7 @@ async function generarMapaInmuebles(inmuebles, vertical = false) {
 
     const mapDiv = document.createElement("div");
     mapDiv.style.width = vertical ? "400px" : "800px";
-    mapDiv.style.height = vertical ? "600px" : "400px";
+    mapDiv.style.height = vertical ? "400px" : "400px";
     mapDiv.style.position = "absolute";
     mapDiv.style.left = "-9999px";
     mapDiv.style.transform = "none"; // 🔹 Evita transformaciones 3D
