@@ -204,7 +204,7 @@ async function generarMapaInmuebles(inmuebles, vertical = false) {
 
     const map = L.map(mapDiv, { zoomControl: !vertical, preferCanvas: true });
     const tileLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: "&copy; OpenStreetMap",
+      attribution: "&copy; Statetty",
       crossOrigin: true
     }).addTo(map);
 
@@ -425,7 +425,7 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
       let anchoCampo = tableWidth - (inmueblesLimitados.length * colAnchoFoto);
       anchoCampo = anchoCampo * 0.75; // reducir la primera columna
 
-      if (mapaImg) doc.addImage(mapaImg.data, "PNG", 14, 30, 187, 80);
+      if (mapaImg) doc.addImage(mapaImg.data, "PNG", 14, 30, 190, 80);
 
       doc.autoTable({
         head: [headers],
