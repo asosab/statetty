@@ -421,7 +421,7 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
       });
 
       const colAnchoFoto = 30;
-      const tableWidth = doc.internal.pageSize.getWidth() - 30; // margen lateral
+      const tableWidth = doc.internal.pageSize.getWidth() - 10; // margen lateral
       let anchoCampo = tableWidth - (inmueblesLimitados.length * colAnchoFoto);
       anchoCampo = anchoCampo * 0.75; // reducir la primera columna
 
