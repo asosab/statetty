@@ -601,7 +601,7 @@ $(document).ready(function () {
         .replace(/whatsapp\.com\/\d+/gi, "[...]");
 
       // 🔹 Limitar longitud (manteniendo contexto)
-      const chrMax = 500;
+      const chrMax = 320;
       const faltan = rawDesc.length > chrMax ? rawDesc.length - chrMax : 0;
       const frase = faltan > 0 ? `... (y ${faltan} caracteres más)` : "";
       location.des = rawDesc.length > chrMax ? rawDesc.substring(0, chrMax) + frase : rawDesc;
