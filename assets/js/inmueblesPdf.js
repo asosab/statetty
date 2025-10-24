@@ -430,7 +430,7 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
       doc.autoTable({
         head: [headers],
         body: rows,
-        startY: mapaImg ? 130 : 30,
+        startY: mapaImg ? 100 : 30,
         styles: { fontSize: 9, cellPadding: 3, valign: "top" },
         headStyles: { fillColor: [76, 175, 80], textColor: 255, halign: "center" },
         theme: "grid",
