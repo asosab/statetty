@@ -606,7 +606,7 @@ $(document).ready(function () {
         iconSize: [40, 60], iconAnchor: [20, 60], popupAnchor: [1, -54], shadowSize: [60, 60]
       });
 
-      var marker = L.marker([dato.lat, dato.lng], { icon }).addTo(map);
+      var marker = L.marker([dato.lat, dato.lng], { icon }); if (brand !== "ic") {marker.addTo(map);}
 
       const nombreAgente = (dato.agentName || '').trim();
       const nombreCorto = nombreAgente ? ' ' + nombreAgente.split(' ')[0] : '';
