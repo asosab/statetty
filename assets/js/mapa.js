@@ -1,5 +1,7 @@
 // ---------------------------------------------
 // mapa.js - Lógica completa del mapa y selección
+// (versión modificada para que las agencias desmarcadas no participen
+//  en búsquedas, botones 'seleccionar todos', generación de PDFs, etc.)
 // ---------------------------------------------
 
 var map, locations = [], markers = [], seleccionados = [], ultimosFiltrados = [];
@@ -36,8 +38,6 @@ function guardarSeleccionados() {
   } catch (e) {
     if (e.name === "QuotaExceededError" || e.code === 22) {
       console.warn("⚠️ localStorage lleno, usando backup en memoria");
-
-      // inicializar y guardar en backup
       window.__backupLocalStorage = window.__backupLocalStorage || {};
       window.__backupLocalStorage["inmueblesSeleccionados"] = JSON.stringify(ids);
     } else {
@@ -48,7 +48,6 @@ function guardarSeleccionados() {
 
 
 function cargarSeleccionados() {
-  // asegurar inicialización del backup
   window.__backupLocalStorage = window.__backupLocalStorage || {};
 
   let data = localStorage.getItem("inmueblesSeleccionados");
@@ -104,8 +103,6 @@ function cargarAgencias() {
 }
 
 
-
-
 // -------------------------------
 // Utilidades
 // -------------------------------
@@ -114,13 +111,10 @@ function normalizeURL(u) {
   return u.includes('http') ? u : `https://c21.com.bo${u}`;
 }
 
-//function formatNumber(num) { return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") + ",00";}
-
 function formatNumber(num) {
   if (isNaN(num)) return "0";
   return new Intl.NumberFormat("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(num);
 }
-
 
 function calcularPromedio(datos, prop) {
   if (!Array.isArray(datos) || datos.length === 0) return 0;
@@ -128,6 +122,95 @@ function calcularPromedio(datos, prop) {
   if (datosFiltrados.length === 0) return 0;
   const suma = datosFiltrados.reduce((acc, item) => acc + item[prop], 0);
   return Math.round(suma / datosFiltrados.length);
+}
+
+/**
+ * Devuelve el "brand" (clave de agencia) a partir de una URL o de un marker.
+ * @param {Object|string} input - Puede ser un marker objeto o una URL/uid string
+ * @returns {string} brand clave como 'remax','C21','ic','statetty', etc.
+ */
+function getBrand(input) {
+  let url = '';
+  if (!input) return 'statetty';
+  if (typeof input === 'string') url = input;
+  else if (input.dato && input.dato.uid) url = input.dato.uid;
+  else if (input.options && input.options.iconUrl) url = input.options.iconUrl;
+  url = (url || '').toLowerCase();
+  if (url.includes("c21.com")) return 'C21';
+  if (url.includes("remax")) return 'remax';
+  if (url.includes("bieninmuebles")) return 'bieni';
+  if (url.includes("elfaro")) return 'elfaro';
+  if (url.includes("dueodeinmueble")) return 'IDI';
+  if (url.includes("ultracasas")) return 'UC';
+  if (url.includes("uno.com")) return 'uno';
+  if (url.includes("infocasas.com")) return 'ic';
+  return 'statetty';
+}
+
+/**
+ * ¿Está visible (habilitada) la agencia/marker actual en los filtros?
+ * Usa las checkboxes de agencias para decidirlo.
+ * @param {Object} m - objeto {marker, iconOriginal, dato, overlay}
+ * @returns {boolean}
+ */
+function isMarkerActive(m) {
+  const brand = getBrand(m);
+  if (brand === 'statetty') return true; // siempre operativo
+  const activas = agenciasActivas() || [];
+  return activas.includes(brand);
+}
+
+/**
+ * Obtiene la lista de locations que actualmente están visibles/operativas
+ * para búsquedas, selección masiva y generación de PDFs.
+ * @returns {Array}
+ */
+function getVisibleLocations() {
+  const activas = agenciasActivas();
+  return locations.filter(loc => {
+    let url = loc.uid || "";
+    let brand = getBrand(url);
+    if (brand === "statetty") return true;
+    return activas.includes(brand);
+  });
+}
+
+/**
+ * Helper para sincronizar el DOM y el estado de seleccionados cuando se
+ * deshabilita una agencia: elimina esos inmuebles de "seleccionados",
+ * quita overlays y desmarca checkboxes; cuando se habilita, vuelve a
+ * reactivar las checkboxes (sin seleccionarlas automáticamente).
+ * @param {string} ag - clave de la agencia que cambió
+ * @param {boolean} checked - nuevo estado
+ */
+function handleAgencyToggle(ag, checked) {
+  markers.forEach(m => {
+    const brand = getBrand(m);
+    if (brand !== ag) return;
+
+    // sincronizar marcador en el mapa
+    if (checked) {
+      map.addLayer(m.marker);
+      // reactivar checkbox en popup si existe (no lo marcamos seleccionado)
+      $(`.chk-sel[data-id='${m.dato.uid}']`).prop('disabled', false);
+    } else {
+      map.removeLayer(m.marker);
+      // quitar de seleccionados si estaba
+      if (seleccionados.some(s => s.uid === m.dato.uid)) {
+        // eliminar overlay
+        if (m.overlay) { map.removeLayer(m.overlay); m.overlay = null; }
+        seleccionados = seleccionados.filter(s => s.uid !== m.dato.uid);
+      }
+      // desmarcar y deshabilitar checkbox popup
+      $(`.chk-sel[data-id='${m.dato.uid}']`).prop('checked', false).prop('disabled', true);
+    }
+  });
+
+  // Persistir y recalcular estadísticas y toolbox
+  guardarAgencias();
+  actualizarEstadisticas(getVisibleLocations());
+  guardarSeleccionados();
+  actualizarToolbox();
 }
 
 /**
@@ -142,7 +225,6 @@ function actualizarEstadisticas(lista) {
     $('#precio-promedio').text("0,00");
     $('#mas-barato').text("-");
     $('#mas-caro').text("-");
-    // Aseguramos botones aunque lista esté vacía (para inicializar handlers)
     ensureStatsActions();
     updateButtonsState();
     return;
@@ -156,10 +238,7 @@ function actualizarEstadisticas(lista) {
   $('#mas-barato').text(`${masBarato.Titulo}`);
   $('#mas-caro').text(`${masCaro.Titulo}`);
 
-  // Asegurar existencia de botones y sus handlers (idempotente)
   ensureStatsActions();
-
-  // Ajustar habilitación / visibilidad según estado actual
   updateButtonsState();
 }
 
@@ -170,7 +249,6 @@ function actualizarEstadisticas(lista) {
  * @returns {void}
  */
 function ensureStatsActions() {
-  // Si no existe el contenedor, lo creamos (por seguridad)
   if ($('#stats-actions').length === 0) {
     $('#stats-container').append(`
       <div id="stats-actions" style="margin-top:8px;">
@@ -185,13 +263,14 @@ function ensureStatsActions() {
     `);
   }
 
-  // Evitar volver a atar handlers
   if (window.statsButtonsInit) return;
   window.statsButtonsInit = true;
 
   // --- handlers (usar .off para evitar duplicados si por alguna razón se vuelve a llamar) ---
   $('#btn-add-all').off('click').on('click', function () {
-    locations.forEach(a => {
+    // ahora agrega SOLO los inmuebles visibles/operativos
+    const visibles = getVisibleLocations();
+    visibles.forEach(a => {
       if (!seleccionados.some(s => s.uid === a.uid)) {
         seleccionados.push(a);
         let overlay = L.marker([a.lat, a.lng], { icon: checkOverlayIcon, interactive: false }).addTo(map);
@@ -218,7 +297,10 @@ function ensureStatsActions() {
   });
 
   $('#btn-add-sel').off('click').on('click', function () {
+    // agrega SOLO los ultimos filtrados que además estén visibles
+    const visiblesUID = new Set(getVisibleLocations().map(x => x.uid));
     (ultimosFiltrados || []).forEach(a => {
+      if (!visiblesUID.has(a.uid)) return; // ignorar no visibles
       if (!seleccionados.some(s => s.uid === a.uid)) {
         seleccionados.push(a);
         let overlay = L.marker([a.lat, a.lng], { icon: checkOverlayIcon, interactive: false }).addTo(map);
@@ -233,7 +315,9 @@ function ensureStatsActions() {
   });
 
   $('#btn-remove-sel').off('click').on('click', function () {
+    const visiblesUID = new Set(getVisibleLocations().map(x => x.uid));
     (ultimosFiltrados || []).forEach(a => {
+      if (!visiblesUID.has(a.uid)) return; // ignorar no visibles
       seleccionados = seleccionados.filter(s => s.uid !== a.uid);
       let obj = markers.find(m => m.dato.uid === a.uid);
       if (obj && obj.overlay) { map.removeLayer(obj.overlay); obj.overlay = null; }
@@ -246,11 +330,8 @@ function ensureStatsActions() {
 
   $('#btn-keep-only').off('click').on('click', function () {
     const keepUIDs = new Set((ultimosFiltrados || []).map(a => a.uid));
-
-    // Protección: si no hay resultados filtrados, no hacemos nada
     if (keepUIDs.size === 0) return;
 
-    // Eliminar seleccionados que no estén en keepUIDs
     seleccionados.slice().forEach(s => {
       if (!keepUIDs.has(s.uid)) {
         seleccionados = seleccionados.filter(x => x.uid !== s.uid);
@@ -267,8 +348,9 @@ function ensureStatsActions() {
 
   $('#btn-add-all-except').off('click').on('click', function () {
     const excludeUIDs = new Set((ultimosFiltrados || []).map(a => a.uid));
-    locations.forEach(a => {
-      if (excludeUIDs.has(a.uid)) return; // saltar los filtrados
+    const visibles = getVisibleLocations();
+    visibles.forEach(a => {
+      if (excludeUIDs.has(a.uid)) return;
       if (!seleccionados.some(s => s.uid === a.uid)) {
         seleccionados.push(a);
         let overlay = L.marker([a.lat, a.lng], { icon: checkOverlayIcon, interactive: false }).addTo(map);
@@ -284,54 +366,35 @@ function ensureStatsActions() {
 }
 
 /**
- * Actualiza enabled/disabled de los botones según el estado actual:
- * - habilita operaciones de 'agregar' cuando tiene sentido
- * - deshabilita operaciones 'quitar' si no hay selección
- * - deshabilita acciones ligadas al filtro si no hay resultados filtrados
+ * Actualiza enabled/disabled de los botones según el estado actual.
  * @returns {void}
  */
 function updateButtonsState() {
-  // referencias
   const $addSel = $('#btn-add-sel'), $removeSel = $('#btn-remove-sel'),
         $keepOnly = $('#btn-keep-only'), $addAll = $('#btn-add-all'),
         $removeAll = $('#btn-remove-all'), $addAllExcept = $('#btn-add-all-except');
 
-  // seguridad: si no existen los botones, nada que hacer
   if ($addSel.length === 0) return;
 
   const selCount = seleccionados.length;
   const filtCount = (ultimosFiltrados || []).length;
-  const totalCount = (locations || []).length;
+  const totalCount = getVisibleLocations().length;
 
-  // desactivar todo por defecto
   [$addSel,$removeSel,$keepOnly,$addAll,$removeAll,$addAllExcept].forEach($b => { if ($b.length) $b.prop('disabled', true); });
 
-  // reglas:
-  // - Si hay resultados filtrados: permitir agregar/quitar sobre esos filtrados (según exista selección)
   if (filtCount > 0) {
-    if ($addSel.length) $addSel.prop('disabled', false);             // siempre se puede 'Agregar a selección' los filtrados
-    if ($removeSel.length) $removeSel.prop('disabled', selCount === 0); // quitar filtrados solo si hay seleccionados
-    if ($keepOnly.length) $keepOnly.prop('disabled', selCount === 0);   // mantener estos solo si hay seleccionados
-    if ($addAllExcept.length) $addAllExcept.prop('disabled', false);   // agregar todos excepto filtrados (siempre permitido cuando hay filtros)
+    if ($addSel.length) $addSel.prop('disabled', false);
+    if ($removeSel.length) $removeSel.prop('disabled', selCount === 0);
+    if ($keepOnly.length) $keepOnly.prop('disabled', selCount === 0);
+    if ($addAllExcept.length) $addAllExcept.prop('disabled', false);
   }
 
-  // - Agregar todos (si existen inmuebles en el mapa)
   if (totalCount > 0 && $addAll.length) $addAll.prop('disabled', false);
-
-  // - Quitar todos (solo si hay elementos seleccionados)
   if (selCount > 0 && $removeAll.length) $removeAll.prop('disabled', false);
-
-  // Nota: si quieres el comportamiento estricto que mencionaste
-  // (cuando seleccionados === 0, SOLO habilitar 'Agregar a selección'),
-  // activa la siguiente opción: (descomenta la línea siguiente)
-  // if (selCount === 0) { [$addAll,$addAllExcept,$removeSel,$keepOnly,$removeAll].forEach($b => $b.prop('disabled', true)); }
 }
-
 
 function actualizarToolbox() {
   $("#sel-box").remove();
-
-  // ✅ ordenar seleccionados por precio ascendente
   seleccionados.sort((a, b) => (parseFloat(a.precio) || 0) - (parseFloat(b.precio) || 0));
 
   let html = '';
@@ -340,9 +403,8 @@ function actualizarToolbox() {
   });
 
   if (seleccionados.length > 0) {
-    $("#agency-filter").parent().prev(".section-header"); // solo para mantener referencia
+    $("#agency-filter").parent().prev(".section-header");
 
-    // ✅ siempre apunta a la sección de seleccionados
     $("#toolbox .section:nth-child(2) .section-body").html(`
       <div id="sel-box">
         ✅ Seleccionados: ${seleccionados.length}
@@ -352,7 +414,6 @@ function actualizarToolbox() {
         <button id="btn-pdf-mobile" ...>📱 PDF móvil</button>
       </div>
     `);
-
 
     renderColumnSelector();
 
@@ -364,7 +425,6 @@ function actualizarToolbox() {
       generarBrochurePDF(seleccionados, "mobile");
     });
   } else {
-    // Si no hay seleccionados, vaciar el bloque de seleccionados
     $(".section-body:has(#sel-box)").html("");
   }
 
@@ -379,9 +439,7 @@ function actualizarToolbox() {
   });
 
   if (typeof actualizarACM === "function") {actualizarACM();}
-  //if (typeof restaurarEstadoACM === "function") {restaurarEstadoACM();}
 }
-
 
 function agenciasActivas() {
   const activas = [];
@@ -391,73 +449,9 @@ function agenciasActivas() {
   return activas;
 }
 
-function getVisibleLocations() {
-  const activas = agenciasActivas();
-  return locations.filter(loc => {
-    let url = loc.uid || "";
-    let brand = "statetty";
-    if (url.includes("c21.com")) brand = "C21";
-    else if (url.includes("remax")) brand = "remax";
-    else if (url.includes("bieninmuebles")) brand = "bieni";
-    else if (url.includes("elfaro")) brand = "elfaro";
-    else if (url.includes("dueodeinmueble")) brand = "IDI";
-    else if (url.includes("ultracasas")) brand = "UC";
-    else if (url.includes("uno.com")) brand = "uno";
-    else if (url.includes("infocasas.com")) brand = "ic";
-    else brand = "statetty";
-
-    // statetty siempre visible
-    if (brand === "statetty") return true;
-    return activas.includes(brand);
-  });
-}
-
-
-/**
- * Limpia el localStorage preservando solo las claves necesarias
- * (estado ACM, seleccionados, agencias, mapa y columnas personalizadas).
- */
-function resetLocalStoragePreservingState() {
-  // Copia actual de localStorage en memoria
-  const backup = {};
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    try { backup[key] = localStorage.getItem(key); }
-    catch (e) { console.warn("No se pudo copiar", key, e); }
-  }
-
-  // Claves importantes a preservar
-  const preserveKeys = [
-    "estadoACM",
-    "inmueblesSeleccionados",
-    "agenciasSeleccionadas",
-    "mapCenter",
-    "mapZoom"
-  ];
-
-  // También todas las columnas personalizadas
-  Object.keys(backup).forEach(k => {
-    if (k.startsWith("col_")) preserveKeys.push(k);
-  });
-
-  // Guardar los valores a restaurar
-  const preserved = {};
-  preserveKeys.forEach(k => { if (backup[k]) preserved[k] = backup[k]; });
-
-  // Limpiar localStorage
-  localStorage.clear();
-  console.log("🧹 localStorage limpiado, restaurando claves útiles");
-
-  // Restaurar solo lo necesario
-  Object.entries(preserved).forEach(([k, v]) => localStorage.setItem(k, v));
-}
-
 $(document).ready(function () {
-  // 🔹 aquí ya queda limpio
-  
   $('#toolbox-btn').on('click', () => $('#toolbox').toggle());
 
-  // Diccionario de agencias para mostrar nombres correctos
   const agencyNames = {
     "ic":     "Info Casas",
     "UC":     "Ultra Casas",
@@ -466,11 +460,7 @@ $(document).ready(function () {
     "bieni":  "Bien Inmuebles",
     "IDI":    "Inversionistas de Impacto",
     "elfaro": "El Faro"
-    // statetty no se coloca en los checkboxes
   };
-
-
-
 
   var urlParams = new URLSearchParams(window.location.search);
   let id = urlParams.get('id');
@@ -491,59 +481,37 @@ $(document).ready(function () {
   $.getJSON(url, function (data) {
     $('#loading-indicator').hide();
 
-  const columnas = [
-    "Titulo",
-    "lat",
-    "lng",
-    "dir",
-    "URL",
-    "des",
-    "ambientes",
-    "dormitorios",
-    "baños",
-    "m2construccion",
-    "m2terreno",
-    "nombre",
-    "precioM2",
-    "broker",
-    "foto",
-    "precio",
-    "agentName",
-    "agentPhone",
-    "fechaIngreso",
-    "tiempoOfertado",
-    "tipoInmueble",
-    "tipoNegocio",
-    "anoc"
-  ];
+    const columnas = [
+      "Titulo","lat","lng","dir","URL","des","ambientes","dormitorios","baños","m2construccion",
+      "m2terreno","nombre","precioM2","broker","foto","precio","agentName","agentPhone","fechaIngreso",
+      "tiempoOfertado","tipoInmueble","tipoNegocio","anoc"
+    ];
 
-
-  window.columnasConfig = {
-    "Titulo": true,
-    "lat": false, 
-    "lng": false, 
-    "dir": false, 
-    "URL": false, 
-    "des": false,
-    "ambientes": false, 
-    "dormitorios": true, 
-    "baños": true, 
-    "m2construccion": true,
-    "m2terreno": true, 
-    "nombre": false,
-    "precioM2": true, 
-    "broker": false,
-    "foto": false, 
-    "precio": true,
-    "agentName": false, 
-    "agentPhone": false,
-    "fechaIngreso": false,       
-    "tiempoOfertado": true,     
-    "tipoInmueble": false,       
-    "tipoNegocio": false,
-    "anoc": false          
-  };
-
+    window.columnasConfig = {
+      "Titulo": true,
+      "lat": false,
+      "lng": false,
+      "dir": false,
+      "URL": false,
+      "des": false,
+      "ambientes": false,
+      "dormitorios": true,
+      "baños": true,
+      "m2construccion": true,
+      "m2terreno": true,
+      "nombre": false,
+      "precioM2": true,
+      "broker": false,
+      "foto": false,
+      "precio": true,
+      "agentName": false,
+      "agentPhone": false,
+      "fechaIngreso": false,
+      "tiempoOfertado": true,
+      "tipoInmueble": false,
+      "tipoNegocio": false,
+      "anoc": false
+    };
 
     $(data.values).each(function () {
       let location = {};
@@ -558,38 +526,25 @@ $(document).ready(function () {
       location.m2construccion = parseInt(location.m2construccion) || 0;
       location.tiempoOfertado = parseInt(location.tiempoOfertado) || 0;
 
-
-      // ✅ renombramos precioM2 a precioM2C
       location.precioM2C = (location.precio > 0 && location.m2construccion > 0)? location.precio / location.m2construccion: 0;
       delete location.precioM2;
 
-      // ✅ calculamos precioM2T si es posible
       location.precioM2T = (location.precio > 0 && location.m2terreno > 0)? location.precio / location.m2terreno: 0;
 
-
-
-
-
-
       let rawDesc = location.des || "";
-
-      // 🔹 Limpieza general de caracteres corruptos o superfluos
       rawDesc = rawDesc
-        // elimina secuencias típicas de errores de codificación o símbolos rotos
         .replace(/Ø[=<>][ÜÝÐ°Í]/g, " ")
         .replace(/[•·•`´¨^~¬]+/g, " ")
         .replace(/[“”"']/g, "'")
         .replace(/[`´¨]/g, "")
-        .replace(/[\u0000-\u001F\u007F-\u009F]/g, " ") // caracteres invisibles
-        .replace(/[^\x20-\x7EÀ-ÿ\n\r]/g, " ") // elimina caracteres fuera de rango latino
-        // elimina frases o símbolos repetidos
+        .replace(/[\u0000-\u001F\u007F-\u009F]/g, " ")
+        .replace(/[^\x20-\x7EÀ-ÿ\n\r]/g, " ")
         .replace(/\s{2,}/g, " ")
         .replace(/(\r\n|\r|\n){2,}/g, "\n")
         .replace(/\n\s+/g, "\n")
         .replace(/\s+\n/g, "\n")
         .trim();
 
-      // 🔹 Eliminación de números telefónicos y enlaces de WhatsApp
       rawDesc = rawDesc
         .replace(/\+591\d{8}/g, "[...]")
         .replace(/591\d{8}/g, "[...]")
@@ -600,7 +555,6 @@ $(document).ready(function () {
         .replace(/wa\.me\/\d+/gi, "[...]")
         .replace(/whatsapp\.com\/\d+/gi, "[...]");
 
-      // 🔹 Limitar longitud (manteniendo contexto)
       const chrMax = 300;
       const faltan = rawDesc.length > chrMax ? rawDesc.length - chrMax : 0;
       const frase = faltan > 0 ? `... (y ${faltan} caracteres más)` : "";
@@ -644,16 +598,7 @@ $(document).ready(function () {
     // markers
     locations.forEach(function (dato) {
       let url = dato.uid;
-      var brand;
-      if (url.includes("c21.com")) { brand = 'C21'; }
-      else if (url.includes("remax")) { brand = 'remax'; }
-      else if (url.includes("bieninmuebles")) { brand = 'bieni'; }
-      else if (url.includes("elfaro")) { brand = 'elfaro'; }
-      else if (url.includes("dueodeinmueble")) { brand = 'IDI'; }
-      else if (url.includes("ultracasas")) { brand = 'UC'; }
-      else if (url.includes("uno.com")) { brand = 'uno'; }
-      else if (url.includes("infocasas.com")) { brand = 'ic'; }
-      else { brand = 'statetty'; }
+      var brand = getBrand(url);
 
       var icon = new L.Icon({
         iconUrl: '../../assets/images/pointers/pointer_' + brand + '.png',
@@ -663,36 +608,22 @@ $(document).ready(function () {
 
       var marker = L.marker([dato.lat, dato.lng], { icon }).addTo(map);
 
-      // Nombre del agente
       const nombreAgente = (dato.agentName || '').trim();
       const nombreCorto = nombreAgente ? ' ' + nombreAgente.split(' ')[0] : '';
 
-      // Teléfono del agente (ojo con la columna: agentPhone)
       let cel = (dato.agentPhone || '').toString().replace(/\D/g, '');
-
-      // Normaliza para WhatsApp
       if (cel.length === 8) cel = '591' + cel;
       if (cel.length === 9 && cel.startsWith('0')) cel = '591' + cel.slice(1);
 
-      // Mensaje
       let soyNa = na ? ` ${na}` : '';
       let deAg = ag ? ` de ${ag}` : '';
       let sc = (na || ag) ? ' te escribe, ' : '';
       const msj = `Hola${nombreCorto},${soyNa}${deAg}${sc}un gusto saludarte.
-      Por favor, podría enviarme información sobre este inmueble, en caso de que siga disponible (${dato.Titulo})
+      Por favor, podría enviarme información sobre este inmueble, en caso de que siga disponible (${dato.Titulo})\n\n      link: ${url}\n\n      Gracias de antemano\n\n      (Mensaje creado con Statetty https://statetty.com)`;
 
-      link: ${url}
-
-      Gracias de antemano
-
-      (Mensaje creado con Statetty https://statetty.com)`;
-
-      // Link WhatsApp
       const linkWA = cel
         ? `<br/><a href="https://wa.me/${cel}?text=${encodeURIComponent(msj)}" target="_blank" rel="noopener">📱 Contactar por WhatsApp</a>`
         : '';
-
-
 
       var distance = Math.round(calculateDH(circleCenter.lat, circleCenter.lng, dato.lat, dato.lng) * 1000);
       var priceDiffPercent = ((dato.precio - pProm) / pProm) * 100;
@@ -714,6 +645,11 @@ $(document).ready(function () {
         let chk = $(`.chk-sel[data-id='${dato.uid}']`);
         chk.prop("checked", seleccionados.some(s => s.uid === dato.uid));
 
+        // si la agencia está desactivada, deshabilitar el checkbox
+        const currentMarkerObj = markers.find(mm => mm.dato.uid === dato.uid);
+        if (!isMarkerActive(currentMarkerObj)) chk.prop('disabled', true);
+        else chk.prop('disabled', false);
+
         chk.off("change").on("change", function () {
           if (this.checked) {
             if (!seleccionados.some(s => s.uid === dato.uid)) seleccionados.push(dato);
@@ -731,73 +667,59 @@ $(document).ready(function () {
       });
     });
 
-
     // --- inicializar acordeón ---
     $(document).on('click', '.section-header', function () {
-      $('.section').removeClass('active'); // cerrar todas
-      $(this).parent().addClass('active'); // abrir esta
+      $('.section').removeClass('active');
+      $(this).parent().addClass('active');
     });
 
     // --- agencias únicas ---
     let agencies = {};
     markers.forEach(obj => {
-      let brand = obj.iconOriginal.options.iconUrl.split("pointer_")[1].split(".")[0];
+      let brand = getBrand(obj);
       agencies[brand] = true;
     });
 
-    // 🧹 Ignorar cualquier valor guardado, siempre forzar selección por defecto
+    // Forzar selección por defecto (se mantuvo la intención original)
     localStorage.removeItem("agenciasSeleccionadas");
 
-    // renderizar checkboxes con nombres bonitos, excluyendo statetty
     for (let ag in agencies) {
       if (ag === "statetty") continue; // no mostrar
       let label = agencyNames[ag] || ag;
-      // ✅ siempre seleccionadas, excepto InfoCasas
       let checked = ag !== "ic";
 
       $('#agency-filter').append(
         `<div><label><input type="checkbox" class="chk-agency" data-ag="${ag}" ${checked ? "checked" : ""}> ${label}</label></div>`
       );
 
-      // aplicar estado inicial
-      markers.forEach(m => {
-        let brand = m.iconOriginal.options.iconUrl.split("pointer_")[1].split(".")[0];
-        if (brand === ag) {
-          if (checked) {
-            map.addLayer(m.marker);
-          } else {
-            map.removeLayer(m.marker);
-          }
-        }
-      });
+      // aplicar estado inicial (map.addLayer o removeLayer se hará en la primera sincronización)
     }
-
 
     // --- filtro por agencias ---
     $(document).on('change', '.chk-agency', function () {
       let ag = $(this).data('ag');
       let checked = this.checked;
-      markers.forEach(m => {
-        let brand = m.iconOriginal.options.iconUrl.split("pointer_")[1].split(".")[0];
-        if (brand === ag) {
-          if (checked) {
-            map.addLayer(m.marker);
-          } else {
-            map.removeLayer(m.marker);
-          }
-        }
-      });
-      guardarAgencias();
-      actualizarEstadisticas(getVisibleLocations());
+
+      // manejar toggle con limpieza de seleccionados y sincronización
+      handleAgencyToggle(ag, checked);
+
+      // actualizar ultimosFiltrados: si hay texto en búsqueda, re-ejecutar búsqueda para actualizar filtrados
+      const query = $('#search-input').val() || '';
+      if (query.trim()) {
+        $('#search-input').trigger('input');
+      } else {
+        ultimosFiltrados = getVisibleLocations();
+        actualizarEstadisticas(ultimosFiltrados);
+      }
+
+      resetLocalStoragePreservingState();
     });
 
-
-
-
-
-    // ✅ Restaurar seleccionados
+    // --- Restaurar seleccionados (solo si pertenecen a agencias activas) ---
     const prevSel = cargarSeleccionados();
+    const visiblesSet = new Set(getVisibleLocations().map(x => x.uid));
     prevSel.forEach(id => {
+      if (!visiblesSet.has(id)) return; // ignorar inmuebles de agencias deshabilitadas
       let obj = markers.find(m => m.dato.uid === id);
       if (obj) {
         seleccionados.push(obj.dato);
@@ -806,9 +728,9 @@ $(document).ready(function () {
       }
       $(`.chk-sel[data-id='${id}']`).prop("checked", true);
     });
+    guardarSeleccionados();
     actualizarToolbox();
 
-    // ✅ Restaurar centro/zoom del mapa si existe
     const savedMap = cargarMapa();
     if (savedMap) {
       map.setView(savedMap.center, savedMap.zoom);
@@ -819,10 +741,10 @@ $(document).ready(function () {
       map.fitBounds(group.getBounds());
     }
 
-    actualizarEstadisticas(getVisibleLocations());
+    // Asegurar que ultimosFiltrados inicialmente sean solo visibles
+    ultimosFiltrados = getVisibleLocations();
+    actualizarEstadisticas(ultimosFiltrados);
 
-
-    // Guardar posición/zoom cada vez que se mueva o haga zoom
     map.on("moveend", guardarMapa);
     map.on("zoomend", guardarMapa);
   });
@@ -833,6 +755,14 @@ $(document).ready(function () {
     let matchCount = 0, filtrados = [];
 
     markers.forEach(obj => {
+      // ignorar markers cuyas agencias estén desactivadas
+      if (!isMarkerActive(obj)) {
+        // restaurar icono original si era resultado
+        obj.marker.setIcon(obj.iconOriginal);
+        obj.marker.setZIndexOffset(0);
+        return;
+      }
+
       let texto = (
         obj.dato.des + ' ' + obj.dato.nombre + ' ' + obj.dato.Titulo + ' ' + obj.dato.dir + ' ' + obj.dato.broker + ' ' + 
         (obj.dato.agentName || '') + ' ' +
@@ -861,10 +791,8 @@ $(document).ready(function () {
     }
     resetLocalStoragePreservingState();
 
-
   });
   if (typeof initACMTools === "function") {initACMTools();}
-  //if (typeof restaurarEstadoACM === "function") {restaurarEstadoACM();}
 });
 
 // -------------------------------
