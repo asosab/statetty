@@ -745,16 +745,15 @@ $(document).ready(function () {
       agencies[brand] = true;
     });
 
-    // cargar estado previo si existe
-    const prevAgencias = cargarAgencias();
+    // 🧹 Ignorar cualquier valor guardado, siempre forzar selección por defecto
+    localStorage.removeItem("agenciasSeleccionadas");
 
     // renderizar checkboxes con nombres bonitos, excluyendo statetty
     for (let ag in agencies) {
       if (ag === "statetty") continue; // no mostrar
       let label = agencyNames[ag] || ag;
-      //let checked = (!prevAgencias && ag !== "ic") || (prevAgencias && prevAgencias.includes(ag));
-      let checked = !prevAgencias || prevAgencias.includes(ag);
-
+      // ✅ siempre seleccionadas, excepto InfoCasas
+      let checked = ag !== "ic";
 
       $('#agency-filter').append(
         `<div><label><input type="checkbox" class="chk-agency" data-ag="${ag}" ${checked ? "checked" : ""}> ${label}</label></div>`
@@ -772,6 +771,7 @@ $(document).ready(function () {
         }
       });
     }
+
 
     // --- filtro por agencias ---
     $(document).on('change', '.chk-agency', function () {
