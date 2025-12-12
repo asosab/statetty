@@ -100,18 +100,34 @@ image:              mapa.png
     </div>
 
 
-
-
-
   </div>
-
-
-
-
-
 
   <div id="mapid"></div>
   <div id="loading-indicator">Cargando...</div>
+
+<div id="img-fullscreen"
+     style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.9);z-index:99999;justify-content:center;align-items:center;cursor:pointer;">
+  <img id="img-fullscreen-img" style="max-width:95vw;max-height:95vh;object-fit:contain;">
+</div>
+
+<script>
+  // Cerrar fullscreen al hacer click
+  document.getElementById("img-fullscreen").addEventListener("click", function () {
+    this.style.display = "none";
+  });
+
+  // Función para abrir la imagen fullscreen
+  window.showFullImage = function (src) {
+    const cont = document.getElementById("img-fullscreen");
+    const img  = document.getElementById("img-fullscreen-img");
+    img.src = src;
+    cont.style.display = "flex";
+  };
+</script>
+
+
+
+
 
 
   <!-- Lógica principal -->
