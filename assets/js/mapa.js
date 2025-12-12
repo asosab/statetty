@@ -624,7 +624,7 @@ $(document).ready(function () {
       Por favor, podría enviarme información sobre este inmueble, en caso de que siga disponible (${dato.Titulo})\n\n      link: ${url}\n\n      Gracias de antemano\n\n      (Mensaje creado con Statetty https://statetty.com)`;
 
       const linkWA = cel
-        ? `<br/><a href="https://wa.me/${cel}?text=${encodeURIComponent(msj)}" target="_blank" rel="noopener">📱 Contactar por WhatsApp</a>`
+        ? `<br/><a href="https://wa.me/${cel}?text=${encodeURIComponent(msj)}" target="_blank" rel="noopener">📱 Contactar a ${nombreCorto}</a>`
         : '';
 
       var distance = Math.round(calculateDH(circleCenter.lat, circleCenter.lng, dato.lat, dato.lng) * 1000);
