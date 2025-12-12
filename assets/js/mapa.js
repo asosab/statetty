@@ -643,10 +643,11 @@ $(document).ready(function () {
       var priceComparison = priceDiffPercent > 0
         ? `<span style="color: red;">↑${Math.ceil(priceDiffPercent)}%</span>`
         : `<span style="color: green;">↓${Math.ceil(Math.abs(priceDiffPercent))}%</span>`;
-
+      let descripcion = dato.des ? `<b>Descripción:</b> ${dato.des}<br>`:'';
+      let direccion = dato.dir ? `<b>Descripción:</b> ${dato.dir}<br>`:'';
       var popupContent = "<b>" + dato.Titulo + " (" + distance + "m)</b> " + priceComparison + "<br>" +
-        "<b>Dirección:</b> " + dato.dir + "<br>" +
-        "<b>Descripción:</b> " + dato.des + "<br>" +
+        `${descripcion}` +
+        `${direccion}` +
         fotoHTML +
         '<a href="' + url + '" target="_blank">Ver página de la captación</a>' +
         linkWA +
