@@ -643,7 +643,7 @@ $(document).ready(function () {
         ? `<span style="color: red;">↑${Math.ceil(priceDiffPercent)}%</span>`
         : `<span style="color: green;">↓${Math.ceil(Math.abs(priceDiffPercent))}%</span>`;
       let descripcion = dato.des ? `<b>Descripción:</b> ${dato.des}<br>`:'';
-      let direccion = dato.dir ? `<b>Descripción:</b> ${dato.dir}<br>`:'';
+      let direccion = dato.dir ? `<b>Dirección:</b> ${dato.dir}<br>`:'';
       var popupContent = "<b>" + dato.Titulo + " (" + distance + "m)</b> " + priceComparison + "<br>" +
         `${descripcion}` +
         `${direccion}` +
