@@ -620,9 +620,8 @@ $(document).ready(function () {
       let soyNa = na ? ` ${na}` : '';
       let deAg = ag ? ` de ${ag}` : '';
       let sc = (na || ag) ? ' te escribe, ' : '';
-      let foto = dato.foto ? `      Foto: ${dato.foto}\n\n`:'';
-      const msj = `Hola${nombreCorto},${soyNa}${deAg}${sc}un gusto saludarte.
-      Por favor, podría enviarme información sobre este inmueble, en caso de que siga disponible (${dato.Titulo})\n\nGracias de antemano\n\nlink: ${url}\n\n${foto}Mensaje creado con Statetty https://statetty.com`;
+      let foto = dato.foto ? `Foto: ${dato.foto}\n\n`:'';
+      const msj = `Hola${nombreCorto},${soyNa}${deAg}${sc}un gusto saludarte. Por favor, podría enviarme información sobre este inmueble, en caso de que siga disponible (${dato.Titulo})\n\nGracias de antemano\n\nlink: ${url}\n\n${foto}Mensaje creado con Statetty https://statetty.com`;
 
       const linkWA = cel
         ? `<br/><a href="https://wa.me/${cel}?text=${encodeURIComponent(msj)}" target="_blank" rel="noopener">📱 Contactar a ${nombreCorto}</a>`
@@ -649,7 +648,7 @@ $(document).ready(function () {
         `${descripcion}` +
         `${direccion}` +
         fotoHTML +
-        '<a href="' + url + '" target="_blank">Ver página de la captación</a>' +
+        '<a href="' + url + '" target="_blank">🔗 Ver página de la captación</a>' +
         linkWA +
         `<br><label><input type="checkbox" class="chk-sel" data-id="${dato.uid}"> Seleccionar</label>`;
 
