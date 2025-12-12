@@ -628,7 +628,11 @@ $(document).ready(function () {
         : '';
 
       var distance = Math.round(calculateDH(circleCenter.lat, circleCenter.lng, dato.lat, dato.lng) * 1000);
-      let fotoHTML = dato.foto ? `<br><img src="${dato.foto}" style="width:100%;max-width:260px;border-radius:8px;margin-top:6px;" />` : "";
+      let fotoHTML = dato.foto ? `<div style="width:250px;height:250px;overflow:hidden;border-radius:8px;margin:6px 0;">
+           <img src="${dato.foto}" style="width:100%;height:100%;object-fit:cover;object-position:center;">
+         </div></br>`
+      : "";
+
 
       var priceDiffPercent = ((dato.precio - pProm) / pProm) * 100;
       var priceComparison = priceDiffPercent > 0
