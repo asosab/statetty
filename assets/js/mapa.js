@@ -628,6 +628,8 @@ $(document).ready(function () {
         : '';
 
       var distance = Math.round(calculateDH(circleCenter.lat, circleCenter.lng, dato.lat, dato.lng) * 1000);
+      let fotoHTML = dato.foto ? `<br><img src="${dato.foto}" style="width:100%;max-width:260px;border-radius:8px;margin-top:6px;" />` : "";
+
       var priceDiffPercent = ((dato.precio - pProm) / pProm) * 100;
       var priceComparison = priceDiffPercent > 0
         ? `<span style="color: red;">↑${Math.ceil(priceDiffPercent)}%</span>`
@@ -636,6 +638,7 @@ $(document).ready(function () {
       var popupContent = "<b>" + dato.Titulo + " (" + distance + "m)</b> " + priceComparison + "<br>" +
         "<b>Dirección:</b> " + dato.dir + "<br>" +
         "<b>Descripción:</b> " + dato.des + "<br>" +
+        fotoHTML +
         '<a href="' + url + '" target="_blank">Ver página de la captación</a>' +
         linkWA +
         `<br><label><input type="checkbox" class="chk-sel" data-id="${dato.uid}"> Seleccionar</label>`;
