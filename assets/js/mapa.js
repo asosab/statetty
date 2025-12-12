@@ -648,7 +648,7 @@ $(document).ready(function () {
         `${descripcion}` +
         `${direccion}` +
         fotoHTML +
-        '<a href="' + url + '" target="_blank">🔗 Ver página de la captación</a>' +
+        '<a href="' + url + '" target="_blank">🔗 Ver página de la fuente de los datos</a>' +
         linkWA +
         `<br><label><input type="checkbox" class="chk-sel" data-id="${dato.uid}"> Seleccionar</label>`;
 
