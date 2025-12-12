@@ -622,7 +622,7 @@ $(document).ready(function () {
       let sc = (na || ag) ? ' te escribe, ' : '';
       let foto = dato.foto ? `      Foto: ${dato.foto}\n\n`:'';
       const msj = `Hola${nombreCorto},${soyNa}${deAg}${sc}un gusto saludarte.
-      Por favor, podría enviarme información sobre este inmueble, en caso de que siga disponible (${dato.Titulo})\n\n      Gracias de antemano\n\n${foto}      link: ${url}\n\n      Mensaje creado con Statetty https://statetty.com`;
+      Por favor, podría enviarme información sobre este inmueble, en caso de que siga disponible (${dato.Titulo})\n\nGracias de antemano\n\nlink: ${url}\n\n${foto}Mensaje creado con Statetty https://statetty.com`;
 
       const linkWA = cel
         ? `<br/><a href="https://wa.me/${cel}?text=${encodeURIComponent(msj)}" target="_blank" rel="noopener">📱 Contactar a ${nombreCorto}</a>`
