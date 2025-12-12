@@ -144,6 +144,7 @@ function getBrand(input) {
   if (url.includes("ultracasas")) return 'UC';
   if (url.includes("uno.com")) return 'uno';
   if (url.includes("infocasas.com")) return 'ic';
+  if (url.includes("sin-intermediarios")) return 'si';
   return 'statetty';
 }
 
@@ -459,7 +460,8 @@ $(document).ready(function () {
     "remax":  "RE/MAX",
     "bieni":  "Bien Inmuebles",
     "IDI":    "Inversionistas de Impacto",
-    "elfaro": "El Faro"
+    "elfaro": "El Faro",
+    "si":     "Sin Intermediarios",
   };
 
   var urlParams = new URLSearchParams(window.location.search);
