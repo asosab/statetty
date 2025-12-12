@@ -620,8 +620,9 @@ $(document).ready(function () {
       let soyNa = na ? ` ${na}` : '';
       let deAg = ag ? ` de ${ag}` : '';
       let sc = (na || ag) ? ' te escribe, ' : '';
+      let foto = dato.foto ? `      Foto: ${dato.foto}\n\n`:'';
       const msj = `Hola${nombreCorto},${soyNa}${deAg}${sc}un gusto saludarte.
-      Por favor, podría enviarme información sobre este inmueble, en caso de que siga disponible (${dato.Titulo})\n\n      link: ${url}\n\n      Gracias de antemano\n\n      (Mensaje creado con Statetty https://statetty.com)`;
+      Por favor, podría enviarme información sobre este inmueble, en caso de que siga disponible (${dato.Titulo})\n\n      Gracias de antemano\n\n${foto}      link: ${url}\n\n      Mensaje creado con Statetty https://statetty.com`;
 
       const linkWA = cel
         ? `<br/><a href="https://wa.me/${cel}?text=${encodeURIComponent(msj)}" target="_blank" rel="noopener">📱 Contactar a ${nombreCorto}</a>`
@@ -629,7 +630,7 @@ $(document).ready(function () {
 
       var distance = Math.round(calculateDH(circleCenter.lat, circleCenter.lng, dato.lat, dato.lng) * 1000);
       let fotoHTML = dato.foto
-        ? `<div style="width:250px;height:250px;overflow:hidden;border-radius:8px;margin:6px 0;cursor:pointer;"
+        ? `<div style="width:200px;height:200px;overflow:hidden;border-radius:8px;margin:6px 0;cursor:pointer;"
                onclick="showFullImage('${dato.foto}')">
              <img src="${dato.foto}"
                   style="width:100%;height:100%;object-fit:cover;object-position:center;">
