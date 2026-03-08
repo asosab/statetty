@@ -630,21 +630,36 @@ $(document).ready(function () {
 
       const nombreAgente = (dato.agentName || '').trim();
       //const nombreCorto = nombreAgente ? ' ' + nombreAgente.split(' ')[0] : '';
-      const nombreCorto = nombreAgente ? ' ' + nombreAgente.split(/\s+/).slice(0,2).join(' ') : '';
+      const nombreCorto = nombreAgente ? ' ' + nombreAgente
+            .replace(/\b(lic|ing|arq|dr|dra)\.?\s+/gi,'')
+            .replace(/[^\p{L}\s'-]/gu,'')
+            .trim()
+            .split(/\s+/)
+            .slice(0,2)
+            .join(' ')
+        : '';
+      /*
+        let cel = (dato.agentPhone || '').toString().replace(/\D/g, '');
+        if (cel.length === 8) cel = '591' + cel;
+        if (cel.length === 9 && cel.startsWith('0')) cel = '591' + cel.slice(1);
+        */
 
-      let cel = (dato.agentPhone || '').toString().replace(/\D/g, '');
+      let cel = (dato.agentPhone || '').toString().replace(/\D/g,'');
+      // normalización Bolivia
       if (cel.length === 8) cel = '591' + cel;
       if (cel.length === 9 && cel.startsWith('0')) cel = '591' + cel.slice(1);
+      // validar celular Bolivia
+      const celularValido = /^591[67]\d{7}$/.test(cel);
+
+      const linkWA = celularValido
+        ? `<br/><a href="https://wa.me/${cel}?text=${encodeURIComponent(msj)}" target="_blank" rel="noopener">📱 Contactar a${nombreCorto}</a>`
+        : '';
 
       let soyNa = na ? ` ${na}` : '';
       let deAg = ag ? ` de ${ag}` : '';
       let sc = (na || ag) ? ' te escribe, ' : '';
       let foto = dato.foto ? `Foto: ${dato.foto}\n\n`:'';
       const msj = `Hola${nombreCorto},${soyNa}${deAg}${sc}un gusto saludarte. Por favor, podría enviarme información sobre este inmueble, en caso de que siga disponible (${dato.Titulo})\n\nGracias de antemano\n\nlink: ${url}\n\n${foto}Mensaje creado con Statetty https://statetty.com`;
-
-      const linkWA = cel
-        ? `<br/><a href="https://wa.me/${cel}?text=${encodeURIComponent(msj)}" target="_blank" rel="noopener">📱 Contactar a ${nombreCorto}</a>`
-        : '';
 
       var distance = Math.round(calculateDH(circleCenter.lat, circleCenter.lng, dato.lat, dato.lng) * 1000);
       let fotoHTML = dato.foto
