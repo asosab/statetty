@@ -638,6 +638,16 @@ $(document).ready(function () {
             .slice(0,2)
             .join(' ')
         : '';
+      const nombreCortito = nombreAgente ? ' ' + nombreAgente
+            .replace(/\b(lic|ing|arq|dr|dra)\.?\s+/gi,'')
+            .replace(/[^\p{L}\s'-]/gu,'')
+            .trim()
+            .split(/\s+/)
+            .slice(0,1)
+            .join(' ')
+        : '';
+
+
       /*
         let cel = (dato.agentPhone || '').toString().replace(/\D/g, '');
         if (cel.length === 8) cel = '591' + cel;
@@ -655,7 +665,7 @@ $(document).ready(function () {
       let deAg = ag ? ` de ${ag}` : '';
       let sc = (na || ag) ? ' te escribe, ' : '';
       let foto = dato.foto ? `Foto: ${dato.foto}\n\n`:'';
-      const msj = `Hola${nombreCorto},${soyNa}${deAg}${sc}un gusto saludarte. Por favor, podría enviarme información sobre este inmueble, en caso de que siga disponible (${dato.Titulo})\n\nGracias de antemano\n\nlink: ${url}\n\n${foto}Mensaje creado con Statetty https://statetty.com`;
+      const msj = `Hola${nombreCortito},${soyNa}${deAg}${sc}un gusto saludarte. Por favor, podría enviarme información sobre este inmueble, en caso de que siga disponible (${dato.Titulo})\n\nGracias de antemano\n\nlink: ${url}\n\n${foto}Mensaje creado con Statetty https://statetty.com`;
 
       const linkWA = celularValido
         ? `<br/><a href="https://wa.me/${cel}?text=${encodeURIComponent(msj)}" target="_blank" rel="noopener">📱 Contactar a${nombreCorto}</a>`
