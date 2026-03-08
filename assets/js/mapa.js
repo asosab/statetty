@@ -629,7 +629,8 @@ $(document).ready(function () {
       var marker = L.marker([dato.lat, dato.lng], { icon }); if (brand !== "ic") {marker.addTo(map);}
 
       const nombreAgente = (dato.agentName || '').trim();
-      const nombreCorto = nombreAgente ? ' ' + nombreAgente.split(' ')[0] : '';
+      //const nombreCorto = nombreAgente ? ' ' + nombreAgente.split(' ')[0] : '';
+      const nombreCorto = nombreAgente ? ' ' + nombreAgente.split(/\s+/).slice(0,2).join(' ') : '';
 
       let cel = (dato.agentPhone || '').toString().replace(/\D/g, '');
       if (cel.length === 8) cel = '591' + cel;
