@@ -130,31 +130,6 @@ function calcularPromedio(datos, prop) {
  * @param {Object|string} input - Puede ser un marker objeto o una URL/uid string
  * @returns {string} brand clave como 'remax','C21','ic','statetty', etc.
  */
-function getBrand2(input) {
-  let url = '';
-  if (!input) return 'statetty';
-  if (typeof input === 'string') url = input;
-  else if (input.dato && input.dato.uid) url = input.dato.uid;
-  else if (input.options && input.options.iconUrl) url = input.options.iconUrl;
-  url = (url || '').toLowerCase();
-  if (url.includes("c21.com")) return 'C21';
-  if (url.includes("remax")) return 'remax';
-  if (url.includes("bieninmuebles")) return 'bieni';
-  // if (url.includes("elfaro") || url.includes("el-faro")) return 'elfaro';
-  if (/el-?faro/i.test(url)) return 'elfaro';
-  if (url.includes("dueodeinmueble")) return 'IDI';
-  if (url.includes("ultracasas")) return 'UC';
-  if (url.includes("uno.com")) return 'uno';
-  if (url.includes("infocasas.com")) return 'ic';
-  if (url.includes("sin-intermediarios")) return 'si';
-  return 'statetty';
-}
-
-/**
- * Devuelve el "brand" (clave de agencia) a partir de una URL o de un marker.
- * @param {Object|string} input - Puede ser un marker objeto o una URL/uid string
- * @returns {string} brand clave como 'remax','C21','ic','statetty', etc.
- */
 function getBrand(input) {
   let url = '';
   let agentName = '';
@@ -168,14 +143,19 @@ function getBrand(input) {
   } 
   else if (input.options && input.options.iconUrl) {url = input.options.iconUrl;}
   url = (url || '').toLowerCase();
-  if (url.includes("c21.com")) return 'C21';
-  if (url.includes("remax")) return 'remax';
-  if (url.includes("bieninmuebles")) return 'bieni';
+
+
+  // --------------------------------------------------------------------------------------------------- Marcas pequeñas
   if (
     /el-?faro/i.test(url) ||
     agentPhone.replace(/\D/g,'').includes("71035001") ||
     agentName.includes("el faro")
   ) return 'elfaro';
+
+  // ---------------------------------------------------------------------------------------------------- Marcas grandes
+  if (url.includes("c21.com")) return 'C21';
+  if (url.includes("remax")) return 'remax';
+  if (url.includes("bieninmuebles")) return 'bieni';
   if (url.includes("dueodeinmueble")) return 'IDI';
   if (url.includes("ultracasas")) return 'UC';
   if (url.includes("uno.com")) return 'uno';
