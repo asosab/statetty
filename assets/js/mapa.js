@@ -146,22 +146,19 @@ function getBrand(input) {
 
 
   // --------------------------------------------------------------------------------------------------- Marcas pequeñas
-  if (
-    /el-?faro/i.test(url) ||
-    agentPhone.replace(/\D/g,'').includes("71035001") ||
-    agentName.includes("el faro")
-  ) return 'elfaro';
+  if ( /el-?faro/i.test(url) || agentPhone.replace(/\D/g,'').includes("71035001") || agentName.includes("el faro")
+     ) {return 'elfaro';}
 
   // ---------------------------------------------------------------------------------------------------- Marcas grandes
-  if (url.includes("c21.com")) return 'C21';
-  if (url.includes("remax")) return 'remax';
-  if (url.includes("bieninmuebles")) return 'bieni';
-  if (url.includes("dueodeinmueble")) return 'IDI';
-  if (url.includes("ultracasas")) return 'UC';
-  if (url.includes("uno.com")) return 'uno';
-  if (url.includes("infocasas.com")) return 'ic';
-  if (url.includes("sin-intermediarios")) return 'si';
-  return 'statetty';
+  else if (url.includes("c21.com")) {return 'C21';}
+  else if (url.includes("remax")) {return 'remax';}
+  else if (url.includes("bieninmuebles")) {return 'bieni';}
+  else if (url.includes("dueodeinmueble")) {return 'IDI';}
+  else if (url.includes("ultracasas")) {return 'UC';}
+  else if (url.includes("uno.com")) {return 'uno';}
+  else if (url.includes("infocasas.com")) {return 'ic';}
+  else if (url.includes("sin-intermediarios")) {return 'si';}
+  else {return 'statetty';}
 }
 
 /**
