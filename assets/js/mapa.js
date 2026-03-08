@@ -139,7 +139,8 @@ function getBrand(input) {
   if (url.includes("c21.com")) return 'C21';
   if (url.includes("remax")) return 'remax';
   if (url.includes("bieninmuebles")) return 'bieni';
-  if (url.includes("elfaro")) return 'elfaro';
+  // if (url.includes("elfaro") || url.includes("el-faro")) return 'elfaro';
+  if (/el-?faro/i.test(url)) return 'elfaro';
   if (url.includes("dueodeinmueble")) return 'IDI';
   if (url.includes("ultracasas")) return 'UC';
   if (url.includes("uno.com")) return 'uno';
