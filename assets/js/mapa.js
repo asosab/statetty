@@ -629,24 +629,15 @@ $(document).ready(function () {
       var marker = L.marker([dato.lat, dato.lng], { icon }); if (brand !== "ic") {marker.addTo(map);}
 
       const nombreAgente = (dato.agentName || '').trim();
-      //const nombreCorto = nombreAgente ? ' ' + nombreAgente.split(' ')[0] : '';
-      const nombreCorto = nombreAgente ? ' ' + nombreAgente
+      const limpio = nombreAgente
+        ? nombreAgente
             .replace(/\b(lic|ing|arq|dr|dra)\.?\s+/gi,'')
             .replace(/[^\p{L}\s'-]/gu,'')
             .trim()
-            .split(/\s+/)
-            .slice(0,2)
-            .join(' ')
-        : '';
-      const nombreCortito = nombreAgente ? ' ' + nombreAgente
-            .replace(/\b(lic|ing|arq|dr|dra)\.?\s+/gi,'')
-            .replace(/[^\p{L}\s'-]/gu,'')
-            .trim()
-            .split(/\s+/)
-            .slice(0,1)
-            .join(' ')
         : '';
 
+      const nombreCorto   = limpio ? ' ' + limpio.split(/\s+/).slice(0,2).join(' ') : '';
+      const nombreCortito = limpio ? ' ' + limpio.split(/\s+/).slice(0,1).join(' ') : '';
 
       /*
         let cel = (dato.agentPhone || '').toString().replace(/\D/g, '');
