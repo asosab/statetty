@@ -205,8 +205,9 @@ function isMarkerActive(m) {
 function getVisibleLocations() {
   const activas = agenciasActivas();
   return locations.filter(loc => {
-    let url = loc.uid || "";
-    let brand = getBrand(url);
+    //let url = loc.uid || "";
+    //let brand = getBrand(url);
+    let brand = getBrand({ dato: loc });
     if (brand === "statetty") return true;
     return activas.includes(brand);
   });
@@ -598,7 +599,9 @@ $(document).ready(function () {
       const frase = faltan > 0 ? `... (y ${faltan} caracteres más)` : "";
       location.des = rawDesc.length > chrMax ? rawDesc.substring(0, chrMax) + frase : rawDesc;
 
+      location.brand = getBrand({ dato: location });
       locations.push(location);
+
     });
 
     var lat = urlParams.get('lat');
@@ -636,7 +639,9 @@ $(document).ready(function () {
     // markers
     locations.forEach(function (dato) {
       let url = dato.uid;
-      var brand = getBrand(url);
+      //var brand = getBrand(url);
+      //var brand = getBrand({ dato });
+      var brand = dato.brand;
 
       var icon = new L.Icon({
         iconUrl: '../../assets/images/pointers/pointer_' + brand + '.png',
