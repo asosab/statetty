@@ -477,6 +477,7 @@ $(document).ready(function () {
     "IDI":    "Inversionistas de Impacto",
     "elfaro": "El Faro",
     "si":     "Sin Intermediarios",
+    "capital":"Capital Corporación",
   };
 
   var urlParams = new URLSearchParams(window.location.search);
