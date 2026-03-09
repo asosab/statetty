@@ -158,6 +158,7 @@ function getBrand(input) {
   else if (url.includes("uno.com")) {return 'uno';}
   else if (url.includes("infocasas.com")) {return 'ic';}
   else if (url.includes("sin-intermediarios")) {return 'si';}
+  else if (url.includes("capitalcorp")) {return 'capital';}
   else {return 'statetty';}
 }
 
