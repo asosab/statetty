@@ -243,16 +243,19 @@ function detectarTipoInmueble(loc) {
           <div style="margin-top:4px;">
             Terrenos:
             <span id="acm-prom-m2t"></span>
+            <span id="acm-count-t">[-]</span>
           </div>
 
           <div>
             Casas:
             <span id="acm-prom-m2c-construccion"></span>
+            <span id="acm-count-c">[-]</span>
           </div>
 
           <div>
             Deptos.:
             <span id="acm-prom-m2d"></span>
+            <span id="acm-count-d">[-]</span>
           </div>
 
         </div>
@@ -289,6 +292,7 @@ function detectarTipoInmueble(loc) {
 
     } catch (e) {console.log("Error renderACMInputs:", e);}
   }
+
 
 /** ------------------------------------------------------------------------------------------------ calcularEstimado
  * Calcula el valor estimado según tipo seleccionado y m² ingresados
