@@ -262,16 +262,41 @@ function detectarTipoInmueble(loc) {
           </div>
 
         </div>
+
+        <div id="acm-calculadora" style="margin-top:10px;">
+
+          <div>
+            Tipo:
+            <select id="acm-tipo">
+              <option value="departamento">Depto</option>
+              <option value="casa">Casa</option>
+              <option value="terreno">Terreno</option>
+            </select>
+
+            <span id="acm-m2t-wrap" style="margin-left:10px;">
+              m² T.: <input type="number" id="acm-m2t" style="max-width:10ch;">
+            </span>
+
+            <span id="acm-m2c-wrap" style="margin-left:10px;">
+              m² C.: <input type="number" id="acm-m2c" style="max-width:10ch;">
+            </span>
+
+          </div>
+
+          <div style="margin-top:6px;">
+            <span id="acm-estimado">Estimado: -</span>
+            <span id="acm-tiempo-ofertado" style="margin-left:10px;"></span>
+          </div>
+
+        </div>
       `;
 
       $("#acm-container").html(html);
 
-      //$("#acm-venta-rapida").on("change", function(){actualizarACM();});
       $("#acm-container").on("input", "#acm-ajuste-t,#acm-ajuste-c,#acm-ajuste-d", function(){actualizarACM();});
 
     } catch (e) {console.log("Error renderACMInputs:", e);}
   }
-
 
 /** ------------------------------------------------------------------------------------------------ calcularEstimado
  * Calcula el valor estimado según tipo seleccionado y m² ingresados
