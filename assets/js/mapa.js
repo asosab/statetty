@@ -435,13 +435,13 @@ function actualizarToolbox() {
 
     const chkAll = $("#pdf-show-all").prop("checked");
     const selCount = seleccionados.length;
-    const habilitar = selCount > 0 && chkAll === true;
+    const habilitar = selCount > 0 || chkAll === true;
 
     $("#btn-pdf-landscape").prop("disabled", !habilitar);
     $("#btn-pdf-mobile").prop("disabled", !habilitar);
 
     $("#pdf-show-all").off("change").on("change", function(){
-      const habilitar = seleccionados.length > 0 && this.checked;
+      const habilitar = seleccionados.length > 0 || this.checked === true;
       $("#btn-pdf-landscape").prop("disabled", !habilitar);
       $("#btn-pdf-mobile").prop("disabled", !habilitar);
     });
