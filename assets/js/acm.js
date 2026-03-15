@@ -2,102 +2,102 @@
 // acm.js - Análisis Comparativo de Mercado
 // ---------------------------------------------
 
-/**
+
+/** --------------------------------------------------------------------------------------------------- actualizarACM
  * Recalcula los valores ACM y actualiza el HTML
  */
-function actualizarACM() {
-  if ($("#acm-container").length === 0) return;
+  function actualizarACM() {
+    try {
 
-  if (!seleccionados.length) {
-    $("#acm-prom-precio").text("0");
-    $("#acm-prom-m2t").html(`<input type="number" step="0.01" value="" style="max-width:12ch;">`);
-    $("#acm-prom-m2c-construccion").html(`<input type="number" step="0.01" value="" style="max-width:12ch;">`);
-    $("#acm-prom-m2d").html(`<input type="number" step="0.01" value="" style="max-width:12ch;">`);
-    $("#acm-rango").text("-");
-    return;
-  }
+      if ($("#acm-container").length === 0) return;
 
-  const terrenos = seleccionados.filter(s => detectarTipoInmueble(s) === "terreno" && s.m2terreno > 0);
-  const casas    = seleccionados.filter(s => detectarTipoInmueble(s) === "casa" && (s.m2terreno > 0 || s.m2construccion > 0));
-  const deptos   = seleccionados.filter(s => detectarTipoInmueble(s) === "departamento" && s.m2construccion > 0);
+      if (!seleccionados.length) {
+        $("#acm-prom-precio").text("Promedio de precios: USD 0 [0]");
 
-  // Promedio general de precios (se mantiene promedio simple por ahora)
-  const avgPrecio = calcularPromedio(seleccionados, "precio");
-  $("#acm-prom-precio").text(`Promedio de precios: USD ${formatNumber(avgPrecio)} [${seleccionados.length}]`);
+        $("#acm-prom-m2t").html(
+          `<input type="number" step="0.01" title="Valor en dólares del metro cuadrado de terreno, también se usará para calcular valor de casas" style="max-width:12ch;"> ` +
+          `<input id="acm-ajuste-t" type="number" value="15" style="max-width:5ch;"> [-]`
+        );
 
-  // Precio por m² terrenos
-  const valoresM2t = terrenos
-    .filter(t => t.precio > 0 && t.m2terreno > 20 && t.m2terreno < 20000)
-    .map(t => t.precio / t.m2terreno);
+        $("#acm-prom-m2c-construccion").html(
+          `<input type="number" step="0.01" title="Valor en dólares del metro cuadrado de construcción para casas, se usa conjuntamente con el valor de USD/m² terrenos" style="max-width:12ch;"> ` +
+          `<input id="acm-ajuste-c" type="number" value="7" style="max-width:5ch;"> [-]`
+        );
 
-  let promM2t = mediaPonderada(valoresM2t, 15);
-  if (promM2t <= 0 && window.M2T) {
-    const m2tManual = parseInt(window.M2T);
-    if (!isNaN(m2tManual) && m2tManual > 0) {promM2t = m2tManual;}
-  }
+        $("#acm-prom-m2d").html(
+          `<input type="number" step="0.01" title="Valor en dólares del metro cuadrado de construcción para departamentos, tiendas o similares" style="max-width:12ch;"> ` +
+          `<input id="acm-ajuste-d" type="number" value="5" style="max-width:5ch;"> [-]`
+        );
 
+        $("#acm-rango").text("Rango de precios: -");
+        return;
+      }
 
-  $("#acm-prom-m2t").html(
-    `<input type="number" step="0.01" value="${promM2t > 0 ? promM2t.toFixed(2) : ""}" style="max-width:12ch;">` +
-    ` Promedio USD/m² terrenos ` +
-    (valoresM2t.length ? `[${valoresM2t.length}]` : "[-]")
-  );
-  $("#acm-prom-m2t input").on("input", calcularEstimado);
+      const terrenos = seleccionados.filter(s => detectarTipoInmueble(s) === "terreno" && s.m2terreno > 0);
+      const casas = seleccionados.filter(s => detectarTipoInmueble(s) === "casa" && (s.m2terreno > 0 || s.m2construccion > 0));
+      const deptos = seleccionados.filter(s => detectarTipoInmueble(s) === "departamento" && s.m2construccion > 0);
 
-  // Precio por m² departamentos (construcción)
-  let valoresM2d = deptos
-    .filter(d => d.precio > 0 && d.m2construccion > 20 && d.m2construccion < 2000)
-    .map(d => d.precio / d.m2construccion);
+      const avgPrecio = calcularPromedio(seleccionados, "precio");
+      $("#acm-prom-precio").text(`Promedio de precios: USD ${formatNumber(avgPrecio)} [${seleccionados.length}]`);
 
-  let promM2d = mediaPonderada(valoresM2d, 15);
-  $("#acm-prom-m2d").html(
-    `<input type="number" step="0.01" value="${promM2d > 0 ? promM2d.toFixed(2) : ""}" style="max-width:12ch;">` +
-    ` Promedio USD/m² departamentos ` +
-    (valoresM2d.length ? `[${valoresM2d.length}]` : "[-]")
-  );
-  $("#acm-prom-m2d input").on("input", calcularEstimado);
+      const valoresM2t = terrenos.filter(t => t.precio > 0 && t.m2terreno > 20 && t.m2terreno < 20000).map(t => t.precio / t.m2terreno);
+      let promM2t = mediaPonderada(valoresM2t, 15);
+      if (promM2t <= 0 && window.M2T) {const m2tManual = parseInt(window.M2T); if (!isNaN(m2tManual) && m2tManual > 0) promM2t = m2tManual;}
 
-  // Precio por m² casas (construcción ajustado con valor de terreno)
-  let valoresM2cConstruccion = [];
-  if (promM2t > 0) {
-    valoresM2cConstruccion = casas
-      .filter(c => c.precio > 0 && c.m2construccion > 20 && c.m2construccion < 2000)
-      .map(c => {
-        const valorTerreno = c.m2terreno * promM2t;
-        const valorConstruccion = c.precio - valorTerreno;
-        if (valorConstruccion > 0) {
-          return valorConstruccion / c.m2construccion;
-        }
+      const valoresM2c = casas.map(c => {
+        if (c.m2construccion > 0 && c.precio > 0) return c.precio / c.m2construccion;
+        if (c.m2terreno > 0 && c.precio > 0) return c.precio / c.m2terreno;
         return null;
-      })
-      .filter(v => v !== null);
-  }
+      }).filter(v => v !== null);
 
-  const promM2cConstruccion = mediaPonderada(valoresM2cConstruccion, 15);
-  $("#acm-prom-m2c-construccion").html(
-    `<input type="number" step="0.01" value="${promM2cConstruccion > 0 ? promM2cConstruccion.toFixed(2) : ""}" style="max-width:12ch;">` +
-    ` Promedio USD/m² casas ` +
-    (valoresM2cConstruccion.length ? `[${valoresM2cConstruccion.length}]` : "[-]")
-  );
-  $("#acm-prom-m2c-construccion input").on("input", calcularEstimado);
+      const promM2c = mediaPonderada(valoresM2c, 15);
 
-  // Rango de precios general
-  const precios = seleccionados.map(s => s.precio || 0).filter(p => p > 0);
-  if (precios.length > 0) {
-    const min = Math.min(...precios);
-    const max = Math.max(...precios);
-    $("#acm-rango").text(`Rango de precios: USD ${formatNumber(min)} - USD ${formatNumber(max)}`);
-  } else {
-    $("#acm-rango").text("Rango de precios: -");
+      const valoresM2d = deptos.filter(d => d.precio > 0 && d.m2construccion > 0).map(d => d.precio / d.m2construccion);
+      const promM2d = mediaPonderada(valoresM2d, 15);
+
+      const chkRapida = $("#acm-venta-rapida").prop("checked");
+      const ajT = parseFloat($("#acm-ajuste-t").val()) || 15;
+      const ajC = parseFloat($("#acm-ajuste-c").val()) || 7;
+      const ajD = parseFloat($("#acm-ajuste-d").val()) || 5;
+
+      const valT = chkRapida ? promM2t * (1 - ajT / 100) : promM2t;
+      const valC = chkRapida ? promM2c * (1 - ajC / 100) : promM2c;
+      const valD = chkRapida ? promM2d * (1 - ajD / 100) : promM2d;
+
+      $("#acm-prom-m2t").html(
+        `<input type="number" step="0.01" value="${valT > 0 ? valT.toFixed(2) : ""}" title="Valor en dólares del metro cuadrado de terreno, también se usará para calcular valor de casas" style="max-width:12ch;"> ` +
+        `<input id="acm-ajuste-t" type="number" value="${ajT}" style="max-width:5ch;"> ` +
+        `[${valoresM2t.length || "-"}]`
+      );
+
+      $("#acm-prom-m2c-construccion").html(
+        `<input type="number" step="0.01" value="${valC > 0 ? valC.toFixed(2) : ""}" title="Valor en dólares del metro cuadrado de construcción para casas, se usa conjuntamente con el valor de USD/m² terrenos" style="max-width:12ch;"> ` +
+        `<input id="acm-ajuste-c" type="number" value="${ajC}" style="max-width:5ch;"> ` +
+        `[${valoresM2c.length || "-"}]`
+      );
+
+      $("#acm-prom-m2d").html(
+        `<input type="number" step="0.01" value="${valD > 0 ? valD.toFixed(2) : ""}" title="Valor en dólares del metro cuadrado de construcción para departamentos, tiendas o similares" style="max-width:12ch;"> ` +
+        `<input id="acm-ajuste-d" type="number" value="${ajD}" style="max-width:5ch;"> ` +
+        `[${valoresM2d.length || "-"}]`
+      );
+
+      const precios = seleccionados.map(s => s.precio || 0).filter(p => p > 0);
+      if (precios.length > 0) {
+        const min = Math.min(...precios), max = Math.max(...precios);
+        $("#acm-rango").text(`Rango de precios: USD ${formatNumber(min)} - USD ${formatNumber(max)}`);
+      } else {$("#acm-rango").text("Rango de precios: -");}
+
+      calcularEstimado();
+
+    } catch (e) {console.log("Error actualizarACM:", e);}
   }
-  calcularEstimado();
-}
 
 function guardarEstadoACM() {
   const estado = {
     tipo: $("#acm-tipo").val(),
-    m2Terreno: $("#acm-m2-terreno").val(),
-    m2Construccion: $("#acm-m2-construccion").val(),
+    m2Terreno: $("#acm-m2t").val(),
+    m2Construccion: $("#acm-m2c").val(),
     promM2t: $("#acm-prom-m2t input").val(),
     promM2d: $("#acm-prom-m2d input").val(),
     promM2c: $("#acm-prom-m2c-construccion input").val()
@@ -115,8 +115,8 @@ function restaurarEstadoACM() {
     renderACMInputs(estado.tipo);
   }
 
-  if (estado.m2Terreno) $("#acm-m2-terreno").val(estado.m2Terreno);
-  if (estado.m2Construccion) $("#acm-m2-construccion").val(estado.m2Construccion);
+  if (estado.m2Terreno) $("#acm-m2t").val(estado.m2Terreno);
+  if (estado.m2Construccion) $("#acm-m2c").val(estado.m2Construccion);
 
   if (estado.promM2t) $("#acm-prom-m2t input").val(estado.promM2t);
   if (estado.promM2d) $("#acm-prom-m2d input").val(estado.promM2d);
@@ -125,26 +125,55 @@ function restaurarEstadoACM() {
   calcularEstimado();
 }
 
-function mediaPonderada(valores, porcentaje = 10) {
-  if (!valores || valores.length === 0) return 0;
-  const ordenados = [...valores].sort((a, b) => a - b);
-  const n = ordenados.length;
-  const recorte = Math.floor(n * (porcentaje / 100));
-  if (n < 7 || recorte === 0) {return ordenados.reduce((s, v) => s + v, 0) / n;}
-  const recortados = ordenados.slice(recorte, n - recorte);
-  return recortados.reduce((s, v) => s + v, 0) / recortados.length;
-}
-
-/**
- * Calcula el promedio de precio por m² dado un campo (m2terreno o m2construccion).
+/** -------------------------------------------------------------------------------------------------- mediaPonderada
+ * Calcula media ponderada eliminando extremos según tolerancia %
  */
-function promedioPrecioM2(lista, campo) {
-  const valores = lista
-    .filter(x => (x[campo] || 0) > 0 && (x.precio || 0) > 0)
-    .map(x => x.precio / x[campo]);
+  function mediaPonderada(valores, tolerancia) {
+    try {
 
-  return valores.length ? valores.reduce((a,b)=>a+b,0) / valores.length : 0;
-}
+      if (!Array.isArray(valores) || !valores.length) return 0;
+
+      const arr = valores.filter(v => !isNaN(v) && v > 0).sort((a,b)=>a-b);
+      if (!arr.length) return 0;
+
+      const med = arr[Math.floor(arr.length/2)];
+      const min = med * (1 - tolerancia/100);
+      const max = med * (1 + tolerancia/100);
+
+      const filtrados = arr.filter(v => v >= min && v <= max);
+      const base = filtrados.length ? filtrados : arr;
+
+      let suma = 0;
+      for (let i = 0; i < base.length; i++) suma += base[i];
+
+      return base.length ? suma / base.length : 0;
+
+    } catch (e) {console.log("Error mediaPonderada:", e);}
+  }
+
+/** ------------------------------------------------------------------------------------------------ promedioPrecioM2
+ * Calcula el promedio de precio por m² para una lista de inmuebles
+ */
+  function promedioPrecioM2(lista, campoM2) {
+    try {
+
+      if (!Array.isArray(lista) || !lista.length) return 0;
+
+      const valores = [];
+      for (let i = 0; i < lista.length; i++) {
+        const it = lista[i];
+        const m2 = parseFloat(it[campoM2]);
+        const precio = parseFloat(it.precio);
+        if (!isNaN(m2) && m2 > 0 && !isNaN(precio) && precio > 0) valores.push(precio / m2);
+      }
+
+      if (!valores.length) return 0;
+
+      const prom = mediaPonderada(valores, 15);
+      return prom > 0 ? prom : 0;
+
+    } catch (e) {console.log("Error promedioPrecioM2:", e);}
+  }
 
 const tipoInmuebleDic = {
   departamento: {
@@ -177,128 +206,110 @@ function detectarTipoInmueble(loc) {
 }
 
 
-// ---------------------------------------------
-// Formulario dinámico de cálculo ACM reducido
-// ---------------------------------------------
-function initACMTools() {
-  if ($("#acm-form").length > 0) return; // evitar duplicar
+/** ---------------------------------------------------------------------------------------------------- initACMTools
+ * Inicializa herramientas ACM y eventos asociados
+ * @returns {void}
+ */
+  function initACMTools() {
+    try {
 
-$("#acm-container").append(`
-  <div id="acm-form" style="margin-top:8px; padding:4px; border-top:1px solid #ddd; font-size:13px;">
-    <div style="display:flex; align-items:center; gap:12px; margin-bottom:4px;">
-      <div id="grupo-tipo" style="display:flex; align-items:center;">
-        <label style="margin-right:1px; min-width:30px;">Tipo:</label>
-        <select id="acm-tipo" style="max-width:12ch; font-size:13px;">
-          <option value="">--</option>
-          <option value="terreno">Terreno</option>
-          <option value="departamento">Depto</option>
-          <option value="casa">Casa</option>
-        </select>
-      </div>
-      <div id="acm-inputs" style="display:flex; gap:8px;"></div>
-    </div>
-    <div id="acm-result" style="margin-top:4px; font-weight:bold;"></div>
-  </div>
-`);
+      renderACMInputs();
 
+      $('#acm-container').on('input', '#acm-prom-m2t input,#acm-prom-m2c-construccion input,#acm-prom-m2d input', function(){calcularEstimado();});
+      $('#acm-container').on('input', '#acm-m2t,#acm-m2c', function(){calcularEstimado();});
+      $('#acm-container').on('change', '#acm-tipo', function(){calcularEstimado();});
 
-  // Escucha cambios
-  restaurarEstadoACM();
-  $("#acm-tipo").on("change", function() {renderACMInputs($(this).val());});
-  $(document).on("input change", "#acm-form input, #acm-form select", function () {guardarEstadoACM();});
-  return true;
-}
+      $('#acm-container').on('change', '#acm-venta-rapida', function(){actualizarACM();});
+      $('#acm-container').on('input', '#acm-ajuste-t,#acm-ajuste-c,#acm-ajuste-d', function(){actualizarACM();});
 
-function renderACMInputs(tipo) {
-  const $inputs = $("#acm-inputs");
+      actualizarACM();
 
-  // ⚡ Crear inputs una sola vez si no existen
-  if ($inputs.children().length === 0) {
-    const baseStyle = "max-width:7ch; font-size:13px; margin-bottom:3px;";
-$inputs.append(`
-  <div id="grupo-terreno" style="display:none; display:flex; align-items:center;">
-    <label style="margin-right:1px; min-width:30px;">m² T.:</label>
-    <input type="number" id="acm-m2-terreno" min="1" maxlength="8" style="${baseStyle}">
-  </div>
-  <div id="grupo-construccion" style="display:none; display:flex; align-items:center;">
-    <label style="margin-right:1px; min-width:30px;">m² C.:</label>
-    <input type="number" id="acm-m2-construccion" min="1" maxlength="8" style="${baseStyle}">
-  </div>
-`);
-
-
-
-    // ⚡ Atar eventos una sola vez
-    $("#acm-m2-terreno, #acm-m2-construccion").on("input", calcularEstimado);
+    } catch (e) {console.log("Error initACMTools:", e);}
   }
 
-  // Ocultar todo primero
-  $("#grupo-terreno, #grupo-construccion").hide();
+/** ------------------------------------------------------------------------------------------------- renderACMInputs
+ * Renderiza los inputs ACM
+ */
+  function renderACMInputs() {
+    try {
 
-  // Mostrar solo lo que corresponde
-  if (tipo === "terreno") {
-    $("#grupo-terreno").show();
+      const html = `
+        <div id="acm-promedios">
+
+          <div id="acm-rango">Rango de precios: -</div>
+          <div id="acm-prom-precio">Promedio de precios: USD 0 [0]</div>
+
+          <div style="margin-top:6px;">
+            <b>Promedio USD/m²</b>
+            <label style="margin-left:12px;">
+              <input type="checkbox" id="acm-venta-rapida"> V. Rápida
+            </label>
+          </div>
+
+          <div style="margin-top:4px;">
+            Terrenos:
+            <span id="acm-prom-m2t"></span>
+          </div>
+
+          <div>
+            Casas:
+            <span id="acm-prom-m2c-construccion"></span>
+          </div>
+
+          <div>
+            Deptos.:
+            <span id="acm-prom-m2d"></span>
+          </div>
+
+        </div>
+      `;
+
+      $("#acm-container").html(html);
+
+      //$("#acm-venta-rapida").on("change", function(){actualizarACM();});
+      $("#acm-container").on("input", "#acm-ajuste-t,#acm-ajuste-c,#acm-ajuste-d", function(){actualizarACM();});
+
+    } catch (e) {console.log("Error renderACMInputs:", e);}
   }
 
-  if (tipo === "departamento") {
-    $("#grupo-construccion").show();
+
+/** ------------------------------------------------------------------------------------------------ calcularEstimado
+ * Calcula el valor estimado según tipo seleccionado y m² ingresados
+ */
+  function calcularEstimado() {
+    try {
+
+      const tipo = $("#acm-tipo").val();
+      if (!tipo) return;
+
+      const m2t = parseFloat($("#acm-m2t").val()) || 0;
+      const m2c = parseFloat($("#acm-m2c").val()) || 0;
+
+      const vT = parseFloat($("#acm-prom-m2t input[type='number']").first().val()) || 0;
+      const vC = parseFloat($("#acm-prom-m2c-construccion input[type='number']").first().val()) || 0;
+      const vD = parseFloat($("#acm-prom-m2d input[type='number']").first().val()) || 0;
+
+      let estimado = 0;
+
+      if (tipo === "terreno") {
+        if (m2t > 0 && vT > 0) estimado = m2t * vT;
+      } else if (tipo === "casa") {
+        if (m2t > 0 && vT > 0) estimado += m2t * vT;
+        if (m2c > 0 && vC > 0) estimado += m2c * vC;
+      } else if (tipo === "departamento") {
+        if (m2c > 0 && vD > 0) estimado = m2c * vD;
+      }
+
+      if (estimado > 0) {
+        $("#acm-estimado").text(`Estimado: USD ${formatNumber(estimado)}`);
+      } else {
+        $("#acm-estimado").text("Estimado: -");
+      }
+
+      if (typeof calcularTiempoOfertado === "function") calcularTiempoOfertado(tipo, m2t, m2c, estimado);
+
+    } catch (e) {console.log("Error calcularEstimado:", e);}
   }
-
-  if (tipo === "casa") {
-    $("#grupo-terreno, #grupo-construccion").show();
-  }
-
-  calcularEstimado(); // recalcular siempre al cambiar
-}
-
-
-function calcularEstimado() {
-  const tipo = $("#acm-tipo").val();
-  let total = 0;
-
-  if (tipo === "terreno") {
-    const m2 = parseFloat($("#acm-m2-terreno").val()) || 0;
-    const promM2 = extraerValorPromedio("#acm-prom-m2t");
-    total = m2 * promM2;
-  }
-
-  if (tipo === "departamento") {
-    const m2 = parseFloat($("#acm-m2-construccion").val()) || 0;
-    const promM2 = extraerValorPromedio("#acm-prom-m2d");
-    total = m2 * promM2;
-  }
-
-  if (tipo === "casa") {
-    const m2Terreno = parseFloat($("#acm-m2-terreno").val()) || 0;
-    const m2Construccion = parseFloat($("#acm-m2-construccion").val()) || 0;
-
-    const promTerreno = extraerValorPromedio("#acm-prom-m2t");
-    const promConstruccion = extraerValorPromedio("#acm-prom-m2c-construccion");
-
-    // Valor del terreno
-    const valorTerreno = m2Terreno * promTerreno;
-
-    // Valor de la construcción (solo si tiene sentido)
-    let valorConstruccion = 0;
-    if (promTerreno > 0 && promConstruccion > 0 && m2Construccion > 0) {
-      valorConstruccion = m2Construccion * promConstruccion;
-    }
-
-    total = valorTerreno + valorConstruccion;
-  }
-
-  if (total > 0) {
-    $("#acm-result").text(`Estimado: USD ${formatNumber(total)}`);
-    const tipo = $("#acm-tipo").val();
-    const m2Terreno = parseFloat($("#acm-m2-terreno").val()) || 0;
-    const m2Construccion = parseFloat($("#acm-m2-construccion").val()) || 0;
-    const meses = calcularTiempoOfertado(tipo, m2Terreno, m2Construccion, total);
-    if (meses !== null) {$("#acm-result").append(` | Tiempo ofertado aprox: ${meses} meses`);}
-  } else {$("#acm-result").text("");}
-
-
-  //$("#acm-result").text(total > 0 ? `Estimado: USD ${formatNumber(total)}` : "");
-}
 
 function calcularTiempoOfertado(tipo, m2Terreno, m2Construccion, precioEstimado) {
   if (!Array.isArray(locations) || locations.length === 0) return null;
