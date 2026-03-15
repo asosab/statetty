@@ -418,7 +418,7 @@ function actualizarToolbox() {
     html += `<div>${i + 1}. ${s.Titulo} <span class="remove-sel" data-id="${s.uid}" style="cursor:pointer; color:red;">❌</span></div>`;
   });
 
-  if (seleccionados.length > 0) {
+  if (true) {
     $("#agency-filter").parent().prev(".section-header");
 
     $("#toolbox .section:nth-child(2) .section-body").html(`
@@ -426,12 +426,26 @@ function actualizarToolbox() {
         ✅ Seleccionados: ${seleccionados.length}
         ${html}
         <br>
-        <button id="btn-pdf-landscape" ...>📄 PDF pantalla</button>
-        <button id="btn-pdf-mobile" ...>📱 PDF móvil</button>
+        <button id="btn-pdf-landscape" disabled>📄 PDF pantalla</button>
+        <button id="btn-pdf-mobile" disabled>📱 PDF móvil</button> 
       </div>
     `);
 
     renderColumnSelector();
+
+    const chkAll = $("#pdf-show-all").prop("checked");
+    const selCount = seleccionados.length;
+    const habilitar = selCount > 0 && chkAll === true;
+
+    $("#btn-pdf-landscape").prop("disabled", !habilitar);
+    $("#btn-pdf-mobile").prop("disabled", !habilitar);
+
+    $("#pdf-show-all").off("change").on("change", function(){
+      const habilitar = seleccionados.length > 0 && this.checked;
+      $("#btn-pdf-landscape").prop("disabled", !habilitar);
+      $("#btn-pdf-mobile").prop("disabled", !habilitar);
+    });
+
 
     $("#btn-pdf-landscape").off("click").on("click", function () {
       generarBrochurePDF(seleccionados, "landscape");
@@ -440,9 +454,7 @@ function actualizarToolbox() {
     $("#btn-pdf-mobile").off("click").on("click", function () {
       generarBrochurePDF(seleccionados, "mobile");
     });
-  } else {
-    $(".section-body:has(#sel-box)").html("");
-  }
+  } 
 
   $(".remove-sel").off("click").on("click", function () {
     let id = $(this).data("id");
