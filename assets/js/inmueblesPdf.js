@@ -115,7 +115,7 @@ const camposDisponibles = [
   { key: "baños",           label: "Baños",           index: 12 },
   { key: "broker",          label: "Agencia",         index: 13 },
   { key: "agentName",       label: "Agente",          index: 14 },  
-  { key: "agentPhone",       label: "Teléfono",        index: 15 },
+  { key: "agentPhone",      label: "Teléfono",        index: 15 },
   { key: "URL",             label: "URL",             index: 16 },
   { key: "lat",             label: "Latitud",         index: 17 },
   { key: "lng",             label: "Longitud",        index: 18 },
