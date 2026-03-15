@@ -9,82 +9,61 @@
   function actualizarACM() {
     try {
 
-      if ($("#acm-container").length === 0) return;
+      if ($("#acm-container").length===0) return;
 
-      if (!seleccionados.length) {
-        $("#acm-prom-precio").text("Promedio de precios: USD 0 [0]");
+      const terrenos=seleccionados.filter(s=>detectarTipoInmueble(s)==="terreno"&&s.m2terreno>0);
+      const casas=seleccionados.filter(s=>detectarTipoInmueble(s)==="casa"&&(s.m2terreno>0||s.m2construccion>0));
+      const deptos=seleccionados.filter(s=>detectarTipoInmueble(s)==="departamento"&&s.m2construccion>0);
 
-        $("#acm-prom-m2t").html(
-          `<input type="number" step="0.01" title="Valor en dólares del metro cuadrado de terreno, también se usará para calcular valor de casas" style="max-width:12ch;"> ` +
-          `<input id="acm-ajuste-t" type="number" value="15" style="max-width:5ch;"> [-]`
-        );
-
-        $("#acm-prom-m2c-construccion").html(
-          `<input type="number" step="0.01" title="Valor en dólares del metro cuadrado de construcción para casas, se usa conjuntamente con el valor de USD/m² terrenos" style="max-width:12ch;"> ` +
-          `<input id="acm-ajuste-c" type="number" value="7" style="max-width:5ch;"> [-]`
-        );
-
-        $("#acm-prom-m2d").html(
-          `<input type="number" step="0.01" title="Valor en dólares del metro cuadrado de construcción para departamentos, tiendas o similares" style="max-width:12ch;"> ` +
-          `<input id="acm-ajuste-d" type="number" value="5" style="max-width:5ch;"> [-]`
-        );
-
-        $("#acm-rango").text("Rango de precios: -");
-        return;
-      }
-
-      const terrenos = seleccionados.filter(s => detectarTipoInmueble(s) === "terreno" && s.m2terreno > 0);
-      const casas = seleccionados.filter(s => detectarTipoInmueble(s) === "casa" && (s.m2terreno > 0 || s.m2construccion > 0));
-      const deptos = seleccionados.filter(s => detectarTipoInmueble(s) === "departamento" && s.m2construccion > 0);
-
-      const avgPrecio = calcularPromedio(seleccionados, "precio");
+      const avgPrecio=seleccionados.length?calcularPromedio(seleccionados,"precio"):0;
       $("#acm-prom-precio").text(`Promedio de precios: USD ${formatNumber(avgPrecio)} [${seleccionados.length}]`);
 
-      const valoresM2t = terrenos.filter(t => t.precio > 0 && t.m2terreno > 20 && t.m2terreno < 20000).map(t => t.precio / t.m2terreno);
-      let promM2t = mediaPonderada(valoresM2t, 15);
-      if (promM2t <= 0 && window.M2T) {const m2tManual = parseInt(window.M2T); if (!isNaN(m2tManual) && m2tManual > 0) promM2t = m2tManual;}
+      const valoresM2t=terrenos.filter(t=>t.precio>0&&t.m2terreno>20&&t.m2terreno<20000).map(t=>t.precio/t.m2terreno);
+      let promM2t=mediaPonderada(valoresM2t,15);
+      if(promM2t<=0&&window.M2T){const m2tManual=parseInt(window.M2T);if(!isNaN(m2tManual)&&m2tManual>0)promM2t=m2tManual;}
 
-      const valoresM2c = casas.map(c => {
-        if (c.m2construccion > 0 && c.precio > 0) return c.precio / c.m2construccion;
-        if (c.m2terreno > 0 && c.precio > 0) return c.precio / c.m2terreno;
+      const valoresM2c=casas.map(c=>{
+        if(c.m2construccion>0&&c.precio>0)return c.precio/c.m2construccion;
+        if(c.m2terreno>0&&c.precio>0)return c.precio/c.m2terreno;
         return null;
-      }).filter(v => v !== null);
+      }).filter(v=>v!==null);
 
-      const promM2c = mediaPonderada(valoresM2c, 15);
+      const promM2c=mediaPonderada(valoresM2c,15);
 
-      const valoresM2d = deptos.filter(d => d.precio > 0 && d.m2construccion > 0).map(d => d.precio / d.m2construccion);
-      const promM2d = mediaPonderada(valoresM2d, 15);
+      const valoresM2d=deptos.filter(d=>d.precio>0&&d.m2construccion>0).map(d=>d.precio/d.m2construccion);
+      const promM2d=mediaPonderada(valoresM2d,15);
 
-      const chkRapida = $("#acm-venta-rapida").prop("checked");
-      const ajT = parseFloat($("#acm-ajuste-t").val()) || 15;
-      const ajC = parseFloat($("#acm-ajuste-c").val()) || 7;
-      const ajD = parseFloat($("#acm-ajuste-d").val()) || 5;
+      const chkRapida=$("#acm-venta-rapida").prop("checked");
+      const ajT=parseFloat($("#acm-ajuste-t").val())||15;
+      const ajC=parseFloat($("#acm-ajuste-c").val())||7;
+      const ajD=parseFloat($("#acm-ajuste-d").val())||5;
 
-      const valT = chkRapida ? promM2t * (1 - ajT / 100) : promM2t;
-      const valC = chkRapida ? promM2c * (1 - ajC / 100) : promM2c;
-      const valD = chkRapida ? promM2d * (1 - ajD / 100) : promM2d;
+      const valT=chkRapida?promM2t*(1-ajT/100):promM2t;
+      const valC=chkRapida?promM2c*(1-ajC/100):promM2c;
+      const valD=chkRapida?promM2d*(1-ajD/100):promM2d;
 
       $("#acm-prom-m2t").html(
-        `<input type="number" step="0.01" value="${valT > 0 ? valT.toFixed(2) : ""}" title="Valor en dólares del metro cuadrado de terreno, también se usará para calcular valor de casas" style="max-width:12ch;"> ` +
-        `<input id="acm-ajuste-t" type="number" value="${ajT}" style="max-width:5ch;"> ` +
-        `[${valoresM2t.length || "-"}]`
+        `<input type="number" step="0.01" value="${valT>0?valT.toFixed(2):""}" title="Valor en dólares del metro cuadrado de terreno, también se usará para calcular valor de casas" style="max-width:12ch;"> `+
+        `<input id="acm-ajuste-t" type="number" value="${ajT}" style="max-width:5ch;">`
       );
 
       $("#acm-prom-m2c-construccion").html(
-        `<input type="number" step="0.01" value="${valC > 0 ? valC.toFixed(2) : ""}" title="Valor en dólares del metro cuadrado de construcción para casas, se usa conjuntamente con el valor de USD/m² terrenos" style="max-width:12ch;"> ` +
-        `<input id="acm-ajuste-c" type="number" value="${ajC}" style="max-width:5ch;"> ` +
-        `[${valoresM2c.length || "-"}]`
+        `<input type="number" step="0.01" value="${valC>0?valC.toFixed(2):""}" title="Valor en dólares del metro cuadrado de construcción para casas, se usa conjuntamente con el valor de USD/m² terrenos" style="max-width:12ch;"> `+
+        `<input id="acm-ajuste-c" type="number" value="${ajC}" style="max-width:5ch;">`
       );
 
       $("#acm-prom-m2d").html(
-        `<input type="number" step="0.01" value="${valD > 0 ? valD.toFixed(2) : ""}" title="Valor en dólares del metro cuadrado de construcción para departamentos, tiendas o similares" style="max-width:12ch;"> ` +
-        `<input id="acm-ajuste-d" type="number" value="${ajD}" style="max-width:5ch;"> ` +
-        `[${valoresM2d.length || "-"}]`
+        `<input type="number" step="0.01" value="${valD>0?valD.toFixed(2):""}" title="Valor en dólares del metro cuadrado de construcción para departamentos, tiendas o similares" style="max-width:12ch;"> `+
+        `<input id="acm-ajuste-d" type="number" value="${ajD}" style="max-width:5ch;">`
       );
 
-      const precios = seleccionados.map(s => s.precio || 0).filter(p => p > 0);
-      if (precios.length > 0) {
-        const min = Math.min(...precios), max = Math.max(...precios);
+      $("#acm-count-t").text(terrenos.length?`[${terrenos.length}]`:"[-]");
+      $("#acm-count-c").text(casas.length?`[${casas.length}]`:"[-]");
+      $("#acm-count-d").text(deptos.length?`[${deptos.length}]`:"[-]");
+
+      const precios=seleccionados.map(s=>s.precio||0).filter(p=>p>0);
+      if(precios.length>0){
+        const min=Math.min(...precios),max=Math.max(...precios);
         $("#acm-rango").text(`Rango de precios: USD ${formatNumber(min)} - USD ${formatNumber(max)}`);
       } else {$("#acm-rango").text("Rango de precios: -");}
 
@@ -92,6 +71,7 @@
 
     } catch (e) {console.log("Error actualizarACM:", e);}
   }
+
 
 function guardarEstadoACM() {
   const estado = {
