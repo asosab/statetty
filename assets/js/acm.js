@@ -247,7 +247,7 @@ function detectarTipoInmueble(loc) {
   function renderACMInputs() {
     try {
 
-      const html = `
+      const html=`
         <div id="acm-promedios">
 
           <div id="acm-rango">Rango de precios: -</div>
@@ -299,15 +299,13 @@ function detectarTipoInmueble(loc) {
 
           <div style="margin-top:6px;">
             <span id="acm-estimado">Estimado: -</span>
-            <span id="acm-tiempo-ofertado" style="margin-left:10px;"></span>
+            <span id="acm-tiempo-ofertado"> | Tiempo ofertado aprox: -</span>
           </div>
 
         </div>
       `;
 
       $("#acm-container").html(html);
-
-      $("#acm-container").on("input", "#acm-ajuste-t,#acm-ajuste-c,#acm-ajuste-d", function(){actualizarACM();});
 
     } catch (e) {console.log("Error renderACMInputs:", e);}
   }
@@ -318,37 +316,36 @@ function detectarTipoInmueble(loc) {
   function calcularEstimado() {
     try {
 
-      const tipo = $("#acm-tipo").val();
-      if (!tipo) return;
+      const tipo=$("#acm-tipo").val(); if(!tipo)return;
 
-      const m2t = parseFloat($("#acm-m2t").val()) || 0;
-      const m2c = parseFloat($("#acm-m2c").val()) || 0;
+      const m2t=parseFloat($("#acm-m2t").val())||0;
+      const m2c=parseFloat($("#acm-m2c").val())||0;
 
-      const vT = parseFloat($("#acm-prom-m2t input[type='number']").first().val()) || 0;
-      const vC = parseFloat($("#acm-prom-m2c-construccion input[type='number']").first().val()) || 0;
-      const vD = parseFloat($("#acm-prom-m2d input[type='number']").first().val()) || 0;
+      const vT=parseFloat($("#acm-prom-m2t input[type='number']").first().val())||0;
+      const vC=parseFloat($("#acm-prom-m2c-construccion input[type='number']").first().val())||0;
+      const vD=parseFloat($("#acm-prom-m2d input[type='number']").first().val())||0;
 
-      let estimado = 0;
+      let estimado=0;
 
-      if (tipo === "terreno") {
-        if (m2t > 0 && vT > 0) estimado = m2t * vT;
-      } else if (tipo === "casa") {
-        if (m2t > 0 && vT > 0) estimado += m2t * vT;
-        if (m2c > 0 && vC > 0) estimado += m2c * vC;
-      } else if (tipo === "departamento") {
-        if (m2c > 0 && vD > 0) estimado = m2c * vD;
-      }
+      if(tipo==="terreno"){if(m2t>0&&vT>0)estimado=m2t*vT;}
+      else if(tipo==="casa"){if(m2t>0&&vT>0)estimado+=m2t*vT;if(m2c>0&&vC>0)estimado+=m2c*vC;}
+      else if(tipo==="departamento"){if(m2c>0&&vD>0)estimado=m2c*vD;}
 
-      if (estimado > 0) {
+      if(estimado>0){
         $("#acm-estimado").text(`Estimado: USD ${formatNumber(estimado)}`);
+        if(typeof calcularTiempoOfertado==="function"){
+          const meses=calcularTiempoOfertado(tipo,m2t,m2c,estimado);
+          if(meses&&meses>0){$("#acm-tiempo-ofertado").text(` | Tiempo ofertado aprox: ${meses} meses`);}
+          else{$("#acm-tiempo-ofertado").text("");}
+        }
       } else {
         $("#acm-estimado").text("Estimado: -");
+        $("#acm-tiempo-ofertado").text("");
       }
-
-      if (typeof calcularTiempoOfertado === "function") calcularTiempoOfertado(tipo, m2t, m2c, estimado);
 
     } catch (e) {console.log("Error calcularEstimado:", e);}
   }
+
 
 function calcularTiempoOfertado(tipo, m2Terreno, m2Construccion, precioEstimado) {
   if (!Array.isArray(locations) || locations.length === 0) return null;
