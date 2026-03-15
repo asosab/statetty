@@ -133,7 +133,29 @@ function renderColumnSelector() {
   const container = document.createElement("div");
   container.id = "column-selector";
   container.style.marginTop = "10px";
-  container.innerHTML = "<b>Selecciona campos a incluir:</b><br>";
+  const totalInmuebles = Array.isArray(locations) ? locations.length : 0;
+
+  container.innerHTML = `
+    <div style="margin-bottom:8px;">
+      <b>Mostrar en PDF: (en desarrollo)</b><br>
+      <label>
+        <input type="checkbox" id="pdf-show-all">
+        Mostrar todos (${totalInmuebles})
+      </label>
+      <br>
+      <label>
+        Título
+        <input type="text" id="pdf-title" value="Comparativa de Inmuebles" style="margin-left:6px;">
+      </label>
+      <br>
+      <label>
+        <input type="checkbox" id="pdf-include-acm">
+        Incluir resultado del ACM
+      </label>
+    </div>
+
+    <b>Selecciona campos a incluir:</b><br>
+  `;
 
   const grid = document.createElement("div");
   grid.style.display = "grid";
