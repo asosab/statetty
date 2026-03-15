@@ -217,12 +217,26 @@ function detectarTipoInmueble(loc) {
 
       $('#acm-container').on('input', '#acm-prom-m2t input,#acm-prom-m2c-construccion input,#acm-prom-m2d input', function(){calcularEstimado();});
       $('#acm-container').on('input', '#acm-m2t,#acm-m2c', function(){calcularEstimado();});
-      $('#acm-container').on('change', '#acm-tipo', function(){calcularEstimado();});
+
+
+      $('#acm-container').on('change', '#acm-tipo', function(){
+        const tipo=$(this).val();
+        if(tipo==="terreno"){$("#acm-m2c-wrap").hide();$("#acm-m2t-wrap").show();}
+        else if(tipo==="departamento"){$("#acm-m2t-wrap").hide();$("#acm-m2c-wrap").show();}
+        else{$("#acm-m2t-wrap").show();$("#acm-m2c-wrap").show();}
+        calcularEstimado();
+      });
+
 
       $('#acm-container').on('change', '#acm-venta-rapida', function(){actualizarACM();});
       $('#acm-container').on('input', '#acm-ajuste-t,#acm-ajuste-c,#acm-ajuste-d', function(){actualizarACM();});
 
       actualizarACM();
+
+      const tipo=$("#acm-tipo").val();
+      if(tipo==="terreno"){$("#acm-m2c-wrap").hide();$("#acm-m2t-wrap").show();}
+      else if(tipo==="departamento"){$("#acm-m2t-wrap").hide();$("#acm-m2c-wrap").show();}
+      else{$("#acm-m2t-wrap").show();$("#acm-m2c-wrap").show();}
 
     } catch (e) {console.log("Error initACMTools:", e);}
   }

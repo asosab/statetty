@@ -137,7 +137,7 @@ function renderColumnSelector() {
 
   container.innerHTML = `
     <div style="margin-bottom:8px;">
-      <b>Mostrar en PDF: (en desarrollo)</b><br>
+      <b>Mostrar en PDF:</b><br>
       <label><input type="checkbox" id="pdf-show-all">Mostrar todos (${totalInmuebles})</label>
       <br>
       <label> Título <input type="text" id="pdf-title" value="Comparativa de Inmuebles" style="margin-left:6px;"></label>
