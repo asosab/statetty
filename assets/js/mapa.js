@@ -423,7 +423,7 @@ function actualizarToolbox() {
 
     $("#toolbox .section:nth-child(2) .section-body").html(`
       <div id="sel-box">
-        ✅ Seleccionados: ${seleccionados.length}
+        <b>Seleccionados: ${seleccionados.length}</b>
         ${html}
         <br>
         <button id="btn-pdf-landscape" disabled>📄 PDF pantalla</button>
@@ -446,14 +446,18 @@ function actualizarToolbox() {
       $("#btn-pdf-mobile").prop("disabled", !habilitar);
     });
 
-
     $("#btn-pdf-landscape").off("click").on("click", function () {
-      generarBrochurePDF(seleccionados, "landscape");
+      const showAll = $("#pdf-show-all").prop("checked");
+      const data = showAll ? locations : seleccionados;
+      generarBrochurePDF(data, "landscape", seleccionados);
     });
 
     $("#btn-pdf-mobile").off("click").on("click", function () {
-      generarBrochurePDF(seleccionados, "mobile");
+      const showAll = $("#pdf-show-all").prop("checked");
+      const data = showAll ? locations : seleccionados;
+      generarBrochurePDF(data, "mobile", seleccionados);
     });
+
   } 
 
   $(".remove-sel").off("click").on("click", function () {

@@ -253,13 +253,17 @@ async function generarMapaInmuebles(inmuebles, vertical = false) {
 // ---------------------------------------------
 // Generar PDF (modo = "landscape" | "mobile")
 // ---------------------------------------------
-async function generarBrochurePDF(seleccionados, modo = "landscape") {
-  if (!seleccionados || seleccionados.length === 0) {
-    alert("No hay inmuebles seleccionados para generar el PDF.");
+async function generarBrochurePDF(inmuebles, modo = "landscape", seleccionados = []) {
+
+  if (!inmuebles || inmuebles.length === 0) {
+    alert("No hay inmuebles para generar el PDF.");
     return;
   }
 
   try {
+
+    const selectedSet = new Set((seleccionados || []).map(s => s.id || s.uid || s.URL));
+
     showLoader();
     await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js");
     await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js");
@@ -269,25 +273,22 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
     const doc = new jsPDF(modo === "mobile" ? "p" : "l", "mm", "a4");
     const pageWidth = doc.internal.pageSize.getWidth();
 
-    // Título y fecha
     doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
     doc.text("Comparativa de Inmuebles", pageWidth / 2, 15, { align: "center" });
-    const fechaHoy = new Date().toLocaleDateString("es-ES", { year: "numeric", month: "long", day: "numeric" });
-    doc.setFont("helvetica", "normal"); doc.setFontSize(11);
-    doc.text(fechaHoy, 15, 22);
 
-    // Ordenar inmuebles por precio
-    seleccionados.sort((a, b) => (parseFloat(a.precio) || 0) - (parseFloat(b.precio) || 0));
+    const fechaHoy = new Date().toLocaleDateString("es-ES",{year:"numeric",month:"long",day:"numeric"});
+    doc.setFont("helvetica","normal");
+    doc.setFontSize(11);
+    doc.text(fechaHoy,15,22);
 
-    // 🔹 Precargar imágenes con caché seguro
-    for (let s of seleccionados) {
+    inmuebles.sort((a,b)=>(parseFloat(a.precio)||0)-(parseFloat(b.precio)||0));
+
+    for (let s of inmuebles) {
       if (s.foto) {
         try {
           const cacheKey = "fotoCache_" + s.foto;
           window.__fotoCache = window.__fotoCache || {};
-
-          // buscar en localStorage o memoria
           let cached = localStorage.getItem(cacheKey) || window.__fotoCache[cacheKey];
 
           if (cached) {
@@ -295,190 +296,199 @@ async function generarBrochurePDF(seleccionados, modo = "landscape") {
           } else {
             const base64 = await urlToBase64(s.foto);
 
-            // medir dimensiones
-            const dims = await new Promise(resolve => {
-              const img = new Image();
-              img.onload = () => resolve({ w: img.width, h: img.height });
-              img.onerror = () => resolve({ w: null, h: null });
-              img.src = base64;
+            const dims = await new Promise(resolve=>{
+              const img=new Image();
+              img.onload=()=>resolve({w:img.width,h:img.height});
+              img.onerror=()=>resolve({w:null,h:null});
+              img.src=base64;
             });
 
             if (dims.w && dims.h) {
-              s.fotoBase64Cropped = await cropToSquare(base64, dims.w, dims.h);
-
-              // intentar guardar en localStorage con limpieza automática
+              s.fotoBase64Cropped = await cropToSquare(base64,dims.w,dims.h);
               try {
-                localStorage.setItem(cacheKey, s.fotoBase64Cropped);
-                localStorage.setItem(cacheKey + "_ts", Date.now().toString());
-                limpiarFotoCache(50); // conservar solo 50 últimas
-              } catch (e) {
-                if (e.name === "QuotaExceededError" || e.code === 22) {
-                  console.warn("⚠️ localStorage lleno, usando caché en memoria para", s.foto);
-                  window.__fotoCache[cacheKey] = s.fotoBase64Cropped;
-                } else {
-                  console.error("Error guardando foto en cache", e);
-                }
+                localStorage.setItem(cacheKey,s.fotoBase64Cropped);
+                localStorage.setItem(cacheKey+"_ts",Date.now().toString());
+                limpiarFotoCache(50);
+              } catch(e) {
+                window.__fotoCache[cacheKey]=s.fotoBase64Cropped;
               }
             }
           }
-        } catch (e) {
-          console.error("Error precargando foto", e);
-          s.fotoBase64Cropped = null;
+
+        } catch(e) {
+          console.error("Error precargando foto",e);
+          s.fotoBase64Cropped=null;
         }
       }
     }
 
-    // Generar mapa
-    const mapaImg = await generarMapaInmuebles(seleccionados, modo === "mobile");
+    const mapaImg = await generarMapaInmuebles(inmuebles, modo==="mobile");
 
-    // Campos seleccionados
-    let seleccionadas = camposDisponibles.filter(c => {
-      const chk = document.getElementById("chk-" + c.key);
+    let seleccionadas = camposDisponibles.filter(c=>{
+      const chk=document.getElementById("chk-"+c.key);
       return chk && chk.checked;
     });
-    if (seleccionadas.length === 0) {
+
+    if (seleccionadas.length===0) {
       alert("Debes seleccionar al menos un campo.");
-      hideLoader(); return;
+      hideLoader();
+      return;
     }
-    seleccionadas.sort((a, b) => a.index - b.index);
 
-    // Helper para dibujar imágenes cuadradas de 3 cm (≈30 mm)
-    function drawImageFromRaw(raw, cell, doc) {
+    seleccionadas.sort((a,b)=>a.index-b.index);
+
+    function drawImageFromRaw(raw,cell,doc){
       const base64 = raw.fotoBase64Cropped;
-      if (!base64) return;
-      const side = 30; // mm
-      const x = cell.x + (cell.width - side) / 2;
-      const y = cell.y + (cell.height - side) / 2;
-      doc.addImage(base64, "JPEG", x, y, side, side);
+      if(!base64) return;
+      const side=30;
+      const x=cell.x+(cell.width-side)/2;
+      const y=cell.y+(cell.height-side)/2;
+      doc.addImage(base64,"JPEG",x,y,side,side);
     }
 
-    // ---------------------------------------------
-    // Landscape (tabla en segunda página)
-    // ---------------------------------------------
-    if (modo === "landscape") {
-      const camposLimitados = seleccionadas.slice(0, 7);
-      const headers = ["#", ...camposLimitados.map(c => c.label)];
+    if (modo==="landscape") {
 
-      // Armar filas
-      const rows = seleccionados.map((s, i) => {
-        const fila = [`${i + 1}`];
-        camposLimitados.forEach(campo => {
-          if (campo.key === "des") fila.push(s.des || "-");
-          else if (campo.key === "foto") fila.push(s.fotoBase64Cropped ? { content: "", ...s } : "-");
+      const camposLimitados = seleccionadas.slice(0,7);
+      const headers=["#",...camposLimitados.map(c=>c.label)];
+
+      const rows = inmuebles.map((s,i)=>{
+
+        const isSelected = selectedSet.has(s.id || s.uid || s.URL);
+
+        const fila=[`${i+1}`];
+
+        camposLimitados.forEach(campo=>{
+          if(campo.key==="des") fila.push(s.des||"-");
+          else if(campo.key==="foto") fila.push(s.fotoBase64Cropped ? {content:"",...s} : "-");
           else fila.push(
             ["precio","precio_m2","precioDelM2","precioM2","precioM2C","precioM2T"].includes(campo.key)
-              ? formatCurrency(s[campo.key])
-              : (s[campo.key] || "-")
+            ? formatCurrency(s[campo.key])
+            : (s[campo.key]||"-")
           );
         });
+
+        fila.__selected = isSelected;
         return fila;
+
       });
 
-      // Insertar mapa en la primera página
-      if (mapaImg) {
-        doc.addImage(mapaImg.data, "PNG", 15, 28, 260, 160);
-        doc.addPage(); // 👉 tabla arranca en la segunda página
+      if(mapaImg){
+        doc.addImage(mapaImg.data,"PNG",15,28,260,160);
+        doc.addPage();
       }
 
-      // Dividir filas en bloques de 4
-      const chunkSize = 5;
-      for (let i = 0; i < rows.length; i += chunkSize) {
-        const chunk = rows.slice(i, i + chunkSize);
+      const chunkSize=5;
+
+      for(let i=0;i<rows.length;i+=chunkSize){
+
+        const chunk=rows.slice(i,i+chunkSize);
 
         doc.autoTable({
-          head: [headers],
-          body: chunk,
-          startY: 10,
-          margin: { bottom: 15 },
-          styles: { fontSize: 9, cellPadding: 3, valign: "top" },
-          columnStyles: {
-            0: { cellWidth: 12 },   // índice
-            1: { cellWidth: 30 }    // fotos fijo 30mm
-          },
-          headStyles: { fillColor: [76, 175, 80], textColor: 255, halign: "center" },
-          theme: "grid",
-          didParseCell: function (data) {
-            if (data.cell.raw && data.cell.raw.fotoBase64Cropped) {
-              data.cell.styles.minCellHeight = 32;
+
+          head:[headers],
+          body:chunk,
+          startY:10,
+          margin:{bottom:15},
+          styles:{fontSize:9,cellPadding:3,valign:"top"},
+          columnStyles:{0:{cellWidth:12},1:{cellWidth:30}},
+          headStyles:{fillColor:[76,175,80],textColor:255,halign:"center"},
+          theme:"grid",
+
+          didParseCell:function(data){
+            if(data.row.raw && data.row.raw.__selected){
+              data.cell.styles.lineColor=[0,180,0];
+              data.cell.styles.lineWidth=0.6;
+            }
+            if(data.cell.raw && data.cell.raw.fotoBase64Cropped){
+              data.cell.styles.minCellHeight=32;
             }
           },
-          didDrawCell: function (data) {
-            if (data.cell.raw && data.cell.raw.fotoBase64Cropped) {
-              drawImageFromRaw(data.cell.raw, data.cell, doc);
+
+          didDrawCell:function(data){
+            if(data.cell.raw && data.cell.raw.fotoBase64Cropped){
+              drawImageFromRaw(data.cell.raw,data.cell,doc);
             }
           }
+
         });
 
-        if (i + chunkSize < rows.length) doc.addPage();
+        if(i+chunkSize<rows.length) doc.addPage();
+
       }
+
     }
 
-    // ---------------------------------------------
-    // Mobile (máx. 5 inmuebles, con ajustes)
-    // ---------------------------------------------
-    if (modo === "mobile") {
-      const inmueblesLimitados = seleccionados.slice(0, 5);
-      const headers = ["Campo", ...inmueblesLimitados.map((s, i) => `#${i + 1}`)];
-      const rows = seleccionadas.map(campo => {
-        const fila = [campo.label];
-        inmueblesLimitados.forEach(s => {
-          if (campo.key === "des") fila.push(s.des || "-");
-          else if (campo.key === "foto") fila.push(s.fotoBase64Cropped ? { content: "", ...s } : "-");
+    if(modo==="mobile"){
+
+      const inmueblesLimitados=inmuebles.slice(0,5);
+      const headers=["Campo",...inmueblesLimitados.map((s,i)=>`#${i+1}`)];
+
+      const rows = seleccionadas.map(campo=>{
+
+        const fila=[campo.label];
+
+        inmueblesLimitados.forEach(s=>{
+          if(campo.key==="des") fila.push(s.des||"-");
+          else if(campo.key==="foto") fila.push(s.fotoBase64Cropped ? {content:"",...s} : "-");
           else fila.push(
             ["precio","precio_m2","precioDelM2","precioM2","precioM2C","precioM2T"].includes(campo.key)
-              ? formatCurrency(s[campo.key])
-              : (s[campo.key] || "-")
+            ? formatCurrency(s[campo.key])
+            : (s[campo.key]||"-")
           );
         });
+
         return fila;
+
       });
 
-      const colAnchoFoto = 30;
-      const tableWidth = doc.internal.pageSize.getWidth() - 10; // margen lateral
-      let anchoCampo = tableWidth - (inmueblesLimitados.length * colAnchoFoto);
-      anchoCampo = anchoCampo * 0.75; // reducir la primera columna
+      const colAnchoFoto=30;
+      const tableWidth=doc.internal.pageSize.getWidth()-10;
+      let anchoCampo=tableWidth-(inmueblesLimitados.length*colAnchoFoto);
+      anchoCampo=anchoCampo*0.75;
 
-      if (mapaImg) doc.addImage(mapaImg.data, "PNG", 14, 30, 190, 80);
+      if(mapaImg) doc.addImage(mapaImg.data,"PNG",14,30,190,80);
 
       doc.autoTable({
-        head: [headers],
-        body: rows,
-        startY: mapaImg ? 115 : 30,
-        styles: { fontSize: 9, cellPadding: 3, valign: "top" },
-        headStyles: { fillColor: [76, 175, 80], textColor: 255, halign: "center" },
-        theme: "grid",
-        columnStyles: Object.assign(
-          { 0: { cellWidth: anchoCampo } },
-          Object.fromEntries(inmueblesLimitados.map((_, i) => [i + 1, { cellWidth: colAnchoFoto }]))
+
+        head:[headers],
+        body:rows,
+        startY:mapaImg?115:30,
+        styles:{fontSize:9,cellPadding:3,valign:"top"},
+        headStyles:{fillColor:[76,175,80],textColor:255,halign:"center"},
+        theme:"grid",
+
+        columnStyles:Object.assign(
+          {0:{cellWidth:anchoCampo}},
+          Object.fromEntries(inmueblesLimitados.map((_,i)=>[i+1,{cellWidth:colAnchoFoto}]))
         ),
-        didParseCell: function (data) {
-          if (data.cell.raw && data.cell.raw.fotoBase64Cropped) {
-            data.cell.styles.minCellHeight = 32;
+
+        didParseCell:function(data){
+          if(data.cell.raw && data.cell.raw.fotoBase64Cropped){
+            data.cell.styles.minCellHeight=32;
           }
         },
-        didDrawCell: function (data) {
-          if (data.cell.raw && data.cell.raw.fotoBase64Cropped) {
-            drawImageFromRaw(data.cell.raw, data.cell, doc);
+
+        didDrawCell:function(data){
+          if(data.cell.raw && data.cell.raw.fotoBase64Cropped){
+            drawImageFromRaw(data.cell.raw,data.cell,doc);
           }
         }
-      });
-    }
 
-    // Pie
-    let footerText = "";
-    if (typeof na !== "undefined" && na) footerText += na;
-    if (typeof ag !== "undefined" && ag) footerText += " | " + ag;
-    if (typeof an !== "undefined" && an) footerText += " | " + an;
-    if (footerText) {
-      doc.setFontSize(9); doc.setFont("helvetica", "normal");
-      doc.text(footerText, 15, doc.internal.pageSize.getHeight() - 10);
+      });
+
     }
 
     doc.save("brochure-inmuebles.pdf");
-  } catch (err) {
-    alert("Hubo un error al generar el PDF: " + (err && err.message ? err.message : err));
+
+  } catch(err) {
+
+    alert("Hubo un error al generar el PDF: "+(err && err.message ? err.message : err));
+
   } finally {
+
     hideLoader();
+
   }
+
 }
 
