@@ -589,6 +589,7 @@ async function generarBrochurePDF(inmuebles, modo = "landscape", seleccionados =
     const params = new URLSearchParams(window.location.search);
     const na = params.get("na") || null;
     const an = params.get("an") || null;
+    const ag = params.get("ag") || null;
 
     const inmuebleACM = {
 
@@ -610,6 +611,7 @@ async function generarBrochurePDF(inmuebles, modo = "landscape", seleccionados =
 
       agentName: na,
       agentPhone: an,
+      broker:     ag,
 
       des: "Inmueble estimado mediante Análisis Comparativo de Mercado (ACM).",
 
