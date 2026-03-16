@@ -127,6 +127,20 @@ const camposDisponibles = [
   { key: "anoc",            label: "Año de construc.",index: 24 },
 ];
 
+/** ------------------------------------------------------------------------------------------- initPDFACMImageToggle
+ * Muestra u oculta el input de imagen ACM según el checkbox
+ */
+  function initPDFACMImageToggle() {
+    try {
+
+      $(document).on("change","#pdf-include-acm",function(){
+        if($(this).prop("checked")){$("#pdf-acm-img-wrap").show();}
+        else{$("#pdf-acm-img-wrap").hide();}
+      });
+
+    } catch (e) {console.log("Error initPDFACMImageToggle:", e);}
+  }
+
 function renderColumnSelector() {
   if (document.getElementById("column-selector")) return;
 
@@ -143,6 +157,11 @@ function renderColumnSelector() {
       <label> Título <input type="text" id="pdf-title" value="Comparativa de Inmuebles" style="margin-left:6px;"></label>
       <br>
       <label> <input type="checkbox" id="pdf-include-acm">Incluir resultado del ACM</label>
+    </div>
+
+    <div id="pdf-acm-img-wrap" style="display:none;margin-top:4px;">
+      Link imagen para inmueble ACM:
+      <input type="text" id="pdf-acm-img" style="max-width:40ch;">
     </div>
 
     <b>Selecciona campos a incluir:</b><br>
@@ -493,3 +512,6 @@ async function generarBrochurePDF(inmuebles, modo = "landscape", seleccionados =
 
 }
 
+$(document).ready(function(){
+  initPDFACMImageToggle();
+});
