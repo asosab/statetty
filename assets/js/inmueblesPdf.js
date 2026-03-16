@@ -314,7 +314,7 @@ async function generarBrochurePDF(inmuebles, modo = "landscape", seleccionados =
     const titulo=$("#pdf-title").val()||"Comparativa de Inmuebles";
     doc.text(titulo, pageWidth/2, 15, {align:"center"});
 
-    console.table(inmuebles);
+    //console.table(inmuebles);
 
     const fechaHoy = new Date().toLocaleDateString("es-ES",{year:"numeric",month:"long",day:"numeric"});
     doc.setFont("helvetica","normal");
