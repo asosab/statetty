@@ -291,10 +291,10 @@ async function generarMapaInmuebles(inmuebles, vertical = false) {
 // ---------------------------------------------
 async function generarBrochurePDF(inmuebles, modo = "landscape", seleccionados = []) {
 
-  if (!inmuebles || inmuebles.length === 0) {
-    alert("No hay inmuebles para generar el PDF.");
-    return;
-  }
+  if (!inmuebles || inmuebles.length === 0) {alert("No hay inmuebles para generar el PDF.");return;}
+
+  // insertar inmueble generado desde ACM si corresponde
+  if (typeof insertarInmuebleACM === "function") { inmuebles = insertarInmuebleACM(inmuebles);}
 
   try {
 
@@ -528,6 +528,72 @@ async function generarBrochurePDF(inmuebles, modo = "landscape", seleccionados =
   }
 
 }
+
+/** --------------------------------------------------------------------------------------------- insertarInmuebleACM
+ * Crea e inserta el inmueble generado desde ACM para el PDF
+ */
+  function insertarInmuebleACM(inmuebles) {try {
+    if (!$("#pdf-include-acm").prop("checked")) return inmuebles;
+    const estimadoTxt = $("#acm-estimado").text().trim();
+    if (!estimadoTxt) return inmuebles;
+    // extraer número limpio
+    const precio = parseFloat(estimadoTxt.replace(/[^\d.,]/g,"").replace(/\./g,"").replace(",","."));
+    if (!precio || isNaN(precio)) return inmuebles;
+
+    // evitar duplicado si ya existe
+    if (inmuebles.some(i => i && i.__acm)) return inmuebles;
+
+    // validar imagen
+    let img = ($("#pdf-acm-img").val() || "").trim();
+    const imgValida = /^https?:\/\/.+\.(jpg|jpeg|png|webp|gif)(\?.*)?$/i.test(img);
+
+    const foto = imgValida
+      ? img
+      : "https://statetty.com/assets/images/ui/tuinmueble.jpg";
+
+    const m2c = parseFloat($("#acm-m2c").val()) || null;
+    const m2t = parseFloat($("#acm-m2t").val()) || null;
+
+    const precioM2C = (precio && m2c) ? precio / m2c : null;
+    const precioM2T = (precio && m2t) ? precio / m2t : null;
+
+    const tipo = $("#acm-tipo").val() || null;
+
+    // datos de agente desde URL
+    const params = new URLSearchParams(window.location.search);
+    const na = params.get("na") || null;
+    const an = params.get("an") || null;
+
+    const inmuebleACM = {
+
+      __acm: true, // marca interna para evitar duplicados
+
+      titulo: `Inmueble analizado por USD${formatNumber(precio)},00`,
+      foto: foto,
+      nombre: "Inmueble analizado",
+
+      precio: precio,
+      m2construccion: m2c,
+      m2terreno: m2t,
+
+      precioM2C: precioM2C,
+      precioM2T: precioM2T,
+
+      agentName: na,
+      agentPhone: an,
+
+      tipoInmueble: tipo
+
+    };
+
+    const nuevaLista = [...inmuebles, inmuebleACM];
+
+    // ordenar por precio ascendente
+    nuevaLista.sort((a,b)=>(parseFloat(a.precio)||0)-(parseFloat(b.precio)||0));
+    return nuevaLista;
+  } catch (e) {console.log("Error insertarInmuebleACM:", e);return inmuebles;}}
+
+
 
 $(document).ready(function(){
   initPDFACMImageToggle();
