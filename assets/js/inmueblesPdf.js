@@ -538,6 +538,7 @@ async function generarBrochurePDF(inmuebles, modo = "landscape", seleccionados =
     if (!$("#pdf-include-acm").prop("checked")) return inmuebles;
     const estimadoTxt = $("#acm-estimado").text().trim();
     if (!estimadoTxt) return inmuebles;
+
     // extraer número limpio
     const precio = parseFloat(estimadoTxt.replace(/[^\d.,]/g,"").replace(/\./g,"").replace(",","."));
     if (!precio || isNaN(precio)) return inmuebles;
@@ -570,7 +571,7 @@ async function generarBrochurePDF(inmuebles, modo = "landscape", seleccionados =
 
       __acm: true, // marca interna para evitar duplicados
 
-      titulo: `Inmueble analizado por USD${formatNumber(precio)},00`,
+      Titulo: `Inmueble analizado por USD${formatNumber(precio)},00`,
       foto: foto,
       nombre: "Inmueble analizado",
 
@@ -581,10 +582,17 @@ async function generarBrochurePDF(inmuebles, modo = "landscape", seleccionados =
       precioM2C: precioM2C,
       precioM2T: precioM2T,
 
+      tipoInmueble: tipo,
+      tipoNegocio: "Venta",
+
       agentName: na,
       agentPhone: an,
 
-      tipoInmueble: tipo
+      des: "Inmueble estimado mediante Análisis Comparativo de Mercado (ACM).",
+
+      uid: "ACM_" + Date.now(),
+      fechaIngreso: new Date().toISOString(),
+      tiempoOfertado: 0
 
     };
 
@@ -592,9 +600,10 @@ async function generarBrochurePDF(inmuebles, modo = "landscape", seleccionados =
 
     // ordenar por precio ascendente
     nuevaLista.sort((a,b)=>(parseFloat(a.precio)||0)-(parseFloat(b.precio)||0));
-    return nuevaLista;
-  } catch (e) {console.log("Error insertarInmuebleACM:", e);return inmuebles;}}
 
+    return nuevaLista;
+
+  } catch (e) {console.log("Error insertarInmuebleACM:", e);return inmuebles;}}
 
 
 $(document).ready(function(){
