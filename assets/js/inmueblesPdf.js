@@ -275,7 +275,8 @@ async function generarBrochurePDF(inmuebles, modo = "landscape", seleccionados =
 
     doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
-    doc.text("Comparativa de Inmuebles", pageWidth / 2, 15, { align: "center" });
+    const titulo=$("#pdf-title").val()||"Comparativa de Inmuebles";
+    doc.text(titulo, pageWidth/2, 15, {align:"center"});
 
     const fechaHoy = new Date().toLocaleDateString("es-ES",{year:"numeric",month:"long",day:"numeric"});
     doc.setFont("helvetica","normal");
