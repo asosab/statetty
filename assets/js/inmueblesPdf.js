@@ -168,7 +168,7 @@ function renderColumnSelector() {
       <b>Mostrar en PDF:</b><br>
       <label><input type="checkbox" id="pdf-show-all">Mostrar todos (${totalInmuebles})</label>
       <br>
-      <label> Título <input type="text" id="pdf-title" value="Comparativa de Inmuebles" style="margin-left:6px;"></label>
+      <label> Título <input type="text" id="pdf-title" value="Análisis comparativo de mercado" style="margin-left:6px;"></label>
       <br>
       <div id="pdf-acm-option" style="display:none;">
         <label><input type="checkbox" id="pdf-include-acm"> Incluir resultado del ACM</label>
@@ -311,7 +311,7 @@ async function generarBrochurePDF(inmuebles, modo = "landscape", seleccionados =
 
     doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
-    const titulo=$("#pdf-title").val()||"Comparativa de Inmuebles";
+    const titulo=$("#pdf-title").val()||"Análisis comparativo de mercado";
     doc.text(titulo, pageWidth/2, 15, {align:"center"});
 
     //console.table(inmuebles);
@@ -594,10 +594,6 @@ async function generarBrochurePDF(inmuebles, modo = "landscape", seleccionados =
 
       __acm: true, // marca interna para evitar duplicados
 
-      Titulo: `Inmueble analizado por USD${formatNumber(precio)},00`,
-      foto: foto,
-      nombre: "Inmueble analizado",
-
       precio: precio,
       m2construccion: m2c,
       m2terreno: m2t,
@@ -606,7 +602,11 @@ async function generarBrochurePDF(inmuebles, modo = "landscape", seleccionados =
       precioM2T: precioM2T,
 
       tipoInmueble: tipo,
-      tipoNegocio: "Venta",
+      tipoNegocio: (precio >= 10000 ? "Venta" : "Alquiler"),
+
+      Titulo: `Inmueble analizado por USD${formatNumber(precio)},00`,
+      foto: foto,
+      nombre: "Inmueble analizado",
 
       agentName: na,
       agentPhone: an,
