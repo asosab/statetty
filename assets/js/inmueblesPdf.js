@@ -407,6 +407,7 @@ async function generarBrochurePDF(inmuebles, modo = "landscape", seleccionados =
         });
 
         fila.__selected = isSelected;
+        fila.__acm = s.__acm===true;
         return fila;
 
       });
@@ -442,6 +443,12 @@ async function generarBrochurePDF(inmuebles, modo = "landscape", seleccionados =
               data.cell.styles.minCellHeight=32;
             }
           },
+
+          if(data.row.raw && data.row.raw.__acm){
+            data.cell.styles.lineColor=[0,102,255];
+            data.cell.styles.lineWidth=0.8;
+            data.cell.styles.fillColor=[235,243,255]; // fondo azul suave
+          }
 
           didDrawCell:function(data){
             if(data.cell.raw && data.cell.raw.fotoBase64Cropped){
