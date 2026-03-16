@@ -33,14 +33,13 @@
       const valoresM2d=deptos.filter(d=>d.precio>0&&d.m2construccion>0).map(d=>d.precio/d.m2construccion);
       const promM2d=mediaPonderada(valoresM2d,15);
 
-      const chkRapida=$("#acm-venta-rapida").prop("checked");
       const ajT=parseFloat($("#acm-ajuste-t").val())||15;
       const ajC=parseFloat($("#acm-ajuste-c").val())||7;
       const ajD=parseFloat($("#acm-ajuste-d").val())||5;
 
-      const valT=chkRapida?promM2t*(1-ajT/100):promM2t;
-      const valC=chkRapida?promM2c*(1-ajC/100):promM2c;
-      const valD=chkRapida?promM2d*(1-ajD/100):promM2d;
+      const valT=promM2t;
+      const valC=promM2c;
+      const valD=promM2d;
 
       $("#acm-prom-m2t").html(
         `<input type="number" step="0.01" value="${valT>0?valT.toFixed(2):""}" title="Valor en dólares del metro cuadrado de terreno, también se usará para calcular valor de casas" style="max-width:12ch;"> `+
@@ -71,7 +70,6 @@
 
     } catch (e) {console.log("Error actualizarACM:", e);}
   }
-
 
 function guardarEstadoACM() {
   const estado = {
