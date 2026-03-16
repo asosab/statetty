@@ -435,20 +435,23 @@ async function generarBrochurePDF(inmuebles, modo = "landscape", seleccionados =
           theme:"grid",
 
           didParseCell:function(data){
+
             if(data.row.raw && data.row.raw.__selected){
               data.cell.styles.lineColor=[0,180,0];
               data.cell.styles.lineWidth=0.6;
             }
+
+            if(data.row.raw && data.row.raw.__acm){
+              data.cell.styles.lineColor=[0,102,255];
+              data.cell.styles.lineWidth=0.8;
+              data.cell.styles.fillColor=[235,243,255]; // fondo azul suave
+            }
+
             if(data.cell.raw && data.cell.raw.fotoBase64Cropped){
               data.cell.styles.minCellHeight=32;
             }
-          },
 
-          if(data.row.raw && data.row.raw.__acm){
-            data.cell.styles.lineColor=[0,102,255];
-            data.cell.styles.lineWidth=0.8;
-            data.cell.styles.fillColor=[235,243,255]; // fondo azul suave
-          }
+          },
 
           didDrawCell:function(data){
             if(data.cell.raw && data.cell.raw.fotoBase64Cropped){
@@ -509,9 +512,22 @@ async function generarBrochurePDF(inmuebles, modo = "landscape", seleccionados =
         ),
 
         didParseCell:function(data){
+
+          if(data.row.raw && data.row.raw.__selected){
+            data.cell.styles.lineColor=[0,180,0];
+            data.cell.styles.lineWidth=0.6;
+          }
+
+          if(data.row.raw && data.row.raw.__acm){
+            data.cell.styles.lineColor=[0,102,255];
+            data.cell.styles.lineWidth=0.8;
+            data.cell.styles.fillColor=[235,243,255]; // fondo azul suave
+          }
+
           if(data.cell.raw && data.cell.raw.fotoBase64Cropped){
             data.cell.styles.minCellHeight=32;
           }
+
         },
 
         didDrawCell:function(data){
