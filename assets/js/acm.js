@@ -295,55 +295,53 @@ function detectarTipoInmueble(loc) {
 /** ------------------------------------------------------------------------------------------------ calcularEstimado
  * Calcula el valor estimado según tipo seleccionado y m² ingresados
  */
-  function calcularEstimado() {
-    try {
+  function calcularEstimado() { try {
+    const tipo=$("#acm-tipo").val();
+    if(!tipo) return;
 
-      const tipo=$("#acm-tipo").val();
-      if(!tipo) return;
+    const m2t=parseFloat($("#acm-m2t").val())||0;
+    const m2c=parseFloat($("#acm-m2c").val())||0;
 
-      const m2t=parseFloat($("#acm-m2t").val())||0;
-      const m2c=parseFloat($("#acm-m2c").val())||0;
+    const vT=parseFloat($("#acm-prom-m2t input[type='number']").first().val())||0;
+    const vC=parseFloat($("#acm-prom-m2c-construccion input[type='number']").first().val())||0;
+    const vD=parseFloat($("#acm-prom-m2d input[type='number']").first().val())||0;
 
-      const vT=parseFloat($("#acm-prom-m2t input[type='number']").first().val())||0;
-      const vC=parseFloat($("#acm-prom-m2c-construccion input[type='number']").first().val())||0;
-      const vD=parseFloat($("#acm-prom-m2d input[type='number']").first().val())||0;
+    let estimado=0;
 
-      let estimado=0;
+    if(tipo==="terreno"){
+      if(m2t>0&&vT>0) estimado=m2t*vT;
+    } else if(tipo==="casa"){
+      if(m2t>0&&vT>0) estimado+=m2t*vT;
+      if(m2c>0&&vC>0) estimado+=m2c*vC;
+    } else if(tipo==="departamento"){
+      if(m2c>0&&vD>0) estimado=m2c*vD;
+    }
 
-      if(tipo==="terreno"){
-        if(m2t>0&&vT>0) estimado=m2t*vT;
-      } else if(tipo==="casa"){
-        if(m2t>0&&vT>0) estimado+=m2t*vT;
-        if(m2c>0&&vC>0) estimado+=m2c*vC;
-      } else if(tipo==="departamento"){
-        if(m2c>0&&vD>0) estimado=m2c*vD;
+    const chkRapida=$("#acm-venta-rapida").prop("checked");
+    const ajT=parseFloat($("#acm-ajuste-t").val())||15;
+    const ajC=parseFloat($("#acm-ajuste-c").val())||7;
+    const ajD=parseFloat($("#acm-ajuste-d").val())||5;
+
+    if(chkRapida){
+      if(tipo==="terreno") estimado*=1-ajT/100;
+      else if(tipo==="casa") estimado*=1-ajC/100;
+      else if(tipo==="departamento") estimado*=1-ajD/100;
+    }
+
+    if(estimado>0){
+      $("#acm-estimado").text(`Estimado: USD ${formatNumber(estimado)}`);
+      if(typeof calcularTiempoOfertado==="function"){
+        const meses=calcularTiempoOfertado(tipo,m2t,m2c,estimado);
+        if(meses&&meses>0){$("#acm-tiempo-ofertado").text(` | Tiempo ofertado aprox: ${meses} meses`);}
+        else{$("#acm-tiempo-ofertado").text(" | Tiempo ofertado aprox: -");}
       }
+    } else {
+      $("#acm-estimado").text("Estimado: -");
+      $("#acm-tiempo-ofertado").text(" | Tiempo ofertado aprox: -");
+    }
 
-      const chkRapida=$("#acm-venta-rapida").prop("checked");
-      const ajT=parseFloat($("#acm-ajuste-t").val())||15;
-      const ajC=parseFloat($("#acm-ajuste-c").val())||7;
-      const ajD=parseFloat($("#acm-ajuste-d").val())||5;
-
-      if(chkRapida){
-        if(tipo==="terreno") estimado*=1-ajT/100;
-        else if(tipo==="casa") estimado*=1-ajC/100;
-        else if(tipo==="departamento") estimado*=1-ajD/100;
-      }
-
-      if(estimado>0){
-        $("#acm-estimado").text(`Estimado: USD ${formatNumber(estimado)}`);
-        if(typeof calcularTiempoOfertado==="function"){
-          const meses=calcularTiempoOfertado(tipo,m2t,m2c,estimado);
-          if(meses&&meses>0){$("#acm-tiempo-ofertado").text(` | Tiempo ofertado aprox: ${meses} meses`);}
-          else{$("#acm-tiempo-ofertado").text(" | Tiempo ofertado aprox: -");}
-        }
-      } else {
-        $("#acm-estimado").text("Estimado: -");
-        $("#acm-tiempo-ofertado").text(" | Tiempo ofertado aprox: -");
-      }
-
-    } catch (e) {console.log("Error calcularEstimado:", e);}
-  }
+    syncPDFACMVisibility();
+  } catch (e) {console.log("Error calcularEstimado:", e);}}
 
 function calcularTiempoOfertado(tipo, m2Terreno, m2Construccion, precioEstimado) {
   if (!Array.isArray(locations) || locations.length === 0) return null;

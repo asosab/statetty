@@ -141,6 +141,20 @@ const camposDisponibles = [
     } catch (e) {console.log("Error initPDFACMImageToggle:", e);}
   }
 
+/** -------------------------------------------------------------------------------------------- syncPDFACMVisibility
+ * Muestra u oculta opciones PDF del ACM según exista estimado
+ */
+  function syncPDFACMVisibility() {
+    try {
+
+      const txt=$("#acm-estimado").text().trim();
+      if(txt && txt!=="Estimado: -"){$("#pdf-acm-option").show();}
+      else{$("#pdf-acm-option").hide();$("#pdf-include-acm").prop("checked",false);$("#pdf-acm-img-wrap").hide();}
+
+    } catch (e) {console.log("Error syncPDFACMVisibility:", e);}
+  }
+
+
 function renderColumnSelector() {
   if (document.getElementById("column-selector")) return;
 
@@ -156,13 +170,16 @@ function renderColumnSelector() {
       <br>
       <label> Título <input type="text" id="pdf-title" value="Comparativa de Inmuebles" style="margin-left:6px;"></label>
       <br>
-      <label> <input type="checkbox" id="pdf-include-acm">Incluir resultado del ACM</label>
+      <div id="pdf-acm-option" style="display:none;">
+        <label><input type="checkbox" id="pdf-include-acm"> Incluir resultado del ACM</label>
+
+        <div id="pdf-acm-img-wrap" style="display:none;margin-top:4px;">
+          Link imagen para inmueble ACM:
+          <input type="text" id="pdf-acm-img" style="max-width:40ch;">
+        </div>
+      </div>
     </div>
 
-    <div id="pdf-acm-img-wrap" style="display:none;margin-top:4px;">
-      Link imagen para inmueble ACM:
-      <input type="text" id="pdf-acm-img" style="max-width:40ch;">
-    </div>
 
     <b>Selecciona campos a incluir:</b><br>
   `;
@@ -514,4 +531,5 @@ async function generarBrochurePDF(inmuebles, modo = "landscape", seleccionados =
 
 $(document).ready(function(){
   initPDFACMImageToggle();
+  syncPDFACMVisibility()
 });
