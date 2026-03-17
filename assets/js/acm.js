@@ -164,7 +164,7 @@ const tipoInmuebleDic = {
   },
   terreno: {
     incluye: ["lote", "terreno", "parcela"],
-    excluye: ["dormit", "habitac", "cuarto", "piso", "Living", "Churrasquera", "lavanderia"  ] // si contiene esto, ya no es lote
+    excluye: ["dormit", "habitac", "cuarto", "piso", "Living", "Churrasquera", "lavanderia", "suite"  ] // si contiene esto, ya no es lote
   }
 };
 

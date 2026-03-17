@@ -504,6 +504,7 @@ $(document).ready(function () {
   window.ag = urlParams.get('ag');
   window.an = urlParams.get('an');
   window.M2T = urlParams.get('M2T');
+  window.M2T = normalizarM2TDesdeURI();
 
   if (!id || !key) { throw new Error("ID o clave no proporcionados en la URL"); }
 
@@ -875,3 +876,16 @@ function calculateDH(lat1, lng1, lat2, lng2) {
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return 6371 * c;
 }
+
+/** ------------------------------------------------------------------------------------------- normalizarM2TDesdeURI
+ * Normaliza el valor M2T proveniente del URI corrigiendo errores de escala y rango
+ * @returns {number}
+ */
+  function normalizarM2TDesdeURI(){ try {
+    let v=parseFloat(window.M2T); if(isNaN(v)||v<=0)return 0;
+    if(v>10000&&v<100000)v=v/100;
+    while(v>3000)v=v/10;
+    if(v>2300)v=2300;
+    if(v<50)v=50;
+    return Math.round(v*100)/100;
+  } catch (e) {console.log('normalizarM2TDesdeURI error',e);} }
