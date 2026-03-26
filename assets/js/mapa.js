@@ -463,6 +463,7 @@ function actualizarToolbox() {
     `);
 
     ensureRenderColumnSelector();
+    initPDFFormPersistence();
 
     const chkAll = $("#pdf-show-all").prop("checked");
     const selCount = seleccionados.length;

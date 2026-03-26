@@ -7,6 +7,32 @@ function proxify(url) {
   return `https://ekvilibrolab.netlify.app/.netlify/functions/proxy-image?url=${encodeURIComponent(url)}`;
 }
 
+
+/** --------------------------------------------------------------------------------------------- initPDFFormPersistence
+ * Persiste campos PDF en localStorage
+ */
+  function initPDFFormPersistence(){ try {
+    const map=[
+      {id:"pdf-title",key:"pdf_title"},
+      {id:"pdf-agent",key:"pdf_agent"},
+      {id:"pdf-agency",key:"pdf_agency"},
+      {id:"pdf-cellphone",key:"pdf_cellphone"}
+    ];
+
+    map.forEach(f=>{
+      const el=document.getElementById(f.id);
+      if(!el)return;
+
+      const saved=localStorage.getItem(f.key);
+      if(saved!==null)el.value=saved;
+
+      el.addEventListener("input",function(){
+        localStorage.setItem(f.key,this.value||"");
+      });
+    });
+
+  } catch (e) {console.log('initPDFFormPersistence error',e);} }
+
 /** --------------------------------------------------------------------------------------------------- drawFooterAgente
  * Dibuja pie de página con datos desde inputs PDF
  * @param {Object} doc
