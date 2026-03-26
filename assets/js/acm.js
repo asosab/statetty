@@ -206,6 +206,7 @@ function detectarTipoInmueble(loc) {
     try {
 
       renderACMInputs();
+      initACMFormPersistence();
 
       $('#acm-container').on('input', '#acm-prom-m2t input,#acm-prom-m2c-construccion input,#acm-prom-m2d input', function(){calcularEstimado();});
       $('#acm-container').on('input', '#acm-m2t,#acm-m2c', function(){calcularEstimado();});
@@ -231,6 +232,33 @@ function detectarTipoInmueble(loc) {
 
     } catch (e) {console.log("Error initACMTools:", e);}
   }
+
+/** --------------------------------------------------------------------------------------------- initACMFormPersistence
+ * Persiste inputs ACM en localStorage
+ */
+  function initACMFormPersistence(){ try {
+    const map=[
+      {id:"acm-tipo",key:"acm_tipo",evt:"change"},
+      {id:"acm-m2t",key:"acm_m2t"},
+      {id:"acm-m2c",key:"acm_m2c"},
+      {id:"acm-dorm",key:"acm_dorm"},
+      {id:"acm-banio",key:"acm_banio"}
+    ];
+
+    map.forEach(f=>{
+      const el=document.getElementById(f.id);
+      if(!el)return;
+
+      const saved=localStorage.getItem(f.key);
+      if(saved!==null)el.value=saved;
+
+      const evt=f.evt||"input";
+      el.addEventListener(evt,function(){
+        localStorage.setItem(f.key,this.value||"");
+      });
+    });
+
+  } catch (e) {console.log('initACMFormPersistence error',e);} }
 
 /** ---------------------------------------------------------------------------------------------------- renderACMInputs
  * Renderiza los inputs ACM
