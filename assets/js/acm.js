@@ -14,13 +14,13 @@
     const icon=L.divIcon({
       className:"custom-pin",
       html:`<div style="position:relative;">
-              <img src="../../assets/images/pointers/pointer_acm.png" style="width:26px;height:26px;display:block;">
+              <img src="../../assets/images/pointers/pointer_acm.png" style="width:40px;height:60px;display:block;">
               <div style="position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);
                           width:12px;height:6px;background:rgba(0,0,0,0.25);
                           border-radius:50%;filter:blur(2px);"></div>
             </div>`,
-      iconSize:[26,32],
-      iconAnchor:[13,32]
+      iconSize:[40,60],
+      iconAnchor:[20,60]
     });
 
     map.on("click",function(e){
