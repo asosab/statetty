@@ -446,7 +446,7 @@ function actualizarToolbox() {
       </div>
     `);
 
-    renderColumnSelector();
+    if(typeof renderColumnSelector==="function"){renderColumnSelector();}
 
     const chkAll = $("#pdf-show-all").prop("checked");
     const selCount = seleccionados.length;
