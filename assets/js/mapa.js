@@ -21,6 +21,21 @@ var checkOverlayIcon = L.divIcon({
   iconAnchor: [1, 60] // ✔️ sobre la mitad superior del marker
 });
 
+
+
+/** --------------------------------------------------------------------------------------- calcularBoundsDesdeLocations
+ * Calcula bounds y centro óptimo a partir de locations visibles
+ * @param {Array} locs
+ * @returns {Object|null} {bounds, center}
+ */
+  function calcularBoundsDesdeLocations(locs){ try {
+    if(!Array.isArray(locs)||!locs.length)return null;
+    let group=new L.featureGroup(locs.map(l=>L.marker([l.lat,l.lng])));
+    let bounds=group.getBounds(),center=bounds.getCenter();
+    return {bounds,center};
+  } catch (e) {console.log('calcularBoundsDesdeLocations error',e);} }
+
+
 // -------------------------------
 // Persistencia en localStorage
 // -------------------------------
@@ -801,15 +816,18 @@ $(document).ready(function () {
     guardarSeleccionados();
     actualizarToolbox();
 
+    /*
     const savedMap = cargarMapa();
-    if (savedMap) {
-      map.setView(savedMap.center, savedMap.zoom);
-    } else {
-      var group = new L.featureGroup(locations.map(function (location) {
-        return L.marker([location.lat, location.lng]);
-      }));
+    if (savedMap) { map.setView(savedMap.center, savedMap.zoom);} 
+    else {
+      var group = new L.featureGroup(locations.map(function (location) {return L.marker([location.lat, location.lng]);}));
       map.fitBounds(group.getBounds());
     }
+    */
+
+    const visibles=getVisibleLocations();
+    const calc=calcularBoundsDesdeLocations(visibles);
+    if(calc&&calc.bounds){map.fitBounds(calc.bounds.pad(0.1));} else{map.setView([lat,lng],13);}    
 
     // Asegurar que ultimosFiltrados inicialmente sean solo visibles
     ultimosFiltrados = getVisibleLocations();
