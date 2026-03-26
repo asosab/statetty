@@ -210,15 +210,14 @@ function detectarTipoInmueble(loc) {
       $('#acm-container').on('input', '#acm-prom-m2t input,#acm-prom-m2c-construccion input,#acm-prom-m2d input', function(){calcularEstimado();});
       $('#acm-container').on('input', '#acm-m2t,#acm-m2c', function(){calcularEstimado();});
 
-
-      $('#acm-container').on('change', '#acm-tipo', function(){
+      $('#acm-container').on('change','#acm-tipo',function(){
         const tipo=$(this).val();
         if(tipo==="terreno"){$("#acm-m2c-wrap").hide();$("#acm-m2t-wrap").show();}
         else if(tipo==="departamento"){$("#acm-m2t-wrap").hide();$("#acm-m2c-wrap").show();}
         else{$("#acm-m2t-wrap").show();$("#acm-m2c-wrap").show();}
+        setPromDormBanio();
         calcularEstimado();
       });
-
 
       $('#acm-container').on('change', '#acm-venta-rapida', function(){actualizarACM();});
       $('#acm-container').on('input', '#acm-ajuste-t,#acm-ajuste-c,#acm-ajuste-d', function(){actualizarACM();});
@@ -233,72 +232,11 @@ function detectarTipoInmueble(loc) {
     } catch (e) {console.log("Error initACMTools:", e);}
   }
 
-/** ------------------------------------------------------------------------------------------------- renderACMInputs
+/** ---------------------------------------------------------------------------------------------------- renderACMInputs
  * Renderiza los inputs ACM
  */
   function renderACMInputs() {
     try {
-
-      const htmltmp=`
-        <div id="acm-promedios">
-
-          <div id="acm-rango">Rango de precios: -</div>
-          <div id="acm-prom-precio">Promedio de precios: USD 0 [0]</div>
-
-          <div style="margin-top:6px;">
-            <b>Promedio USD/m²</b>
-            <label style="margin-left:12px;">
-              <input type="checkbox" id="acm-venta-rapida"> V. Rápida
-            </label>
-          </div>
-
-          <div style="margin-top:4px;">
-            Terrenos:
-            <span id="acm-prom-m2t"></span>
-            <span id="acm-count-t">[-]</span>
-          </div>
-
-          <div>
-            Casas:
-            <span id="acm-prom-m2c-construccion"></span>
-            <span id="acm-count-c">[-]</span>
-          </div>
-
-          <div>
-            Deptos.:
-            <span id="acm-prom-m2d"></span>
-            <span id="acm-count-d">[-]</span>
-          </div>
-
-        </div>
-
-        <div id="acm-calculadora" style="margin-top:10px;">
-
-          <div>
-            Tipo:
-            <select id="acm-tipo">
-              <option value="departamento">Depto</option>
-              <option value="casa">Casa</option>
-              <option value="terreno">Terreno</option>
-            </select>
-
-            <span id="acm-m2t-wrap" style="margin-left:10px;">
-              m² T.: <input type="number" id="acm-m2t" style="max-width:10ch;">
-            </span>
-
-            <span id="acm-m2c-wrap" style="margin-left:10px;">
-              m² C.: <input type="number" id="acm-m2c" style="max-width:10ch;">
-            </span>
-
-          </div>
-
-          <div style="margin-top:6px;">
-            <span id="acm-estimado">Estimado: -</span>
-            <span id="acm-tiempo-ofertado"> | Tiempo ofertado aprox: -</span>
-          </div>
-
-        </div>
-      `;
 
       const html=`
         <div id="acm-promedios">
@@ -334,7 +272,7 @@ function detectarTipoInmueble(loc) {
 
         <div id="acm-calculadora" style="margin-top:10px;">
 
-          <div style="display:grid;grid-template-columns:auto auto auto 1fr;gap:4px 8px;align-items:center;">
+          <div style="display:grid;grid-template-columns:auto auto auto auto auto;gap:4px 8px;align-items:center;">
             <div>Tipo:</div>
             <select id="acm-tipo">
               <option value="departamento">Depto</option>
@@ -349,6 +287,11 @@ function detectarTipoInmueble(loc) {
             <div id="acm-m2c-wrap">
               m² C.: <input type="number" id="acm-m2c" style="max-width:10ch;">
             </div>
+
+            <div id="acm-amb-wrap">
+              Dormitorios: <input type="number" id="acm-dorm" style="max-width:6ch;">
+              Baños: <input type="number" id="acm-banio" style="max-width:6ch;">
+            </div>
           </div>
 
           <div style="margin-top:6px;">
@@ -358,15 +301,38 @@ function detectarTipoInmueble(loc) {
 
         </div>
       `;
-      
 
       $("#acm-container").html(html);
 
     } catch (e) {console.log("Error renderACMInputs:", e);}
   }
 
+/** --------------------------------------------------------------------------------------------------- setPromDormBanio
+ * Calcula promedio de dormitorios y baños según tipo seleccionado
+ */
+  function setPromDormBanio(){ try {
+    const tipo=$("#acm-tipo").val();
+    if(!tipo||!Array.isArray(seleccionados))return;
 
-/** ------------------------------------------------------------------------------------------------ calcularEstimado
+    const lista=seleccionados.filter(s=>detectarTipoInmueble(s)===tipo);
+
+    const dorms=lista.map(s=>parseFloat(s.dormitorios)||0).filter(v=>v>0);
+    const banios=lista.map(s=>parseFloat(s.baños)||0).filter(v=>v>0);
+
+    const promDorm=dorms.length?(dorms.reduce((a,b)=>a+b,0)/dorms.length):0;
+    const promBanio=banios.length?(banios.reduce((a,b)=>a+b,0)/banios.length):0;
+
+    if(tipo==="casa"||tipo==="departamento"){
+      if(promDorm>0)$("#acm-dorm").val(Math.round(promDorm));
+      if(promBanio>0)$("#acm-banio").val(Math.round(promBanio));
+    }else{
+      $("#acm-dorm").val("");$("#acm-banio").val("");
+    }
+
+  } catch (e) {console.log('setPromDormBanio error',e);} }
+
+
+/** --------------------------------------------------------------------------------------------------- calcularEstimado
  * Calcula el valor estimado según tipo seleccionado y m² ingresados
  */
   function calcularEstimado() { try {
