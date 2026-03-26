@@ -184,12 +184,13 @@ function renderColumnSelector() {
       <b>Mostrar en PDF:</b><br>
       <label><input type="checkbox" id="pdf-show-all">Mostrar todos (${totalInmuebles})</label>
       <br>
-      <label> Título <input type="text" id="pdf-title" value="Análisis comparativo de mercado" style="margin-left:6px;"></label>
-      <br>
 
-      Agente: <input type="text" id="pdf-agent" value="${na}" style="margin-left:6px;"><br>
-      Agencia: <input type="text" id="pdf-agency" value="${ag}" style="margin-left:6px;"><br>
-      Celular: <input type="text" id="pdf-cellphone" value="${an}" style="margin-left:6px;"><br>
+      <div style="display:grid;grid-template-columns:auto 1fr;gap:4px 8px;align-items:center;margin-top:6px;">
+        <div>Título:</div><input type="text" id="pdf-title" value="Análisis comparativo de mercado">
+        <div>Agente:</div><input type="text" id="pdf-agent" value="${na}">
+        <div>Agencia:</div><input type="text" id="pdf-agency" value="${ag}">
+        <div>Celular:</div><input type="text" id="pdf-cellphone" value="${an}">
+      </div>
 
       <div id="pdf-acm-option" style="display:none;">
         <label><input type="checkbox" id="pdf-include-acm"> Incluir resultado del ACM</label>
