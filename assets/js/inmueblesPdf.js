@@ -41,7 +41,7 @@ function proxify(url) {
     const na=$("#pdf-agent").val()||"",ag=$("#pdf-agency").val()||"",an=$("#pdf-cellphone").val()||"";
     const txt=[na,ag,an].filter(Boolean).join(" · "); if(!txt)return;
     const w=doc.internal.pageSize.getWidth(),h=doc.internal.pageSize.getHeight();
-    doc.setFont("helvetica","normal"); doc.setFontSize(7);
+    doc.setFont("helvetica","normal"); doc.setFontSize(9);
     doc.text(txt,w-10,h-5,{align:"right"});
   } catch (e) {console.log('drawFooterAgente error',e);} }
 
