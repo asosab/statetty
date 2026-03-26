@@ -2,8 +2,22 @@
 // acm.js - Análisis Comparativo de Mercado
 // ---------------------------------------------
 
+/** ----------------------------------------------------------------------------------------- ensureSyncPDFACMVisibility
+ * Garantiza disponibilidad de syncPDFACMVisibility cargando script si es necesario
+ */
+  function ensureSyncPDFACMVisibility(){ try {
+    if(typeof syncPDFACMVisibility==="function"){syncPDFACMVisibility();return;}
+    let s=document.querySelector('script[src*="inmueblesPdf.js"]');
+    if(!s){
+      s=document.createElement("script");
+      s.src="inmueblesPdf.js";
+      s.onload=function(){if(typeof syncPDFACMVisibility==="function"){syncPDFACMVisibility();}};
+      s.onerror=function(){console.log("Error cargando inmueblesPdf.js");};
+      document.head.appendChild(s);
+    }
+  } catch (e) {console.log('ensureSyncPDFACMVisibility error',e);} }
 
-/** --------------------------------------------------------------------------------------------------- actualizarACM
+/** ------------------------------------------------------------------------------------------------------ actualizarACM
  * Recalcula los valores ACM y actualiza el HTML
  */
   function actualizarACM() {
@@ -340,7 +354,8 @@ function detectarTipoInmueble(loc) {
       $("#acm-tiempo-ofertado").text(" | Tiempo ofertado aprox: -");
     }
 
-    syncPDFACMVisibility();
+    //syncPDFACMVisibility();
+    ensureSyncPDFACMVisibility();
   } catch (e) {console.log("Error calcularEstimado:", e);}}
 
 function calcularTiempoOfertado(tipo, m2Terreno, m2Construccion, precioEstimado) {
