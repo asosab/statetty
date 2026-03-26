@@ -600,6 +600,7 @@ async function generarBrochurePDF(inmuebles, modo = "landscape", seleccionados =
 
 }
 
+
 /** --------------------------------------------------------------------------------------------- insertarInmuebleACM
  * Crea e inserta el inmueble generado desde ACM para el PDF
  */
@@ -639,6 +640,9 @@ async function generarBrochurePDF(inmuebles, modo = "landscape", seleccionados =
 
     const dorm=parseInt($("#acm-dorm").val())||null;
     const banio=parseInt($("#acm-banio").val())||null;
+
+    lat: (window.__acmCoords&&window.__acmCoords.lat)||null,
+    lng: (window.__acmCoords&&window.__acmCoords.lng)||null,
 
 
     const inmuebleACM = {

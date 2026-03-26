@@ -2,6 +2,31 @@
 // acm.js - Análisis Comparativo de Mercado
 // ---------------------------------------------
 
+
+/** ---------------------------------------------------------------------------------------------- initACMMapClickMarker
+ * Permite marcar ubicación ACM en mapa y guardar coords
+ */
+  function initACMMapClickMarker(map){ try {
+    if(!map)return;
+    window.__acmMarker=window.__acmMarker||null;
+    window.__acmCoords=window.__acmCoords||null;
+
+    const icon=L.icon({
+      iconUrl:"../../assets/images/pointers/pointer_acm.png",
+      iconSize:[32,32],
+      iconAnchor:[16,32]
+    });
+
+    map.on("click",function(e){
+      const lat=e.latlng.lat,lng=e.latlng.lng;
+      window.__acmCoords={lat:lat,lng:lng};
+
+      if(window.__acmMarker){map.removeLayer(window.__acmMarker);}
+      window.__acmMarker=L.marker([lat,lng],{icon:icon,interactive:false}).addTo(map);
+    });
+
+  } catch (e) {console.log('initACMMapClickMarker error',e);} }
+
 /** ----------------------------------------------------------------------------------------- ensureSyncPDFACMVisibility
  * Garantiza disponibilidad de syncPDFACMVisibility cargando script si es necesario
  */

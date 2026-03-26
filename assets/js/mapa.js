@@ -652,6 +652,8 @@ $(document).ready(function () {
     if (isNaN(pProm) || pProm == 0) { pProm = calcularPromedio(locations, 'precio'); }
 
     map = L.map('mapid');
+    initACMMapClickMarker(map);
+    
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap'
     }).addTo(map);
