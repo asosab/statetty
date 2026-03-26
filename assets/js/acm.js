@@ -292,6 +292,12 @@ function detectarTipoInmueble(loc) {
           <div style="grid-column:3;">Baños:</div>
           <input type="number" id="acm-banio" style="max-width:6ch;grid-column:4;">
         </div>
+
+        <div style="margin-top:6px;"> 
+          <span id="acm-estimado">Estimado: -</span> 
+          <span id="acm-tiempo-ofertado"> | Tiempo ofertado aprox: -</span> 
+        </div>
+
       `;
 
       $("#acm-container").html(html);
