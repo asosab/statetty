@@ -478,7 +478,7 @@ async function generarBrochurePDF(inmuebles, modo = "landscape", seleccionados =
             if(data.cell.raw && data.cell.raw.fotoBase64Cropped){
               drawImageFromRaw(data.cell.raw,data.cell,doc);
             }
-          }
+          },
           didDrawPage:function(data){drawFooterAgente(doc);}
         });
 
@@ -555,7 +555,7 @@ async function generarBrochurePDF(inmuebles, modo = "landscape", seleccionados =
           if(data.cell.raw && data.cell.raw.fotoBase64Cropped){
             drawImageFromRaw(data.cell.raw,data.cell,doc);
           }
-        }
+        },
         didDrawPage:function(data){drawFooterAgente(doc);}
       });
 
