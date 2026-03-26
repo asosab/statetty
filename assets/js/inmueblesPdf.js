@@ -607,9 +607,9 @@ async function generarBrochurePDF(inmuebles, modo = "landscape", seleccionados =
 
     // datos de agente desde URL
     const params = new URLSearchParams(window.location.search);
-    const na = params.get("na") || null;
-    const an = params.get("an") || null;
-    const ag = params.get("ag") || null;
+    const na=$("#pdf-agent").val()||params.get("na")||null;
+    const ag=$("#pdf-agency").val()||params.get("ag")||null;
+    const an=$("#pdf-cellphone").val()||params.get("an")||null;
 
     const inmuebleACM = {
 
