@@ -287,7 +287,7 @@ function detectarTipoInmueble(loc) {
             <div id="acm-m2c-wrap">
               m² C.: <input type="number" id="acm-m2c" style="max-width:10ch;">
             </div>
-
+            <br/>
             <div id="acm-amb-wrap">
               Dormitorios: <input type="number" id="acm-dorm" style="max-width:6ch;">
               Baños: <input type="number" id="acm-banio" style="max-width:6ch;">
