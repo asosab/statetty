@@ -270,36 +270,27 @@ function detectarTipoInmueble(loc) {
 
         </div>
 
-        <div id="acm-calculadora" style="margin-top:10px;">
+        <div style="display:grid;grid-template-columns:auto auto auto auto;gap:4px 8px;align-items:center;">
+          <div>Tipo:</div>
+          <select id="acm-tipo">
+            <option value="departamento">Depto</option>
+            <option value="casa">Casa</option>
+            <option value="terreno">Terreno</option>
+          </select>
 
-          <div style="display:grid;grid-template-columns:auto auto auto auto;gap:4px 8px;align-items:center;">
-            <div>Tipo:</div>
-            <select id="acm-tipo">
-              <option value="departamento">Depto</option>
-              <option value="casa">Casa</option>
-              <option value="terreno">Terreno</option>
-            </select>
-
-            <div id="acm-m2t-wrap">
-              m² T.: <input type="number" id="acm-m2t" style="max-width:10ch;">
-            </div>
-
-            <div id="acm-m2c-wrap">
-              m² C.: <input type="number" id="acm-m2c" style="max-width:10ch;">
-            </div>
-
-            <div>Dormitorios:</div>
-            <input type="number" id="acm-dorm" style="max-width:6ch;">
-
-            <div>Baños:</div>
-            <input type="number" id="acm-banio" style="max-width:6ch;">
+          <div id="acm-m2t-wrap">
+            m² T.: <input type="number" id="acm-m2t" style="max-width:10ch;">
           </div>
 
-          <div style="margin-top:6px;">
-            <span id="acm-estimado">Estimado: -</span>
-            <span id="acm-tiempo-ofertado"> | Tiempo ofertado aprox: -</span>
+          <div id="acm-m2c-wrap">
+            m² C.: <input type="number" id="acm-m2c" style="max-width:10ch;">
           </div>
 
+          <div style="grid-column:1;">Dormitorios:</div>
+          <input type="number" id="acm-dorm" style="max-width:6ch;grid-column:2;">
+
+          <div style="grid-column:3;">Baños:</div>
+          <input type="number" id="acm-banio" style="max-width:6ch;grid-column:4;">
         </div>
       `;
 
