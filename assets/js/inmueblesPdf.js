@@ -176,6 +176,9 @@ function renderColumnSelector() {
   container.style.marginTop = "10px";
   const totalInmuebles = Array.isArray(locations) ? locations.length : 0;
 
+  const params=new URLSearchParams(window.location.search);
+  const na=params.get("na")||"",ag=params.get("ag")||"",an=params.get("an")||"";
+
   container.innerHTML = `
     <div style="margin-bottom:8px;">
       <b>Mostrar en PDF:</b><br>
@@ -183,6 +186,11 @@ function renderColumnSelector() {
       <br>
       <label> Título <input type="text" id="pdf-title" value="Análisis comparativo de mercado" style="margin-left:6px;"></label>
       <br>
+
+      Agente: <input type="text" id="pdf-agent" value="${na}" style="margin-left:6px;"><br>
+      Agencia: <input type="text" id="pdf-agency" value="${ag}" style="margin-left:6px;"><br>
+      Celular: <input type="text" id="pdf-cellphone" value="${an}" style="margin-left:6px;"><br>
+
       <div id="pdf-acm-option" style="display:none;">
         <label><input type="checkbox" id="pdf-include-acm"> Incluir resultado del ACM</label>
 
@@ -192,7 +200,6 @@ function renderColumnSelector() {
         </div>
       </div>
     </div>
-
 
     <b>Selecciona campos a incluir:</b><br>
   `;
