@@ -636,7 +636,7 @@ async function generarBrochurePDF(inmuebles, modo = "landscape", seleccionados =
     const na=$("#pdf-agent").val()||params.get("na")||null;
     const ag=$("#pdf-agency").val()||params.get("ag")||null;
     const an=$("#pdf-cellphone").val()||params.get("an")||null;
-    
+
     const dorm=parseInt($("#acm-dorm").val())||null;
     const banio=parseInt($("#acm-banio").val())||null;
 
@@ -662,6 +662,9 @@ async function generarBrochurePDF(inmuebles, modo = "landscape", seleccionados =
       agentName: na,
       agentPhone: an,
       broker:     ag,
+
+      dormitorios: dorm,
+      baños: banio,
 
       des: "Inmueble estimado mediante Análisis Comparativo de Mercado (ACM).",
 
