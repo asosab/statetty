@@ -8,12 +8,11 @@ function proxify(url) {
 }
 
 /** --------------------------------------------------------------------------------------------------- drawFooterAgente
- * Dibuja pie de página con datos del agente alineado a la derecha
+ * Dibuja pie de página con datos desde inputs PDF
  * @param {Object} doc
  */
   function drawFooterAgente(doc){ try {
-    const params=new URLSearchParams(window.location.search);
-    const na=params.get("na")||"",ag=params.get("ag")||"",an=params.get("an")||"";
+    const na=$("#pdf-agent").val()||"",ag=$("#pdf-agency").val()||"",an=$("#pdf-cellphone").val()||"";
     const txt=[na,ag,an].filter(Boolean).join(" · "); if(!txt)return;
     const w=doc.internal.pageSize.getWidth(),h=doc.internal.pageSize.getHeight();
     doc.setFont("helvetica","normal"); doc.setFontSize(7);
