@@ -239,7 +239,7 @@ function detectarTipoInmueble(loc) {
   function renderACMInputs() {
     try {
 
-      const html=`
+      const htmltmp=`
         <div id="acm-promedios">
 
           <div id="acm-rango">Rango de precios: -</div>
@@ -299,6 +299,66 @@ function detectarTipoInmueble(loc) {
 
         </div>
       `;
+
+      const html=`
+        <div id="acm-promedios">
+
+          <div id="acm-rango">Rango de precios: -</div>
+          <div id="acm-prom-precio">Promedio de precios: USD 0 [0]</div>
+
+          <div style="margin-top:6px;">
+            <b>Promedio USD/m²</b>
+            <label style="margin-left:12px;">
+              <input type="checkbox" id="acm-venta-rapida"> V. Rápida
+            </label>
+          </div>
+
+          <div style="display:grid;grid-template-columns:auto 1fr 1fr auto;gap:4px 8px;align-items:center;margin-top:6px;">
+            <div>Terrenos:</div>
+            <div id="acm-prom-m2t"></div>
+            <div></div>
+            <div id="acm-count-t">[-]</div>
+
+            <div>Casas:</div>
+            <div id="acm-prom-m2c-construccion"></div>
+            <div></div>
+            <div id="acm-count-c">[-]</div>
+
+            <div>Deptos.:</div>
+            <div id="acm-prom-m2d"></div>
+            <div></div>
+            <div id="acm-count-d">[-]</div>
+          </div>
+
+        </div>
+
+        <div id="acm-calculadora" style="margin-top:10px;">
+
+          <div style="display:grid;grid-template-columns:auto auto auto 1fr;gap:4px 8px;align-items:center;">
+            <div>Tipo:</div>
+            <select id="acm-tipo">
+              <option value="departamento">Depto</option>
+              <option value="casa">Casa</option>
+              <option value="terreno">Terreno</option>
+            </select>
+
+            <div id="acm-m2t-wrap">
+              m² T.: <input type="number" id="acm-m2t" style="max-width:10ch;">
+            </div>
+
+            <div id="acm-m2c-wrap">
+              m² C.: <input type="number" id="acm-m2c" style="max-width:10ch;">
+            </div>
+          </div>
+
+          <div style="margin-top:6px;">
+            <span id="acm-estimado">Estimado: -</span>
+            <span id="acm-tiempo-ofertado"> | Tiempo ofertado aprox: -</span>
+          </div>
+
+        </div>
+      `;
+      
 
       $("#acm-container").html(html);
 
