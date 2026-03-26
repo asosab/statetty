@@ -641,10 +641,6 @@ async function generarBrochurePDF(inmuebles, modo = "landscape", seleccionados =
     const dorm=parseInt($("#acm-dorm").val())||null;
     const banio=parseInt($("#acm-banio").val())||null;
 
-    lat: (window.__acmCoords&&window.__acmCoords.lat)||null,
-    lng: (window.__acmCoords&&window.__acmCoords.lng)||null,
-
-
     const inmuebleACM = {
 
       __acm: true, // marca interna para evitar duplicados
@@ -666,6 +662,9 @@ async function generarBrochurePDF(inmuebles, modo = "landscape", seleccionados =
       agentName: na,
       agentPhone: an,
       broker:     ag,
+
+      lat: (window.__acmCoords&&window.__acmCoords.lat)||null,
+      lng: (window.__acmCoords&&window.__acmCoords.lng)||null,      
 
       dormitorios: dorm,
       baños: banio,
