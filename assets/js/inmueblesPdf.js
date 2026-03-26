@@ -7,6 +7,19 @@ function proxify(url) {
   return `https://ekvilibrolab.netlify.app/.netlify/functions/proxy-image?url=${encodeURIComponent(url)}`;
 }
 
+/** --------------------------------------------------------------------------------------------------- drawFooterAgente
+ * Dibuja pie de página con datos del agente alineado a la derecha
+ * @param {Object} doc
+ */
+  function drawFooterAgente(doc){ try {
+    const params=new URLSearchParams(window.location.search);
+    const na=params.get("na")||"",ag=params.get("ag")||"",an=params.get("an")||"";
+    const txt=[na,ag,an].filter(Boolean).join(" · "); if(!txt)return;
+    const w=doc.internal.pageSize.getWidth(),h=doc.internal.pageSize.getHeight();
+    doc.setFont("helvetica","normal"); doc.setFontSize(7);
+    doc.text(txt,w-10,h-5,{align:"right"});
+  } catch (e) {console.log('drawFooterAgente error',e);} }
+
 async function urlToBase64(url) {
   const resp = await fetch(proxify(url));
   const blob = await resp.blob();
@@ -458,7 +471,7 @@ async function generarBrochurePDF(inmuebles, modo = "landscape", seleccionados =
               drawImageFromRaw(data.cell.raw,data.cell,doc);
             }
           }
-
+          didDrawPage:function(data){drawFooterAgente(doc);}
         });
 
         if(i+chunkSize<rows.length) doc.addPage();
@@ -535,7 +548,7 @@ async function generarBrochurePDF(inmuebles, modo = "landscape", seleccionados =
             drawImageFromRaw(data.cell.raw,data.cell,doc);
           }
         }
-
+        didDrawPage:function(data){drawFooterAgente(doc);}
       });
 
     }
