@@ -396,6 +396,22 @@ function ensureStatsActions() {
   });
 }
 
+/** ---------------------------------------------------------------------------------------- ensureRenderColumnSelector
+* Garantiza disponibilidad de renderColumnSelector cargando el script si es necesario
+*/
+function ensureRenderColumnSelector(){ try {
+  if(typeof renderColumnSelector==="function"){renderColumnSelector();return;}
+  let s=document.querySelector('script[src*="inmueblesPdf.js"]');
+  if(!s){
+    s=document.createElement("script");
+    s.src="inmueblesPdf.js";
+    s.onload=function(){if(typeof renderColumnSelector==="function"){renderColumnSelector();}};
+    s.onerror=function(){console.log("Error cargando inmueblesPdf.js");};
+    document.head.appendChild(s);
+  }
+} catch (e) {console.log('ensureRenderColumnSelector error',e);} }
+
+
 /**
  * Actualiza enabled/disabled de los botones según el estado actual.
  * @returns {void}
@@ -446,7 +462,7 @@ function actualizarToolbox() {
       </div>
     `);
 
-    if(typeof renderColumnSelector==="function"){renderColumnSelector();}
+    ensureRenderColumnSelector();
 
     const chkAll = $("#pdf-show-all").prop("checked");
     const selCount = seleccionados.length;
