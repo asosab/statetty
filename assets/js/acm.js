@@ -272,7 +272,7 @@ function detectarTipoInmueble(loc) {
 
         <div id="acm-calculadora" style="margin-top:10px;">
 
-          <div style="display:grid;grid-template-columns:auto auto auto auto auto;gap:4px 8px;align-items:center;">
+          <div style="display:grid;grid-template-columns:auto auto auto auto;gap:4px 8px;align-items:center;">
             <div>Tipo:</div>
             <select id="acm-tipo">
               <option value="departamento">Depto</option>
@@ -287,11 +287,12 @@ function detectarTipoInmueble(loc) {
             <div id="acm-m2c-wrap">
               m² C.: <input type="number" id="acm-m2c" style="max-width:10ch;">
             </div>
-            <br/>
-            <div id="acm-amb-wrap">
-              Dormitorios: <input type="number" id="acm-dorm" style="max-width:6ch;">
-              Baños: <input type="number" id="acm-banio" style="max-width:6ch;">
-            </div>
+
+            <div>Dormitorios:</div>
+            <input type="number" id="acm-dorm" style="max-width:6ch;">
+
+            <div>Baños:</div>
+            <input type="number" id="acm-banio" style="max-width:6ch;">
           </div>
 
           <div style="margin-top:6px;">
