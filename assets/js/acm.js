@@ -3,18 +3,24 @@
 // ---------------------------------------------
 
 
-/** ---------------------------------------------------------------------------------------------- initACMMapClickMarker
- * Permite marcar ubicación ACM en mapa y guardar coords
+/** ------------------------------------------------------------------------------------------- initACMMapClickMarker
+ * Marker ACM con mismo estilo de pines
  */
   function initACMMapClickMarker(map){ try {
     if(!map)return;
     window.__acmMarker=window.__acmMarker||null;
     window.__acmCoords=window.__acmCoords||null;
 
-    const icon=L.icon({
-      iconUrl:"../../assets/images/pointers/pointer_acm.png",
-      iconSize:[32,32],
-      iconAnchor:[16,32]
+    const icon=L.divIcon({
+      className:"custom-pin",
+      html:`<div style="position:relative;">
+              <img src="../../assets/images/pointers/pointer_acm.png" style="width:26px;height:26px;display:block;">
+              <div style="position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);
+                          width:12px;height:6px;background:rgba(0,0,0,0.25);
+                          border-radius:50%;filter:blur(2px);"></div>
+            </div>`,
+      iconSize:[26,32],
+      iconAnchor:[13,32]
     });
 
     map.on("click",function(e){
@@ -26,6 +32,8 @@
     });
 
   } catch (e) {console.log('initACMMapClickMarker error',e);} }
+
+
 
 /** ----------------------------------------------------------------------------------------- ensureSyncPDFACMVisibility
  * Garantiza disponibilidad de syncPDFACMVisibility cargando script si es necesario
