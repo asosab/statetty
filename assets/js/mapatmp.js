@@ -21,7 +21,15 @@ var checkOverlayIcon = L.divIcon({
   iconAnchor: [1, 60] // ✔️ sobre la mitad superior del marker
 });
 
-
+async function openWsRedirect(url) {try {
+  const res = await fetch(url, {headers: {"ngrok-skip-browser-warning": "1"}});
+  const html = await res.text();
+  const win = window.open("", "_blank");
+  if (!win) return alert("Popup bloqueado");
+  win.document.open();
+  win.document.write(html);
+  win.document.close();
+} catch (e) {console.log("openWsRedirect", e);}}
 
 /** --------------------------------------------------------------------------------------- calcularBoundsDesdeLocations
  * Calcula bounds y centro óptimo a partir de locations visibles
@@ -669,16 +677,6 @@ $(document).ready(function () {
     });
     var crossMarker = L.marker(circleCenter, { icon: crossIcon }).addTo(map);
     crossMarker.bindPopup(`Coordenadas: ${lat},${lng}<br>Valor promedio: USD${formatNumber(pProm)}`);
-
-    async function openWsRedirect(url) {try {
-      const res = await fetch(url, {headers: {"ngrok-skip-browser-warning": "1"}});
-      const html = await res.text();
-      const win = window.open("", "_blank");
-      if (!win) return alert("Popup bloqueado");
-      win.document.open();
-      win.document.write(html);
-      win.document.close();
-    } catch (e) {console.log("openWsRedirect", e);}}
 
     // markers
     locations.forEach(function (dato) {
