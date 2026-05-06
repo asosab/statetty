@@ -532,7 +532,6 @@ $(document).ready(function () {
   let id = urlParams.get('id');
   let key = urlParams.get('key');
   let pProm = Math.round(urlParams.get('p'));
-  let userid = urlParams.get('u');
   window.na = urlParams.get('na');
   window.ag = urlParams.get('ag');
   window.an = urlParams.get('an');
@@ -541,7 +540,7 @@ $(document).ready(function () {
 
   if (!id || !key) { throw new Error("ID o clave no proporcionados en la URL"); }
 
-  var valores = 'Sheet1!A2:X';
+  var valores = 'Sheet1!A2:W';
   var url = 'https://sheets.googleapis.com/v4/spreadsheets/' + id + '/values/' + valores + '?key=' + key;
 
   $('#loading-indicator').show();
@@ -552,7 +551,7 @@ $(document).ready(function () {
     const columnas = [
       "Titulo","lat","lng","dir","URL","des","ambientes","dormitorios","baños","m2construccion",
       "m2terreno","nombre","precioM2","broker","foto","precio","agentName","agentPhone","fechaIngreso",
-      "tiempoOfertado","tipoInmueble","tipoNegocio","anoc","_id"
+      "tiempoOfertado","tipoInmueble","tipoNegocio","anoc"
     ];
 
     window.columnasConfig = {
@@ -580,8 +579,7 @@ $(document).ready(function () {
       "tiempoOfertado": false,
       "tipoInmueble":   false,
       "tipoNegocio":    false,
-      "anoc":           false,
-      "_id":            false,
+      "anoc":           false
     };
 
     $(data.values).each(function () {
@@ -713,12 +711,10 @@ $(document).ready(function () {
       let deAg = ag ? ` de ${ag}` : '';
       let sc = (na || ag) ? ' te escribe, ' : '';
       let foto = dato.foto ? `Foto: ${dato.foto}\n\n`:'';
-
-      const server = "https://excited-fully-skunk.ngrok-free.app/api/statetty/usrClckWsInm";
-      const linkSrv = `${server}?u=${encodeURIComponent(userid)}&i=${encodeURIComponent(dato._id)}`;
+      const msj = `Hola${nombreCortito},${soyNa}${deAg}${sc}un gusto saludarte. Por favor, podría enviarme información sobre este inmueble, en caso de que siga disponible (${dato.Titulo})\n\nGracias de antemano\n\nlink: ${url}\n\n${foto}Mensaje creado con Statetty https://statetty.com`;
 
       const linkWA = celularValido
-        ? `<br/><a href="${linkSrv}" target="_blank" rel="noopener">📱 Contactar a${nombreCorto}</a>`
+        ? `<br/><a href="https://wa.me/${cel}?text=${encodeURIComponent(msj)}" target="_blank" rel="noopener">📱 Contactar a${nombreCorto}</a>`
         : '';
 
       var distance = Math.round(calculateDH(circleCenter.lat, circleCenter.lng, dato.lat, dato.lng) * 1000);
