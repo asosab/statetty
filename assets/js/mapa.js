@@ -21,7 +21,15 @@ var checkOverlayIcon = L.divIcon({
   iconAnchor: [1, 60] // ✔️ sobre la mitad superior del marker
 });
 
-
+async function openWsRedirect(url) {try {
+  const res = await fetch(url, {headers: {"ngrok-skip-browser-warning": "1"}});
+  const html = await res.text();
+  const win = window.open("", "_blank");
+  if (!win) return alert("Popup bloqueado");
+  win.document.open();
+  win.document.write(html);
+  win.document.close();
+} catch (e) {console.log("openWsRedirect", e);}}
 
 /** --------------------------------------------------------------------------------------- calcularBoundsDesdeLocations
  * Calcula bounds y centro óptimo a partir de locations visibles
@@ -532,6 +540,7 @@ $(document).ready(function () {
   let id = urlParams.get('id');
   let key = urlParams.get('key');
   let pProm = Math.round(urlParams.get('p'));
+  let userid = urlParams.get('u');
   window.na = urlParams.get('na');
   window.ag = urlParams.get('ag');
   window.an = urlParams.get('an');
@@ -540,7 +549,7 @@ $(document).ready(function () {
 
   if (!id || !key) { throw new Error("ID o clave no proporcionados en la URL"); }
 
-  var valores = 'Sheet1!A2:W';
+  var valores = 'Sheet1!A2:X';
   var url = 'https://sheets.googleapis.com/v4/spreadsheets/' + id + '/values/' + valores + '?key=' + key;
 
   $('#loading-indicator').show();
@@ -551,7 +560,7 @@ $(document).ready(function () {
     const columnas = [
       "Titulo","lat","lng","dir","URL","des","ambientes","dormitorios","baños","m2construccion",
       "m2terreno","nombre","precioM2","broker","foto","precio","agentName","agentPhone","fechaIngreso",
-      "tiempoOfertado","tipoInmueble","tipoNegocio","anoc"
+      "tiempoOfertado","tipoInmueble","tipoNegocio","anoc","_id"
     ];
 
     window.columnasConfig = {
@@ -579,7 +588,8 @@ $(document).ready(function () {
       "tiempoOfertado": false,
       "tipoInmueble":   false,
       "tipoNegocio":    false,
-      "anoc":           false
+      "anoc":           false,
+      "_id":            false,
     };
 
     $(data.values).each(function () {
@@ -711,11 +721,15 @@ $(document).ready(function () {
       let deAg = ag ? ` de ${ag}` : '';
       let sc = (na || ag) ? ' te escribe, ' : '';
       let foto = dato.foto ? `Foto: ${dato.foto}\n\n`:'';
-      const msj = `Hola${nombreCortito},${soyNa}${deAg}${sc}un gusto saludarte. Por favor, podría enviarme información sobre este inmueble, en caso de que siga disponible (${dato.Titulo})\n\nGracias de antemano\n\nlink: ${url}\n\n${foto}Mensaje creado con Statetty https://statetty.com`;
+
+      const server = "https://excited-fully-skunk.ngrok-free.app/api/statetty/usrClckWsInm";
+      const linkSrv = `${server}?u=${encodeURIComponent(userid)}&i=${encodeURIComponent(dato._id)}`;
+
+      //const linkWA = celularValido ? `<br/><a href="${linkSrv}" target="_blank" rel="noopener">📱 Contactar a${nombreCorto}</a>` : '';
 
       const linkWA = celularValido
-        ? `<br/><a href="https://wa.me/${cel}?text=${encodeURIComponent(msj)}" target="_blank" rel="noopener">📱 Contactar a${nombreCorto}</a>`
-        : '';
+        ? `<br/><a href="#" onclick="openWsRedirect('${linkSrv}');return false;">📱 Contactar a${nombreCorto}</a>`
+        : '';        
 
       var distance = Math.round(calculateDH(circleCenter.lat, circleCenter.lng, dato.lat, dato.lng) * 1000);
       let fotoHTML = dato.foto
