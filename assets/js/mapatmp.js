@@ -541,7 +541,7 @@ $(document).ready(function () {
 
   if (!id || !key) { throw new Error("ID o clave no proporcionados en la URL"); }
 
-  var valores = 'Sheet1!A2:W';
+  var valores = 'Sheet1!A2:X';
   var url = 'https://sheets.googleapis.com/v4/spreadsheets/' + id + '/values/' + valores + '?key=' + key;
 
   $('#loading-indicator').show();
@@ -714,7 +714,7 @@ $(document).ready(function () {
       let sc = (na || ag) ? ' te escribe, ' : '';
       let foto = dato.foto ? `Foto: ${dato.foto}\n\n`:'';
 
-      const server = "https://excited-fully-skunk.ngrok-free.app/api/usrClckWsInm";
+      const server = "https://excited-fully-skunk.ngrok-free.app/api/statetty/usrClckWsInm";
       const linkSrv = `${server}?u=${encodeURIComponent(userid)}&i=${encodeURIComponent(dato._id)}`;
 
       const linkWA = celularValido
