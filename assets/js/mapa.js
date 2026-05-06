@@ -24,7 +24,7 @@ var checkOverlayIcon = L.divIcon({
 async function openWsRedirect(url) {try {
   const res = await fetch(url, {headers: {"ngrok-skip-browser-warning": "1"}});
   const html = await res.text();
-  const win = window.open("", "_blank");
+  const win = window.open("", "_blank", "noopener,noreferrer");
   if (!win) return alert("Popup bloqueado");
   win.document.open();
   win.document.write(html);
