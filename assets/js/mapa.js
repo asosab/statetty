@@ -26,7 +26,7 @@ async function openWsRedirect(url) {try {
   const html = await res.text();
   const win = window.open("", "_blank");  //, "noopener,noreferrer"
   if (!win) return alert("Popup bloqueado");
-  win.opener = null;
+  //win.opener = null;
   win.document.open();
   win.document.write(html);
   win.document.close();
