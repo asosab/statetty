@@ -725,8 +725,6 @@ $(document).ready(function () {
       const server = "https://excited-fully-skunk.ngrok-free.app/api/statetty/usrClckWsInm";
       const linkSrv = `${server}?u=${encodeURIComponent(userid)}&i=${encodeURIComponent(dato._id)}`;
 
-      //const linkWA = celularValido ? `<br/><a href="${linkSrv}" target="_blank" rel="noopener">📱 Contactar a${nombreCorto}</a>` : '';
-
       const linkWA = celularValido
         ? `<br/><a href="#" onclick="openWsRedirect('${linkSrv}');return false;">📱 Contactar a${nombreCorto}</a>`
         : '';        
