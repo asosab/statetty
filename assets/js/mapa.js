@@ -550,7 +550,7 @@ $(document).ready(function () {
 
   if (!id || !key) { throw new Error("ID o clave no proporcionados en la URL"); }
 
-  var valores = 'Sheet1!A2:X';
+  var valores = 'Sheet1!A2:Y';
   var url = 'https://sheets.googleapis.com/v4/spreadsheets/' + id + '/values/' + valores + '?key=' + key;
 
   $('#loading-indicator').show();
