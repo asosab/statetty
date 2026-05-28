@@ -561,7 +561,7 @@ $(document).ready(function () {
     const columnas = [
       "Titulo","lat","lng","dir","URL","des","ambientes","dormitorios","baños","m2construccion",
       "m2terreno","nombre","precioM2","broker","foto","precio","agentName","agentPhone","fechaIngreso",
-      "tiempoOfertado","tipoInmueble","tipoNegocio","anoc","_id"
+      "tiempoOfertado","tipoInmueble","tipoNegocio","anoc","_id", "micros"
     ];
 
     window.columnasConfig = {
@@ -591,6 +591,7 @@ $(document).ready(function () {
       "tipoNegocio":    false,
       "anoc":           false,
       "_id":            false,
+      "micros":         false,
     };
 
     $(data.values).each(function () {
@@ -605,6 +606,7 @@ $(document).ready(function () {
       location.m2terreno      = parseInt(location.m2terreno) || 0;
       location.m2construccion = parseInt(location.m2construccion) || 0;
       location.tiempoOfertado = parseInt(location.tiempoOfertado) || 0;
+      location.micros         = parseInt(location.micros) || 0;
 
       location.precioM2C = (location.precio > 0 && location.m2construccion > 0)? location.precio / location.m2construccion: 0;
       delete location.precioM2;
@@ -747,9 +749,12 @@ $(document).ready(function () {
         : `<span style="color: green;">↓${Math.ceil(Math.abs(priceDiffPercent))}%</span>`;
       let descripcion = dato.des ? `<b>Descripción:</b> ${dato.des}<br>`:'';
       let direccion = dato.dir ? `<b>Dirección:</b> ${dato.dir}<br>`:'';
+      let micros = dato.micros > 0 ? `<b>Líneas de micros:</b> ${dato.micros}<br>`:'';
+
       var popupContent = "<b>" + dato.Titulo + " (" + distance + "m)</b> " + priceComparison + "<br>" +
         `${descripcion}` +
         `${direccion}` +
+        `${micros}` +
         fotoHTML +
         '<a href="' + url + '" target="_blank">🔗 Ver página de la fuente de los datos</a>' +
         linkWA +
