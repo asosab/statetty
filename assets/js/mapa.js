@@ -606,7 +606,7 @@ $(document).ready(function () {
       location.m2terreno      = parseInt(location.m2terreno) || 0;
       location.m2construccion = parseInt(location.m2construccion) || 0;
       location.tiempoOfertado = parseInt(location.tiempoOfertado) || 0;
-      location.micros         = parseInt(location.micros) || 0;
+      location.micros         = location.micros || '';
 
       location.precioM2C = (location.precio > 0 && location.m2construccion > 0)? location.precio / location.m2construccion: 0;
       delete location.precioM2;
@@ -749,7 +749,7 @@ $(document).ready(function () {
         : `<span style="color: green;">↓${Math.ceil(Math.abs(priceDiffPercent))}%</span>`;
       let descripcion = dato.des ? `<b>Descripción:</b> ${dato.des}<br>`:'';
       let direccion = dato.dir ? `<b>Dirección:</b> ${dato.dir}<br>`:'';
-      let micros = dato.micros > 0 ? `<b>Líneas de micros:</b> ${dato.micros}<br>`:'';
+      let micros = dato.micros !=='' ? `<b>Líneas de micros:</b> ${dato.micros}<br>`:'';
 
       var popupContent = "<b>" + dato.Titulo + " (" + distance + "m)</b> " + priceComparison + "<br>" +
         `${descripcion}` +
