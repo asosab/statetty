@@ -1,0 +1,2286 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- ★ SEO META — editar aquí -->
+  <title>Statetty | La navaja suiza del asesor inmobiliario</title>
+  <meta name="description" content="Statetty centraliza inmuebles de RE/MAX, Century 21 y más, monitorea tus grupos de WhatsApp y calcula el ACM — todo desde Telegram. Para agentes inmobiliarios en Bolivia y Perú.">
+  <meta name="keywords" content="software inmobiliario Bolivia, plataforma inmobiliaria Santa Cruz, ACM automático, monitor WhatsApp inmobiliario, agente inmobiliario Bolivia, anticrético, Statetty, inmuebles Santa Cruz de la Sierra">
+  <meta name="author" content="Alejandro Sosa Briceño">
+  <meta name="geo.region" content="BO-S">
+  <meta name="geo.placename" content="Santa Cruz de la Sierra">
+  <meta name="geo.position" content="-17.7833152;-63.1821236">
+  <meta name="ICBM" content="-17.7833152, -63.1821236">
+  <link rel="canonical" href="https://statetty.com/">
+  <!-- ★ FIN SEO META -->
+
+  <!-- ★ OPEN GRAPH — editar aquí -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://statetty.com/">
+  <meta property="og:title" content="Statetty | La navaja suiza del asesor inmobiliario">
+  <meta property="og:description" content="Centralizá inmuebles de RE/MAX, C21 y más. Monitoreá WhatsApp. Calculá el ACM en segundos. Todo desde Telegram.">
+  <meta property="og:image" content="https://statetty.com/assets/images/statetty.png">
+  <meta property="og:image:alt" content="Statetty — plataforma inmobiliaria">
+  <meta property="og:locale" content="es_BO">
+  <meta property="og:site_name" content="Statetty">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@statetty">
+  <meta name="twitter:creator" content="@asosab">
+  <meta name="twitter:title" content="Statetty | La navaja suiza del asesor inmobiliario">
+  <meta name="twitter:description" content="Centralizá inmuebles de RE/MAX, C21 y más. Monitoreá WhatsApp. Calculá el ACM en segundos.">
+  <meta name="twitter:image" content="https://statetty.com/assets/images/statetty.png">
+  <!-- ★ FIN OPEN GRAPH -->
+
+  <!-- Favicons — mismos que el sitio actual -->
+  <link rel="icon" href="/assets/images/favicon.ico" type="image/x-icon">
+  <link rel="apple-touch-icon" href="/assets/images/apple-touch-icon.png">
+  <meta name="theme-color" content="#0a0a0a">
+  <meta name="msapplication-TileColor" content="#0a0a0a">
+
+  <!-- Fuentes -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+
+  <style>
+    /* ============================================================
+       ★ VARIABLES GLOBALES — editar aquí para cambiar colores/tipografía
+       ============================================================ */
+    :root {
+      --brand:       #FF5C00;
+      --brand-dim:   #cc4900;
+      --brand-soft:  rgba(255,92,0,.10);
+      --dark:        #0a0a0a;
+      --dark-2:      #111111;
+      --dark-3:      #1a1a1a;
+      --dark-4:      #242424;
+      --mid:         #3a3a3a;
+      --muted:       #777;
+      --muted-2:     #555;
+      --light:       #e8e4df;
+      --light-2:     #f2ede8;
+      --white:       #ffffff;
+      --font-head:   'Syne', sans-serif;
+      --font-body:   'DM Sans', sans-serif;
+      --radius-sm:   6px;
+      --radius-md:   12px;
+      --radius-lg:   20px;
+      --radius-xl:   32px;
+      --transition:  0.22s cubic-bezier(.4,0,.2,1);
+    }
+    /* ★ FIN VARIABLES GLOBALES */
+
+    /* ============================================================
+       RESET & BASE
+       ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; font-size: 16px; }
+    body {
+      font-family: var(--font-body);
+      background: var(--dark);
+      color: var(--light);
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+    img { max-width: 100%; display: block; }
+    a { color: inherit; text-decoration: none; }
+    button { cursor: pointer; font-family: inherit; border: none; background: none; }
+
+    /* ============================================================
+       UTILIDADES
+       ============================================================ */
+    .container { max-width: 1160px; margin: 0 auto; padding: 0 24px; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 14px 28px;
+      border-radius: var(--radius-lg);
+      font-family: var(--font-head); font-weight: 600; font-size: .95rem;
+      letter-spacing: .01em;
+      transition: var(--transition);
+      white-space: nowrap;
+    }
+    .btn-primary {
+      background: var(--brand); color: var(--white);
+      border: 2px solid var(--brand);
+    }
+    .btn-primary:hover { background: var(--brand-dim); border-color: var(--brand-dim); transform: translateY(-1px); }
+    .btn-ghost {
+      background: transparent; color: var(--light);
+      border: 1.5px solid var(--mid);
+    }
+    .btn-ghost:hover { border-color: var(--light); background: var(--dark-3); }
+    .btn-sm { padding: 10px 20px; font-size: .85rem; }
+
+    .tag {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: .75rem;
+      font-weight: 600;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+    }
+    .tag-brand { background: var(--brand-soft); color: var(--brand); border: 1px solid rgba(255,92,0,.25); }
+    .tag-light { background: rgba(255,255,255,.07); color: var(--muted); border: 1px solid var(--mid); }
+
+    .section-label {
+      font-family: var(--font-head); font-size: .75rem; font-weight: 700;
+      letter-spacing: .12em; text-transform: uppercase;
+      color: var(--brand); margin-bottom: 16px;
+    }
+    .section-title {
+      font-family: var(--font-head); font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 700; line-height: 1.15;
+      color: var(--white);
+    }
+    .section-sub {
+      font-size: 1.05rem; color: var(--muted);
+      max-width: 600px; line-height: 1.7;
+      margin-top: 14px;
+    }
+    .divider { border: none; border-top: 1px solid var(--dark-4); margin: 0; }
+
+    /* Animación de entrada */
+    .fade-up {
+      opacity: 0; transform: translateY(28px);
+      transition: opacity .55s ease, transform .55s ease;
+    }
+    .fade-up.visible { opacity: 1; transform: none; }
+
+    /* ============================================================
+       ★ 01 — NAVEGACIÓN
+       ============================================================ */
+    .nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+      background: rgba(10,10,10,.88);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid transparent;
+      transition: border-color .3s;
+    }
+    .nav.scrolled { border-bottom-color: var(--dark-4); }
+    .nav-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      height: 64px; gap: 32px;
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 10px;
+      font-family: var(--font-head); font-weight: 800; font-size: 1.25rem;
+      color: var(--white); flex-shrink: 0;
+    }
+    .nav-logo img { width: 32px; height: 32px; object-fit: contain; }
+    .nav-tagline {
+      font-size: .7rem; color: var(--muted); font-family: var(--font-body);
+      font-weight: 300; font-style: italic;
+      display: none;
+    }
+    @media (min-width: 900px) { .nav-tagline { display: block; } }
+
+    .nav-links {
+      display: none; list-style: none; gap: 4px; align-items: center;
+    }
+    @media (min-width: 900px) { .nav-links { display: flex; } }
+    .nav-links a {
+      padding: 8px 14px; border-radius: var(--radius-sm);
+      font-size: .875rem; color: var(--muted);
+      transition: var(--transition);
+    }
+    .nav-links a:hover { color: var(--white); background: var(--dark-3); }
+
+    .nav-cta { display: flex; align-items: center; gap: 12px; }
+    .nav-hamburger {
+      display: flex; flex-direction: column; gap: 5px;
+      padding: 8px; border-radius: var(--radius-sm);
+      transition: var(--transition);
+    }
+    @media (min-width: 900px) { .nav-hamburger { display: none; } }
+    .nav-hamburger span {
+      display: block; width: 22px; height: 1.5px;
+      background: var(--light); border-radius: 2px;
+      transition: var(--transition);
+    }
+    .nav-hamburger.open span:nth-child(1) { transform: translateY(6.5px) rotate(45deg); }
+    .nav-hamburger.open span:nth-child(2) { opacity: 0; }
+    .nav-hamburger.open span:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); }
+
+    /* Menú móvil */
+    .nav-mobile {
+      display: none; position: fixed; inset: 64px 0 0 0; z-index: 999;
+      background: var(--dark-2); padding: 24px;
+      flex-direction: column; gap: 8px;
+    }
+    .nav-mobile.open { display: flex; }
+    .nav-mobile a {
+      padding: 14px 16px; border-radius: var(--radius-md);
+      font-size: 1.1rem; color: var(--light);
+      border: 1px solid var(--dark-4);
+      transition: var(--transition);
+    }
+    .nav-mobile a:hover { background: var(--dark-3); color: var(--white); }
+    .nav-mobile .btn { margin-top: 8px; justify-content: center; }
+
+    /* ============================================================
+       ★ 02 — HERO
+       ============================================================ */
+    #inicio {
+      padding: 140px 0 80px;
+      position: relative; overflow: hidden;
+    }
+    .hero-bg {
+      position: absolute; inset: 0; pointer-events: none;
+      background:
+        radial-gradient(ellipse 60% 40% at 70% 50%, rgba(255,92,0,.08) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 60% at 20% 80%, rgba(255,92,0,.04) 0%, transparent 60%);
+    }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px; align-items: center;
+    }
+    @media (max-width: 860px) {
+      .hero-grid { grid-template-columns: 1fr; gap: 40px; }
+      #inicio { padding: 110px 0 60px; }
+    }
+    .hero-tag { margin-bottom: 20px; }
+    .hero-headline {
+      font-family: var(--font-head);
+      font-size: clamp(2.6rem, 5vw, 4rem);
+      font-weight: 800; line-height: 1.1;
+      color: var(--white);
+      letter-spacing: -.02em;
+    }
+    .hero-headline em {
+      font-style: normal; color: var(--brand);
+    }
+    .hero-sub {
+      margin-top: 20px; font-size: 1.1rem;
+      color: var(--muted); line-height: 1.7; max-width: 480px;
+    }
+    .hero-actions {
+      margin-top: 32px; display: flex; gap: 14px; flex-wrap: wrap; align-items: center;
+    }
+    .hero-badges {
+      display: flex; flex-wrap: wrap; gap: 8px; margin-top: 28px;
+    }
+    .hero-video-wrap {
+      position: relative; border-radius: var(--radius-xl);
+      overflow: hidden; aspect-ratio: 16/10;
+      border: 1px solid var(--dark-4);
+      background: var(--dark-3);
+    }
+    /* ★ VIDEO LOOP HERO — reemplazar /assets/video/demo-loop.mp4 con el video real */
+    .hero-video-wrap video {
+      width: 100%; height: 100%; object-fit: cover;
+    }
+    .hero-video-placeholder {
+      width: 100%; height: 100%;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 12px; color: var(--muted-2);
+      font-size: .875rem;
+    }
+    .hero-video-placeholder svg { opacity: .4; }
+    .hero-video-glow {
+      position: absolute; inset: -1px;
+      border-radius: var(--radius-xl);
+      background: linear-gradient(135deg, rgba(255,92,0,.15) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    /* ============================================================
+       ★ 03 — PROBLEMA (identificación)
+       ============================================================ */
+    #problema { padding: 80px 0; }
+    .problema-intro {
+      text-align: center; margin-bottom: 48px;
+    }
+    .problema-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+    .problema-card {
+      padding: 24px 22px;
+      border: 1px solid var(--dark-4);
+      border-radius: var(--radius-md);
+      background: var(--dark-2);
+      transition: var(--transition);
+    }
+    .problema-card:hover { border-color: var(--mid); background: var(--dark-3); }
+    .problema-icon {
+      font-size: 1.4rem; margin-bottom: 14px;
+      width: 44px; height: 44px;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--dark-4); border-radius: var(--radius-sm);
+    }
+    .problema-card h3 {
+      font-family: var(--font-head); font-size: .95rem;
+      font-weight: 600; color: var(--white); margin-bottom: 8px;
+    }
+    .problema-card p { font-size: .875rem; color: var(--muted); line-height: 1.6; }
+
+    /* ============================================================
+       ★ 04 — FUNCIONES
+       ============================================================ */
+    #funciones { padding: 80px 0; background: var(--dark-2); }
+    .funciones-header { margin-bottom: 48px; }
+    .funciones-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+    }
+    .funcion-card {
+      padding: 28px 26px;
+      border: 1px solid var(--dark-4);
+      border-radius: var(--radius-lg);
+      background: var(--dark-3);
+      transition: var(--transition);
+      position: relative; overflow: hidden;
+    }
+    .funcion-card::before {
+      content: ''; position: absolute;
+      top: 0; left: 0; right: 0; height: 2px;
+      background: var(--brand); opacity: 0;
+      transition: var(--transition);
+    }
+    .funcion-card:hover { border-color: var(--mid); }
+    .funcion-card:hover::before { opacity: 1; }
+    .funcion-icon {
+      width: 48px; height: 48px;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--brand-soft);
+      border: 1px solid rgba(255,92,0,.2);
+      border-radius: var(--radius-md);
+      font-size: 1.4rem; margin-bottom: 18px;
+    }
+    .funcion-card h3 {
+      font-family: var(--font-head); font-weight: 700;
+      font-size: 1.05rem; color: var(--white); margin-bottom: 10px;
+    }
+    .funcion-card p { font-size: .9rem; color: var(--muted); line-height: 1.65; }
+    .funcion-local {
+      margin-top: 12px; font-size: .75rem;
+      color: var(--brand); font-weight: 600; letter-spacing: .03em;
+    }
+
+    /* ============================================================
+       ★ 05 — TESTIMONIOS
+       ============================================================ */
+    #testimonios { padding: 80px 0; }
+    .testimonios-header { margin-bottom: 48px; }
+    .testimonios-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    .testimonio-card {
+      padding: 28px 26px;
+      border: 1px solid var(--dark-4);
+      border-radius: var(--radius-lg);
+      background: var(--dark-2);
+      display: flex; flex-direction: column; gap: 20px;
+    }
+    .testimonio-quote {
+      font-size: .95rem; color: var(--light-2);
+      line-height: 1.75; flex: 1;
+      font-style: italic;
+    }
+    .testimonio-resultado {
+      font-size: .82rem; font-weight: 600;
+      color: var(--brand);
+      padding: 8px 14px;
+      background: var(--brand-soft);
+      border-radius: var(--radius-sm);
+      display: inline-block; margin-bottom: 4px;
+    }
+    .testimonio-author {
+      display: flex; align-items: center; gap: 14px;
+      padding-top: 16px;
+      border-top: 1px solid var(--dark-4);
+    }
+    .testimonio-avatar {
+      width: 44px; height: 44px; border-radius: 50%;
+      object-fit: cover; background: var(--dark-4);
+      flex-shrink: 0;
+    }
+    .testimonio-avatar-placeholder {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: var(--dark-4);
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-head); font-weight: 700;
+      font-size: .95rem; color: var(--brand);
+      flex-shrink: 0;
+    }
+    .testimonio-name {
+      font-family: var(--font-head); font-weight: 600;
+      font-size: .9rem; color: var(--white);
+    }
+    .testimonio-agency {
+      font-size: .8rem; color: var(--muted);
+    }
+    .testimonio-audio {
+      margin-top: 8px;
+    }
+    .testimonio-audio audio {
+      width: 100%; height: 36px; border-radius: var(--radius-sm);
+      accent-color: var(--brand);
+    }
+    .audio-label {
+      font-size: .75rem; color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    /* ============================================================
+       ★ 06 — FORMULARIO ÚNICO ("Presentate")
+       ============================================================ */
+    #formulario { padding: 100px 0; background: var(--dark-2); }
+    .formulario-wrap {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px; align-items: start;
+    }
+    @media (max-width: 860px) { .formulario-wrap { grid-template-columns: 1fr; gap: 40px; } }
+    .formulario-info h2 {
+      font-family: var(--font-head); font-size: clamp(2rem, 3.5vw, 2.8rem);
+      font-weight: 800; color: var(--white); line-height: 1.15;
+      margin-bottom: 16px;
+    }
+    .formulario-info h2 em { font-style: normal; color: var(--brand); }
+    .formulario-info p { color: var(--muted); line-height: 1.75; font-size: .975rem; }
+    .formulario-steps {
+      margin-top: 32px; display: flex; flex-direction: column; gap: 18px;
+    }
+    .form-step {
+      display: flex; align-items: flex-start; gap: 14px;
+    }
+    .form-step-num {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: var(--brand-soft); border: 1px solid rgba(255,92,0,.3);
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-head); font-weight: 700;
+      font-size: .8rem; color: var(--brand);
+      flex-shrink: 0; margin-top: 2px;
+    }
+    .form-step-text { font-size: .9rem; color: var(--muted); line-height: 1.6; }
+    .form-step-text strong { color: var(--light); font-weight: 500; }
+
+    /* ★ FORMULARIO — campos y estilos */
+    .form-card {
+      background: var(--dark-3);
+      border: 1px solid var(--dark-4);
+      border-radius: var(--radius-xl);
+      padding: 36px 32px;
+    }
+    .form-title {
+      font-family: var(--font-head); font-weight: 700;
+      font-size: 1.15rem; color: var(--white);
+      margin-bottom: 24px;
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    @media (max-width: 520px) { .form-row { grid-template-columns: 1fr; } }
+    .form-group { margin-bottom: 14px; }
+    .form-group label {
+      display: block; font-size: .8rem;
+      font-weight: 500; color: var(--muted);
+      margin-bottom: 6px; letter-spacing: .02em;
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%; padding: 12px 14px;
+      background: var(--dark-4); border: 1px solid var(--mid);
+      border-radius: var(--radius-md);
+      color: var(--white); font-family: var(--font-body); font-size: .9rem;
+      transition: var(--transition);
+      -webkit-appearance: none; appearance: none;
+    }
+    .form-group select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23777' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 14px center;
+      padding-right: 36px;
+    }
+    .form-group textarea { resize: vertical; min-height: 90px; }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none; border-color: var(--brand);
+      box-shadow: 0 0 0 3px rgba(255,92,0,.12);
+    }
+    .form-group input::placeholder,
+    .form-group textarea::placeholder { color: var(--muted-2); }
+
+    /* ★ DATOS DE CIUDADES Y PRECIOS — se referencian en JS más abajo */
+    .form-submit {
+      width: 100%; margin-top: 8px; padding: 15px;
+      background: var(--brand); color: var(--white);
+      border-radius: var(--radius-lg);
+      font-family: var(--font-head); font-weight: 700;
+      font-size: 1rem; letter-spacing: .01em;
+      transition: var(--transition);
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .form-submit:hover { background: var(--brand-dim); transform: translateY(-1px); }
+    .form-submit:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+    .form-legal {
+      margin-top: 12px; font-size: .75rem;
+      color: var(--muted-2); text-align: center; line-height: 1.6;
+    }
+    .form-legal a { color: var(--muted); text-decoration: underline; text-underline-offset: 2px; }
+    .form-success {
+      display: none; text-align: center; padding: 24px;
+    }
+    .form-success.visible { display: block; }
+    .form-success-icon { font-size: 3rem; margin-bottom: 12px; }
+    .form-success h3 {
+      font-family: var(--font-head); font-weight: 700;
+      color: var(--white); font-size: 1.3rem; margin-bottom: 8px;
+    }
+    .form-success p { color: var(--muted); font-size: .9rem; line-height: 1.65; }
+
+    /* ============================================================
+       ★ 07 — VIDEOTECA
+       ============================================================ */
+    #videos { padding: 80px 0; }
+    .videos-header { margin-bottom: 40px; }
+    .videos-featured {
+      position: relative; border-radius: var(--radius-xl);
+      overflow: hidden; aspect-ratio: 16/9;
+      background: var(--dark-3);
+      border: 1px solid var(--dark-4);
+      margin-bottom: 36px;
+    }
+    .videos-featured iframe {
+      width: 100%; height: 100%; border: none;
+    }
+    /* ★ FILTROS DE VIDEOS — editar categorías aquí */
+    .videos-filters {
+      display: flex; flex-wrap: wrap; gap: 8px;
+      margin-bottom: 24px;
+    }
+    .videos-filter-btn {
+      padding: 8px 18px; border-radius: 20px;
+      font-size: .82rem; font-weight: 500;
+      border: 1px solid var(--mid); color: var(--muted);
+      background: transparent; transition: var(--transition);
+    }
+    .videos-filter-btn:hover,
+    .videos-filter-btn.active {
+      background: var(--brand); border-color: var(--brand);
+      color: var(--white);
+    }
+    .videos-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 16px;
+    }
+    .video-card {
+      border-radius: var(--radius-md); overflow: hidden;
+      border: 1px solid var(--dark-4); background: var(--dark-2);
+      cursor: pointer; transition: var(--transition);
+    }
+    .video-card:hover { border-color: var(--mid); transform: translateY(-2px); }
+    .video-thumb {
+      position: relative; aspect-ratio: 16/9;
+      background: var(--dark-4); overflow: hidden;
+    }
+    .video-thumb img { width: 100%; height: 100%; object-fit: cover; transition: var(--transition); }
+    .video-card:hover .video-thumb img { transform: scale(1.04); }
+    .video-play-overlay {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(0,0,0,.3);
+    }
+    .video-play-btn {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: var(--brand); display: flex;
+      align-items: center; justify-content: center;
+      transition: var(--transition);
+    }
+    .video-card:hover .video-play-btn { transform: scale(1.1); }
+    .video-play-btn svg { margin-left: 3px; }
+    .video-info { padding: 14px 14px 16px; }
+    .video-cat {
+      font-size: .7rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: .06em; color: var(--brand); margin-bottom: 6px;
+    }
+    .video-title {
+      font-family: var(--font-head); font-weight: 600;
+      font-size: .9rem; color: var(--white); line-height: 1.4;
+      margin-bottom: 8px;
+    }
+    .video-dur {
+      font-size: .75rem; color: var(--muted);
+    }
+    .video-hidden { display: none; }
+
+    /* Modal de video */
+    .video-modal {
+      display: none; position: fixed; inset: 0; z-index: 2000;
+      background: rgba(0,0,0,.88);
+      align-items: center; justify-content: center;
+      padding: 24px;
+    }
+    .video-modal.open { display: flex; }
+    .video-modal-inner {
+      width: 100%; max-width: 860px;
+      border-radius: var(--radius-xl); overflow: hidden;
+      aspect-ratio: 16/9; position: relative;
+      background: var(--dark);
+    }
+    .video-modal-inner iframe { width: 100%; height: 100%; border: none; }
+    .video-modal-close {
+      position: fixed; top: 20px; right: 20px;
+      width: 44px; height: 44px; border-radius: 50%;
+      background: var(--dark-3); border: 1px solid var(--mid);
+      color: var(--white); font-size: 1.2rem;
+      display: flex; align-items: center; justify-content: center;
+      transition: var(--transition);
+    }
+    .video-modal-close:hover { background: var(--mid); }
+
+    /* ============================================================
+       ★ 08 — PRECIOS
+       ============================================================ */
+    #precios { padding: 80px 0; background: var(--dark-2); }
+    .precios-header { margin-bottom: 40px; }
+    .precios-selector {
+      display: flex; gap: 0; margin-bottom: 36px;
+      background: var(--dark-4); border-radius: var(--radius-lg);
+      padding: 4px; width: fit-content;
+    }
+    .pais-btn {
+      padding: 10px 24px; border-radius: var(--radius-md);
+      font-family: var(--font-head); font-weight: 600;
+      font-size: .875rem; color: var(--muted);
+      transition: var(--transition);
+    }
+    .pais-btn.active {
+      background: var(--dark-2); color: var(--white);
+      box-shadow: 0 1px 4px rgba(0,0,0,.4);
+    }
+
+    .precios-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px; margin-bottom: 40px;
+    }
+    .precio-card {
+      padding: 28px 24px;
+      border: 1px solid var(--dark-4);
+      border-radius: var(--radius-lg);
+      background: var(--dark-3);
+      transition: var(--transition);
+    }
+    .precio-card.destacado {
+      border-color: var(--brand);
+      position: relative;
+    }
+    .precio-badge {
+      position: absolute; top: -12px; left: 50%;
+      transform: translateX(-50%);
+      padding: 4px 16px; border-radius: 20px;
+      background: var(--brand); color: var(--white);
+      font-size: .72rem; font-weight: 700;
+      letter-spacing: .06em; text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .precio-tipo {
+      font-family: var(--font-head); font-weight: 700;
+      font-size: 1rem; color: var(--white); margin-bottom: 4px;
+    }
+    .precio-desc { font-size: .82rem; color: var(--muted); margin-bottom: 20px; }
+    .precio-tabla { width: 100%; border-collapse: collapse; }
+    .precio-tabla th {
+      font-size: .72rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: .06em; color: var(--muted);
+      padding: 0 0 10px; text-align: left;
+    }
+    .precio-tabla td {
+      padding: 10px 0;
+      border-top: 1px solid var(--dark-4);
+      font-size: .9rem; color: var(--light);
+    }
+    .precio-tabla td:last-child { text-align: right; font-weight: 600; }
+    .precio-moneda { font-size: .75rem; color: var(--muted); }
+
+    /* Calculadora de grupo */
+    .calc-wrap {
+      background: var(--dark-3); border: 1px solid var(--dark-4);
+      border-radius: var(--radius-xl);
+      padding: 32px; margin-bottom: 32px;
+    }
+    .calc-title {
+      font-family: var(--font-head); font-weight: 700;
+      font-size: 1.1rem; color: var(--white); margin-bottom: 6px;
+    }
+    .calc-sub { font-size: .875rem; color: var(--muted); margin-bottom: 28px; }
+    .calc-controls {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+      margin-bottom: 24px;
+    }
+    @media (max-width: 520px) { .calc-controls { grid-template-columns: 1fr; } }
+    .calc-control label {
+      display: block; font-size: .8rem; font-weight: 500;
+      color: var(--muted); margin-bottom: 8px;
+    }
+    .calc-control input[type=range] {
+      width: 100%; accent-color: var(--brand);
+      height: 4px; cursor: pointer;
+    }
+    .calc-control select {
+      width: 100%; padding: 11px 14px;
+      background: var(--dark-4); border: 1px solid var(--mid);
+      border-radius: var(--radius-md);
+      color: var(--white); font-family: var(--font-body); font-size: .9rem;
+      -webkit-appearance: none; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23777' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 14px center;
+      padding-right: 36px;
+    }
+    .calc-value-display {
+      font-family: var(--font-head); font-weight: 700;
+      font-size: .9rem; color: var(--brand); margin-top: 6px;
+    }
+    .calc-result {
+      display: grid; grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px; padding: 20px 0 0;
+      border-top: 1px solid var(--dark-4);
+    }
+    @media (max-width: 520px) { .calc-result { grid-template-columns: 1fr 1fr; } }
+    .calc-result-item { text-align: center; }
+    .calc-result-label {
+      font-size: .72rem; text-transform: uppercase;
+      letter-spacing: .06em; color: var(--muted); margin-bottom: 6px;
+    }
+    .calc-result-val {
+      font-family: var(--font-head); font-weight: 800;
+      font-size: 1.4rem; color: var(--white);
+    }
+    .calc-result-val.brand { color: var(--brand); }
+    .calc-result-mon { font-size: .72rem; color: var(--muted); margin-top: 2px; }
+
+    .precios-ctas {
+      display: flex; gap: 14px; flex-wrap: wrap; align-items: center;
+    }
+
+    /* ============================================================
+       ★ 09 — FAQ
+       ============================================================ */
+    #faq { padding: 80px 0; }
+    .faq-header { margin-bottom: 48px; }
+    .faq-list { max-width: 760px; }
+    /* ★ PREGUNTAS FAQ — editar texto aquí, el JSON-LD se genera automáticamente */
+    .faq-item {
+      border-bottom: 1px solid var(--dark-4);
+    }
+    .faq-question {
+      width: 100%; display: flex; align-items: center; justify-content: space-between;
+      gap: 16px; padding: 22px 0;
+      text-align: left; color: var(--white);
+      font-family: var(--font-head); font-weight: 600;
+      font-size: .975rem; transition: var(--transition);
+    }
+    .faq-question:hover { color: var(--brand); }
+    .faq-icon {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--dark-4); border: 1px solid var(--mid);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; transition: var(--transition);
+    }
+    .faq-icon svg { transition: transform .22s; }
+    .faq-item.open .faq-icon { background: var(--brand-soft); border-color: rgba(255,92,0,.3); }
+    .faq-item.open .faq-icon svg { transform: rotate(45deg); }
+    .faq-answer {
+      overflow: hidden; max-height: 0;
+      transition: max-height .35s cubic-bezier(.4,0,.2,1), padding .25s;
+      padding: 0;
+    }
+    .faq-item.open .faq-answer { max-height: 500px; padding-bottom: 22px; }
+    .faq-answer p { font-size: .9rem; color: var(--muted); line-height: 1.75; }
+    .faq-answer a { color: var(--brand); text-decoration: underline; text-underline-offset: 3px; }
+
+    /* ============================================================
+       ★ 10 — SALA DE PRENSA
+       ============================================================ */
+    #prensa { padding: 80px 0; background: var(--dark-2); }
+    .prensa-header { margin-bottom: 48px; }
+    .prensa-kit {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+      margin-bottom: 40px;
+    }
+    @media (max-width: 680px) { .prensa-kit { grid-template-columns: 1fr; } }
+    .prensa-card {
+      padding: 28px 26px;
+      border: 1px solid var(--dark-4);
+      border-radius: var(--radius-lg);
+      background: var(--dark-3);
+    }
+    .prensa-card-icon {
+      width: 48px; height: 48px;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--dark-4); border-radius: var(--radius-md);
+      font-size: 1.4rem; margin-bottom: 16px;
+    }
+    .prensa-card h3 {
+      font-family: var(--font-head); font-weight: 700;
+      font-size: 1rem; color: var(--white); margin-bottom: 10px;
+    }
+    .prensa-card p { font-size: .875rem; color: var(--muted); line-height: 1.65; margin-bottom: 18px; }
+    .prensa-assets {
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    /* ★ ASSETS DE PRENSA — editar links de Drive aquí */
+    .prensa-asset {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 14px;
+      background: var(--dark-4); border-radius: var(--radius-sm);
+      transition: var(--transition);
+    }
+    .prensa-asset:hover { background: var(--mid); }
+    .prensa-asset-name { font-size: .875rem; color: var(--light); }
+    .prensa-asset-meta { font-size: .75rem; color: var(--muted); margin-top: 2px; }
+    .prensa-download {
+      display: flex; align-items: center; gap: 6px;
+      padding: 7px 14px; border-radius: var(--radius-sm);
+      background: var(--brand-soft); color: var(--brand);
+      font-size: .8rem; font-weight: 600;
+      border: 1px solid rgba(255,92,0,.2);
+      transition: var(--transition);
+      white-space: nowrap;
+    }
+    .prensa-download:hover { background: var(--brand); color: var(--white); }
+    .prensa-contacto {
+      padding: 24px 28px;
+      border: 1px solid var(--dark-4);
+      border-radius: var(--radius-lg);
+      background: var(--dark-3);
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 20px; flex-wrap: wrap;
+    }
+    .prensa-contacto-info h3 {
+      font-family: var(--font-head); font-weight: 700;
+      font-size: .975rem; color: var(--white); margin-bottom: 4px;
+    }
+    .prensa-contacto-info p { font-size: .875rem; color: var(--muted); }
+    .prensa-contacto-info a { color: var(--brand); }
+
+    /* ============================================================
+       ★ 11 — FOOTER
+       ============================================================ */
+    footer { padding: 60px 0 32px; border-top: 1px solid var(--dark-4); }
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr 1fr;
+      gap: 48px; margin-bottom: 48px;
+    }
+    @media (max-width: 720px) { .footer-grid { grid-template-columns: 1fr 1fr; gap: 32px; } }
+    @media (max-width: 480px) { .footer-grid { grid-template-columns: 1fr; } }
+    .footer-brand .nav-logo { margin-bottom: 14px; }
+    .footer-brand p {
+      font-size: .875rem; color: var(--muted);
+      line-height: 1.7; max-width: 260px;
+    }
+    .footer-brand address {
+      font-style: normal; font-size: .8rem;
+      color: var(--muted-2); margin-top: 14px; line-height: 1.75;
+    }
+    .footer-brand address a { color: var(--muted); }
+    .footer-col h4 {
+      font-family: var(--font-head); font-weight: 700;
+      font-size: .8rem; text-transform: uppercase;
+      letter-spacing: .08em; color: var(--muted);
+      margin-bottom: 16px;
+    }
+    .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .footer-col ul a { font-size: .875rem; color: var(--muted); transition: var(--transition); }
+    .footer-col ul a:hover { color: var(--white); }
+    .footer-social {
+      display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px;
+    }
+    .footer-social-link {
+      width: 36px; height: 36px; border-radius: var(--radius-sm);
+      background: var(--dark-4); border: 1px solid var(--mid);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--muted); font-size: .85rem;
+      transition: var(--transition);
+    }
+    .footer-social-link:hover { background: var(--mid); color: var(--white); }
+    .footer-wa-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 11px 20px; border-radius: var(--radius-lg);
+      background: #25D366; color: var(--white);
+      font-family: var(--font-head); font-weight: 600;
+      font-size: .85rem; margin-top: 14px;
+      transition: var(--transition);
+    }
+    .footer-wa-btn:hover { background: #1fba58; }
+    .footer-bottom {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 12px;
+      padding-top: 28px; border-top: 1px solid var(--dark-4);
+    }
+    .footer-copy { font-size: .8rem; color: var(--muted-2); }
+    .footer-legal { display: flex; gap: 16px; flex-wrap: wrap; }
+    .footer-legal a { font-size: .8rem; color: var(--muted-2); transition: var(--transition); }
+    .footer-legal a:hover { color: var(--white); }
+
+    /* ============================================================
+       RESPONSIVE GENERAL
+       ============================================================ */
+    @media (max-width: 680px) {
+      .funciones-grid { grid-template-columns: 1fr; }
+      .testimonios-grid { grid-template-columns: 1fr; }
+      .btn { padding: 12px 22px; font-size: .875rem; }
+      .hero-actions { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============================================================
+       ★ 01 — NAVEGACIÓN
+       ============================================================ -->
+  <nav class="nav" id="nav" role="navigation" aria-label="Navegación principal">
+    <div class="container nav-inner">
+
+      <a href="#inicio" class="nav-logo" aria-label="Statetty — inicio">
+        <!-- ★ LOGO — /assets/images/statetty.png ya existe en el servidor -->
+        <img src="/assets/images/statetty.png" alt="Statetty logo" width="32" height="32"
+             onerror="this.style.display='none'">
+        Statetty
+        <span class="nav-tagline">navaja suiza del asesor inmobiliario</span>
+      </a>
+
+      <ul class="nav-links" role="list">
+        <li><a href="#funciones">Funciones</a></li>
+        <li><a href="#precios">Precios</a></li>
+        <li><a href="#videos">Videos</a></li>
+        <li><a href="#prensa">Prensa</a></li>
+        <li><a href="#faq">FAQ</a></li>
+      </ul>
+
+      <div class="nav-cta">
+        <a href="#formulario" class="btn btn-primary btn-sm">Presentate</a>
+        <button class="nav-hamburger" id="hamburger" aria-label="Abrir menú" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+
+    </div>
+  </nav>
+
+  <!-- Menú móvil -->
+  <div class="nav-mobile" id="nav-mobile" role="dialog" aria-label="Menú de navegación">
+    <a href="#funciones" onclick="closeMenu()">Funciones</a>
+    <a href="#precios"   onclick="closeMenu()">Precios</a>
+    <a href="#videos"    onclick="closeMenu()">Videos</a>
+    <a href="#prensa"    onclick="closeMenu()">Prensa</a>
+    <a href="#faq"       onclick="closeMenu()">FAQ</a>
+    <a href="#formulario" class="btn btn-primary" onclick="closeMenu()">Presentate</a>
+  </div>
+
+
+  <main>
+
+    <!-- ============================================================
+         ★ 02 — HERO
+         ============================================================ -->
+    <section id="inicio" aria-labelledby="hero-title">
+      <div class="hero-bg" aria-hidden="true"></div>
+      <div class="container">
+        <div class="hero-grid">
+
+          <div class="fade-up">
+            <div class="hero-tag">
+              <span class="tag tag-brand">Para agentes inmobiliarios</span>
+            </div>
+
+            <!-- ★ HEADLINE HERO — editar aquí -->
+            <h1 class="hero-headline" id="hero-title">
+              Trabaja diferente.<br>
+              Sé el agente que<br>
+              <em>siempre llega primero.</em>
+            </h1>
+
+            <!-- ★ SUBHEADLINE HERO — editar aquí -->
+            <p class="hero-sub">
+              Statetty centraliza inmuebles de RE/MAX, Century 21 y más,
+              monitorea tus grupos de WhatsApp y calcula el ACM —
+              todo desde Telegram, en tiempo real.
+            </p>
+
+            <div class="hero-actions">
+              <a href="#formulario" class="btn btn-primary">
+                Presentate
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </a>
+              <a href="#videos" class="btn btn-ghost">Ver cómo funciona ↓</a>
+            </div>
+
+            <div class="hero-badges">
+              <span class="tag tag-light">RE/MAX · Century 21 · Infocasas</span>
+              <span class="tag tag-light">Santa Cruz · Bolivia</span>
+              <span class="tag tag-light">Telegram + WhatsApp</span>
+            </div>
+          </div>
+
+          <!-- ★ VIDEO LOOP HERO
+               Reemplazar /assets/video/demo-loop.mp4 con el video corto real (10–20s, mudo).
+               Si no existe aún, el placeholder es visible. -->
+          <div class="hero-video-wrap fade-up" style="transition-delay:.15s">
+            <video autoplay muted loop playsinline poster="/assets/images/statetty.png"
+                   aria-label="Demostración de Statetty en acción"
+                   onerror="this.parentElement.querySelector('.hero-video-placeholder').style.display='flex'; this.style.display='none'">
+              <source src="/assets/video/demo-loop.mp4" type="video/mp4">
+            </video>
+            <!-- Placeholder visible hasta que exista el video -->
+            <div class="hero-video-placeholder" style="display:none">
+              <svg width="48" height="48" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="12" r="10" stroke="#555" stroke-width="1.5"/>
+                <path d="M10 8l6 4-6 4V8z" fill="#555"/>
+              </svg>
+              <span>Video demo — próximamente</span>
+            </div>
+            <div class="hero-video-glow" aria-hidden="true"></div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ============================================================
+         ★ 03 — EL PROBLEMA (identificación del agente)
+         ============================================================ -->
+    <section id="problema" aria-labelledby="problema-title">
+      <div class="container">
+        <div class="problema-intro fade-up">
+          <p class="section-label">¿Te suena familiar?</p>
+          <h2 class="section-title" id="problema-title">El trabajo de un agente<br>no debería verse así</h2>
+        </div>
+
+        <!-- ★ CARDS DE DOLOR — editar texto aquí -->
+        <div class="problema-grid">
+          <div class="problema-card fade-up">
+            <div class="problema-icon" aria-hidden="true">⏳</div>
+            <h3>Horas en portales y grupos</h3>
+            <p>Revisás RE/MAX, C21, Infocasas y cinco grupos de WhatsApp antes de desayunar — y todavía te falta la mitad.</p>
+          </div>
+          <div class="problema-card fade-up" style="transition-delay:.08s">
+            <div class="problema-icon" aria-hidden="true">📵</div>
+            <h3>El lead que se escapó</h3>
+            <p>Alguien publicó un requerimiento que encajaba perfecto con tu captación. Lo viste dos horas tarde.</p>
+          </div>
+          <div class="problema-card fade-up" style="transition-delay:.16s">
+            <div class="problema-icon" aria-hidden="true">📊</div>
+            <h3>El ACM a mano</h3>
+            <p>Tabs abiertas, Excel, calculadora, notas. Hacer un análisis comparativo de mercado te consume media mañana.</p>
+          </div>
+          <div class="problema-card fade-up" style="transition-delay:.24s">
+            <div class="problema-icon" aria-hidden="true">🔍</div>
+            <h3>Datos que no se hablan</h3>
+            <p>Un portal dice una cosa, otro dice otra, y los grupos de WhatsApp son su propio caos. Sin centralización, no hay claridad.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ============================================================
+         ★ 04 — FUNCIONES CLAVE
+         ============================================================ -->
+    <section id="funciones" aria-labelledby="funciones-title">
+      <div class="container">
+        <div class="funciones-header fade-up">
+          <p class="section-label">Qué hace Statetty</p>
+          <h2 class="section-title" id="funciones-title">Todo lo que necesitás,<br>en un solo lugar</h2>
+          <p class="section-sub">
+            Construido específicamente para el mercado inmobiliario boliviano —
+            con soporte para anticrético, líneas de bus integradas y datos de las agencias locales más importantes.
+          </p>
+        </div>
+
+        <!-- ★ CARDS DE FUNCIONES — editar texto e íconos aquí -->
+        <div class="funciones-grid">
+
+          <div class="funcion-card fade-up">
+            <div class="funcion-icon" aria-hidden="true">🗺️</div>
+            <h3>Mapa interactivo</h3>
+            <p>Todos los inmuebles en un mapa con filtros de radio y precio. Líneas de bus integradas, pin de ACM, estadísticas por zona y exportación directa a PDF para tus clientes.</p>
+          </div>
+
+          <div class="funcion-card fade-up" style="transition-delay:.08s">
+            <div class="funcion-icon" aria-hidden="true">💬</div>
+            <h3>Monitor de WhatsApp</h3>
+            <p>Statetty escucha tus grupos de WhatsApp en tiempo real. Cuando aparece algo que coincide con tus captaciones o búsquedas, recibís la alerta en Telegram — antes que nadie.</p>
+          </div>
+
+          <div class="funcion-card fade-up" style="transition-delay:.16s">
+            <div class="funcion-icon" aria-hidden="true">📈</div>
+            <h3>ACM automático</h3>
+            <p>Análisis comparativo de mercado con datos reales de RE/MAX, C21, Infocasas y más. Filtrá por zona, radio, antigüedad y tipo de operación. El mercado, calculado en segundos.</p>
+          </div>
+
+          <div class="funcion-card fade-up" style="transition-delay:.08s">
+            <div class="funcion-icon" aria-hidden="true">📋</div>
+            <h3>Exportar a Google Sheets</h3>
+            <p>Todos los datos crudos de tu búsqueda en tu hoja de cálculo, con un clic. Sin copiar, sin pegar, sin perder tiempo en formateo.</p>
+          </div>
+
+          <div class="funcion-card fade-up" style="transition-delay:.16s">
+            <div class="funcion-icon" aria-hidden="true">📄</div>
+            <h3>Reportes PDF para clientes</h3>
+            <p>Generá reportes con tus datos de agente, resultados de búsqueda e información de mercado. Listos para enviar o imprimir, en segundos.</p>
+          </div>
+
+          <div class="funcion-card fade-up" style="transition-delay:.24s">
+            <div class="funcion-icon" aria-hidden="true">🤝</div>
+            <h3>Red de agentes</h3>
+            <p>Buscá agentes por zona con mapa de sus captaciones. Encontrá el partner ideal para un cocierre sin llamadas a ciegas.</p>
+            <p class="funcion-local">🇧🇴 Soporta anticrético — búsqueda nativa boliviana</p>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ============================================================
+         ★ 05 — TESTIMONIOS
+         ============================================================ -->
+    <section id="testimonios" aria-labelledby="testimonios-title">
+      <div class="container">
+        <div class="testimonios-header fade-up">
+          <p class="section-label">Agentes que ya trabajan diferente</p>
+          <h2 class="section-title" id="testimonios-title">Lo que dicen<br>quienes lo usan</h2>
+        </div>
+
+        <!-- ★ TESTIMONIOS — editar aquí. Agregar/quitar cards según disponibilidad.
+             Avatar: usar URL real de la foto. Si no hay foto, dejar initials en testimonio-avatar-placeholder. -->
+        <div class="testimonios-grid">
+
+          <div class="testimonio-card fade-up">
+            <p class="testimonio-quote">
+              "Ahora sólo entro a los grupos de WhatsApp para publicar mis peticiones o inmuebles.
+              Cuando alguien escribe algo que me interesa me llega directo como una alarma.
+              ¡Antes pasaba horas buscando entre los cientos de mensajes diarios!"
+            </p>
+            <div>
+              <span class="testimonio-resultado">Horas de búsqueda manual → cero</span>
+            </div>
+            <div class="testimonio-author">
+              <!-- ★ Foto: reemplazar src con URL real si está disponible -->
+              <div class="testimonio-avatar-placeholder" aria-hidden="true">SU</div>
+              <div>
+                <div class="testimonio-name">Siria Useche</div>
+                <div class="testimonio-agency">
+                  <a href="https://c21.com.bo/v/asesor/5737-siria-ines-useche-antunez"
+                     target="_blank" rel="noopener">Century 21 Nexo ↗</a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="testimonio-card fade-up" style="transition-delay:.1s">
+            <p class="testimonio-quote">
+              "La herramienta de WhatsApp de Statetty me automatiza la búsqueda de oportunidades.
+              Esto me ha liberado más de 3 horas diarias que ahora destino a cocierres con otros agentes,
+              negociaciones con constructoras y alianzas estratégicas que generan negocios mucho más grandes."
+            </p>
+            <div>
+              <span class="testimonio-resultado">+3 horas diarias liberadas</span>
+            </div>
+            <div class="testimonio-author">
+              <div class="testimonio-avatar-placeholder" aria-hidden="true">GP</div>
+              <div>
+                <div class="testimonio-name">Gabriel Pérez</div>
+                <div class="testimonio-agency">
+                  <a href="https://c21.com.bo/asesor/2903_hector-gabriel-perez"
+                     target="_blank" rel="noopener">Century 21 Expansión ↗</a>
+                </div>
+              </div>
+            </div>
+            <!-- ★ Audio de Gabriel Pérez — el archivo ya existe en el servidor -->
+            <div class="testimonio-audio">
+              <p class="audio-label">Escuchalo en sus palabras:</p>
+              <audio controls preload="none" aria-label="Testimonio de Gabriel Pérez">
+                <source src="/assets/audio/gabriel_perez_01.mp3" type="audio/mpeg">
+              </audio>
+            </div>
+          </div>
+
+          <!-- ★ TESTIMONIO 3 — completar cuando esté disponible -->
+          <!--
+          <div class="testimonio-card fade-up" style="transition-delay:.2s">
+            <p class="testimonio-quote">"..."</p>
+            <div><span class="testimonio-resultado">Resultado concreto</span></div>
+            <div class="testimonio-author">
+              <div class="testimonio-avatar-placeholder">XX</div>
+              <div>
+                <div class="testimonio-name">Nombre Apellido</div>
+                <div class="testimonio-agency">Agencia</div>
+              </div>
+            </div>
+          </div>
+          -->
+
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ============================================================
+         ★ 06 — FORMULARIO ÚNICO ("Presentate")
+         Todos los CTAs de la página anclan a #formulario
+         ============================================================ -->
+    <section id="formulario" aria-labelledby="formulario-title">
+      <div class="container">
+        <div class="formulario-wrap">
+
+          <div class="fade-up">
+            <p class="section-label">Empezá</p>
+            <h2 class="formulario-info" style="display:contents">
+              <span class="formulario-info">
+                <h2 id="formulario-title" style="font-family:var(--font-head);font-size:clamp(2rem,3.5vw,2.8rem);font-weight:800;color:var(--white);line-height:1.15;margin-bottom:16px">
+                  Presentate —<br>nos interesa <em style="font-style:normal;color:var(--brand)">conocerte</em>
+                </h2>
+              </span>
+            </h2>
+            <p style="color:var(--muted);line-height:1.75;font-size:.975rem">
+              Contanos quién sos y cómo trabajás. Te respondemos de inmediato por WhatsApp
+              y, si corresponde, coordinamos una presentación en tu oficina.
+            </p>
+
+            <div class="formulario-steps">
+              <div class="form-step">
+                <div class="form-step-num">1</div>
+                <p class="form-step-text">Completás el formulario — tus datos llegan como mensaje de WhatsApp, lo que confirma tu número al instante.</p>
+              </div>
+              <div class="form-step">
+                <div class="form-step-num">2</div>
+                <p class="form-step-text"><strong>Un agente de IA responde de inmediato</strong> con tu acceso configurado y los primeros pasos.</p>
+              </div>
+              <div class="form-step">
+                <div class="form-step-num">3</div>
+                <p class="form-step-text">Si estás en Santa Cruz, <strong>coordinamos una presentación en tu oficina</strong> para que todo tu equipo lo vea en acción.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="fade-up" style="transition-delay:.12s">
+            <div class="form-card">
+              <p class="form-title">Tu información</p>
+
+              <form id="contactForm" novalidate>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="f-nombre">Nombre completo *</label>
+                    <input type="text" id="f-nombre" name="nombre" placeholder="Tu nombre" required autocomplete="name">
+                  </div>
+                  <div class="form-group">
+                    <label for="f-agencia">Agencia inmobiliaria *</label>
+                    <input type="text" id="f-agencia" name="agencia" placeholder="RE/MAX, C21, independiente…" required>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="f-wa">WhatsApp *</label>
+                  <input type="tel" id="f-wa" name="whatsapp" placeholder="+591 7xxxxxxx"
+                         required autocomplete="tel" inputmode="tel">
+                </div>
+
+                <div class="form-group">
+                  <label for="f-email">Correo electrónico</label>
+                  <input type="email" id="f-email" name="email" placeholder="tu@correo.com" autocomplete="email">
+                </div>
+
+                <div class="form-row">
+                  <!-- ★ PAÍSES — editar opciones aquí; las ciudades se poblan automáticamente desde JS -->
+                  <div class="form-group">
+                    <label for="f-pais">País *</label>
+                    <select id="f-pais" name="pais" required>
+                      <option value="">Seleccioná</option>
+                      <option value="bolivia" selected>Bolivia</option>
+                      <option value="peru">Perú</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="f-ciudad">Ciudad *</label>
+                    <select id="f-ciudad" name="ciudad" required>
+                      <!-- Poblado dinámicamente por JS -->
+                    </select>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="f-mensaje">Mensaje (opcional)</label>
+                  <textarea id="f-mensaje" name="mensaje" placeholder="Contanos cómo trabajás, cuántos agentes tiene tu equipo, o cualquier consulta…"></textarea>
+                </div>
+
+                <button type="submit" class="form-submit" id="form-submit-btn">
+                  <span id="form-btn-text">Enviar por WhatsApp</span>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+                    <path d="M12 0C5.373 0 0 5.373 0 12c0 2.124.554 4.118 1.528 5.849L.057 23.009a.75.75 0 00.93.928l5.224-1.459A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75A9.75 9.75 0 1121.75 12 9.761 9.761 0 0112 21.75z" fill="currentColor"/>
+                  </svg>
+                </button>
+
+                <p class="form-legal">
+                  Al enviar aceptás nuestra
+                  <a href="https://statetty.com/politica_de_privacidad.html" target="_blank">política de privacidad</a>.
+                  Tus datos se usan solo para gestionar tu acceso a Statetty.
+                </p>
+
+              </form>
+
+              <!-- Mensaje de éxito post-envío -->
+              <div class="form-success" id="form-success" aria-live="polite">
+                <div class="form-success-icon" aria-hidden="true">🎉</div>
+                <h3>¡Listo! Recibiste un mensaje</h3>
+                <p>
+                  Te enviamos un mensaje de WhatsApp ahora mismo. Revisalo para completar tu acceso a Statetty.
+                  Si no lo recibís en los próximos minutos, escribinos a
+                  <a href="https://wa.me/59178447518" target="_blank" rel="noopener">+591 78447518</a>.
+                </p>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ============================================================
+         ★ 07 — VIDEOTECA
+         ============================================================ -->
+    <section id="videos" aria-labelledby="videos-title">
+      <div class="container">
+        <div class="videos-header fade-up">
+          <p class="section-label">Aprendé a tu ritmo</p>
+          <h2 class="section-title" id="videos-title">Miralo antes<br>de probarlo</h2>
+          <p class="section-sub">
+            Talleres en vivo, tutoriales paso a paso y demos de cada función.
+            Cientos de minutos de contenido gratuito para dominar Statetty desde el primer día.
+          </p>
+        </div>
+
+        <!-- ★ VIDEO DESTACADO — reemplazar el ID de YouTube con el video más reciente o más visto -->
+        <div class="videos-featured fade-up">
+          <iframe
+            src="https://www.youtube.com/embed/5fjdUETpbF0?start=0"
+            title="Taller Statetty — Cómo usar la plataforma completa"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen
+            loading="lazy">
+          </iframe>
+        </div>
+
+        <!-- ★ FILTROS DE CATEGORÍAS — editar names de categorías aquí -->
+        <div class="videos-filters fade-up" role="group" aria-label="Filtrar videos por categoría">
+          <button class="videos-filter-btn active" data-cat="todos" onclick="filterVideos(this)">Todos</button>
+          <button class="videos-filter-btn" data-cat="inicio"    onclick="filterVideos(this)">Primeros pasos</button>
+          <button class="videos-filter-btn" data-cat="busqueda"  onclick="filterVideos(this)">Búsqueda</button>
+          <button class="videos-filter-btn" data-cat="whatsapp"  onclick="filterVideos(this)">WhatsApp tool</button>
+          <button class="videos-filter-btn" data-cat="acm"       onclick="filterVideos(this)">ACM y mapas</button>
+          <button class="videos-filter-btn" data-cat="taller"    onclick="filterVideos(this)">Talleres</button>
+        </div>
+
+        <!-- ★ LISTADO DE VIDEOS
+             Editar: data-cat (categoría), data-yt (ID de YouTube), data-dur (duración), título.
+             Agregar más <div class="video-card"> según los videos del canal. -->
+        <div class="videos-grid fade-up" id="videos-grid">
+
+          <div class="video-card" data-cat="inicio" onclick="openVideo('J2feutK2rVM')">
+            <div class="video-thumb">
+              <img src="https://img.youtube.com/vi/J2feutK2rVM/mqdefault.jpg"
+                   alt="Cómo buscar inmuebles en Statetty" loading="lazy">
+              <div class="video-play-overlay" aria-hidden="true">
+                <div class="video-play-btn">
+                  <svg width="16" height="16" fill="white" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                </div>
+              </div>
+            </div>
+            <div class="video-info">
+              <div class="video-cat">Primeros pasos</div>
+              <div class="video-title">Cómo buscar inmuebles en Statetty</div>
+              <div class="video-dur">Tutorial</div>
+            </div>
+          </div>
+
+          <div class="video-card" data-cat="busqueda" onclick="openVideo('i7RoRQPZMO8')">
+            <div class="video-thumb">
+              <img src="https://img.youtube.com/vi/i7RoRQPZMO8/mqdefault.jpg"
+                   alt="Cómo buscar anticréticos" loading="lazy">
+              <div class="video-play-overlay" aria-hidden="true">
+                <div class="video-play-btn">
+                  <svg width="16" height="16" fill="white" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                </div>
+              </div>
+            </div>
+            <div class="video-info">
+              <div class="video-cat">Búsqueda</div>
+              <div class="video-title">Buscar anticréticos con Statetty</div>
+              <div class="video-dur">Short</div>
+            </div>
+          </div>
+
+          <div class="video-card" data-cat="acm" onclick="openVideo('0_wDeIei7Dc')">
+            <div class="video-thumb">
+              <img src="https://img.youtube.com/vi/0_wDeIei7Dc/mqdefault.jpg"
+                   alt="Cómo hacer un ACM con Statetty" loading="lazy">
+              <div class="video-play-overlay" aria-hidden="true">
+                <div class="video-play-btn">
+                  <svg width="16" height="16" fill="white" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                </div>
+              </div>
+            </div>
+            <div class="video-info">
+              <div class="video-cat">ACM y mapas</div>
+              <div class="video-title">Análisis comparativo de mercado paso a paso</div>
+              <div class="video-dur">Tutorial</div>
+            </div>
+          </div>
+
+          <div class="video-card" data-cat="whatsapp" onclick="openVideo('5fjdUETpbF0')">
+            <div class="video-thumb">
+              <img src="https://img.youtube.com/vi/5fjdUETpbF0/mqdefault.jpg"
+                   alt="WhatsApp tool de Statetty" loading="lazy">
+              <div class="video-play-overlay" aria-hidden="true">
+                <div class="video-play-btn">
+                  <svg width="16" height="16" fill="white" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                </div>
+              </div>
+            </div>
+            <div class="video-info">
+              <div class="video-cat">WhatsApp tool</div>
+              <div class="video-title">Monitor de WhatsApp — taller completo</div>
+              <div class="video-dur">Taller</div>
+            </div>
+          </div>
+
+          <!-- ★ Agregar más cards de video con el mismo formato -->
+
+        </div>
+      </div>
+    </section>
+
+    <!-- Modal de video -->
+    <div class="video-modal" id="video-modal" role="dialog" aria-modal="true" aria-label="Reproductor de video"
+         onclick="if(event.target===this) closeVideo()">
+      <div class="video-modal-inner">
+        <iframe id="video-modal-frame" src="" title="Video Statetty"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen></iframe>
+      </div>
+      <button class="video-modal-close" onclick="closeVideo()" aria-label="Cerrar video">✕</button>
+    </div>
+
+
+    <!-- ============================================================
+         ★ 08 — PRECIOS
+         ============================================================ -->
+    <section id="precios" aria-labelledby="precios-title">
+      <div class="container">
+        <div class="precios-header fade-up">
+          <p class="section-label">Planes</p>
+          <h2 class="section-title" id="precios-title">Una inversión que<br>se paga con un solo cierre</h2>
+          <p class="section-sub">Planes individuales y de equipo. Mientras más agentes y más tiempo, menor es el costo por persona.</p>
+        </div>
+
+        <!-- Selector de país -->
+        <div class="precios-selector fade-up" role="group" aria-label="Seleccionar país">
+          <button class="pais-btn active" data-pais="bolivia" onclick="setPais(this)">🇧🇴 Bolivia (Bs.)</button>
+          <button class="pais-btn" data-pais="peru" onclick="setPais(this)">🇵🇪 Perú (S/.)</button>
+        </div>
+
+        <!-- ★ Tabla de precios — los valores se inyectan desde JS (objeto PRECIOS) -->
+        <div class="precios-grid fade-up" id="precios-grid">
+          <!-- Generado dinámicamente por JS -->
+        </div>
+
+        <!-- Calculadora de grupo -->
+        <div class="calc-wrap fade-up">
+          <p class="calc-title">Calculadora para equipos</p>
+          <p class="calc-sub">¿Cuántos agentes tiene tu oficina? Calculá el precio exacto para tu equipo.</p>
+
+          <div class="calc-controls">
+            <div class="calc-control">
+              <label for="calc-agentes">Número de agentes: <span id="calc-agentes-val">5</span></label>
+              <input type="range" id="calc-agentes" min="2" max="30" value="5" step="1"
+                     oninput="calcPrecio()" aria-valuemin="2" aria-valuemax="30">
+            </div>
+            <div class="calc-control">
+              <label for="calc-duracion">Duración del plan</label>
+              <select id="calc-duracion" onchange="calcPrecio()">
+                <option value="30">30 días</option>
+                <option value="90" selected>90 días</option>
+                <option value="180">180 días</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="calc-result" id="calc-result" aria-live="polite">
+            <!-- Generado dinámicamente -->
+          </div>
+        </div>
+
+        <div class="precios-ctas fade-up">
+          <a href="#formulario" class="btn btn-primary">Presentate y empezá</a>
+          <!-- ★ LINK WHATSAPP PRECIOS — número de contacto -->
+          <a href="https://wa.me/59178447518?text=Hola%2C%20quiero%20consultar%20sobre%20planes%20para%20oficina"
+             target="_blank" rel="noopener" class="btn btn-ghost">
+            Hablar sobre plan de oficina →
+          </a>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ============================================================
+         ★ 09 — FAQ
+         ============================================================ -->
+    <section id="faq" aria-labelledby="faq-title">
+      <div class="container">
+        <div class="faq-header fade-up">
+          <p class="section-label">Preguntas frecuentes</p>
+          <h2 class="section-title" id="faq-title">Todo lo que<br>necesitás saber</h2>
+        </div>
+
+        <!-- ★ PREGUNTAS FAQ
+             Editar preguntas y respuestas aquí.
+             El JSON-LD de schema FAQ se genera automáticamente desde estos data-attributes al cargar la página.
+             Orden sugerido: objeciones de compra arriba, técnicas abajo. -->
+        <div class="faq-list fade-up" id="faq-list">
+
+          <div class="faq-item" data-faq
+               data-q="¿Cuánto cuesta Statetty?"
+               data-a="Los planes comienzan desde Bs. 75 por 30 días de acceso individual en Bolivia. Existen planes para grupos de 5 a 9 agentes y de 10 agentes en adelante, con precios por persona más económicos. Usá la calculadora en la sección de precios para ver el costo exacto según tu equipo y duración.">
+            <button class="faq-question" onclick="toggleFaq(this)" aria-expanded="false">
+              ¿Cuánto cuesta Statetty?
+              <span class="faq-icon" aria-hidden="true">
+                <svg width="12" height="12" fill="none" viewBox="0 0 24 24">
+                  <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              </span>
+            </button>
+            <div class="faq-answer"><p>Los planes comienzan desde <strong>Bs. 75 por 30 días</strong> de acceso individual en Bolivia. Existen planes para grupos de 5–9 agentes y de 10+ agentes, con precio por persona más económico. Usá la calculadora en la sección de precios para ver el costo exacto según tu equipo y duración.</p></div>
+          </div>
+
+          <div class="faq-item" data-faq
+               data-q="¿Realmente funciona con WhatsApp?"
+               data-a="Sí, y es una de las funciones más usadas. Statetty escanea automáticamente los mensajes de tus grupos de WhatsApp. Cuando detecta que alguien está buscando o ofreciendo algo que coincide con tus captaciones o búsquedas, te envía una alerta inmediata a Telegram.">
+            <button class="faq-question" onclick="toggleFaq(this)" aria-expanded="false">
+              ¿Realmente funciona con WhatsApp?
+              <span class="faq-icon" aria-hidden="true">
+                <svg width="12" height="12" fill="none" viewBox="0 0 24 24">
+                  <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              </span>
+            </button>
+            <div class="faq-answer"><p>Sí, y es una de las funciones más potentes. Statetty escanea automáticamente los mensajes de tus grupos de WhatsApp. Cuando detecta que alguien está buscando o publicando algo que coincide con tus captaciones o búsquedas, te envía una alerta inmediata a Telegram — para que seas el primero en responder.</p></div>
+          </div>
+
+          <div class="faq-item" data-faq
+               data-q="¿Es complicado de usar? ¿Necesito instalar algo?"
+               data-a="Statetty funciona desde Telegram, una app que no requiere instalación adicional si ya la tenés. Hay una curva de aprendizaje inicial, por eso ofrecemos soporte inmediato por WhatsApp, videos tutoriales, y si estás en Santa Cruz, coordinamos una presentación en tu oficina.">
+            <button class="faq-question" onclick="toggleFaq(this)" aria-expanded="false">
+              ¿Es complicado de usar? ¿Necesito instalar algo?
+              <span class="faq-icon" aria-hidden="true">
+                <svg width="12" height="12" fill="none" viewBox="0 0 24 24">
+                  <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              </span>
+            </button>
+            <div class="faq-answer"><p>Statetty funciona desde Telegram — descargala en 2 minutos si no la tenés, luego buscá <a href="https://t.me/statettybot" target="_blank" rel="noopener">@statettybot</a> y empezá. Reconocemos que hay una curva de aprendizaje, por eso ofrecemos soporte inmediato por WhatsApp, decenas de videos tutoriales, y si estás en Santa Cruz, coordinamos una presentación en tu oficina.</p></div>
+          </div>
+
+          <div class="faq-item" data-faq
+               data-q="¿Puedo usarlo con todo mi equipo?"
+               data-a="Sí. Hay planes para grupos de 5-9 agentes y de 10 agentes en adelante, con precio por persona más bajo que el individual. Si tienen entre 7 y 20 agentes, calculamos el precio exacto según tu equipo. Usá la calculadora en la sección de precios.">
+            <button class="faq-question" onclick="toggleFaq(this)" aria-expanded="false">
+              ¿Puedo usarlo con todo mi equipo?
+              <span class="faq-icon" aria-hidden="true">
+                <svg width="12" height="12" fill="none" viewBox="0 0 24 24">
+                  <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              </span>
+            </button>
+            <div class="faq-answer"><p>Sí, y es más económico para todos. Hay planes para grupos de 5–9 agentes y de 10+ agentes, con precio por persona más bajo que el individual. Para equipos de tamaño personalizado (7, 12, 20 agentes) calculamos el costo exacto — usá la calculadora en la sección de precios o escribinos directamente.</p></div>
+          </div>
+
+          <div class="faq-item" data-faq
+               data-q="¿Cómo sé que los datos de los inmuebles son confiables?"
+               data-a="La gran mayoría de los datos provienen directamente de las páginas oficiales de las inmobiliarias más reconocidas (RE/MAX, Century 21, etc.), lo que garantiza que la información y el agente captador sean reales y verificables. Portales generalistas como Infocasas tienen menor garantía sobre el captador.">
+            <button class="faq-question" onclick="toggleFaq(this)" aria-expanded="false">
+              ¿Cómo sé que los datos de los inmuebles son confiables?
+              <span class="faq-icon" aria-hidden="true">
+                <svg width="12" height="12" fill="none" viewBox="0 0 24 24">
+                  <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              </span>
+            </button>
+            <div class="faq-answer"><p>La gran mayoría de los datos provienen directamente de los sitios oficiales de RE/MAX, Century 21 y otras agencias reconocidas, lo que garantiza que la información y el agente captador sean reales y verificables. Portales generalistas como Infocasas están incluidos pero tienen menor garantía sobre el captador específico.</p></div>
+          </div>
+
+          <div class="faq-item" data-faq
+               data-q="¿Por qué usan Telegram y no WhatsApp?"
+               data-a="Telegram es más rápida, más segura y tiene mejor tecnología para recibir alertas en tiempo real. Funciona perfectamente en celulares viejos y nuevos, y también en computadora, sin necesidad de otra app. El Monitor de WhatsApp de Statetty te permite seguir en tus grupos de WhatsApp normalmente — solo que las alertas importantes te llegan ordenadas por Telegram.">
+            <button class="faq-question" onclick="toggleFaq(this)" aria-expanded="false">
+              ¿Por qué usan Telegram y no WhatsApp?
+              <span class="faq-icon" aria-hidden="true">
+                <svg width="12" height="12" fill="none" viewBox="0 0 24 24">
+                  <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              </span>
+            </button>
+            <div class="faq-answer"><p>Telegram es más rápida, más segura y tiene mejor tecnología para recibir alertas en tiempo real. Funciona perfectamente en celulares viejos y nuevos, y también en computadora. El Monitor de WhatsApp de Statetty te permite seguir en tus grupos normalmente — solo que las alertas importantes te llegan ordenadas por Telegram, no al revés.</p></div>
+          </div>
+
+          <div class="faq-item" data-faq
+               data-q="¿Funciona fuera de Santa Cruz?"
+               data-a="El sistema indexa propiedades de RE/MAX, Century 21 y otras agencias que operan a nivel nacional en Bolivia, por lo que podés buscar inmuebles en todo el país. En Perú, la cobertura inicial es Lima. El foco de desarrollo y nuevas funciones está orientado a Santa Cruz, pero el beneficio de explorar otras ciudades ya está disponible.">
+            <button class="faq-question" onclick="toggleFaq(this)" aria-expanded="false">
+              ¿Funciona fuera de Santa Cruz?
+              <span class="faq-icon" aria-hidden="true">
+                <svg width="12" height="12" fill="none" viewBox="0 0 24 24">
+                  <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              </span>
+            </button>
+            <div class="faq-answer"><p>El sistema indexa propiedades de RE/MAX, Century 21 y otras agencias con presencia nacional en Bolivia, por lo que podés buscar en todo el país. En Perú, la cobertura inicial es Lima. El foco de desarrollo, análisis de mercado y nuevas funciones está orientado a Santa Cruz, pero las demás ciudades ya tienen datos disponibles.</p></div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ============================================================
+         ★ 10 — SALA DE PRENSA
+         ============================================================ -->
+    <section id="prensa" aria-labelledby="prensa-title">
+      <div class="container">
+        <div class="prensa-header fade-up">
+          <p class="section-label">Sala de prensa</p>
+          <h2 class="section-title" id="prensa-title">Recursos para<br>periodistas y presentaciones</h2>
+          <p class="section-sub">
+            Todo lo que necesitás para escribir sobre Statetty o incluirla en una presentación.
+            Descarga directa, sin formularios.
+          </p>
+        </div>
+
+        <!-- ★ ASSETS DE PRENSA
+             Editar links de Google Drive con export=download para descarga directa.
+             Formato: https://drive.google.com/uc?export=download&id=ID_DEL_ARCHIVO -->
+        <div class="prensa-kit fade-up">
+
+          <div class="prensa-card">
+            <div class="prensa-card-icon" aria-hidden="true">📰</div>
+            <h3>Kit de prensa completo</h3>
+            <p>Descripción de la empresa, datos clave, funciones principales, capturas de pantalla y citas atribuibles. Listo para armar una nota de prensa o slide de presentación.</p>
+            <div class="prensa-assets">
+              <!-- ★ Reemplazar ID_KIT_PRENSA con el ID real del archivo en Drive -->
+              <a href="https://drive.google.com/uc?export=download&id=ID_KIT_PRENSA"
+                 class="prensa-asset" download target="_blank" rel="noopener">
+                <div>
+                  <div class="prensa-asset-name">Kit de prensa Statetty</div>
+                  <div class="prensa-asset-meta">PDF · Español · 2025</div>
+                </div>
+                <span class="prensa-download">
+                  <svg width="14" height="14" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 15l-4-4h3V4h2v7h3l-4 4zM5 18h14v2H5v-2z" fill="currentColor"/>
+                  </svg>
+                  Descargar
+                </span>
+              </a>
+            </div>
+          </div>
+
+          <div class="prensa-card">
+            <div class="prensa-card-icon" aria-hidden="true">🎨</div>
+            <h3>Recursos de marca</h3>
+            <p>Logo en distintos formatos y fondos, capturas de pantalla de alta resolución y video demo descargable.</p>
+            <div class="prensa-assets">
+              <!-- ★ Reemplazar IDs con los archivos reales en Drive -->
+              <a href="https://drive.google.com/uc?export=download&id=ID_LOGO_PNG_BLANCO"
+                 class="prensa-asset" download target="_blank" rel="noopener">
+                <div>
+                  <div class="prensa-asset-name">Logo — fondo blanco</div>
+                  <div class="prensa-asset-meta">PNG · Alta resolución</div>
+                </div>
+                <span class="prensa-download">
+                  <svg width="14" height="14" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 15l-4-4h3V4h2v7h3l-4 4zM5 18h14v2H5v-2z" fill="currentColor"/>
+                  </svg>
+                  Descargar
+                </span>
+              </a>
+              <a href="https://drive.google.com/uc?export=download&id=ID_LOGO_SVG"
+                 class="prensa-asset" download target="_blank" rel="noopener">
+                <div>
+                  <div class="prensa-asset-name">Logo — SVG vectorial</div>
+                  <div class="prensa-asset-meta">SVG · Escalable</div>
+                </div>
+                <span class="prensa-download">
+                  <svg width="14" height="14" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 15l-4-4h3V4h2v7h3l-4 4zM5 18h14v2H5v-2z" fill="currentColor"/>
+                  </svg>
+                  Descargar
+                </span>
+              </a>
+              <a href="https://drive.google.com/uc?export=download&id=ID_CAPTURAS"
+                 class="prensa-asset" download target="_blank" rel="noopener">
+                <div>
+                  <div class="prensa-asset-name">Capturas de pantalla</div>
+                  <div class="prensa-asset-meta">ZIP · Mapa, búsqueda, ACM</div>
+                </div>
+                <span class="prensa-download">
+                  <svg width="14" height="14" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 15l-4-4h3V4h2v7h3l-4 4zM5 18h14v2H5v-2z" fill="currentColor"/>
+                  </svg>
+                  Descargar
+                </span>
+              </a>
+              <a href="https://drive.google.com/uc?export=download&id=ID_VIDEO_DEMO"
+                 class="prensa-asset" download target="_blank" rel="noopener">
+                <div>
+                  <div class="prensa-asset-name">Video demo</div>
+                  <div class="prensa-asset-meta">MP4 · Sin sonido · 60s</div>
+                </div>
+                <span class="prensa-download">
+                  <svg width="14" height="14" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 15l-4-4h3V4h2v7h3l-4 4zM5 18h14v2H5v-2z" fill="currentColor"/>
+                  </svg>
+                  Descargar
+                </span>
+              </a>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ★ CONTACTO DE PRENSA — editar nombre y email aquí -->
+        <div class="prensa-contacto fade-up">
+          <div class="prensa-contacto-info">
+            <h3>Contacto de prensa</h3>
+            <p>
+              Alejandro Sosa Briceño — Director ·
+              <a href="mailto:alejandro.sosa@statetty.com">alejandro.sosa@statetty.com</a> ·
+              <a href="https://wa.me/59178447518" target="_blank" rel="noopener">WhatsApp</a>
+            </p>
+          </div>
+          <a href="mailto:alejandro.sosa@statetty.com" class="btn btn-ghost btn-sm">
+            Escribir al equipo
+          </a>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+
+  <!-- ============================================================
+       ★ 11 — FOOTER
+       ============================================================ -->
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+
+        <div class="footer-brand">
+          <a href="#inicio" class="nav-logo" aria-label="Statetty">
+            <img src="/assets/images/statetty.png" alt="" width="28" height="28"
+                 onerror="this.style.display='none'">
+            Statetty
+          </a>
+          <p>La navaja suiza del asesor inmobiliario boliviano.</p>
+          <!-- ★ DIRECCIÓN — editar aquí -->
+          <address>
+            Charcas 168, Santa Cruz de la Sierra, Bolivia<br>
+            <a href="tel:+59178447518">+591 78447518</a> ·
+            <a href="mailto:info@statetty.com">info@statetty.com</a>
+          </address>
+          <!-- ★ BOTÓN WHATSAPP FOOTER -->
+          <a href="https://wa.me/59178447518?text=Hola%20Statetty%2C%20quiero%20información"
+             target="_blank" rel="noopener" class="footer-wa-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+              <path d="M12 0C5.373 0 0 5.373 0 12c0 2.124.554 4.118 1.528 5.849L.057 23.009a.75.75 0 00.93.928l5.224-1.459A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75A9.75 9.75 0 1121.75 12 9.761 9.761 0 0112 21.75z"/>
+            </svg>
+            Escribinos por WhatsApp
+          </a>
+        </div>
+
+        <div class="footer-col">
+          <h4>Plataforma</h4>
+          <ul>
+            <li><a href="#funciones">Funciones</a></li>
+            <li><a href="#precios">Precios</a></li>
+            <li><a href="#videos">Videos y talleres</a></li>
+            <li><a href="#faq">Preguntas frecuentes</a></li>
+            <li><a href="#prensa">Sala de prensa</a></li>
+            <li><a href="https://t.me/Statetty" target="_blank" rel="noopener">Comunidad Telegram</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Redes</h4>
+          <div class="footer-social">
+            <a href="https://instagram.com/Statetty" target="_blank" rel="noopener"
+               class="footer-social-link" aria-label="Instagram de Statetty">
+              <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/>
+              </svg>
+            </a>
+            <a href="https://twitter.com/Statetty" target="_blank" rel="noopener"
+               class="footer-social-link" aria-label="Twitter/X de Statetty">
+              <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+              </svg>
+            </a>
+            <a href="https://facebook.com/statetty" target="_blank" rel="noopener"
+               class="footer-social-link" aria-label="Facebook de Statetty">
+              <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+              </svg>
+            </a>
+            <a href="https://www.youtube.com/@statetty" target="_blank" rel="noopener"
+               class="footer-social-link" aria-label="YouTube de Statetty">
+              <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+              </svg>
+            </a>
+            <a href="https://open.spotify.com/show/2F2hodB96q8U1QtMBjIgl9" target="_blank" rel="noopener"
+               class="footer-social-link" aria-label="Podcast Statetty en Spotify">
+              <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
+              </svg>
+            </a>
+            <a href="https://whatsapp.com/channel/0029Vb6WYM36mYPE27u1Dk1t" target="_blank" rel="noopener"
+               class="footer-social-link" aria-label="Canal de WhatsApp de Statetty">
+              <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+                <path d="M12 0C5.373 0 0 5.373 0 12c0 2.124.554 4.118 1.528 5.849L.057 23.009a.75.75 0 00.93.928l5.224-1.459A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75A9.75 9.75 0 1121.75 12 9.761 9.761 0 0112 21.75z"/>
+              </svg>
+            </a>
+          </div>
+          <ul style="margin-top:20px">
+            <li><a href="https://statetty.com/terminos_y_condiciones.html" target="_blank">Términos y condiciones</a></li>
+            <li><a href="https://statetty.com/politica_de_privacidad.html" target="_blank">Política de privacidad</a></li>
+            <li><a href="https://statetty.com/descargo_de_responsabilidad.html" target="_blank">Descargo de responsabilidad</a></li>
+          </ul>
+        </div>
+
+      </div>
+
+      <div class="footer-bottom">
+        <!-- ★ AÑO DE COPYRIGHT — actualizar manualmente o con JS -->
+        <p class="footer-copy">© <span id="footer-year">2025</span> Statetty. Todos los derechos reservados.</p>
+        <div class="footer-legal">
+          <a href="https://t.me/statettybot" target="_blank" rel="noopener">Abrir el bot en Telegram →</a>
+        </div>
+      </div>
+
+    </div>
+  </footer>
+
+
+  <!-- ============================================================
+       SCHEMA JSON-LD — SEO estructurado
+       (generado en parte desde el DOM, en parte estático)
+       ============================================================ -->
+  <script type="application/ld+json" id="schema-org">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "name": "Statetty",
+        "url": "https://statetty.com",
+        "logo": "https://statetty.com/assets/images/statetty.png",
+        "contactPoint": {
+          "@type": "ContactPoint",
+          "telephone": "+591-78447518",
+          "contactType": "customer support",
+          "availableLanguage": "Spanish"
+        },
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "Charcas 168",
+          "addressLocality": "Santa Cruz de la Sierra",
+          "addressCountry": "BO"
+        },
+        "sameAs": [
+          "https://instagram.com/Statetty",
+          "https://twitter.com/Statetty",
+          "https://facebook.com/statetty",
+          "https://www.youtube.com/@statetty"
+        ]
+      },
+      {
+        "@type": "SoftwareApplication",
+        "name": "Statetty Bot",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Telegram",
+        "offers": {
+          "@type": "Offer",
+          "price": "75",
+          "priceCurrency": "BOB"
+        },
+        "description": "Plataforma inmobiliaria que centraliza inmuebles de RE/MAX, Century 21 y más, monitorea grupos de WhatsApp y calcula el ACM desde Telegram."
+      }
+    ]
+  }
+  </script>
+
+
+  <!-- ============================================================
+       JAVASCRIPT
+       ============================================================ -->
+  <script>
+  /* ============================================================
+     ★ DATOS DE CIUDADES POR PAÍS
+     Editar aquí para agregar o quitar ciudades.
+     Formato: { value: 'slug', label: 'Nombre visible' }
+     ============================================================ */
+  const CIUDADES = {
+    bolivia: [
+      { value: '', label: 'Seleccioná una ciudad' },
+      { value: 'santa-cruz', label: 'Santa Cruz de la Sierra' },
+      { value: 'cochabamba', label: 'Cochabamba' },
+      { value: 'la-paz', label: 'La Paz' },
+      { value: 'el-alto', label: 'El Alto' },
+      { value: 'sucre', label: 'Sucre' },
+      { value: 'oruro', label: 'Oruro' },
+      { value: 'tarija', label: 'Tarija' },
+      { value: 'potosi', label: 'Potosí' },
+      { value: 'trinidad', label: 'Trinidad' },
+      { value: 'cobija', label: 'Cobija' },
+      { value: 'otra', label: 'Otra ciudad' }
+    ],
+    /* ★ Perú — por ahora solo Lima en primera etapa */
+    peru: [
+      { value: '', label: 'Seleccioná una ciudad' },
+      { value: 'lima', label: 'Lima' }
+    ]
+  };
+
+  /* ============================================================
+     ★ DATOS DE PRECIOS POR PAÍS
+     Editar aquí para actualizar precios o agregar monedas.
+     No tocar la estructura — solo los valores numéricos y la moneda.
+     ============================================================ */
+  const PRECIOS = {
+    bolivia: {
+      moneda: 'Bs.',
+      codigo: 'BOB',
+      individual: { 30: 75,  90: 189,  180: 300  },
+      grupo5:      { 30: 285, 90: 720,  180: 1140 },
+      grupo10:     { 30: 380, 90: 960,  180: 1560 }
+    },
+    /* ★ Perú — completar con precios reales cuando se lance */
+    peru: {
+      moneda: 'S/.',
+      codigo: 'PEN',
+      individual: { 30: 55,  90: 139,  180: 220  },
+      grupo5:      { 30: 210, 90: 530,  180: 840  },
+      grupo10:     { 30: 280, 90: 710,  180: 1150 }
+    }
+  };
+
+  /* ============================================================
+     ★ NÚMERO DE WHATSAPP para el formulario
+     El formulario envía los datos como mensaje de WhatsApp a este número.
+     ============================================================ */
+  const WA_NUMERO = '59178447518';
+
+  /* ============================================================
+     Estado global
+     ============================================================ */
+  let paisActivo = 'bolivia';
+
+  /* ============================================================
+     NAV — scroll y hamburger
+     ============================================================ */
+  window.addEventListener('scroll', () => {
+    document.getElementById('nav').classList.toggle('scrolled', window.scrollY > 20);
+  });
+
+  document.getElementById('hamburger').addEventListener('click', function() {
+    const isOpen = this.classList.toggle('open');
+    this.setAttribute('aria-expanded', isOpen);
+    document.getElementById('nav-mobile').classList.toggle('open', isOpen);
+    document.body.style.overflow = isOpen ? 'hidden' : '';
+  });
+
+  function closeMenu() {
+    document.getElementById('hamburger').classList.remove('open');
+    document.getElementById('hamburger').setAttribute('aria-expanded', 'false');
+    document.getElementById('nav-mobile').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  /* ============================================================
+     CIUDADES — selector dinámico
+     ============================================================ */
+  function poblarCiudades(pais) {
+    const sel = document.getElementById('f-ciudad');
+    sel.innerHTML = '';
+    (CIUDADES[pais] || CIUDADES.bolivia).forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.value;
+      opt.textContent = c.label;
+      sel.appendChild(opt);
+    });
+  }
+
+  document.getElementById('f-pais').addEventListener('change', function() {
+    poblarCiudades(this.value);
+    paisActivo = this.value;
+    renderPrecios();
+    calcPrecio();
+  });
+
+  poblarCiudades('bolivia');
+
+  /* ============================================================
+     PRECIOS — render de tabla y selector de país
+     ============================================================ */
+  function setPais(btn) {
+    document.querySelectorAll('.pais-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    paisActivo = btn.dataset.pais;
+    renderPrecios();
+    calcPrecio();
+  }
+
+  function renderPrecios() {
+    const p = PRECIOS[paisActivo];
+    const grid = document.getElementById('precios-grid');
+    const planes = [
+      {
+        tipo: 'Individual',
+        desc: 'Para el agente independiente',
+        data: p.individual,
+        destacado: false
+      },
+      {
+        tipo: 'Grupo 5–9',
+        desc: 'Equipo pequeño o mediano',
+        data: p.grupo5,
+        destacado: false
+      },
+      {
+        tipo: 'Oficina 10+',
+        desc: 'La opción más económica por agente',
+        data: p.grupo10,
+        destacado: true
+      }
+    ];
+
+    grid.innerHTML = planes.map(plan => `
+      <div class="precio-card${plan.destacado ? ' destacado' : ''}">
+        ${plan.destacado ? '<span class="precio-badge">Mejor precio/agente</span>' : ''}
+        <div class="precio-tipo">${plan.tipo}</div>
+        <div class="precio-desc">${plan.desc}</div>
+        <table class="precio-tabla">
+          <thead>
+            <tr>
+              <th>Duración</th>
+              <th style="text-align:right">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${[30, 90, 180].map(d => `
+              <tr>
+                <td>${d} días</td>
+                <td>${p.moneda} ${plan.data[d].toLocaleString()}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `).join('');
+  }
+
+  renderPrecios();
+
+  /* ============================================================
+     CALCULADORA DE GRUPOS
+     ============================================================ */
+  function calcPrecio() {
+    const agentes  = parseInt(document.getElementById('calc-agentes').value);
+    const duracion = parseInt(document.getElementById('calc-duracion').value);
+    const p        = PRECIOS[paisActivo];
+
+    document.getElementById('calc-agentes-val').textContent = agentes;
+
+    let base, cuentasBase;
+    if (agentes >= 10) { base = p.grupo10; cuentasBase = 10; }
+    else               { base = p.grupo5;  cuentasBase = 5;  }
+
+    const bsPaquete = base[duracion];
+    const total     = Math.round((bsPaquete / cuentasBase) * agentes);
+    const porAgente = Math.round(total / agentes);
+    const porDia    = +(total / duracion).toFixed(1);
+
+    document.getElementById('calc-result').innerHTML = `
+      <div class="calc-result-item">
+        <div class="calc-result-label">Agentes</div>
+        <div class="calc-result-val">${agentes}</div>
+        <div class="calc-result-mon">${duracion} días</div>
+      </div>
+      <div class="calc-result-item">
+        <div class="calc-result-label">Total</div>
+        <div class="calc-result-val brand">${p.moneda} ${total.toLocaleString()}</div>
+        <div class="calc-result-mon">${p.codigo}</div>
+      </div>
+      <div class="calc-result-item">
+        <div class="calc-result-label">Por agente</div>
+        <div class="calc-result-val">${p.moneda} ${porAgente.toLocaleString()}</div>
+        <div class="calc-result-mon">por ${duracion} días</div>
+      </div>
+    `;
+  }
+
+  calcPrecio();
+
+  /* ============================================================
+     FORMULARIO — envío como mensaje de WhatsApp
+     ============================================================ */
+  document.getElementById('contactForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('form-submit-btn');
+    const txt = document.getElementById('form-btn-text');
+
+    const nombre  = document.getElementById('f-nombre').value.trim();
+    const wa      = document.getElementById('f-wa').value.trim();
+    const email   = document.getElementById('f-email').value.trim();
+    const agencia = document.getElementById('f-agencia').value.trim();
+    const pais    = document.getElementById('f-pais').options[document.getElementById('f-pais').selectedIndex].text;
+    const ciudad  = document.getElementById('f-ciudad').options[document.getElementById('f-ciudad').selectedIndex].text;
+    const mensaje = document.getElementById('f-mensaje').value.trim();
+
+    if (!nombre || !wa || !agencia) {
+      alert('Por favor completá nombre, WhatsApp y agencia.');
+      return;
+    }
+
+    btn.disabled = true;
+    txt.textContent = 'Abriendo WhatsApp…';
+
+    /* ★ Armar el mensaje que se envía a WA_NUMERO */
+    const waMsg = [
+      `Hola Statetty 👋 Me presento:`,
+      `*Nombre:* ${nombre}`,
+      `*Agencia:* ${agencia}`,
+      `*País/Ciudad:* ${pais} — ${ciudad}`,
+      email ? `*Email:* ${email}` : '',
+      mensaje ? `*Mensaje:* ${mensaje}` : '',
+      `_(enviado desde statetty.com)_`
+    ].filter(Boolean).join('\n');
+
+    const waUrl = `https://wa.me/${WA_NUMERO}?text=${encodeURIComponent(waMsg)}`;
+    window.open(waUrl, '_blank');
+
+    /* Mostrar confirmación */
+    setTimeout(() => {
+      document.getElementById('contactForm').style.display = 'none';
+      const success = document.getElementById('form-success');
+      success.classList.add('visible');
+      success.focus();
+    }, 800);
+  });
+
+  /* ============================================================
+     VIDEOS — filtro y modal
+     ============================================================ */
+  function filterVideos(btn) {
+    document.querySelectorAll('.videos-filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const cat = btn.dataset.cat;
+    document.querySelectorAll('.video-card').forEach(card => {
+      card.classList.toggle('video-hidden', cat !== 'todos' && card.dataset.cat !== cat);
+    });
+  }
+
+  function openVideo(ytId) {
+    const modal = document.getElementById('video-modal');
+    document.getElementById('video-modal-frame').src =
+      `https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0`;
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    modal.querySelector('.video-modal-close').focus();
+  }
+
+  function closeVideo() {
+    document.getElementById('video-modal').classList.remove('open');
+    document.getElementById('video-modal-frame').src = '';
+    document.body.style.overflow = '';
+  }
+
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeVideo(); });
+
+  /* ============================================================
+     FAQ — acordeón
+     ============================================================ */
+  function toggleFaq(btn) {
+    const item = btn.closest('.faq-item');
+    const isOpen = item.classList.contains('open');
+    document.querySelectorAll('.faq-item').forEach(i => {
+      i.classList.remove('open');
+      i.querySelector('.faq-question').setAttribute('aria-expanded', 'false');
+    });
+    if (!isOpen) {
+      item.classList.add('open');
+      btn.setAttribute('aria-expanded', 'true');
+    }
+  }
+
+  /* ============================================================
+     ANIMACIONES — Intersection Observer para .fade-up
+     ============================================================ */
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
+  }, { threshold: 0.12 });
+
+  document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+  /* ============================================================
+     SCHEMA FAQ — generado automáticamente desde el DOM
+     ============================================================ */
+  (function() {
+    const items = document.querySelectorAll('[data-faq]');
+    if (!items.length) return;
+    const faqs = Array.from(items).map(el => ({
+      '@type': 'Question',
+      'name': el.dataset.q,
+      'acceptedAnswer': { '@type': 'Answer', 'text': el.dataset.a }
+    }));
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.textContent = JSON.stringify({ '@context': 'https://schema.org', '@type': 'FAQPage', 'mainEntity': faqs });
+    document.body.appendChild(script);
+  })();
+
+  /* ★ AÑO DE COPYRIGHT — actualizado automáticamente */
+  document.getElementById('footer-year').textContent = new Date().getFullYear();
+
+  </script>
+
+</body>
+</html>
