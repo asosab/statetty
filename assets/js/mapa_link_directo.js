@@ -174,6 +174,7 @@ function getBrand(input) {
   else if (url.includes("infocasas.com")) {return 'ic';}
   else if (url.includes("sin-intermediarios")) {return 'si';}
   else if (url.includes("capitalcorp")) {return 'capital';}
+  else if (url.includes("santa-cruz.estate")) {return 'sce';}
   else {return 'statetty';}
 }
 
@@ -526,6 +527,7 @@ $(document).ready(function () {
     "elfaro": "El Faro",
     "si":     "Sin Intermediarios",
     "capital":"Capital Corporación",
+    "sce":    "Santa Cruz Estate",
   };
 
   var urlParams = new URLSearchParams(window.location.search);

@@ -291,6 +291,7 @@ $(document).ready(function () {
       else if ((fullUrl || '').includes("ultracasas")) brand = 'UC';
       else if ((fullUrl || '').includes("uno.com")) brand = 'uno';
       else if ((fullUrl || '').includes("infocasas.com")) brand = 'ic';
+      else if ((fullUrl || '').includes("santa-cruz.estate")) brand = 'sce';
       else brand = 'statetty';
 
       var icon = new L.Icon({
