@@ -727,8 +727,8 @@ $(document).ready(function () {
       let sc = (na || ag) ? ' te escribe, ' : '';
       let foto = dato.foto ? `Foto: ${dato.foto}\n\n`:'';
 
-      const server = "https://scorpion-fast-quietly.ngrok-free.app/api/statetty/usrClckWsInm";
-      const linkSrv = `${server}?u=${encodeURIComponent(userid)}&i=${encodeURIComponent(dato._id)}`;
+      const server = STATETTY_CONFIG.WS_API_BASE;
+      const linkSrv = `${server}/usrClckWsInm?u=${encodeURIComponent(userid)}&i=${encodeURIComponent(dato._id)}`;
 
       const linkWA = celularValido
         ? `<br/><a href="#" onclick="openWsRedirect('${linkSrv}');return false;">📱 Contactar a${nombreCorto}</a>`

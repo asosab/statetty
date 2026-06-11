@@ -724,7 +724,7 @@ $(document).ready(function () {
       let sc = (na || ag) ? ' te escribe, ' : '';
       let foto = dato.foto ? `Foto: ${dato.foto}\n\n`:'';
 
-      const server = "https://excited-fully-skunk.ngrok-free.app/api/statetty/usrClckWsInm";
+      const server = STATETTY_CONFIG.WS_API_BASE;
       const linkSrv = `${server}?u=${encodeURIComponent(userid)}&i=${encodeURIComponent(dato._id)}`;
 
       //const linkWA = celularValido ? `<br/><a href="${linkSrv}" target="_blank" rel="noopener">📱 Contactar a${nombreCorto}</a>` : '';

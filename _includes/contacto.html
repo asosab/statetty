@@ -1,16 +1,370 @@
-  <!-- ******Contacto****** --> 
-  <section id="Contacto" class="contact section has-pattern">
-    <div class="container">
-      <div class="contact-inner">
-        <h2 class="title  text-center">Contáctanos</h2>
-        <div class="testigo-message">      
-          <div class="profile">
-            <p class="intro  text-center">Déjanos un mensaje y te responderemos de inmediato.</p>
-          </div><!--//profile-->
-          <div class="speech-bubble">
-            {% include frmcontacto.html %}
-          </div><!--//speech-bubble-->   
-        </div><!--//testigo-message-->
-      </div><!--//contact-inner-->
-    </div><!--//container-->
-  </section><!--//Contacto-->  
+<style>
+:root {
+  --brand:       #FF5C00;
+  --brand-dim:   #cc4900;
+  --brand-soft:  rgba(255,92,0,.10);
+  --dark:        #0a0a0a;
+  --dark-2:      #111111;
+  --dark-3:      #1a1a1a;
+  --dark-4:      #242424;
+  --mid:         #3a3a3a;
+  --muted:       #777;
+  --muted-2:     #555;
+  --light:       #e8e4df;
+  --white:       #ffffff;
+  --font-head:   'Montserrat', sans-serif;
+  --font-body:   'Lato', sans-serif;
+  --radius-sm:   6px;
+  --radius-md:   12px;
+  --radius-lg:   20px;
+  --radius-xl:   32px;
+  --transition:  0.22s cubic-bezier(.4,0,.2,1);
+}
+#Contacto.contact-form-section {
+  background: var(--dark);
+  color: var(--light);
+  font-family: var(--font-body);
+}
+#Contacto .contact-form-wrap {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 64px;
+  align-items: start;
+}
+@media (max-width: 860px) {
+  #Contacto .contact-form-wrap { grid-template-columns: 1fr; gap: 40px; }
+}
+#Contacto .form-info h2 {
+  font-family: var(--font-head); font-size: clamp(1.6rem, 3vw, 2.4rem);
+  font-weight: 700; color: var(--white); line-height: 1.2;
+  margin-bottom: 16px;
+}
+#Contacto .form-info h2 em { font-style: normal; color: var(--brand); }
+#Contacto .form-info p { color: var(--muted); line-height: 1.7; font-size: .95rem; }
+#Contacto .form-steps {
+  margin-top: 28px; display: flex; flex-direction: column; gap: 16px;
+}
+#Contacto .form-step {
+  display: flex; align-items: flex-start; gap: 14px;
+}
+#Contacto .form-step-num {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--brand-soft); border: 1px solid rgba(255,92,0,.3);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-head); font-weight: 700;
+  font-size: .78rem; color: var(--brand);
+  flex-shrink: 0; margin-top: 2px;
+}
+#Contacto .form-step-text { font-size: .88rem; color: var(--muted); line-height: 1.6; }
+#Contacto .form-step-text strong { color: var(--light); font-weight: 500; }
+#Contacto .form-card {
+  background: var(--dark-3);
+  border: 1px solid var(--dark-4);
+  border-radius: var(--radius-xl);
+  padding: 32px 28px;
+}
+#Contacto .form-title {
+  font-family: var(--font-head); font-weight: 700;
+  font-size: 1.1rem; color: var(--white);
+  margin-bottom: 22px;
+}
+#Contacto .form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+@media (max-width: 520px) { #Contacto .form-row { grid-template-columns: 1fr; } }
+#Contacto .form-group { margin-bottom: 14px; }
+#Contacto .form-group label {
+  display: block; font-size: .78rem;
+  font-weight: 500; color: var(--muted);
+  margin-bottom: 5px; letter-spacing: .02em;
+}
+#Contacto .form-group input,
+#Contacto .form-group select,
+#Contacto .form-group textarea {
+  width: 100%; padding: 11px 14px;
+  background: var(--dark-4); border: 1px solid var(--mid);
+  border-radius: var(--radius-md);
+  color: var(--white); font-family: var(--font-body); font-size: .88rem;
+  transition: var(--transition);
+  -webkit-appearance: none; appearance: none;
+}
+#Contacto .form-group select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23777' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 14px center;
+  padding-right: 36px;
+}
+#Contacto .form-group textarea { resize: vertical; min-height: 80px; }
+#Contacto .form-group input:focus,
+#Contacto .form-group select:focus,
+#Contacto .form-group textarea:focus {
+  outline: none; border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(255,92,0,.12);
+}
+#Contacto .form-group input::placeholder,
+#Contacto .form-group textarea::placeholder { color: var(--muted-2); }
+#Contacto .form-submit {
+  width: 100%; margin-top: 6px; padding: 14px;
+  background: var(--brand); color: var(--white);
+  border-radius: var(--radius-lg);
+  font-family: var(--font-head); font-weight: 700;
+  font-size: .95rem; letter-spacing: .01em;
+  transition: var(--transition);
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  cursor: pointer; border: none;
+}
+#Contacto .form-submit:hover { background: var(--brand-dim); transform: translateY(-1px); }
+#Contacto .form-submit:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+#Contacto .form-spinner { display: none; width: 18px; height: 18px; border: 2px solid rgba(255,255,255,.3); border-top-color: #fff; border-radius: 50%; animation: spin .6s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+#Contacto .form-legal {
+  margin-top: 12px; font-size: .73rem;
+  color: var(--muted-2); text-align: center; line-height: 1.6;
+}
+#Contacto .form-legal a { color: var(--muted); text-decoration: underline; text-underline-offset: 2px; }
+#Contacto .form-success {
+  display: none; text-align: center; padding: 20px;
+}
+#Contacto .form-success.visible { display: block; }
+#Contacto .form-success-icon { font-size: 2.8rem; margin-bottom: 10px; }
+#Contacto .form-success h3 {
+  font-family: var(--font-head); font-weight: 700;
+  color: var(--white); font-size: 1.2rem; margin-bottom: 10px;
+}
+#Contacto .form-success p { color: var(--muted); font-size: .88rem; line-height: 1.65; margin-bottom: 6px; }
+#Contacto .form-success a { color: var(--brand); text-decoration: underline; text-underline-offset: 2px; font-weight: 600; }
+#Contacto .form-error {
+  color: #ff4444; font-size: .82rem;
+  margin-top: 8px; text-align: center;
+}
+</style>
+
+<section id="Contacto" class="contact-form-section section has-pattern">
+  <div class="container">
+    <div class="contact-form-wrap">
+
+      <div class="form-info">
+        <h2>¿Quieres mandar un mensaje a <em>Statetty</em>?</h2>
+        <p>Llena el formulario — sirve tanto para registrarte como para contactarnos. Con estos datos creamos tu pre-registro y lo dejamos listo para usar.</p>
+
+        <div class="form-steps">
+          <div class="form-step">
+            <div class="form-step-num">1</div>
+            <p class="form-step-text">Completás el formulario — creamos tu pre-registro al instante.</p>
+          </div>
+          <div class="form-step">
+            <div class="form-step-num">2</div>
+            <p class="form-step-text">Abrís Telegram y buscás <strong>@StatettyBot</strong> — vinculás tu cuenta en segundos.</p>
+          </div>
+          <div class="form-step">
+            <div class="form-step-num">3</div>
+            <p class="form-step-text">Si estás en Santa Cruz, podemos coordinar una presentación en tu oficina. Para el resto del mundo podemos tener una presentación por videoconferencia.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <p class="form-title">Creá tu cuenta o dejanos un mensaje</p>
+
+        <form id="contactForm" novalidate>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="f-nombres">Nombres *</label>
+              <input type="text" id="f-nombres" name="nombres" placeholder="Tu nombre" required autocomplete="given-name">
+            </div>
+            <div class="form-group">
+              <label for="f-apellidos">Apellidos *</label>
+              <input type="text" id="f-apellidos" name="apellidos" placeholder="Tus apellidos" required autocomplete="family-name">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="f-wa">WhatsApp *</label>
+            <input type="tel" id="f-wa" name="whatsapp" placeholder="+591 7xxxxxxx"
+                   required autocomplete="tel" inputmode="tel">
+          </div>
+
+          <div class="form-group">
+            <label for="f-agencia">Agencia inmobiliaria</label>
+            <input type="text" id="f-agencia" name="agencia" placeholder="RE/MAX, C21, independiente…">
+          </div>
+
+          <div class="form-group">
+            <label for="f-email">Correo electrónico</label>
+            <input type="email" id="f-email" name="email" placeholder="tu@correo.com" autocomplete="email">
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="f-pais">País *</label>
+              <select id="f-pais" name="pais" required>
+                <option value="">Seleccioná</option>
+                <option value="bolivia" selected>Bolivia</option>
+                <option value="peru">Perú</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="f-ciudad">Ciudad *</label>
+              <select id="f-ciudad" name="ciudad" required>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="f-mensaje">Mensaje (opcional)</label>
+            <textarea id="f-mensaje" name="mensaje" placeholder="Contanos cómo trabajás, cuántos agentes tiene tu equipo, o cualquier consulta…"></textarea>
+          </div>
+
+          <button type="submit" class="form-submit" id="form-submit-btn">
+            <span id="form-btn-text">Enviar</span>
+            <span class="form-spinner" id="form-spinner"></span>
+          </button>
+
+          <div class="form-error" id="form-error"></div>
+
+          <p class="form-legal">
+            Al enviar aceptás nuestra
+            <a href="https://statetty.com/politica_de_privacidad.html" target="_blank">política de privacidad</a>.
+            Tus datos se usan solo para gestionar tu acceso a Statetty.
+          </p>
+
+        </form>
+
+        <div class="form-success" id="form-success" aria-live="polite">
+          <div class="form-success-icon" aria-hidden="true">🎉</div>
+          <h3>¡Listo!</h3>
+          <p>Tu cuenta te está esperando en Telegram.</p>
+          <p>Abrí Telegram, buscá <strong>@StatettyBot</strong> y vinculá tu cuenta para empezar.</p>
+          <p style="margin-top:10px"><a href="https://t.me/statettybot" target="_blank" rel="noopener">👉 Abrir Telegram</a></p>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<script>
+(function() {
+  var CIUDADES = {
+    bolivia: [
+      { value: '', label: 'Seleccioná una ciudad' },
+      { value: 'scz', label: 'Santa Cruz de la Sierra' },
+      { value: 'cochabamba', label: 'Cochabamba' },
+      { value: 'la-paz', label: 'La Paz' },
+      { value: 'el-alto', label: 'El Alto' },
+      { value: 'sucre', label: 'Sucre' },
+      { value: 'oruro', label: 'Oruro' },
+      { value: 'tarija', label: 'Tarija' },
+      { value: 'potosi', label: 'Potosí' },
+      { value: 'trinidad', label: 'Trinidad' },
+      { value: 'cobija', label: 'Cobija' },
+      { value: 'otra', label: 'Otra ciudad' }
+    ],
+    peru: [
+      { value: '', label: 'Seleccioná una ciudad' },
+      { value: 'lim', label: 'Lima' }
+    ]
+  };
+
+  function poblarCiudades(pais) {
+    var sel = document.getElementById('f-ciudad');
+    sel.innerHTML = '';
+    (CIUDADES[pais] || CIUDADES.bolivia).forEach(function(c) {
+      var opt = document.createElement('option');
+      opt.value = c.value;
+      opt.textContent = c.label;
+      sel.appendChild(opt);
+    });
+  }
+
+  document.getElementById('f-pais').addEventListener('change', function() {
+    poblarCiudades(this.value);
+  });
+
+  poblarCiudades('bolivia');
+
+  document.getElementById('contactForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    var btn = document.getElementById('form-submit-btn');
+    var txt = document.getElementById('form-btn-text');
+    var spinner = document.getElementById('form-spinner');
+    var errorEl = document.getElementById('form-error');
+    var successEl = document.getElementById('form-success');
+
+    errorEl.textContent = '';
+    errorEl.style.display = 'none';
+
+    var nombres = document.getElementById('f-nombres').value.trim();
+    var apellidos = document.getElementById('f-apellidos').value.trim();
+    var wa = document.getElementById('f-wa').value.trim();
+    var agencia = document.getElementById('f-agencia').value.trim();
+    var email = document.getElementById('f-email').value.trim();
+    var paisSelect = document.getElementById('f-pais');
+    var pais = paisSelect.options[paisSelect.selectedIndex].value;
+    var ciudadSelect = document.getElementById('f-ciudad');
+    var ciudad = ciudadSelect.value;
+
+    if (!nombres || !apellidos || !wa || !ciudad) {
+      errorEl.textContent = 'Por favor completá nombres, apellidos, WhatsApp y ciudad.';
+      errorEl.style.display = 'block';
+      return;
+    }
+
+    btn.disabled = true;
+    txt.textContent = 'Enviando…';
+    spinner.style.display = 'inline-block';
+
+    var payload = {
+      nombres: nombres,
+      apellidos: apellidos,
+      whatsapp: wa,
+      agencia_inmobiliaria: agencia,
+      email: email,
+      pais: pais,
+      ciudad: ciudad.toUpperCase(),
+      mensaje: document.getElementById('f-mensaje').value.trim()
+    };
+
+    if (typeof STATETTY_CONFIG === 'undefined' || !STATETTY_CONFIG.WS_API_BASE) {
+      errorEl.textContent = 'Error de configuración. Intentalo de nuevo más tarde.';
+      errorEl.style.display = 'block';
+      btn.disabled = false;
+      txt.textContent = 'Enviar';
+      spinner.style.display = 'none';
+      return;
+    }
+
+    fetch(STATETTY_CONFIG.WS_API_BASE + "/registro", {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      btn.disabled = false;
+      txt.textContent = 'Enviar';
+      spinner.style.display = 'none';
+
+      if (data.ok) {
+        document.getElementById('contactForm').style.display = 'none';
+        successEl.classList.add('visible');
+        successEl.focus();
+      } else {
+        errorEl.textContent = data.error || 'Error del servidor. Intentalo de nuevo.';
+        errorEl.style.display = 'block';
+      }
+    })
+    .catch(function(err) {
+      btn.disabled = false;
+      txt.textContent = 'Enviar';
+      spinner.style.display = 'none';
+      errorEl.textContent = 'Error de conexión. Verificá tu internet e intentalo de nuevo.';
+      errorEl.style.display = 'block';
+    });
+  });
+})();
+</script>
