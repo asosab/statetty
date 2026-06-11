@@ -1,27 +1,135 @@
-    <!-- ******FOOTER****** --> 
-    <footer class="footer">
-        <div class="container text-center">
-            <small class="copyright">© Copyright 2025 Statetty Todos los derechos reservados.</small><br/>
-            <!-- Enlaces a documentos legales -->
-            <small class="copyright">
-                <a href="{{ '/politica_de_privacidad.html' | relative_url }}">Privacidad</a> |
-                <a href="{{ '/terminos_y_condiciones.html' | relative_url }}">Condiciones</a> |
-                <a href="{{ '/descargo_de_responsabilidad.html' | relative_url }}">Descargo de Responsabilidad</a>
-            </small>
-        </div><!--//container-->
+<!-- ******FOOTER****** -->
+<footer class="footer" style="background:#042a36;color:#fff;padding:48px 0 24px;font-family:'Lato',sans-serif;">
 
-        {% include social_links.html %}
-    </footer><!--//footer-->
+<style>
+.footer a { transition: .22s cubic-bezier(.4,0,.2,1); }
+.footer-grid { display:grid; grid-template-columns:1.4fr 1fr 1fr; gap:48px; margin-bottom:32px; }
+@media (max-width:720px) { .footer-grid { grid-template-columns:1fr 1fr; gap:32px; } }
+@media (max-width:480px) { .footer-grid { grid-template-columns:1fr; } }
 
-    <!-- Javascript -->          
+.footer-logo { display:inline-flex; align-items:center; gap:10px; font-family:'Montserrat',sans-serif; font-weight:800; font-size:1.2rem; color:#fff; text-decoration:none; margin-bottom:14px; }
+.footer-logo:hover { color:#fff; text-decoration:none; }
+.footer-logo img { width:28px; height:28px; object-fit:contain; }
+.footer-brand p { font-size:.875rem; color:rgba(255,255,255,.65); line-height:1.7; max-width:260px; margin:0 0 14px; }
+.footer-brand address { font-style:normal; font-size:.8rem; color:rgba(255,255,255,.5); line-height:1.75; }
+.footer-brand address a { color:rgba(255,255,255,.65); text-decoration:none; }
+.footer-brand address a:hover { color:#fff; }
 
-    <!--script async="" defer="" src="https://buttons.github.io/buttons.js"></script-->
-    
-    <script src="{{'/assets/js/vendor/lazysizes.min.js' | prepend: site.url}}" async></script>
-    <script src="{{'/assets/plugins/bootstrap/js/bootstrap.min.js' | prepend: site.url}}"></script>
-    <script src="{{'/assets/plugins/prism/prism.js' | prepend: site.url}}"></script>    
-    <script src="{{'/assets/plugins/gumshoe/gumshoe.polyfills.min.js' | prepend: site.url}}"></script> 
-    <script src="{{'/assets/js/main.js' | prepend: site.url}}"></script>  
+.footer-wa-btn { display:inline-flex; align-items:center; gap:8px; padding:11px 20px; border-radius:20px; background:#25D366; color:#fff; font-family:'Montserrat',sans-serif; font-weight:600; font-size:.85rem; margin-top:16px; text-decoration:none; transition:.22s; }
+.footer-wa-btn:hover { background:#1fba58; color:#fff; text-decoration:none; }
 
-    <!--//metricool-->
-    <script>function loadScript(a){var b=document.getElementsByTagName("head")[0],c=document.createElement("script");c.type="text/javascript",c.src="https://tracker.metricool.com/resources/be.js",c.onreadystatechange=a,c.onload=a,b.appendChild(c)}loadScript(function(){beTracker.t({hash:"b0c42d45d4280adcda2eca537010e82d"})});</script>
+.footer-col h4 { font-family:'Montserrat',sans-serif; font-weight:700; font-size:.8rem; text-transform:uppercase; letter-spacing:.08em; color:#FF5C00; margin-bottom:16px; }
+.footer-col ul { list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:10px; }
+.footer-col ul a { font-size:.875rem; color:rgba(255,255,255,.65); text-decoration:none; }
+.footer-col ul a:hover { color:#fff; }
+
+.footer-social { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:20px; }
+.footer-social-link { width:36px; height:36px; border-radius:6px; background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.15); display:flex; align-items:center; justify-content:center; color:rgba(255,255,255,.65); font-size:.85rem; text-decoration:none; transition:.22s; }
+.footer-social-link:hover { background:#FF5C00; border-color:#FF5C00; color:#fff; text-decoration:none; }
+
+.footer-bottom { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; padding-top:24px; border-top:1px solid rgba(255,255,255,.1); }
+.footer-copy { font-size:.8rem; color:rgba(255,255,255,.5); margin:0; }
+.footer-legal { display:flex; gap:16px; flex-wrap:wrap; }
+.footer-legal a { font-size:.8rem; color:rgba(255,255,255,.5); text-decoration:none; }
+.footer-legal a:hover { color:#fff; }
+</style>
+
+<div class="container">
+  <div class="footer-grid">
+
+    <div class="footer-brand">
+      <a href="#inicio" class="footer-logo">
+        <img src="{{ '/assets/images/favicon/favicon.ico' | prepend: site.url }}" alt="" width="28" height="28"
+             onerror="this.style.display='none'">
+        <span>{{ site.title }}</span>
+      </a>
+      <p>La navaja suiza del asesor inmobiliario boliviano.</p>
+      <address>
+        Charcas 168, Santa Cruz de la Sierra, Bolivia<br>
+        <a href="tel:+59178447518">+591 78447518</a> ·
+        <a href="mailto:info@statetty.com">info@statetty.com</a>
+      </address>
+      <a href="https://wa.me/59178447518?text=Hola%20Statetty%2C%20quiero%20informaci%C3%B3n"
+         target="_blank" rel="noopener" class="footer-wa-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+          <path d="M12 0C5.373 0 0 5.373 0 12c0 2.124.554 4.118 1.528 5.849L.057 23.009a.75.75 0 00.93.928l5.224-1.459A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75A9.75 9.75 0 1121.75 12 9.761 9.761 0 0112 21.75z"/>
+        </svg>
+        Escribinos por WhatsApp
+      </a>
+    </div>
+
+    <div class="footer-col">
+      <h4>Plataforma</h4>
+      <ul>
+        <li><a href="#inicio">Inicio</a></li>
+        <li><a href="#about">Acerca de</a></li>
+        <li><a href="#Beneficios">Beneficios</a></li>
+        <li><a href="#tarifas">Tarifas</a></li>
+        <li><a href="#testimonios">Testimonios</a></li>
+        <li><a href="#faq">FAQ</a></li>
+        <li><a href="#Contacto">Contacto</a></li>
+        <li><a href="https://t.me/statetty" target="_blank" rel="noopener">Comunidad Telegram</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-col">
+      <h4>Redes</h4>
+      <div class="footer-social">
+        <a href="https://instagram.com/statetty" target="_blank" rel="noopener"
+           class="footer-social-link" aria-label="Instagram de Statetty">
+          <i class="fab fa-instagram"></i>
+        </a>
+        <a href="https://x.com/statetty" target="_blank" rel="noopener"
+           class="footer-social-link" aria-label="X de Statetty">
+          <i class="fab fa-twitter"></i>
+        </a>
+        <a href="https://facebook.com/statetty" target="_blank" rel="noopener"
+           class="footer-social-link" aria-label="Facebook de Statetty">
+          <i class="fab fa-facebook"></i>
+        </a>
+        <a href="https://www.youtube.com/@statetty" target="_blank" rel="noopener"
+           class="footer-social-link" aria-label="YouTube de Statetty">
+          <i class="fab fa-youtube"></i>
+        </a>
+        <a href="https://open.spotify.com/show/2F2hodB96q8U1QtMBjIgl9" target="_blank" rel="noopener"
+           class="footer-social-link" aria-label="Podcast Statetty en Spotify">
+          <i class="fab fa-spotify"></i>
+        </a>
+        <a href="https://whatsapp.com/channel/0029Vb6WYM36mYPE27u1Dk1t" target="_blank" rel="noopener"
+           class="footer-social-link" aria-label="Canal de WhatsApp de Statetty">
+          <i class="fab fa-whatsapp"></i>
+        </a>
+      </div>
+      <ul>
+        <li><a href="{{ '/politica_de_privacidad.html' | relative_url }}">Política de privacidad</a></li>
+        <li><a href="{{ '/terminos_y_condiciones.html' | relative_url }}">Términos y condiciones</a></li>
+        <li><a href="{{ '/descargo_de_responsabilidad.html' | relative_url }}">Descargo de responsabilidad</a></li>
+      </ul>
+    </div>
+
+  </div>
+
+  <div class="footer-bottom">
+    <p class="footer-copy">&copy; <span id="footer-year">2025</span> Statetty. Todos los derechos reservados.</p>
+    <div class="footer-legal">
+      <a href="https://t.me/statettybot" target="_blank" rel="noopener">Abrir el bot en Telegram &rarr;</a>
+    </div>
+  </div>
+</div>
+
+</footer>
+
+<!-- Javascript -->
+<script src="{{ '/assets/js/vendor/lazysizes.min.js' | prepend: site.url }}" async></script>
+<script src="{{ '/assets/plugins/bootstrap/js/bootstrap.min.js' | prepend: site.url }}"></script>
+<script src="{{ '/assets/plugins/prism/prism.js' | prepend: site.url }}"></script>
+<script src="{{ '/assets/plugins/gumshoe/gumshoe.polyfills.min.js' | prepend: site.url }}"></script>
+<script src="{{ '/assets/js/main.js' | prepend: site.url }}"></script>
+
+<!-- //metricool -->
+<script>function loadScript(a){var b=document.getElementsByTagName("head")[0],c=document.createElement("script");c.type="text/javascript",c.src="https://tracker.metricool.com/resources/be.js",c.onreadystatechange=a,c.onload=a,b.appendChild(c)}loadScript(function(){beTracker.t({hash:"b0c42d45d4280adcda2eca537010e82d"})});</script>
+
+<script>
+document.getElementById('footer-year').textContent = new Date().getFullYear();
+</script>
