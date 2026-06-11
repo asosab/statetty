@@ -3,10 +3,14 @@
   .btn-nav-cta { display:inline-block; padding:8px 18px; border-radius:6px; background:#FF5C00; color:#fff; font-family:'Montserrat',sans-serif; font-weight:600; font-size:.82rem; text-transform:uppercase; letter-spacing:.03em; border:2px solid #FF5C00; transition:.22s; text-decoration:none; }
   .btn-nav-cta:hover { background:#cc4900; border-color:#cc4900; color:#fff; text-decoration:none; }
   </style>
-  <header id="header" class="header">              
+  <header id="header" class="header">
     <nav id="main-nav" class="main-nav navbar navbar-expand-md">
       <div class="container-fluid">
+{% if page.layout == 'landing' or page.url == '/' %}
       <a class="navbar-brand logo scrollto" href="#inicio" title="{{ site.short }}">
+{% else %}
+      <a class="navbar-brand logo" href="/" title="{{ site.short }}">
+{% endif %}
         <img class="logo-image mr-2 lazyload" data-src="{{'/assets/images/favicon/favicon.ico' | prepend: site.url}}" alt="logo" width="32" height="32">
         <span class="logo-title">{{ site.title }}</span>
       </a>
@@ -19,15 +23,20 @@
            
       <div class="navbar-collapse collapse" id="navbar-collapse">
         <ul id="nav-menu" class="nav navbar-nav ms-md-auto">
+{% if page.layout == 'landing' or page.url == '/' %}
           <li class="nav-item sr-only"><a class="nav-link scrollto" href="#inicio">       Inicio</a></li>
           <li class="nav-item"><a class="nav-link scrollto"         href="#about">        Acerca de</a></li>
           <li class="nav-item"><a class="nav-link scrollto"         href="#Beneficios">   Beneficios</a></li>
           <li class="nav-item"><a class="nav-link scrollto"         href="#tarifas">      Tarifas</a></li>
           <li class="nav-item"><a class="nav-link scrollto"         href="#testimonios">  Testimonios</a></li>
-          <li class="nav-item"><a class="nav-link scrollto"         href="#faq">          FAQ</a></li>   
-          <!--li class="nav-item"><a class="nav-link scrollto"         href="#Blog">         Blog</a></li>  
-          <li class="nav-item"><a class="nav-link scrollto"         href="#Recursos">     Recursos</a></li-->
-          <li class="nav-item last"><a class="btn-nav-cta scrollto" href="#Contacto">¡Empezá ahora!</a></li>
+          <li class="nav-item"><a class="nav-link scrollto"         href="#faq">          FAQ</a></li>
+          <li class="nav-item last"><a class="btn-nav-cta scrollto" href="#Contacto">     ¡Empezá ahora!</a></li>
+{% else %}
+          <li class="nav-item"><a class="nav-link" href="/">                              Inicio</a></li>
+          <li class="nav-item"><a class="nav-link" href="/#tarifas">                      Tarifas</a></li>
+          <li class="nav-item"><a class="nav-link" href="/blog/">                         Blog</a></li>
+          <li class="nav-item last"><a class="btn-nav-cta" href="/#Contacto">             ¡Empezá ahora!</a></li>
+{% endif %}
         </ul><!--//nav-->
       </div><!--//navabr-collapse-->
       </div>
