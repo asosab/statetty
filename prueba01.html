@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Statetty · Nueva identidad</title>
+<meta name="description" content="Prototipo con la nueva paleta de Statetty: azul corporativo y amarillo vibrante.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js"></script>
+
+<style>
+/* ============================================================
+   ★ VARIABLES STATETTY — editar aquí la paleta
+   ============================================================ */
+:root {
+  --blue:       #447AB9;
+  --blue-dark:  #325886;
+  --blue-light: #82A7D6;
+  --yellow:     #FEF265;
+  --yellow-pale:#FCE8A4;
+
+  --dark:       #1a1d23;
+  --gray-800:   #2d3138;
+  --gray-700:   #3a3e45;
+  --gray-600:   #5c6068;
+  --gray-400:   #9ea2a9;
+  --gray-300:   #c2c5cb;
+  --gray-200:   #dcdee2;
+  --gray-100:   #f0f1f3;
+  --white:      #ffffff;
+
+  --font-head:  'Montserrat', sans-serif;
+  --font-body:  'Lato', sans-serif;
+  --radius-sm:  6px;
+  --radius-md:  12px;
+  --radius-lg:  20px;
+  --shadow:     0 4px 20px rgba(0,0,0,.06);
+  --shadow-lg:  0 12px 36px rgba(0,0,0,.10);
+  --transition: 0.25s cubic-bezier(.4,0,.2,1);
+}
+
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; font-size: 16px; }
+body {
+  font-family: var(--font-body);
+  color: var(--gray-700);
+  background: var(--white);
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+img { max-width: 100%; display: block; }
+a { color: var(--blue); text-decoration: none; transition: var(--transition); }
+a:hover { color: var(--blue-dark); }
+.container { max-width: 1160px; margin: 0 auto; padding: 0 24px; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+.header {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+  background: var(--blue);
+  border-bottom: 1px solid rgba(255,255,255,.10);
+  transition: var(--transition);
+}
+.header.scrolled {
+  background: rgba(68,122,185,.97);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 2px 20px rgba(0,0,0,.12);
+}
+.header .container {
+  display: flex; align-items: center;
+  justify-content: space-between;
+  height: 64px;
+}
+.header-logo {
+  display: flex; align-items: center; gap: 10px;
+  font-family: var(--font-head); font-weight: 800;
+  font-size: 1.25rem; color: var(--white); text-decoration: none;
+}
+.header-logo:hover { color: var(--yellow); }
+.header-logo img { width: 28px; height: 28px; object-fit: contain; }
+.header-logo .highlight { color: var(--yellow); }
+
+.header-nav { display: flex; align-items: center; gap: 8px; }
+.header-nav a {
+  font-family: var(--font-head); font-weight: 600;
+  font-size: .82rem; text-transform: uppercase; letter-spacing: .04em;
+  color: rgba(255,255,255,.80); padding: 8px 14px; border-radius: var(--radius-sm);
+  transition: var(--transition);
+}
+.header-nav a:hover,
+.header-nav a.active { color: var(--white); background: rgba(255,255,255,.12); }
+.header-nav .btn-nav-cta {
+  background: var(--yellow); color: var(--blue-dark);
+  padding: 8px 20px; border-radius: 50px; font-weight: 700;
+}
+.header-nav .btn-nav-cta:hover {
+  background: var(--yellow-pale); color: var(--blue-dark);
+}
+.nav-toggle {
+  display: none; flex-direction: column; gap: 5px;
+  background: none; border: none; cursor: pointer; padding: 6px;
+}
+.nav-toggle span {
+  display: block; width: 24px; height: 2px;
+  background: var(--white); border-radius: 2px; transition: var(--transition);
+}
+
+/* ============================================================
+   HERO
+   ============================================================ */
+.hero {
+  padding: 120px 0 80px;
+  background: linear-gradient(135deg, var(--blue) 0%, var(--blue-dark) 100%);
+  color: var(--white); text-align: center;
+}
+.hero-title {
+  font-family: var(--font-head); font-weight: 800;
+  font-size: clamp(2.8rem, 6vw, 4.5rem);
+  line-height: 1.08; margin-bottom: .5rem;
+}
+.hero-title .highlight { color: var(--yellow); }
+.hero-sub {
+  font-size: 1.25rem; color: var(--blue-light);
+  max-width: 600px; margin: 0 auto 2rem;
+  font-weight: 300;
+}
+.hero-btns { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 14px 32px; border-radius: 50px;
+  font-family: var(--font-head); font-weight: 700;
+  font-size: .95rem; border: none; cursor: pointer;
+  transition: var(--transition); text-decoration: none;
+}
+.btn-primary { background: var(--yellow); color: var(--blue-dark); }
+.btn-primary:hover { background: var(--yellow-pale); color: var(--blue-dark); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(254,242,101,.30); }
+.btn-outline { background: transparent; color: var(--white); border: 2px solid rgba(255,255,255,.40); }
+.btn-outline:hover { background: rgba(255,255,255,.10); border-color: var(--white); transform: translateY(-2px); }
+
+/* ============================================================
+   SECTIONS (genérico)
+   ============================================================ */
+.section { padding: 5rem 0; }
+.section-alt { background: var(--gray-100); }
+.section-title {
+  font-family: var(--font-head); font-weight: 700;
+  font-size: 2rem; color: var(--blue-dark);
+  text-align: center; margin-bottom: .5rem;
+}
+.section-title:after {
+  content: ''; display: block;
+  width: 64px; height: 4px; background: var(--yellow);
+  border-radius: 2px; margin: 12px auto 0;
+}
+.section-subtitle {
+  text-align: center; color: var(--gray-600);
+  font-size: 1.05rem; max-width: 600px; margin: .5rem auto 3rem;
+}
+
+/* ============================================================
+   BENEFITS (demo de sección interior)
+   ============================================================ */
+.benefits-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+.benefit-card {
+  background: var(--white); border-radius: var(--radius-md);
+  padding: 2rem; box-shadow: var(--shadow);
+  border: 1px solid var(--gray-200);
+  transition: var(--transition);
+}
+.benefit-card:hover {
+  transform: translateY(-4px); box-shadow: var(--shadow-lg);
+  border-color: var(--blue-light);
+}
+.benefit-card__icon {
+  width: 48px; height: 48px; border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, var(--blue), var(--blue-light));
+  color: var(--white); display: flex; align-items: center; justify-content: center;
+  font-size: 1.25rem; margin-bottom: 1.25rem;
+}
+.benefit-card h3 {
+  font-family: var(--font-head); font-weight: 700;
+  font-size: 1.15rem; color: var(--blue-dark); margin-bottom: .5rem;
+}
+.benefit-card p { font-size: .92rem; color: var(--gray-600); line-height: 1.6; }
+
+/* ============================================================
+   BLOG POSTS GRID
+   ============================================================ */
+.posts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+.post-card {
+  background: var(--white); border-radius: var(--radius-md);
+  overflow: hidden; box-shadow: var(--shadow);
+  border: 1px solid var(--gray-200);
+  transition: var(--transition);
+  display: flex; flex-direction: column;
+}
+.post-card:hover {
+  transform: translateY(-4px); box-shadow: var(--shadow-lg);
+}
+.post-card__image {
+  height: 180px; overflow: hidden; background: var(--blue-light);
+  display: flex; align-items: center; justify-content: center;
+  color: rgba(255,255,255,.30); font-size: 2.5rem;
+}
+.post-card__image img {
+  width: 100%; height: 100%; object-fit: cover;
+  transition: transform .4s;
+}
+.post-card:hover .post-card__image img { transform: scale(1.05); }
+.post-card__body {
+  padding: 1.25rem 1.5rem 1.5rem;
+  display: flex; flex-direction: column; flex: 1;
+}
+.post-card__date {
+  font-size: .78rem; text-transform: uppercase; letter-spacing: .05em;
+  color: var(--blue); font-weight: 700;
+}
+.post-card__title {
+  font-family: var(--font-head); font-weight: 700;
+  font-size: 1.1rem; margin: .35rem 0 .5rem;
+}
+.post-card__title a { color: var(--dark); }
+.post-card__title a:hover { color: var(--blue); }
+.post-card__excerpt {
+  font-size: .88rem; color: var(--gray-600);
+  line-height: 1.55; flex: 1;
+}
+.post-card__link {
+  font-weight: 700; font-size: .88rem;
+  color: var(--blue); margin-top: .75rem;
+  display: inline-flex; align-items: center; gap: 4px;
+}
+.post-card__link:hover { color: var(--blue-dark); gap: 8px; }
+.posts-cta { text-align: center; margin-top: 2.5rem; }
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+.footer {
+  background: var(--blue-dark); color: rgba(255,255,255,.70);
+  padding: 48px 0 24px; font-family: var(--font-body);
+}
+.footer-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr;
+  gap: 48px; margin-bottom: 32px;
+}
+.footer-logo {
+  display: inline-flex; align-items: center; gap: 10px;
+  font-family: var(--font-head); font-weight: 800;
+  font-size: 1.2rem; color: var(--white); margin-bottom: 14px;
+}
+.footer-logo:hover { color: var(--yellow); }
+.footer-logo img { width: 28px; height: 28px; }
+.footer-brand p { font-size: .875rem; color: rgba(255,255,255,.60); line-height: 1.7; max-width: 260px; margin: 0 0 14px; }
+.footer-brand address { font-style: normal; font-size: .8rem; color: rgba(255,255,255,.45); line-height: 1.75; }
+.footer-brand address a { color: rgba(255,255,255,.60); }
+.footer-brand address a:hover { color: var(--yellow); }
+.footer-wa-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 11px 20px; border-radius: 20px;
+  background: #25D366; color: #fff;
+  font-family: var(--font-head); font-weight: 600;
+  font-size: .85rem; margin-top: 16px; transition: var(--transition);
+}
+.footer-wa-btn:hover { background: #1fba58; color: #fff; }
+.footer-col h4 {
+  font-family: var(--font-head); font-weight: 700;
+  font-size: .8rem; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--yellow); margin-bottom: 16px;
+}
+.footer-col ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+.footer-col ul a { font-size: .875rem; color: rgba(255,255,255,.60); }
+.footer-col ul a:hover { color: var(--yellow); }
+.footer-social { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+.footer-social-link {
+  width: 36px; height: 36px; border-radius: var(--radius-sm);
+  background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12);
+  display: flex; align-items: center; justify-content: center;
+  color: rgba(255,255,255,.60); font-size: .85rem; transition: var(--transition);
+}
+.footer-social-link:hover { background: var(--yellow); border-color: var(--yellow); color: var(--blue-dark); }
+.footer-bottom {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 12px; padding-top: 24px;
+  border-top: 1px solid rgba(255,255,255,.10);
+}
+.footer-copy { font-size: .8rem; color: rgba(255,255,255,.45); margin: 0; }
+.footer-legal { display: flex; gap: 16px; flex-wrap: wrap; }
+.footer-legal a { font-size: .8rem; color: rgba(255,255,255,.45); }
+.footer-legal a:hover { color: var(--yellow); }
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 768px) {
+  .nav-toggle { display: flex; }
+  .header-nav {
+    position: fixed; top: 64px; left: 0; right: 0;
+    flex-direction: column; background: var(--blue);
+    padding: 16px 24px; gap: 4px;
+    transform: translateY(-120%); opacity: 0;
+    pointer-events: none; transition: var(--transition);
+    border-bottom: 1px solid rgba(255,255,255,.10);
+  }
+  .header-nav.open { transform: translateY(0); opacity: 1; pointer-events: auto; }
+  .header-nav a { width: 100%; padding: 12px 14px; }
+  .footer-grid { grid-template-columns: 1fr; gap: 32px; }
+  .hero { padding: 100px 0 60px; }
+}
+
+@media (max-width: 480px) {
+  .hero-btns { flex-direction: column; align-items: center; }
+  .btn { width: 100%; justify-content: center; }
+  .footer-bottom { flex-direction: column; text-align: center; }
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     HEADER
+     ============================================================ -->
+<header class="header" id="header">
+  <div class="container">
+    <a class="header-logo" href="#inicio">
+      <img src="/assets/images/favicon/favicon.ico" alt="" width="28" height="28"
+           onerror="this.style.display='none'">
+      State<span class="highlight">tty</span>
+    </a>
+
+    <button class="nav-toggle" id="navToggle" aria-label="Abrir menú">
+      <span></span><span></span><span></span>
+    </button>
+
+    <nav class="header-nav" id="headerNav">
+      <a href="#inicio" class="active">Inicio</a>
+      <a href="#beneficios">Beneficios</a>
+      <a href="#blog">Blog</a>
+      <a href="#contacto">Contacto</a>
+      <a href="#contacto" class="btn-nav-cta">Empezá ahora</a>
+    </nav>
+  </div>
+</header>
+
+<!-- ============================================================
+     HERO
+     ============================================================ -->
+<section id="inicio" class="hero">
+  <div class="container">
+    <h1 class="hero-title">State<span class="highlight">tty</span></h1>
+    <p class="hero-sub">Tu aliado tecnológico en el mercado inmobiliario</p>
+    <div class="hero-btns">
+      <a href="#contacto" class="btn btn-primary">Empezá ahora</a>
+      <a href="https://t.me/statettybot" target="_blank" class="btn btn-outline">Probá el bot</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     BENEFICIOS (demo de sección interior)
+     ============================================================ -->
+<section id="beneficios" class="section section-alt">
+  <div class="container">
+    <h2 class="section-title">¿Por qué Statetty?</h2>
+    <p class="section-subtitle">Todo lo que necesitás para potenciar tu negocio inmobiliario en un solo lugar.</p>
+
+    <div class="benefits-grid">
+      <div class="benefit-card">
+        <div class="benefit-card__icon"><i class="fas fa-search"></i></div>
+        <h3>Centralizá inmuebles</h3>
+        <p>RE/MAX, Century 21 y más en un solo lugar. Sin ir página por página.</p>
+      </div>
+      <div class="benefit-card">
+        <div class="benefit-card__icon"><i class="fab fa-whatsapp"></i></div>
+        <h3>Monitoreá WhatsApp</h3>
+        <p>Seguí 100+ grupos inmobiliarios automáticamente y no pierdas ninguna oportunidad.</p>
+      </div>
+      <div class="benefit-card">
+        <div class="benefit-card__icon"><i class="fas fa-calculator"></i></div>
+        <h3>ACM automático</h3>
+        <p>Calculá el análisis comparativo de mercado en segundos, no en horas.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     BLOG — ÚLTIMAS ENTRADAS
+     ============================================================ -->
+<section id="blog" class="section">
+  <div class="container">
+    <h2 class="section-title">Últimas del blog</h2>
+    <p class="section-subtitle">Consejos, guías y novedades para agentes inmobiliarios.</p>
+
+    <div class="posts-grid">
+      <!-- Post 1 -->
+      <article class="post-card">
+        <div class="post-card__image">
+          <i class="fas fa-newspaper"></i>
+        </div>
+        <div class="post-card__body">
+          <time class="post-card__date" datetime="2025-01-21">21 de enero, 2025</time>
+          <h3 class="post-card__title">
+            <a href="/top-10-presencia-digital/">Top 10 Consejos de Presencia Digital</a>
+          </h3>
+          <p class="post-card__excerpt">Guía práctica para construir una presencia digital profesional y efectiva como agente inmobiliario.</p>
+          <a href="/top-10-presencia-digital/" class="post-card__link">
+            Leer más <i class="fas fa-arrow-right"></i>
+          </a>
+        </div>
+      </article>
+
+      <!-- Post 2 -->
+      <article class="post-card">
+        <div class="post-card__image">
+          <i class="fas fa-chart-line"></i>
+        </div>
+        <div class="post-card__body">
+          <time class="post-card__date" datetime="2025-04-15">15 de abril, 2025</time>
+          <h3 class="post-card__title">
+            <a href="/como-el-acm-transforma-tu-estrategia/">Cómo el ACM transforma tu estrategia de precios</a>
+          </h3>
+          <p class="post-card__excerpt">El análisis comparativo de mercado es la herramienta más poderosa para fijar precios competitivos. Aprendé a usarlo.</p>
+          <a href="https://t.me/statetty" class="post-card__link">
+            Leer más <i class="fas fa-arrow-right"></i>
+          </a>
+        </div>
+      </article>
+
+      <!-- Post 3 -->
+      <article class="post-card">
+        <div class="post-card__image">
+          <i class="fas fa-robot"></i>
+        </div>
+        <div class="post-card__body">
+          <time class="post-card__date" datetime="2025-06-01">1 de junio, 2025</time>
+          <h3 class="post-card__title">
+            <a href="https://t.me/statettybot">WhatsApp + Telegram: duplicá tus leads sin esfuerzo</a>
+          </h3>
+          <p class="post-card__excerpt">Integrá las dos plataformas de mensajería más usadas y gestioná todos tus prospectos desde un solo lugar.</p>
+          <a href="https://t.me/statettybot" class="post-card__link">
+            Leer más <i class="fas fa-arrow-right"></i>
+          </a>
+        </div>
+      </article>
+    </div>
+
+    <div class="posts-cta">
+      <a href="https://t.me/statetty" class="btn btn-primary">Ver todas las entradas</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     CONTACTO (placeholder)
+     ============================================================ -->
+<section id="contacto" class="section section-alt">
+  <div class="container" style="text-align:center;">
+    <h2 class="section-title">Contacto</h2>
+    <p class="section-subtitle">Escribinos y empezá a transformar tu negocio hoy.</p>
+    <a href="https://wa.me/59178447518?text=Hola%20Statetty%2C%20quiero%20informaci%C3%B3n"
+       target="_blank" rel="noopener" class="btn btn-primary">
+      <i class="fab fa-whatsapp"></i> Escribinos por WhatsApp
+    </a>
+  </div>
+</section>
+
+<!-- ============================================================
+     FOOTER
+     ============================================================ -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="#inicio" class="footer-logo">
+          <img src="/assets/images/favicon/favicon.ico" alt="" width="28" height="28"
+               onerror="this.style.display='none'">
+          Statetty
+        </a>
+        <p>La navaja suiza del asesor inmobiliario boliviano.</p>
+        <address>
+          Charcas 168, Santa Cruz de la Sierra, Bolivia<br>
+          <a href="tel:+59178447518">+591 78447518</a> ·
+          <a href="mailto:info@statetty.com">info@statetty.com</a>
+        </address>
+        <a href="https://wa.me/59178447518?text=Hola%20Statetty%2C%20quiero%20informaci%C3%B3n"
+           target="_blank" rel="noopener" class="footer-wa-btn">
+          <i class="fab fa-whatsapp"></i> Escribinos por WhatsApp
+        </a>
+      </div>
+
+      <div class="footer-col">
+        <h4>Plataforma</h4>
+        <ul>
+          <li><a href="#inicio">Inicio</a></li>
+          <li><a href="#beneficios">Beneficios</a></li>
+          <li><a href="#blog">Blog</a></li>
+          <li><a href="#contacto">Contacto</a></li>
+          <li><a href="https://t.me/statetty" target="_blank" rel="noopener">Comunidad Telegram</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Redes</h4>
+        <div class="footer-social">
+          <a href="https://instagram.com/statetty" target="_blank" rel="noopener"
+             class="footer-social-link" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+          <a href="https://x.com/statetty" target="_blank" rel="noopener"
+             class="footer-social-link" aria-label="X (Twitter)"><i class="fab fa-twitter"></i></a>
+          <a href="https://facebook.com/statetty" target="_blank" rel="noopener"
+             class="footer-social-link" aria-label="Facebook"><i class="fab fa-facebook"></i></a>
+          <a href="https://www.youtube.com/@statetty" target="_blank" rel="noopener"
+             class="footer-social-link" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+          <a href="https://open.spotify.com/show/2F2hodB96q8U1QtMBjIgl9" target="_blank" rel="noopener"
+             class="footer-social-link" aria-label="Podcast"><i class="fab fa-spotify"></i></a>
+        </div>
+        <ul>
+          <li><a href="/politica_de_privacidad.html">Política de privacidad</a></li>
+          <li><a href="/terminos_y_condiciones.html">Términos y condiciones</a></li>
+          <li><a href="/descargo_de_responsabilidad.html">Descargo de responsabilidad</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p class="footer-copy">&copy; 2025 Statetty. Todos los derechos reservados.</p>
+      <div class="footer-legal">
+        <a href="https://t.me/statettybot" target="_blank" rel="noopener">Abrir el bot en Telegram &rarr;</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- ============================================================
+     SCRIPTS
+     ============================================================ -->
+<script>
+// Header scroll effect
+const header = document.getElementById('header');
+window.addEventListener('scroll', () => {
+  header.classList.toggle('scrolled', window.scrollY > 60);
+});
+
+// Mobile nav toggle
+const navToggle = document.getElementById('navToggle');
+const headerNav = document.getElementById('headerNav');
+navToggle.addEventListener('click', () => {
+  headerNav.classList.toggle('open');
+});
+
+// Close nav on link click (mobile)
+headerNav.querySelectorAll('a').forEach(link => {
+  link.addEventListener('click', () => {
+    headerNav.classList.remove('open');
+  });
+});
+
+// Update footer year
+document.querySelector('.footer-copy').textContent =
+  '© ' + new Date().getFullYear() + ' Statetty. Todos los derechos reservados.';
+</script>
+</body>
+</html>
