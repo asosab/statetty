@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Statetty · Inicio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js"></script>
+<style>
+:root {
+  --blue:       #17baef;
+  --blue-dark:  #074f66;
+  --blue-light: #6dd0f5;
+  --yellow:     #eebf3f;
+  --yellow-pale:#f4d67a;
+  --font-head:  'Montserrat', sans-serif;
+  --font-body:  'Lato', sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; font-size: 16px; }
+body { font-family: var(--font-body); color: #444; background: #fff; }
+a { text-decoration: none; }
+.container { max-width: 1160px; margin: 0 auto; padding: 0 24px; }
+
+.Inicio {
+  background: var(--blue); color: #fff; padding-top: 150px; padding-bottom: 80px;
+  text-align: center;
+}
+.Inicio .title {
+  font-family: var(--font-head); font-weight: 800;
+  font-size: clamp(3rem, 8vw, 6rem);
+  color: var(--blue-dark); margin-top: 0; line-height: 1.08;
+}
+.Inicio .title .highlight { color: var(--yellow); }
+.Inicio .intro {
+  font-size: 1.35rem; max-width: 600px; margin: 0 auto 2rem;
+  font-weight: 300; color: var(--blue-light);
+}
+.Inicio .btns { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-bottom: 40px; }
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 14px 32px; border-radius: 50px;
+  font-family: var(--font-head); font-weight: 700;
+  font-size: .95rem; border: none; cursor: pointer;
+  transition: 0.25s cubic-bezier(.4,0,.2,1);
+}
+.btn-cta-secondary { background: var(--yellow); color: var(--blue-dark); }
+.btn-cta-secondary:hover { background: var(--yellow-pale); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(238,191,63,.30); }
+.btn-cta-primary { background: transparent; color: #fff; border: 2px solid rgba(255,255,255,.40); }
+.btn-cta-primary:hover { background: rgba(255,255,255,.10); border-color: #fff; transform: translateY(-2px); }
+</style>
+</head>
+<body>
+<section id="inicio" class="Inicio section">
+  <div class="container text-center">
+    <h2 class="title">State<span class="highlight">tty</span></h2>
+    <p class="intro">Tu aliado tecnológico en el mercado inmobiliario</p>
+    <div class="btns">
+      <a class="btn btn-cta-secondary" href="#contacto">¡Empezá ahora!</a>
+      <a class="btn btn-cta-primary" href="https://t.me/statettybot" target="_blank">Probá el bot</a>
+    </div>
+  </div>
+</section>
+</body>
+</html>

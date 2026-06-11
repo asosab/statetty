@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Statetty · Footer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js"></script>
+<style>
+:root {
+  --blue:       #17baef;
+  --blue-dark:  #074f66;
+  --blue-light: #6dd0f5;
+  --yellow:     #eebf3f;
+  --yellow-pale:#f4d67a;
+  --font-head:  'Montserrat', sans-serif;
+  --font-body:  'Lato', sans-serif;
+  --radius-sm:  6px;
+  --transition: 0.22s cubic-bezier(.4,0,.2,1);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; font-size: 16px; }
+body { font-family: var(--font-body); color: #444; background: #e8e8e8; padding: 40px 0; }
+a { text-decoration: none; }
+.container { max-width: 1160px; margin: 0 auto; padding: 0 24px; }
+
+.footer {
+  background: var(--blue-dark); color: rgba(255,255,255,.70);
+  padding: 48px 0 24px; font-family: var(--font-body);
+}
+.footer-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 48px; margin-bottom: 32px; }
+@media (max-width: 720px) { .footer-grid { grid-template-columns: 1fr 1fr; gap: 32px; } }
+@media (max-width: 480px) { .footer-grid { grid-template-columns: 1fr; } }
+.footer-logo { display: inline-flex; align-items: center; gap: 10px; font-family: var(--font-head); font-weight: 800; font-size: 1.2rem; color: #fff; margin-bottom: 14px; }
+.footer-logo:hover { color: var(--yellow); }
+.footer-logo img { width: 28px; height: 28px; }
+.footer-brand p { font-size: .875rem; color: rgba(255,255,255,.60); line-height: 1.7; max-width: 260px; margin: 0 0 14px; }
+.footer-brand address { font-style: normal; font-size: .8rem; color: rgba(255,255,255,.45); line-height: 1.75; }
+.footer-brand address a { color: rgba(255,255,255,.60); }
+.footer-brand address a:hover { color: var(--yellow); }
+.footer-wa-btn { display: inline-flex; align-items: center; gap: 8px; padding: 11px 20px; border-radius: 20px; background: #25D366; color: #fff; font-family: var(--font-head); font-weight: 600; font-size: .85rem; margin-top: 16px; transition: var(--transition); }
+.footer-wa-btn:hover { background: #1fba58; color: #fff; }
+.footer-col h4 { font-family: var(--font-head); font-weight: 700; font-size: .8rem; text-transform: uppercase; letter-spacing: .08em; color: var(--yellow); margin-bottom: 16px; }
+.footer-col ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+.footer-col ul a { font-size: .875rem; color: rgba(255,255,255,.60); }
+.footer-col ul a:hover { color: var(--yellow); }
+.footer-social { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+.footer-social-link { width: 36px; height: 36px; border-radius: var(--radius-sm); background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12); display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,.60); font-size: .85rem; transition: var(--transition); }
+.footer-social-link:hover { background: var(--yellow); border-color: var(--yellow); color: var(--blue-dark); }
+.footer-bottom { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,.10); }
+.footer-copy { font-size: .8rem; color: rgba(255,255,255,.45); margin: 0; }
+.footer-legal { display: flex; gap: 16px; flex-wrap: wrap; }
+.footer-legal a { font-size: .8rem; color: rgba(255,255,255,.45); }
+.footer-legal a:hover { color: var(--yellow); }
+</style>
+</head>
+<body>
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="#inicio" class="footer-logo"><img src="/assets/images/favicon/favicon.ico" alt="" width="28" height="28" onerror="this.style.display='none'"> Statetty</a>
+        <p>La navaja suiza del asesor inmobiliario boliviano.</p>
+        <address>Charcas 168, Santa Cruz de la Sierra, Bolivia<br><a href="tel:+59178447518">+591 78447518</a> · <a href="mailto:info@statetty.com">info@statetty.com</a></address>
+        <a href="https://wa.me/59178447518?text=Hola%20Statetty%2C%20quiero%20informaci%C3%B3n" target="_blank" rel="noopener" class="footer-wa-btn"><i class="fab fa-whatsapp"></i> Escribinos por WhatsApp</a>
+      </div>
+      <div class="footer-col">
+        <h4>Plataforma</h4>
+        <ul>
+          <li><a href="#inicio">Inicio</a></li>
+          <li><a href="#about">Acerca de</a></li>
+          <li><a href="#beneficios">Beneficios</a></li>
+          <li><a href="#tarifas">Tarifas</a></li>
+          <li><a href="#testimonios">Testimonios</a></li>
+          <li><a href="#faq">FAQ</a></li>
+          <li><a href="#blog">Blog</a></li>
+          <li><a href="#contacto">Contacto</a></li>
+          <li><a href="https://t.me/statetty" target="_blank" rel="noopener">Comunidad Telegram</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Redes</h4>
+        <div class="footer-social">
+          <a href="https://instagram.com/statetty" target="_blank" rel="noopener" class="footer-social-link" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+          <a href="https://x.com/statetty" target="_blank" rel="noopener" class="footer-social-link" aria-label="X"><i class="fab fa-twitter"></i></a>
+          <a href="https://facebook.com/statetty" target="_blank" rel="noopener" class="footer-social-link" aria-label="Facebook"><i class="fab fa-facebook"></i></a>
+          <a href="https://www.youtube.com/@statetty" target="_blank" rel="noopener" class="footer-social-link" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+          <a href="https://open.spotify.com/show/2F2hodB96q8U1QtMBjIgl9" target="_blank" rel="noopener" class="footer-social-link" aria-label="Podcast"><i class="fab fa-spotify"></i></a>
+        </div>
+        <ul>
+          <li><a href="/politica_de_privacidad.html">Política de privacidad</a></li>
+          <li><a href="/terminos_y_condiciones.html">Términos y condiciones</a></li>
+          <li><a href="/descargo_de_responsabilidad.html">Descargo de responsabilidad</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p class="footer-copy">&copy; 2025 Statetty. Todos los derechos reservados.</p>
+      <div class="footer-legal"><a href="https://t.me/statettybot" target="_blank" rel="noopener">Abrir el bot en Telegram &rarr;</a></div>
+    </div>
+  </div>
+</footer>
+<script>document.querySelector('.footer-copy').textContent='\u00A9 '+new Date().getFullYear()+' Statetty. Todos los derechos reservados.';</script>
+</body>
+</html>

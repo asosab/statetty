@@ -4,10 +4,10 @@
 
 Sitio web estático Jekyll 4.3, alojado en GitHub Pages (statetty.com). Landing page corporativa + mapas interactivos Leaflet + generación de PDF. Producto principal: bot de Telegram @statettybot.
 
-## Paleta de colores base
+## Paleta de colores base (logo oficial)
 
-- **Azul**: Principal `#447AB9`, Oscuro (sombras) `#325886`, Claro (luces) `#82A7D6`
-- **Amarillo**: Principal `#FEF265`, Variante pálida `#FCE8A4`
+- **Azul**: Principal `#17baef`, Oscuro `#074f66`, Claro `#6dd0f5`
+- **Amarillo**: Principal `#eebf3f`, Pálido `#f4d67a`
 
 ## Últimos cambios
 
@@ -17,7 +17,9 @@ Sitio web estático Jekyll 4.3, alojado en GitHub Pages (statetty.com). Landing 
 - 2025-06-11: Footer reemplazado con versión moderna de test.html — 3 columnas (marca con logo+nombre, plataforma, redes+legales), iconos FontAwesome, WhatsApp CTA, año dinámico. Fondo `#042a36` mantenido.
 - 2025-06-11: Link "¡Empezá ahora!" del header convertido a botón naranja (`.btn-nav-cta`) con brand `#FF5C00`, hover `#cc4900`.
 - 2025-06-11: FAQ reemplazado con acordeón interactivo de test.html — 7 preguntas, estructura `data-faq` con JSON-LD autogenerado, colores claros del sitio. Texto corregido en pregunta de WhatsApp: Statetty sigue sus propios 100+ grupos inmobiliarios, no los del usuario.
-- 2025-06-11: Creado `prueba01.html` como prototipo de la nueva identidad visual — paleta azul (principal `#447AB9`, oscuro `#325886`, claro `#82A7D6`) y amarillo (principal `#FEF265`, pálido `#FCE8A4`). Header fijo con efecto scroll, hero con gradiente, grid de beneficios, sección de blog con 3 tarjetas de entradas, footer armonizado. Sin tocar index.html.
+- 2025-06-11: Creados posts dummy `2025-03-15-que-es-el-acm-y-como-te-ayuda-a-vender-mas` y `2025-05-20-monitoreo-whatsapp-para-agentes-inmobiliarios.md`.
+- 2025-06-11: Creados 10 archivos de prueba por sección (`prueba-header.html`, `prueba-inicio.html`, `prueba-about.html`, `prueba-beneficios.html`, `prueba-tarifas.html`, `prueba-testimonios.html`, `prueba-faq.html`, `prueba-blog.html`, `prueba-contacto.html`, `prueba-footer.html`) con la paleta oficial del logo (azul `#17baef` / amarillo `#eebf3f`).
+- 2025-06-11: `prueba01.html` actualizado como página maestra que ensambla todas las secciones — paleta unificada, sin naranja. Sin tocar index.html.
 
 ## Próximos pasos
 
