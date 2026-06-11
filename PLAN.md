@@ -18,8 +18,10 @@ Sitio web estático Jekyll 4.3, alojado en GitHub Pages (statetty.com). Landing 
 - 2025-06-11: Link "¡Empezá ahora!" del header convertido a botón naranja (`.btn-nav-cta`) con brand `#FF5C00`, hover `#cc4900`.
 - 2025-06-11: FAQ reemplazado con acordeón interactivo de test.html — 7 preguntas, estructura `data-faq` con JSON-LD autogenerado, colores claros del sitio. Texto corregido en pregunta de WhatsApp: Statetty sigue sus propios 100+ grupos inmobiliarios, no los del usuario.
 - 2025-06-11: Creados posts dummy `2025-03-15-que-es-el-acm-y-como-te-ayuda-a-vender-mas` y `2025-05-20-monitoreo-whatsapp-para-agentes-inmobiliarios.md`.
-- 2025-06-11: Creados 10 archivos de prueba por sección (`prueba-header.html`, `prueba-inicio.html`, `prueba-about.html`, `prueba-beneficios.html`, `prueba-tarifas.html`, `prueba-testimonios.html`, `prueba-faq.html`, `prueba-blog.html`, `prueba-contacto.html`, `prueba-footer.html`) con la paleta oficial del logo (azul `#17baef` / amarillo `#eebf3f`).
+- 2025-06-11: Creados 10 archivos de prueba por sección (`prueba-header.html`…`prueba-footer.html`) con la paleta oficial del logo (azul `#17baef` / amarillo `#eebf3f`).
 - 2025-06-11: `prueba01.html` actualizado como página maestra que ensambla todas las secciones — paleta unificada, sin naranja. Sin tocar index.html.
+- 2025-06-11: Secciones Tarifas y Contacto en `prueba01.html` reemplazadas con versiones autocontenidas (style+script inline) desde `_includes/` original, adaptadas a paleta amarilla.
+- 2025-06-11: Creado `/blog/index.html` — página independiente de índice del blog con buscador JS que filtra en vivo, grid de 3 posts, header sticky y footer.
 
 ## Próximos pasos
 
