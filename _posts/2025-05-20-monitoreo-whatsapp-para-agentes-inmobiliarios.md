@@ -84,7 +84,7 @@ El objetivo es que al escribir en WhatsApp, copies el texto base y ajustes una o
 
 ## Paso 4: Tu vitrina digital con Google Drive y Google Fotos
 
-Cuando alguien en un grupo pregunta "¿alguien tiene algo en el barrio X?", la respuesta ideal llega en menos de un minuto. Para eso, el material del inmueble tiene que estar listo antes de que llegue la pregunta.
+Cuando alguien en un grupo pregunta "¿Alguien tiene algo en el barrio X?", la respuesta ideal llega en menos de un minuto. Para eso, el material del inmueble tiene que estar listo antes de que llegue la pregunta.
 
 **El sistema:**
 
@@ -99,11 +99,10 @@ Cuando pegás un enlace de Google Fotos en WhatsApp, la plataforma genera autom�
 **La estructura del mensaje:**
 
 ```
-[Enlace Google Fotos]  ← primero, genera el thumbnail automático
-
 Depto 2 dorms | Zona Norte | USD 85.000
 Piso 3, amoblado, con cochera. Disponible para visita esta semana.
 
+[Enlace Google Fotos]  ← Genera el thumbnail automático
 Brochure completo: [Enlace Drive]
 📞 [Tu número]
 ```
