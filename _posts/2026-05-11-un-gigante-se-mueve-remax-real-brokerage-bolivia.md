@@ -84,4 +84,4 @@ El mercado inmobiliario boliviano está creciendo. La tecnología está llegando
 
 ---
 
-*Si sos agente, gerente de oficina o inversor y querés ser parte de lo que viene, [hablemos](https://statetty.com/#Contacto) o probá el bot directamente en [@statettybot](https://t.me/statettybot).*
+*Si sos agente, gerente de oficina o inversor y querés ser parte de lo que viene, [hablemos](https://statetty.com/#Contacto) o probá el bot directamente en [@statettybot](https://statetty.com/#Contacto).*
