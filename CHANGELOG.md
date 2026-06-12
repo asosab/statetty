@@ -2,6 +2,13 @@
 
 ## 2025-06-11
 
+- **Migración completa prueba01 → en vivo**: todos los estilos globales de `prueba01.html` movidos a `assets/css/theme-1.css` (`:root`, resets, header, hero, about, beneficios, testimonios, blog, footer + responsive). Cada `_include/*.html` actualizado con el contenido y estilo de su sección homóloga en prueba01. Eliminados todos los `prueba-*.html`.
+- **Header reemplazado**: diseño custom flexbox (hamburguesa animada, scroll con blur, logo blanco, CTA amarillo/azul) con Liquid condicional para landing vs otras páginas. JS inline para scroll/toggle.
+- **About**: migrado de Bootstrap grid a CSS Grid con `.about-grid`/`.about-item`/`.about-icon`.
+- **Beneficios y Testimonios**: reescritos con clases namespaced (`beneficios-section`, `testimonios-section`, `.testimonio` flexbox). Sin lazyload.
+- **Blog dinámico**: `_includes/blog.html` reescrito con `{% for post in site.posts limit:3 %}`, cards BEM, fechas en español. Agregado `{% include blog.html %}` a `_layouts/landing.html`.
+- **Brand colors**: todos los acentos naranja `#FF5C00` reemplazados por amarillo oficial `#eebf3f` en faq, tarifas, contacto y footer. Texto sobre fondo amarillo usa `var(--blue-dark)`.
+
 - **Posts dummy**: creados `_posts/2025-03-15-que-es-el-acm-y-como-te-ayuda-a-vender-mas.md` y `_posts/2025-05-20-monitoreo-whatsapp-para-agentes-inmobiliarios.md` — 2 entradas de blog reales sobre ACM y monitoreo de WhatsApp para que el grid del blog funcione con contenido vivo (3 posts total).
 - **Archivos de prueba por sección**: creados 10 archivos HTML independientes (`prueba-header.html`, `prueba-inicio.html`, `prueba-about.html`, `prueba-beneficios.html`, `prueba-tarifas.html`, `prueba-testimonios.html`, `prueba-faq.html`, `prueba-blog.html`, `prueba-contacto.html`, `prueba-footer.html`) — cada uno autocontenido con CSS+HTML+JS, usando la paleta oficial del logo (azul `#17baef`, azul oscuro `#074f66`, amarillo `#eebf3f`).
 - **prueba01.html actualizado**: página maestra que ensambla todas las secciones en orden (header, inicio, about, beneficios, tarifas, testimonios, faq, blog, contacto, footer). Paleta unificada azul/amarillo. Sin naranja. Sin tocar index.html ni los _includes/ oficiales.

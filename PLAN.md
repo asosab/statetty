@@ -11,18 +11,19 @@ Sitio web estático Jekyll 4.3, alojado en GitHub Pages (statetty.com). Landing 
 
 ## Últimos cambios
 
-- 2025-06-09: Creación de `arquitectura.md` con documentación completa de la arquitectura, incluidos diagramas Mermaid.
-- 2025-06-09: Integración de SCE (Santa Cruz Estate) como nueva fuente de datos reconocida en mapa.js, mapatmp.js, mapa_link_directo.js y mapaInmo.js.
-- 2025-06-11: Sección tarifas reemplazada con versión dinámica — selector de país (Bolivia/Perú), grid de precios generado por JS, calculadora de equipos con slider de agentes y selector de duración, y botón que pre-rellena el formulario de contacto con el plan calculado. Adaptado al tema claro del sitio.
-- 2025-06-11: Footer reemplazado con versión moderna de test.html — 3 columnas (marca con logo+nombre, plataforma, redes+legales), iconos FontAwesome, WhatsApp CTA, año dinámico. Fondo `#042a36` mantenido.
-- 2025-06-11: Link "¡Empezá ahora!" del header convertido a botón naranja (`.btn-nav-cta`) con brand `#FF5C00`, hover `#cc4900`.
-- 2025-06-11: FAQ reemplazado con acordeón interactivo de test.html — 7 preguntas, estructura `data-faq` con JSON-LD autogenerado, colores claros del sitio. Texto corregido en pregunta de WhatsApp: Statetty sigue sus propios 100+ grupos inmobiliarios, no los del usuario.
-- 2025-06-11: Creados posts dummy `2025-03-15-que-es-el-acm-y-como-te-ayuda-a-vender-mas` y `2025-05-20-monitoreo-whatsapp-para-agentes-inmobiliarios.md`.
-- 2025-06-11: Creados 10 archivos de prueba por sección (`prueba-header.html`…`prueba-footer.html`) con la paleta oficial del logo (azul `#17baef` / amarillo `#eebf3f`).
-- 2025-06-11: `prueba01.html` actualizado como página maestra que ensambla todas las secciones — paleta unificada, sin naranja. Sin tocar index.html.
-- 2025-06-11: Secciones Tarifas y Contacto en `prueba01.html` reemplazadas con versiones autocontenidas (style+script inline) desde `_includes/` original, adaptadas a paleta amarilla.
-- 2025-06-11: Creado `/blog/index.html` — página independiente de índice del blog con buscador JS que filtra en vivo, grid de 3 posts, header sticky y footer.
+- 2025-06-11: **Migración completa de `prueba01.html` al sitio en vivo** — todos los estilos y secciones del prototipo movidos a sus archivos oficiales. Paleta unificada (azul `#17baef` / amarillo `#eebf3f`). Sin naranja. Todos los `prueba-*.html` eliminados.
+- 2025-06-11: `theme-1.css` extendido con `:root` global (variables de paleta, tipografía, sombras, radios), resets, y estilos de header, hero, about, beneficios, testimonios, blog, footer + responsive. Sobrescribe estilos Bootstrap previos.
+- 2025-06-11: `_includes/header.html` reemplazado — header fijo con hamburguesa animada, blur al scrollear, logo blanco, botón CTA amarillo/azul oscuro, Liquid condicional (landing vs otras páginas).
+- 2025-06-11: `_includes/inicio.html` hero actualizado — sin `offset-header`, sin `<br><br><br>`, botones con colores de paleta.
+- 2025-06-11: `_includes/about.html` convertido a CSS Grid (`.about-grid`) — tarjetas con íconos, sin Bootstrap grid.
+- 2025-06-11: `_includes/beneficios.html` reemplazado — clase `beneficios-section`, fondo azul, feature-list con íconos amarillos, texto en vos/voseo.
+- 2025-06-11: `_includes/testimonios.html` reemplazado — flexbox layout (`.testimonio > .testimonio-profile + .testimonio-bubble`), sin lazyload, audio Gabriel con onclick inline.
+- 2025-06-11: `_includes/blog.html` reescrito — grid dinámico con Liquid `{% for post in site.posts limit:3 %}`, cards BEM, fecha en español, CTA a `/blog/`.
+- 2025-06-11: `_layouts/landing.html` ahora incluye `{% include blog.html %}` entre FAQ y contacto.
+- 2025-06-11: Brand colors migrados de `#FF5C00` (naranja) a `#eebf3f` (amarillo oficial) en `_includes/faq.html`, `tarifas.html`, `contacto.html`, `footer.html`. Texto sobre amarillo usa `var(--blue-dark)` en vez de `#fff`.
 
 ## Próximos pasos
 
-Sin definir.
+- Verificar que el build de Jekyll no tenga errores.
+- Probar navegación responsive, scroll header, FAQ accordion, calculadora de tarifas, formulario de contacto, y blog dinámico.
+- Mover JS global (scroll header, toggle nav) de inline en header.html a `assets/js/main.js` si se desea centralizar.
