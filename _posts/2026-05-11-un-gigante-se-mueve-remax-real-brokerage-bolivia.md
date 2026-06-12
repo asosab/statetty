@@ -10,6 +10,9 @@ published: true
 image: "statettyTatuaje.png"
 ---
 
+¿Sin tiempo para leer? Escucha el artículo en [Statetty Podcast](https://open.spotify.com/episode/4RAnSOYMd3ikBGdUnB9Nbu)
+
+
 ## El movimiento que redefine el sector
 
 El 27 de abril de 2026, The Real Brokerage (NASDAQ: REAX) anunció un acuerdo definitivo para adquirir RE/MAX Holdings (NYSE: RMAX) por un valor empresarial de aproximadamente **880 millones de dólares**. De esa combinación nace **Real REMAX Group**: una entidad que une la plataforma tecnológica de Real con la red de franquicias más reconocida del mundo, con más de 180.000 agentes en más de 120 países y territorios.
