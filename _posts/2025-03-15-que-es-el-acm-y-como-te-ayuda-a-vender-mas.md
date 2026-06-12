@@ -197,4 +197,4 @@ Con Statetty, un ACM que antes te tomaba medio día ahora lo tenés en **menos d
 
 ---
 
-*¿Querés probarlo? [Iniciá tu prueba en @statettybot](https://t.me/statettybot) y hacé tu primer ACM hoy mismo.*
+*¿Querés probarlo? [Iniciá tu prueba en @statettybot](https://statetty.com/#Contacto) y hacé tu primer ACM hoy mismo.*
