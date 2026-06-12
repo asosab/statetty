@@ -155,6 +155,40 @@ Multiplicá eso por veinte oportunidades al día y empezás a ver por qué el or
 
 ---
 
+## Cómo publicar un requerimiento en grupos de WhatsApp
+
+Un requerimiento mal escrito se pierde entre el ruido. Uno bien estructurado lo leen tus colegas, lo procesan los bots de alerta y genera respuestas concretas. La estructura es simple:
+
+**Primera línea: qué buscás y bajo qué modalidad**
+En negrita y mayúsculas. Sin ambigüedad. Quien lo lee en un vistazo sabe si tiene algo para ofrecerte.
+
+**Segunda parte: zona y detalles del inmueble**
+Zona, características físicas y cualquier condición que sea excluyente. Cuanto más específico, menos tiempo perdido en respuestas que no aplican.
+
+**Tercera parte: rango de presupuesto**
+Un número concreto o un rango. Nunca "presupuesto acorde", "según el inmueble" o frases similares: eso filtra mal y genera intercambios innecesarios.
+
+**Cuarta parte: tus datos de contacto**
+Teléfono, nombre y agencia en una sola línea. Formato limpio, fácil de copiar.
+
+---
+
+**Ejemplo:**
+
+```
+*REQUERIMIENTO TERRENO EN VENTA*
+Zona Norte, 9no anillo, remanso
+Sobre avenida — 14mts de frente, 20mts de fondo o más
+Presupuesto: 110.000 $us
+Ref: +59175583233 | Siria Useche | C21 Nexo
+```
+
+---
+
+Este formato también es el que mejor procesan los bots de monitoreo como Statetty: la modalidad en la primera línea, la zona en la segunda y el presupuesto como dato numérico limpio maximizan las coincidencias en los sistemas de alerta.
+
+---
+
 ## Cómo Statetty simplifica todo esto
 
 Todo lo que describimos arriba funciona. Requiere disciplina, organización y tiempo de configuración inicial.
