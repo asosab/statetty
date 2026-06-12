@@ -5,7 +5,7 @@
     <div class="posts-grid">
 {% for post in site.posts limit:3 %}
       <article class="post-card">
-        <div class="post-card__image">{% if post.image %}<img src="{{ post.image | prepend: site.url }}" alt="" loading="lazy">{% endif %}</div>
+        <div class="post-card__image">{% if post.image %}<img src="/assets/image/{{ post.image | prepend: site.url }}" alt="" loading="lazy">{% endif %}</div>
         <div class="post-card__body">
           <time class="post-card__date" datetime="{{ post.date | date: '%Y-%m-%d' }}">{{ post.date | date: '%-d de %B, %Y' | replace:'January','enero' | replace:'February','febrero' | replace:'March','marzo' | replace:'April','abril' | replace:'May','mayo' | replace:'June','junio' | replace:'July','julio' | replace:'August','agosto' | replace:'September','septiembre' | replace:'October','octubre' | replace:'November','noviembre' | replace:'December','diciembre' }}</time>
           <h3 class="post-card__title"><a href="{{ post.url | prepend: site.url }}">{{ post.title }}</a></h3>
