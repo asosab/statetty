@@ -6,7 +6,7 @@ categories: herramientas, whatsapp
 comments: true
 description: "Seguí cientos de grupos de WhatsApp sin esfuerzo y no pierdas ninguna oportunidad. Te contamos cómo funciona el monitor automático de Statetty."
 tags: [whatsapp, monitoreo, grupos, alertas, automatización, productividad]
-published: false
+published: true
 image: "statetty_phone.jpg"
 ---
 
