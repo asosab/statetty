@@ -12,7 +12,7 @@ image: "statetty_phone.jpg"
 
 ## El problema real
 
-Si sos agente inmobiliario en Santa Cruz, probablemente estés en decenas de grupos de WhatsApp donde se publican propiedades, pedidos de clientes y oportunidades de cocierre. En un grupo activo pueden caer 500 o más mensajes por día.
+Si sos agente inmobiliario, probablemente estés en decenas de grupos de WhatsApp donde se publican propiedades, pedidos de clientes y oportunidades de cocierre. En un grupo activo pueden caer 500 o más mensajes por día.
 
 El volumen es solo parte del problema. Cada mensaje que se te pasa puede ser un negocio que cierra otro. Y cada vez que querés ofrecer un inmueble, empezás de cero: buscás las fotos, escribís el texto, copiás el precio, pegás el número. Lo repetís decenas de veces al día.
 
@@ -32,7 +32,7 @@ Cuando conozcas a un colega en un evento, en una firma o en una visita, pregunt�
 
 **Grupos por zona o tipo de inmueble**
 
-Buscá grupos específicos: "Departamentos Equipetrol", "Casas zona Norte SCZ", "Anticréticos Santa Cruz". Son más fáciles de filtrar y el ruido es menor.
+Buscá grupos específicos: "Departamentos Equipetrol", "Casas zona Norte SCZ", "Anticréticos". Son más fáciles de filtrar y el ruido es menor.
 
 **Grupos de propietarios y constructoras**
 
@@ -72,7 +72,7 @@ Cada vez que respondés a alguien en WhatsApp, escribís más o menos lo mismo: 
 
 **Qué conviene tener listo:**
 
-- **Saludo de presentación:** tu nombre, inmobiliaria, zona en la que trabajás y una frase de apertura corta. Por ejemplo: "Hola, soy [Nombre] de [Inmobiliaria]. Trabajo en la zona norte de Santa Cruz y me especializo en [tipo de inmueble]."
+- **Saludo de presentación:** tu nombre, inmobiliaria, zona en la que trabajás y una frase de apertura corta. Por ejemplo: "Hola, soy [Nombre] de [Inmobiliaria]. Trabajo en la zona norte de ... y me especializo en [tipo de inmueble]."
 - **Ficha por captación:** un texto con los datos del inmueble. Zona, dormitorios, precio, condición (venta / alquiler / anticrético) y un dato diferenciador. Sin adornos.
 - **Cierre estándar:** una frase para invitar a coordinar una visita o para pedir más información sobre lo que busca el cliente.
 
@@ -161,7 +161,7 @@ Todo lo que describimos arriba funciona. Requiere disciplina, organización y ti
 
 Statetty está construido para el agente que ya entiende ese proceso y quiere que la parte más repetitiva ocurra sola.
 
-En lugar de buscar manualmente con palabras clave en cada grupo, Statetty tiene su propio número de WhatsApp que monitorea más de 100 grupos inmobiliarios en Santa Cruz de forma continua. Cuando detecta un mensaje que coincide con tus criterios (zona, tipo de inmueble, precio), te manda una alerta en tiempo real a Telegram. No necesitás compartir tus grupos personales, no instalás nada extra, no revisás manualmente nada.
+En lugar de buscar manualmente con palabras clave en cada grupo, Statetty tiene su propio número de WhatsApp que monitorea más de 100 grupos inmobiliarios de tu localidad de forma continua. Cuando detecta un mensaje que coincide con tus criterios (zona, tipo de inmueble, precio), te manda una alerta en tiempo real a Telegram. No necesitás compartir tus grupos personales, no instalás nada extra, no revisás manualmente nada.
 
 Gabriel Pérez, agente de Century 21, usa Statetty desde 2024 y recuperó más de tres horas diarias que ahora destina a cocierres y alianzas.
 
