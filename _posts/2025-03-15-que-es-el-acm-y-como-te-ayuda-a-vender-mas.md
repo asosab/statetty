@@ -12,9 +12,9 @@ image: "statetty_banner.jpg"
 
 ## El ACM: tu mejor aliado para poner precio a una propiedad
 
-El **Análisis Comparativo de Mercado (ACM)** es el método más usado por agentes inmobiliarios para estimar el valor de una propiedad. Se basa en comparar inmuebles similares —activos, vendidos o en alquiler— ubicados en la misma zona, para derivar un rango de precio justo y defendible ante el cliente.
+El **Análisis Comparativo de Mercado (ACM)** es el método más usado por agentes inmobiliarios para estimar el valor de una propiedad. Se basa en comparar inmuebles similares (activos, vendidos o en alquiler) ubicados en la misma zona, para derivar un rango de precio justo y defendible ante el cliente.
 
-No es una tasación legal ni un avalúo pericial. Es una herramienta de trabajo cotidiano: rápida, práctica y suficientemente precisa para negociar con criterio.
+Es una herramienta de trabajo cotidiano: rápida, práctica y suficientemente precisa para negociar con criterio. A diferencia de una tasación legal o avalúo pericial, podés hacerla vos mismo con los datos del mercado.
 
 ---
 
@@ -90,7 +90,7 @@ Ese es tu punto de partida para la negociación.
 
 ### 3. Rango mínimo–máximo
 
-El promedio solo no es suficiente. El rango te da el piso y el techo:
+El rango complementa al promedio: te da el piso y el techo del valor de mercado.
 
 ```
 rango = [precio/m²_mínimo × superficie_sujeto, precio/m²_máximo × superficie_sujeto]
@@ -103,7 +103,7 @@ Podés presentarle al cliente: *"el mercado actual de tu zona ubica la propiedad
 
 ### 4. Ajustes cualitativos
 
-No todos los comparables son perfectos. Podés aplicar ajustes simples por características diferenciales:
+Los comparables tienen variaciones entre sí. Podés aplicar ajustes simples por características diferenciales:
 
 | Factor              | Ajuste sugerido |
 |---------------------|-----------------|
@@ -145,7 +145,7 @@ Si el precio/m² de un inmueble está por debajo del promedio de su zona sin jus
 
 ### Caso 4: Actualizar captaciones antiguas
 
-Una propiedad captada hace 8 meses puede estar publicada a un precio que el mercado ya superó —hacia arriba o hacia abajo. Repetir el ACM periódicamente sobre tus captaciones activas te permite ajustar antes de que el cliente o el comprador te lo señalen.
+Una propiedad captada hace 8 meses puede estar publicada a un precio que el mercado ya superó (hacia arriba o hacia abajo). Repetir el ACM periódicamente sobre tus captaciones activas te permite ajustar antes de que el cliente o el comprador te lo señalen.
 
 ---
 
@@ -168,7 +168,7 @@ Eso puede llevar **3 a 6 horas por propiedad**, sin contar que los datos de port
 Statetty automatiza el proceso completo desde el bot en Telegram ([@statettybot](https://t.me/statettybot)):
 
 **Búsqueda filtrada por zona y radio**
-Configurás el punto central (la propiedad sujeto), el radio de búsqueda (recomendado: 1 km) y la antigüedad máxima del dato (recomendado: 12 meses). Statetty consulta inmobiliarias y fuentes propias —no solo portales— lo que mejora la calidad y completitud de los comparables.
+Configurás el punto central (la propiedad sujeto), el radio de búsqueda (recomendado: 1 km) y la antigüedad máxima del dato (recomendado: 12 meses). Statetty consulta inmobiliarias y fuentes propias (no solo portales), lo que mejora la calidad y completitud de los comparables.
 
 **Pin ACM en el mapa**
 Una vez que tenés los resultados en el mapa interactivo, podés colocar un pin en la ubicación exacta de la propiedad que estás analizando. Ese pin calcula automáticamente el ACM en función de los inmuebles visibles. Si lo movés, recalcula.
@@ -180,7 +180,7 @@ Con Statetty, un ACM que antes te tomaba medio día ahora lo tenés en **menos d
 
 ### Videos: cómo hacer el ACM con Statetty
 
-**Tutorial completo — ACM paso a paso:**
+**Tutorial completo: ACM paso a paso**
 [![Tutorial ACM en Statetty](https://img.youtube.com/vi/0_wDeIei7Dc/0.jpg)](https://youtu.be/0_wDeIei7Dc)
 
 > Parámetros recomendados para el ACM: función *Inmuebles*, radio 1 km, antigüedad 12 meses, búsqueda sobre activos **e** inactivos. Incluir inactivos es clave porque los inmuebles vendidos son los comparables más sólidos.
@@ -190,7 +190,7 @@ Con Statetty, un ACM que antes te tomaba medio día ahora lo tenés en **menos d
 ## Buenas prácticas para un ACM confiable
 
 - **Usá inactivos además de activos.** Los precios de publicación son aspiracionales; los de venta efectiva son los reales.
-- **No promedies comparables muy dispares.** Si uno de los datos está muy alejado del resto, analizá por qué antes de incluirlo.
+- **Filtrá los comparables muy dispares.** Si uno de los datos está muy alejado del resto, analizá por qué antes de incluirlo.
 - **Documentá tus fuentes.** Si después el cliente pregunta, tenés que poder mostrar de dónde salió cada número.
 - **Repetí el análisis cada vez que el mercado se mueva.** En mercados volátiles, un ACM de hace tres meses puede estar desactualizado.
 - **Combiná con tu criterio.** El ACM es una herramienta, no un oráculo. Tu conocimiento del barrio, del tipo de cliente y del momento del mercado siempre suma.
