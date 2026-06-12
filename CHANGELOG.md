@@ -2,6 +2,8 @@
 
 ## 2025-06-12
 
+- **Fix imagen blog**: `_includes/blog.html` — faltaba `site.imageFolder` en el prepend de la URL de imagen, generando rutas rotas (nombre pegado al dominio). Corregido usando `site.imageFolder` (ya definido en `_config.yml` y usado en `seo.html`).
+- **Refactor blog listing**: `blog/index.html` era una página standalone sin layout, con header, footer y `<head>` completos hardcodeados. Creado `_layouts/blog.html` (patrón `head.html` + `header.html` + `content` + `footer.html`). `blog/index.html` ahora usa `layout: blog`, hereda header/footer/head de los includes, y solo conserva su CSS específico (hero, search, cards) y el JS de búsqueda. La ruta de imagen de posts también se unificó vía `site.imageFolder`.
 - **GitHub Actions workflow**: creado `.github/workflows/jekyll.yml` para build y deploy automatizado con Jekyll 4.3.3. Fix de `Gemfile.lock`: agregada plataforma `x86_64-linux` (`bundle lock --add-platform x86_64-linux`) para resolver gems nativas en runner Ubuntu. Build y deployment verificados exitosos.
 
 ## 2025-06-11

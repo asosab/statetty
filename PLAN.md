@@ -22,8 +22,17 @@ Sitio web estático Jekyll 4.3, alojado en GitHub Pages (statetty.com). Landing 
 - 2025-06-11: `_layouts/landing.html` ahora incluye `{% include blog.html %}` entre FAQ y contacto.
 - 2025-06-11: Brand colors migrados de `#FF5C00` (naranja) a `#eebf3f` (amarillo oficial) en `_includes/faq.html`, `tarifas.html`, `contacto.html`, `footer.html`. Texto sobre amarillo usa `var(--blue-dark)` en vez de `#fff`.
 - 2025-06-12: **GitHub Actions workflow** creado (`.github/workflows/jekyll.yml`) para build con Jekyll 4.3 y deploy a Pages. Fix de `Gemfile.lock`: agregada plataforma `x86_64-linux` para compatibilidad con runner Ubuntu. Build y deploy verificados exitosos.
+- 2025-06-12: **Fix imagen blog**: `_includes/blog.html` usaba `{{ post.image | prepend: site.url }}` sin la ruta `/assets/images/`, generando URLs rotas (ej. `https://statetty.comstatetty_phone.jpg`). Corregido a `{{ post.image | prepend: site.imageFolder | prepend: site.url }}`, usando la variable `site.imageFolder` ya existente en `_config.yml`.
+
+## Principio de arquitectura
+
+**Toda página debe cargar su estilo general desde `assets/css/theme-1.css`** (incluido vía `{% include head.html %}` -> `theme-1.css`). Esto garantiza consistencia visual (paleta, tipografía, resets, variables `:root`) y que un cambio en la marca se refleje en todo el sitio. Ninguna página debe duplicar variables, resets o estilos generales inline.
 
 ## Próximos pasos
 
 - Probar navegación responsive, scroll header, FAQ accordion, calculadora de tarifas, formulario de contacto, y blog dinámico en producción.
 - Mover JS global (scroll header, toggle nav) de inline en header.html a `assets/js/main.js` si se desea centralizar.
+
+## Pendiente — refactor blog/index.html
+
+- 2026-06-12: **`blog/index.html` no usa layout ni includes** — tiene header, footer y `<head>` completos hardcodeados. Crea `_layouts/blog.html`, refactoriza `blog/index.html` para que herede de él y use `{% include header.html %}` / `{% include footer.html %}`. El CSS específico del blog (hero, search, cards) puede quedar inline en `blog/index.html`.
