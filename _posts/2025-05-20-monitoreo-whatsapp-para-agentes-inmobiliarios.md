@@ -10,6 +10,9 @@ published: true
 image: "statetty_phone.jpg"
 ---
 
+¿Sin tiempo para leer? Escucha el artículo en [Statetty Podcast](https://open.spotify.com/episode/0Fk6ikKEK437Gh5lxgG4rE?si=SeJ3YrUkRgy1p7Ygqog7wQ)
+
+
 ## WhatsApp como canal de negocios inmobiliarios
 
 Los grupos de WhatsApp especializados en inmuebles son hoy uno de los canales más directos para generar negocio: concentran demanda real, presupuestos concretos y colegas dispuestos a cocerrar. Un mensaje bien publicado en el grupo correcto puede generar una respuesta en minutos. Las oportunidades de cocierre llegan antes de que el cliente llegue a los portales. Y la red de contactos que se construye dentro de esos grupos tiene un valor que ninguna pauta publicitaria reemplaza.
