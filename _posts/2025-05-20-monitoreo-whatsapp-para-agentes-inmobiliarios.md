@@ -22,7 +22,7 @@ Hay una forma más inteligente de trabajar. Esta guía la construye paso a paso.
 
 ## Paso 1: Conseguir los grupos correctos
 
-Tu primer activo en WhatsApp no es tu número, son los grupos donde estás.
+Los grupos donde estás son un activo clave: definen el volumen y la calidad de las oportunidades que llegan a tu radar. Tu número y tus captaciones valen más cuando están expuestos a los grupos correctos.
 
 **Grupos de colegas especializados**
 
@@ -32,7 +32,7 @@ Cuando conozcas a un colega en un evento, en una firma o en una visita, pregunt�
 
 **Grupos por zona o tipo de inmueble**
 
-Buscá grupos específicos: "Departamentos Equipetrol", "Casas zona Norte SCZ", "Anticréticos". Son más fáciles de filtrar y el ruido es menor.
+Buscá grupos específicos por zona o categoría: "Departamentos zona norte", "Casas residencial", "Anticréticos". Son más fáciles de filtrar y el ruido es menor.
 
 **Grupos de propietarios y constructoras**
 
@@ -53,7 +53,7 @@ Abrí la búsqueda global de WhatsApp (la lupa en la parte superior), escribí u
 **Palabras clave para encontrar demanda activa:**
 
 - Intención: "busco", "necesito", "quiero alquilar", "quiero comprar", "¿alguien tiene?"
-- Zonas donde tenés captaciones: "Equipetrol", "Sirari", "Los Chacos", "Urbarí"
+- Zonas donde tenés captaciones: el nombre exacto de los barrios o distritos donde operás
 - Características específicas: "piscina", "3 dormitorios", "amoblado", "con garaje", "anticrético"
 
 **Frecuencia recomendada:** una revisión con palabras clave a primera hora de la mañana y otra a las 5 pm cubre la mayor parte de la actividad diaria.
@@ -125,7 +125,7 @@ https://photos.google.com/share/AF1Qipc_KXyA2b5pJL8mNq3...
 
 En:
 ```
-bit.ly/casa-equipetrol-3d
+bit.ly/casa-zona-norte-3d
 ```
 
 **Flujo de trabajo:**
@@ -161,7 +161,7 @@ Todo lo que describimos arriba funciona. Requiere disciplina, organización y ti
 
 Statetty está construido para el agente que ya entiende ese proceso y quiere que la parte más repetitiva ocurra sola.
 
-En lugar de buscar manualmente con palabras clave en cada grupo, Statetty tiene su propio número de WhatsApp que monitorea más de 100 grupos inmobiliarios de tu localidad de forma continua. Cuando detecta un mensaje que coincide con tus criterios (zona, tipo de inmueble, precio), te manda una alerta en tiempo real a Telegram. No necesitás compartir tus grupos personales, no instalás nada extra, no revisás manualmente nada.
+En lugar de buscar manualmente con palabras clave en cada grupo, Statetty tiene su propio número de WhatsApp que monitorea más de 100 grupos inmobiliarios de forma continua. Cuando detecta un mensaje que coincide con tus criterios (zona, tipo de inmueble, precio), te manda una alerta en tiempo real a Telegram. No necesitás compartir tus grupos personales, no instalás nada extra, no revisás manualmente nada.
 
 Gabriel Pérez, agente de Century 21, usa Statetty desde 2024 y recuperó más de tres horas diarias que ahora destina a cocierres y alianzas.
 
