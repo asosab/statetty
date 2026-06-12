@@ -4,7 +4,7 @@ title: "Un gigante se mueve y ya está en camino a Bolivia. ¿Estamos listos?"
 date: 2026-05-11
 categories: mercado, estrategia, tecnología
 comments: true
-description: "El 27 de abril de 2026, Real Brokerage anunció la adquisición de RE/MAX Holdings por 880 millones de dólares. Lo que eso significa para el mercado inmobiliario boliviano y para Statetty."
+description: "El 27 de abril de 2026, Real Brokerage anunció la adquisición de RE/MAX Holdings por 880 millones de dólares. Lo que eso significa para el mercado inmobiliario y para Statetty."
 tags: [real brokerage, remax, mercado inmobiliario, bolivia, tecnología, estrategia]
 published: true
 image: "statettyTatuaje.png"
@@ -80,7 +80,7 @@ A ese agente es al que le hablo todos los días.
 
 Este momento confirma que estábamos mirando en la dirección correcta desde el principio.
 
-El mercado inmobiliario boliviano está creciendo. La tecnología está llegando. Statetty va a estar en el centro de esa transformación.
+El mercado inmobiliario está creciendo. La tecnología está llegando. Statetty va a estar en el centro de esa transformación.
 
 ---
 
