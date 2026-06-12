@@ -1,5 +1,9 @@
 # Changelog
 
+## 2025-06-12
+
+- **GitHub Actions workflow**: creado `.github/workflows/jekyll.yml` para build y deploy automatizado con Jekyll 4.3.3. Fix de `Gemfile.lock`: agregada plataforma `x86_64-linux` (`bundle lock --add-platform x86_64-linux`) para resolver gems nativas en runner Ubuntu. Build y deployment verificados exitosos.
+
 ## 2025-06-11
 
 - **Migración completa prueba01 → en vivo**: todos los estilos globales de `prueba01.html` movidos a `assets/css/theme-1.css` (`:root`, resets, header, hero, about, beneficios, testimonios, blog, footer + responsive). Cada `_include/*.html` actualizado con el contenido y estilo de su sección homóloga en prueba01. Eliminados todos los `prueba-*.html`.

@@ -21,9 +21,9 @@ Sitio web estático Jekyll 4.3, alojado en GitHub Pages (statetty.com). Landing 
 - 2025-06-11: `_includes/blog.html` reescrito — grid dinámico con Liquid `{% for post in site.posts limit:3 %}`, cards BEM, fecha en español, CTA a `/blog/`.
 - 2025-06-11: `_layouts/landing.html` ahora incluye `{% include blog.html %}` entre FAQ y contacto.
 - 2025-06-11: Brand colors migrados de `#FF5C00` (naranja) a `#eebf3f` (amarillo oficial) en `_includes/faq.html`, `tarifas.html`, `contacto.html`, `footer.html`. Texto sobre amarillo usa `var(--blue-dark)` en vez de `#fff`.
+- 2025-06-12: **GitHub Actions workflow** creado (`.github/workflows/jekyll.yml`) para build con Jekyll 4.3 y deploy a Pages. Fix de `Gemfile.lock`: agregada plataforma `x86_64-linux` para compatibilidad con runner Ubuntu. Build y deploy verificados exitosos.
 
 ## Próximos pasos
 
-- Verificar que el build de Jekyll no tenga errores.
-- Probar navegación responsive, scroll header, FAQ accordion, calculadora de tarifas, formulario de contacto, y blog dinámico.
+- Probar navegación responsive, scroll header, FAQ accordion, calculadora de tarifas, formulario de contacto, y blog dinámico en producción.
 - Mover JS global (scroll header, toggle nav) de inline en header.html a `assets/js/main.js` si se desea centralizar.
