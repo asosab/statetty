@@ -10,6 +10,11 @@ published: true
 image: "statetty_banner.jpg"
 ---
 
+¿Sin tiempo para leer? Escucha el artículo en [Statetty Podcast](https://open.spotify.com/episode/0NSokJKTVAyiPsUL8RPBNV)
+
+
+
+
 ## El ACM: tu mejor aliado para poner precio a una propiedad
 
 El **Análisis Comparativo de Mercado (ACM)** es el método más usado por agentes inmobiliarios para estimar el valor de una propiedad. Se basa en comparar inmuebles similares (activos, vendidos o en alquiler) ubicados en la misma zona, para derivar un rango de precio justo y defendible ante el cliente.

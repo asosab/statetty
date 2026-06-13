@@ -10,7 +10,7 @@ published: true
 image: "statetty_phone.jpg"
 ---
 
-¿Sin tiempo para leer? Escucha el artículo en [Statetty Podcast](https://open.spotify.com/episode/0Fk6ikKEK437Gh5lxgG4rE?si=SeJ3YrUkRgy1p7Ygqog7wQ)
+¿Sin tiempo para leer? Escucha el artículo en [Statetty Podcast](https://open.spotify.com/episode/0Fk6ikKEK437Gh5lxgG4rE)
 
 
 ## WhatsApp como canal de negocios inmobiliarios

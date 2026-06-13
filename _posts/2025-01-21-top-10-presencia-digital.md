@@ -10,6 +10,9 @@ published: true
 image: "Presencia-digital-de-una-empresa.jpg"
 ---
 
+¿Sin tiempo para leer? Escucha el artículo en [Statetty Podcast](https://open.spotify.com/episode/6wzCnQCD6nedDgSXU1axzj)
+
+
 ## Top 10 Acciones para Crear una Presencia Digital como Agente Inmobiliario
 
 Si estás dando tus primeros pasos para posicionarte en el mundo digital como agente inmobiliario, esta guía te ayudará a establecer una presencia profesional y efectiva. Sigue estas 10 acciones clave:
