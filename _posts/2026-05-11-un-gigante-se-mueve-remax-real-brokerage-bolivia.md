@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "Un gigante se mueve y ya está en camino a Bolivia. ¿Estamos listos?"
-date: 2026-05-11
+date: 2026-06-15
 categories: mercado, estrategia, tecnología
 comments: true
 description: "El 27 de abril de 2026, Real Brokerage anunció la adquisición de RE/MAX Holdings por 880 millones de dólares. Lo que eso significa para el mercado inmobiliario y para Statetty."

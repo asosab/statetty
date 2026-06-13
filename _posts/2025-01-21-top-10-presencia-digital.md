@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "Top 10 Consejos de Presencia Digital"
-date: 2025-01-21
+date: 2026-06-29
 categories: agentes-inmobiliarios, marketing-digital
 comments: true
 description: "Guía práctica para construir una presencia digital profesional y efectiva como agente inmobiliario."

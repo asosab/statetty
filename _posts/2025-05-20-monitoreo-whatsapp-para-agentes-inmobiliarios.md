@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "WhatsApp para agentes inmobiliarios: del caos al sistema"
-date: 2025-05-20
+date: 2026-06-12
 categories: herramientas, whatsapp
 comments: true
 description: "Construí tu red de grupos, buscá con palabras clave, entregá tu oferta en segundos. La guía completa para trabajar WhatsApp de forma profesional antes de automatizarlo."
