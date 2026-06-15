@@ -165,16 +165,17 @@ function getBrand(input) {
      ) {return 'elfaro';}
 
   // ---------------------------------------------------------------------------------------------------- Marcas grandes
-  else if (url.includes("c21.com")) {return 'C21';}
-  else if (url.includes("remax")) {return 'remax';}
-  else if (url.includes("bieninmuebles")) {return 'bieni';}
-  else if (url.includes("dueodeinmueble")) {return 'IDI';}
-  else if (url.includes("ultracasas")) {return 'UC';}
-  else if (url.includes("uno.com")) {return 'uno';}
-  else if (url.includes("infocasas.com")) {return 'ic';}
-  else if (url.includes("sin-intermediarios")) {return 'si';}
-  else if (url.includes("capitalcorp")) {return 'capital';}
-  else if (url.includes("santa-cruz.estate")) {return 'sce';}
+  else if (url.includes("c21.com"))             {return 'C21';}
+  else if (url.includes("century21"))           {return 'C21';}
+  else if (url.includes("remax"))               {return 'remax';}
+  else if (url.includes("bieninmuebles"))       {return 'bieni';}
+  else if (url.includes("dueodeinmueble"))      {return 'IDI';}
+  else if (url.includes("ultracasas"))          {return 'UC';}
+  else if (url.includes("uno.com"))             {return 'uno';}
+  else if (url.includes("infocasas.com"))       {return 'ic';}
+  else if (url.includes("sin-intermediarios"))  {return 'si';}
+  else if (url.includes("capitalcorp"))         {return 'capital';}
+  else if (url.includes("santa-cruz.estate"))   {return 'sce';}
   else {return 'statetty';}
 }
 

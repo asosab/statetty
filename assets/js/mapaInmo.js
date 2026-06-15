@@ -283,14 +283,15 @@ $(document).ready(function () {
     locations.forEach(function (a) {
       let fullUrl = normalizeURL(a.URL);
       var brand;
-      if ((fullUrl || '').includes("c21.com")) brand = 'C21';
-      else if ((fullUrl || '').includes("remax")) brand = 'remax';
-      else if ((fullUrl || '').includes("bieninmuebles")) brand = 'bieni';
-      else if ((fullUrl || '').includes("elfaro")) brand = 'elfaro';
-      else if ((fullUrl || '').includes("dueodeinmueble")) brand = 'IDI';
-      else if ((fullUrl || '').includes("ultracasas")) brand = 'UC';
-      else if ((fullUrl || '').includes("uno.com")) brand = 'uno';
-      else if ((fullUrl || '').includes("infocasas.com")) brand = 'ic';
+      if      ((fullUrl || '').includes("c21"))               brand = 'C21';
+      else if ((fullUrl || '').includes("century21"))         brand = 'C21';
+      else if ((fullUrl || '').includes("remax"))             brand = 'remax';
+      else if ((fullUrl || '').includes("bieninmuebles"))     brand = 'bieni';
+      else if ((fullUrl || '').includes("elfaro"))            brand = 'elfaro';
+      else if ((fullUrl || '').includes("dueodeinmueble"))    brand = 'IDI';
+      else if ((fullUrl || '').includes("ultracasas"))        brand = 'UC';
+      else if ((fullUrl || '').includes("uno.com"))           brand = 'uno';
+      else if ((fullUrl || '').includes("infocasas.com"))     brand = 'ic';
       else if ((fullUrl || '').includes("santa-cruz.estate")) brand = 'sce';
       else brand = 'statetty';
 
