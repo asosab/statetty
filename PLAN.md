@@ -33,6 +33,10 @@ Sitio web estático Jekyll 4.3, alojado en GitHub Pages (statetty.com). Landing 
 - Probar navegación responsive, scroll header, FAQ accordion, calculadora de tarifas, formulario de contacto, y blog dinámico en producción.
 - Mover JS global (scroll header, toggle nav) de inline en header.html a `assets/js/main.js` si se desea centralizar.
 
+## 2026-06-16
+
+- **Formulario de contacto**: países restringidos a Bolivia y Perú; ciudades limitadas a Santa Cruz de la Sierra (SCZ) y Lima (LIM) con nombres completos visibles.
+
 ## Pendiente — refactor blog/index.html
 
 - 2026-06-12: **`blog/index.html` no usa layout ni includes** — tiene header, footer y `<head>` completos hardcodeados. Crea `_layouts/blog.html`, refactoriza `blog/index.html` para que herede de él y use `{% include header.html %}` / `{% include footer.html %}`. El CSS específico del blog (hero, search, cards) puede quedar inline en `blog/index.html`.

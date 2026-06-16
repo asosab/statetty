@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-06-16
+
+- **Formulario de contacto**: `_includes/contacto.html` — países restringidos a Bolivia y Perú; ciudades filtradas solo a Santa Cruz de la Sierra (SCZ) y Lima (LIM), con nombres completos visibles.
+
 ## 2025-06-12
 
 - **Fix imagen blog**: `_includes/blog.html` — faltaba `site.imageFolder` en el prepend de la URL de imagen, generando rutas rotas (nombre pegado al dominio). Corregido usando `site.imageFolder` (ya definido en `_config.yml` y usado en `seo.html`).
