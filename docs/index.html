@@ -1,0 +1,229 @@
+---
+layout: null
+title: Documentos — Statetty
+---
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Documentos — Statetty</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #0C0C0E;
+      --surface: #16161A;
+      --border:  #252530;
+      --hover:   #1C1C24;
+      --accent:  #00BFA5;
+      --text:    #EEEEF0;
+      --muted:   #7878A0;
+      --radius:  10px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      min-height: 100vh;
+      padding: 3rem 1rem 4rem;
+    }
+
+    .wrap { max-width: 700px; margin: 0 auto; }
+
+    /* ── Header ── */
+    header { margin-bottom: 2.5rem; }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      text-decoration: none;
+      margin-bottom: 1rem;
+    }
+    .brand::before {
+      content: "";
+      display: inline-block;
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    h1 {
+      font-size: 1.9rem;
+      font-weight: 600;
+      letter-spacing: -0.04em;
+      line-height: 1.15;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 0.875rem;
+      margin-top: 0.35rem;
+    }
+
+    /* ── File list ── */
+    .file-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .file-item a {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+      padding: 0.85rem 1.1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      text-decoration: none;
+      color: var(--text);
+      transition: border-color 0.15s ease, background 0.15s ease;
+    }
+    .file-item a:hover  { border-color: var(--accent); background: var(--hover); }
+    .file-item a:focus  { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    .icon { font-size: 1.25rem; flex-shrink: 0; line-height: 1; }
+
+    .name {
+      flex: 1;
+      font-size: 0.92rem;
+      font-weight: 500;
+      word-break: break-all;
+    }
+
+    /* Extension badge */
+    .badge {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 0.18rem 0.48rem;
+      border-radius: 5px;
+      flex-shrink: 0;
+    }
+    .b-pdf  { background:#3D1010; color:#FF7070; }
+    .b-png, .b-jpg, .b-jpeg, .b-gif, .b-webp, .b-svg
+            { background:#0D2A1A; color:#4ADE80; }
+    .b-docx, .b-doc { background:#0E1E3D; color:#60A5FA; }
+    .b-xlsx, .b-xls, .b-csv { background:#0B271A; color:#34D399; }
+    .b-pptx, .b-ppt { background:#2D1A0D; color:#FB923C; }
+    .b-zip, .b-rar, .b-7z  { background:#2A250A; color:#FBBF24; }
+    .b-mp4, .b-mov, .b-avi, .b-webm { background:#1A0D2D; color:#A78BFA; }
+    .b-mp3, .b-wav, .b-ogg { background:#1A0D1D; color:#F472B6; }
+    .b-other { background:#1E1E2E; color:var(--muted); }
+
+    .dl { color: var(--muted); font-size: 0.85rem; flex-shrink: 0; }
+
+    /* ── Empty state ── */
+    .empty {
+      text-align: center;
+      color: var(--muted);
+      padding: 3.5rem 1rem;
+      border: 1px dashed var(--border);
+      border-radius: var(--radius);
+      font-size: 0.88rem;
+      line-height: 1.8;
+    }
+
+    /* ── Footer ── */
+    footer {
+      margin-top: 2.5rem;
+      text-align: center;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+    footer a { color: var(--muted); text-decoration: none; }
+    footer a:hover { color: var(--accent); }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <a class="brand" href="https://statetty.com">Statetty</a>
+    <h1>Documentos</h1>
+    <p class="subtitle">Archivos disponibles para descarga</p>
+  </header>
+
+  <main>
+    {% assign all_docs = site.static_files | where_exp: "f", "f.path contains '/docs/'" %}
+
+    {%- comment -%}
+      Filtramos index.html para que no aparezca listado.
+      Ajustá el filtro `contains '/docs/'` si tu carpeta tiene otro nombre.
+    {%- endcomment -%}
+
+    {% assign has_files = false %}
+    {% for f in all_docs %}
+      {% unless f.name == "index.html" %}
+        {% assign has_files = true %}
+      {% endunless %}
+    {% endfor %}
+
+    {% if has_files %}
+    <ul class="file-list">
+      {% for f in all_docs %}
+        {% unless f.name == "index.html" %}
+          {% assign ext = f.extname | downcase | remove: "." %}
+
+          {% comment %} Icono por tipo {% endcomment %}
+          {% if ext == "pdf" %}{% assign ico = "📄" %}
+          {% elsif ext == "png" or ext == "jpg" or ext == "jpeg" or ext == "gif" or ext == "webp" or ext == "svg" %}{% assign ico = "🖼️" %}
+          {% elsif ext == "docx" or ext == "doc" %}{% assign ico = "📝" %}
+          {% elsif ext == "xlsx" or ext == "xls" or ext == "csv" %}{% assign ico = "📊" %}
+          {% elsif ext == "pptx" or ext == "ppt" %}{% assign ico = "📋" %}
+          {% elsif ext == "zip" or ext == "rar" or ext == "7z" %}{% assign ico = "🗜️" %}
+          {% elsif ext == "mp4" or ext == "mov" or ext == "avi" or ext == "webm" %}{% assign ico = "🎬" %}
+          {% elsif ext == "mp3" or ext == "wav" or ext == "ogg" %}{% assign ico = "🎵" %}
+          {% else %}{% assign ico = "📁" %}
+          {% endif %}
+
+          {% comment %} Clase del badge {% endcomment %}
+          {% case ext %}
+            {% when "pdf" %}{% assign bc = "b-pdf" %}
+            {% when "png","jpg","jpeg","gif","webp","svg" %}{% assign bc = "b-png" %}
+            {% when "docx","doc" %}{% assign bc = "b-docx" %}
+            {% when "xlsx","xls","csv" %}{% assign bc = "b-xlsx" %}
+            {% when "pptx","ppt" %}{% assign bc = "b-pptx" %}
+            {% when "zip","rar","7z" %}{% assign bc = "b-zip" %}
+            {% when "mp4","mov","avi","webm" %}{% assign bc = "b-mp4" %}
+            {% when "mp3","wav","ogg" %}{% assign bc = "b-mp3" %}
+            {% else %}{% assign bc = "b-other" %}
+          {% endcase %}
+
+          <li class="file-item">
+            <a href="{{ f.path }}" target="_blank" rel="noopener">
+              <span class="icon">{{ ico }}</span>
+              <span class="name">{{ f.name }}</span>
+              <span class="badge {{ bc }}">{{ ext }}</span>
+              <span class="dl">↓</span>
+            </a>
+          </li>
+        {% endunless %}
+      {% endfor %}
+    </ul>
+
+    {% else %}
+    <div class="empty">
+      No hay archivos en esta carpeta todavía.<br>
+      Subí un archivo y hacé un nuevo deploy.
+    </div>
+    {% endif %}
+  </main>
+
+  <footer>
+    <a href="https://statetty.com">statetty.com</a>
+  </footer>
+
+</div>
+</body>
+</html>
