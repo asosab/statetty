@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- **Formulario de registro completo**: `registro/index.html` — página independiente con layout `default`. Formulario moderno responsivo con todos los campos de `frm.md`. Radio cards para nivel de experiencia y nivel tecnológico. Envía al mismo endpoint que `contacto.html`.
 - **Formulario de contacto**: `_includes/contacto.html` — países restringidos a Bolivia y Perú; ciudades filtradas solo a Santa Cruz de la Sierra (SCZ) y Lima (LIM), con nombres completos visibles.
 
 ## 2025-06-12

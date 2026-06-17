@@ -36,6 +36,7 @@ Sitio web estático Jekyll 4.3, alojado en GitHub Pages (statetty.com). Landing 
 ## 2026-06-16
 
 - **Formulario de contacto**: países restringidos a Bolivia y Perú; ciudades limitadas a Santa Cruz de la Sierra (SCZ) y Lima (LIM) con nombres completos visibles.
+- **Formulario de registro completo**: creado `/registro/index.html` con layout `default`. Formulario moderno responsivo con todos los campos de `frm.md`: email, nombres, apellidos, WhatsApp con código de país, fecha de nacimiento, sexo, agencia, país (Bolivia/Perú/OTRO), ciudades, nivel de experiencia (radiobuttons), nivel de tecnología (radiobuttons), intereses, expectativas, código de referencia y copia de respuestas. Envía al mismo endpoint que `contacto.html` (`WS_API_BASE + "/registro"`).
 
 ## Pendiente — refactor blog/index.html
 

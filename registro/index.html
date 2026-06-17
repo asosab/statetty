@@ -1,0 +1,505 @@
+---
+layout: default
+title:  "Registro de usuario"
+date:   2026-06-16
+categories: registro, usuarios
+description: "Completá tus datos para registrarte en Statetty. Formulario rápido, seguro y moderno."
+tags: [registro, formulario, Statetty, real state, inmuebles]
+---
+
+<style>
+#RegistroForm {
+  --brand:       #eebf3f;
+  --brand-dim:   #d4a82e;
+  --brand-soft:  rgba(238,191,63,.12);
+  --section-bg:  #f5f5f5;
+  --card-bg:     #ffffff;
+  --border:      #e0e0e0;
+  --input-border:#d0d0d0;
+  --text:        #444;
+  --text-strong: #222;
+  --muted:       #777;
+  --muted-2:     #555;
+  --font-head:   'Montserrat', sans-serif;
+  --font-body:   'Lato', sans-serif;
+  --radius-sm:   6px;
+  --radius-md:   12px;
+  --radius-lg:   20px;
+  --radius-xl:   32px;
+  --transition:  0.22s cubic-bezier(.4,0,.2,1);
+}
+#RegistroForm.registro-section {
+  background: var(--section-bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  padding: 40px 0;
+}
+#RegistroForm .container { max-width: 820px; }
+#RegistroForm .registro-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 12px rgba(0,0,0,.07);
+  border-radius: var(--radius-xl);
+  padding: 40px 36px;
+}
+@media (max-width: 520px) {
+  #RegistroForm .registro-card { padding: 24px 18px; }
+}
+#RegistroForm .registro-title {
+  font-family: var(--font-head); font-weight: 700;
+  font-size: clamp(1.4rem, 3vw, 1.8rem);
+  color: var(--text-strong);
+  margin-bottom: 6px;
+}
+#RegistroForm .registro-subtitle {
+  color: var(--muted); font-size: .92rem; margin-bottom: 28px; line-height: 1.6;
+}
+#RegistroForm .registro-subtitle em { font-style: normal; color: var(--brand); font-weight: 600; }
+#RegistroForm .form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+#RegistroForm .form-row-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 14px;
+}
+@media (max-width: 640px) {
+  #RegistroForm .form-row,
+  #RegistroForm .form-row-3 { grid-template-columns: 1fr; }
+}
+#RegistroForm .form-group { margin-bottom: 16px; }
+#RegistroForm .form-group label {
+  display: block; font-size: .8rem;
+  font-weight: 600; color: var(--muted);
+  margin-bottom: 5px; letter-spacing: .02em;
+}
+#RegistroForm .form-group label .required {
+  color: #e74c3c; margin-left: 2px;
+}
+#RegistroForm .form-group .hint {
+  display: block; font-size: .72rem; color: var(--muted-2);
+  margin-top: 3px; font-weight: 400;
+}
+#RegistroForm .form-group input,
+#RegistroForm .form-group select,
+#RegistroForm .form-group textarea {
+  width: 100%; padding: 11px 14px;
+  background: #f9f9f9; border: 1px solid var(--input-border);
+  border-radius: var(--radius-md);
+  color: var(--text); font-family: var(--font-body); font-size: .88rem;
+  transition: var(--transition);
+  -webkit-appearance: none; appearance: none;
+}
+#RegistroForm .form-group select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23777' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 14px center;
+  padding-right: 36px;
+}
+#RegistroForm .form-group textarea { resize: vertical; min-height: 80px; }
+#RegistroForm .form-group input:focus,
+#RegistroForm .form-group select:focus,
+#RegistroForm .form-group textarea:focus {
+  outline: none; border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(238,191,63,.12);
+}
+#RegistroForm .form-group input::placeholder,
+#RegistroForm .form-group textarea::placeholder { color: var(--muted-2); }
+#RegistroForm .radio-group {
+  display: flex; flex-wrap: wrap; gap: 10px;
+  padding: 6px 0;
+}
+#RegistroForm .radio-group label {
+  display: flex; align-items: center; gap: 6px;
+  font-weight: 400; font-size: .85rem; color: var(--text);
+  cursor: pointer; margin-bottom: 0;
+}
+#RegistroForm .radio-group input[type="radio"] {
+  width: auto; padding: 0; margin: 0;
+  -webkit-appearance: radio; appearance: radio;
+  accent-color: var(--brand);
+}
+#RegistroForm .radio-card-group {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+@media (max-width: 640px) {
+  #RegistroForm .radio-card-group { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 400px) {
+  #RegistroForm .radio-card-group { grid-template-columns: 1fr; }
+}
+#RegistroForm .radio-card {
+  position: relative;
+}
+#RegistroForm .radio-card input[type="radio"] {
+  position: absolute; opacity: 0; width: 0; height: 0;
+}
+#RegistroForm .radio-card label {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 14px 8px;
+  background: #f9f9f9;
+  border: 2px solid var(--input-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: var(--transition);
+  font-weight: 500; font-size: .82rem; color: var(--text);
+  font-family: var(--font-body);
+  min-height: 60px;
+  margin-bottom: 0;
+}
+#RegistroForm .radio-card input[type="radio"]:checked + label {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+  color: var(--text-strong);
+  box-shadow: 0 0 0 2px rgba(238,191,63,.15);
+}
+#RegistroForm .radio-card label:hover {
+  border-color: var(--brand-dim);
+}
+#RegistroForm .checkbox-group {
+  display: flex; align-items: center; gap: 8px;
+  margin-top: 4px;
+}
+#RegistroForm .checkbox-group input[type="checkbox"] {
+  width: auto; padding: 0;
+  -webkit-appearance: checkbox; appearance: checkbox;
+  accent-color: var(--brand);
+  transform: scale(1.1);
+}
+#RegistroForm .checkbox-group label {
+  margin-bottom: 0; font-weight: 400; font-size: .85rem; color: var(--text);
+}
+#RegistroForm .form-divider {
+  border: none; border-top: 1px solid var(--border);
+  margin: 24px 0;
+}
+#RegistroForm .form-submit {
+  width: 100%; margin-top: 10px; padding: 15px;
+  background: var(--brand); color: var(--blue-dark, #074f66);
+  border-radius: var(--radius-lg);
+  font-family: var(--font-head); font-weight: 700;
+  font-size: 1rem; letter-spacing: .01em;
+  transition: var(--transition);
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  cursor: pointer; border: none;
+}
+#RegistroForm .form-submit:hover { background: var(--brand-dim); transform: translateY(-1px); }
+#RegistroForm .form-submit:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+#RegistroForm .form-spinner { display: none; width: 18px; height: 18px; border: 2px solid rgba(255,255,255,.3); border-top-color: #fff; border-radius: 50%; animation: spin .6s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+#RegistroForm .form-error {
+  color: #e74c3c; font-size: .85rem;
+  margin-top: 10px; text-align: center; display: none;
+}
+#RegistroForm .form-success {
+  display: none; text-align: center; padding: 30px 20px;
+}
+#RegistroForm .form-success.visible { display: block; }
+#RegistroForm .form-success-icon { font-size: 3rem; margin-bottom: 12px; }
+#RegistroForm .form-success h3 {
+  font-family: var(--font-head); font-weight: 700;
+  color: var(--text-strong); font-size: 1.3rem; margin-bottom: 10px;
+}
+#RegistroForm .form-success p { color: var(--muted); font-size: .9rem; line-height: 1.65; margin-bottom: 6px; }
+#RegistroForm .form-success a { color: var(--brand); text-decoration: underline; text-underline-offset: 2px; font-weight: 600; }
+#RegistroForm .form-legal {
+  margin-top: 14px; font-size: .74rem;
+  color: var(--muted-2); text-align: center; line-height: 1.6;
+}
+#RegistroForm .form-legal a { color: var(--muted); text-decoration: underline; text-underline-offset: 2px; }
+</style>
+
+<section id="RegistroForm" class="registro-section">
+  <div class="container">
+    <div class="registro-card">
+
+      <h1 class="registro-title">Registro de usuario</h1>
+      <p class="registro-subtitle">
+        Completá tus datos para crear tu cuenta en <em>Statetty</em>.
+        Todos los campos marcados con <strong style="color:#e74c3c">*</strong> son obligatorios.
+      </p>
+
+      <form id="registroForm" novalidate>
+
+        <!-- CORREO -->
+        <div class="form-group">
+          <label for="f-email">Correo electrónico <span class="required">*</span></label>
+          <input type="email" id="f-email" name="email" placeholder="tu@correo.com" required autocomplete="email">
+        </div>
+
+        <!-- NOMBRES + APELLIDOS -->
+        <div class="form-row">
+          <div class="form-group">
+            <label for="f-nombres">Nombre(s) <span class="required">*</span></label>
+            <input type="text" id="f-nombres" name="nombres" placeholder="Ej: Juan Carlos" required autocomplete="given-name">
+          </div>
+          <div class="form-group">
+            <label for="f-apellidos">Apellido(s) <span class="required">*</span></label>
+            <input type="text" id="f-apellidos" name="apellidos" placeholder="Ej: Pérez López" required autocomplete="family-name">
+          </div>
+        </div>
+
+        <!-- WHATSAPP -->
+        <div class="form-group">
+          <label for="f-wa">Número WhatsApp <span class="required">*</span></label>
+          <input type="tel" id="f-wa" name="whatsapp" placeholder="+591 7xxxxxxx" required autocomplete="tel" inputmode="tel">
+          <span class="hint">Incluí el código de país, ej: +591 para Bolivia, +51 para Perú</span>
+        </div>
+
+        <!-- FECHA DE NACIMIENTO -->
+        <div class="form-group">
+          <label for="f-nacimiento">Fecha de nacimiento <span class="required">*</span></label>
+          <input type="date" id="f-nacimiento" name="fecha_nacimiento" required>
+          <span class="hint">Se utiliza para verificar mayoría de edad y ofrecer beneficios especiales</span>
+        </div>
+
+        <!-- SEXO -->
+        <div class="form-group">
+          <label>Sexo <span class="required">*</span></label>
+          <span class="hint" style="margin-bottom:6px;display:block;">En referencia a las características anatómicas de una persona</span>
+          <div class="radio-group">
+            <label><input type="radio" name="sexo" value="masculino" required> Masculino</label>
+            <label><input type="radio" name="sexo" value="femenino"> Femenino</label>
+          </div>
+        </div>
+
+        <!-- AGENCIA INMOBILIARIA -->
+        <div class="form-group">
+          <label for="f-agencia">Agencia Inmobiliaria <span class="required">*</span></label>
+          <input type="text" id="f-agencia" name="agencia" placeholder="RE/MAX, Century 21, independiente…" required>
+          <span class="hint">La agencia acompañará tu nombre cuando promocionemos tus captaciones</span>
+        </div>
+
+        <!-- PAÍS + CIUDAD -->
+        <div class="form-row">
+          <div class="form-group">
+            <label for="f-pais">País donde operas <span class="required">*</span></label>
+            <select id="f-pais" name="pais" required>
+              <option value="">Seleccioná</option>
+              <option value="bolivia" selected>Bolivia</option>
+              <option value="peru">Perú</option>
+              <option value="otro">Otro</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="f-ciudades">Ciudades o regiones donde operas <span class="required">*</span></label>
+            <input type="text" id="f-ciudades" name="ciudades" placeholder="Ej: Santa Cruz de la Sierra, Lima" required>
+          </div>
+        </div>
+
+        <hr class="form-divider">
+
+        <!-- NIVEL DE EXPERIENCIA -->
+        <div class="form-group">
+          <label>Nivel de experiencia en el mercado inmobiliario <span class="required">*</span></label>
+          <div class="radio-card-group">
+            <div class="radio-card">
+              <input type="radio" name="nivel_experiencia" value="principiante" id="exp-principiante" required>
+              <label for="exp-principiante">Principiante</label>
+            </div>
+            <div class="radio-card">
+              <input type="radio" name="nivel_experiencia" value="intermedio" id="exp-intermedio">
+              <label for="exp-intermedio">Intermedio</label>
+            </div>
+            <div class="radio-card">
+              <input type="radio" name="nivel_experiencia" value="avanzado" id="exp-avanzado">
+              <label for="exp-avanzado">Avanzado</label>
+            </div>
+            <div class="radio-card">
+              <input type="radio" name="nivel_experiencia" value="experto" id="exp-experto">
+              <label for="exp-experto">Experto</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- NIVEL DE EXPERTICIA TECNOLÓGICA -->
+        <div class="form-group">
+          <label>Nivel de experticia tecnológica <span class="required">*</span></label>
+          <span class="hint" style="margin-bottom:8px;display:block;">Adaptamos la asistencia y el soporte técnico según tu nivel</span>
+          <div class="radio-card-group">
+            <div class="radio-card">
+              <input type="radio" name="nivel_tecnologia" value="basico" id="tec-basico" required>
+              <label for="tec-basico">Básico</label>
+            </div>
+            <div class="radio-card">
+              <input type="radio" name="nivel_tecnologia" value="intermedio" id="tec-intermedio">
+              <label for="tec-intermedio">Intermedio</label>
+            </div>
+            <div class="radio-card">
+              <input type="radio" name="nivel_tecnologia" value="avanzado" id="tec-avanzado">
+              <label for="tec-avanzado">Avanzado</label>
+            </div>
+            <div class="radio-card">
+              <input type="radio" name="nivel_tecnologia" value="experto" id="tec-experto">
+              <label for="tec-experto">Experto</label>
+            </div>
+          </div>
+        </div>
+
+        <hr class="form-divider">
+
+        <!-- INTERESES -->
+        <div class="form-group">
+          <label for="f-intereses">Intereses o necesidades específicas en tecnología inmobiliaria</label>
+          <textarea id="f-intereses" name="intereses" placeholder="Contanos qué aspectos tecnológicos son relevantes para tu trabajo como agente inmobiliario…"></textarea>
+        </div>
+
+        <!-- EXPECTATIVAS -->
+        <div class="form-group">
+          <label for="f-expectativas">Expectativas o mejoras deseadas en la aplicación Statetty</label>
+          <textarea id="f-expectativas" name="expectativas" placeholder="Tus sugerencias nos ayudan a mejorar la plataforma…"></textarea>
+        </div>
+
+        <!-- CÓDIGO DE REFERENCIA -->
+        <div class="form-group">
+          <label for="f-codigo">Código de referencia</label>
+          <input type="text" id="f-codigo" name="codigo_referencia" placeholder="Si tenés un código Statetty, ingresalo aquí">
+          <span class="hint">Si llegaste por recomendación, solicitá el código a tu amigo</span>
+        </div>
+
+        <!-- ENVIARME COPIA -->
+        <div class="checkbox-group">
+          <input type="checkbox" id="f-copia" name="enviar_copia">
+          <label for="f-copia">Enviarme una copia de mis respuestas</label>
+        </div>
+
+        <button type="submit" class="form-submit" id="form-submit-btn">
+          <span id="form-btn-text">Enviar registro</span>
+          <span class="form-spinner" id="form-spinner"></span>
+        </button>
+
+        <div class="form-error" id="form-error"></div>
+
+        <p class="form-legal">
+          Al enviar aceptás nuestra
+          <a href="https://statetty.com/politica_de_privacidad.html" target="_blank">política de privacidad</a>.
+          Tus datos se usan solo para gestionar tu acceso a Statetty.
+        </p>
+
+      </form>
+
+      <div class="form-success" id="form-success" aria-live="polite">
+        <div class="form-success-icon" aria-hidden="true">🎉</div>
+        <h3>¡Registro completado!</h3>
+        <p>Tu cuenta te está esperando en Telegram.</p>
+        <p>Abrí Telegram, buscá <strong>@StatettyBot</strong> y vinculá tu cuenta para empezar.</p>
+        <p style="margin-top:10px"><a href="https://t.me/statettybot" target="_blank" rel="noopener">👉 Abrir Telegram</a></p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<script>
+(function() {
+  var form = document.getElementById('registroForm');
+  var btn = document.getElementById('form-submit-btn');
+  var txt = document.getElementById('form-btn-text');
+  var spinner = document.getElementById('form-spinner');
+  var errorEl = document.getElementById('form-error');
+  var successEl = document.getElementById('form-success');
+
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    errorEl.textContent = '';
+    errorEl.style.display = 'none';
+
+    var email = document.getElementById('f-email').value.trim();
+    var nombres = document.getElementById('f-nombres').value.trim();
+    var apellidos = document.getElementById('f-apellidos').value.trim();
+    var wa = document.getElementById('f-wa').value.trim();
+    var nacimiento = document.getElementById('f-nacimiento').value;
+    var sexo = form.querySelector('input[name="sexo"]:checked');
+    var agencia = document.getElementById('f-agencia').value.trim();
+    var paisSelect = document.getElementById('f-pais');
+    var pais = paisSelect.options[paisSelect.selectedIndex].value;
+    var ciudades = document.getElementById('f-ciudades').value.trim();
+    var nivelExp = form.querySelector('input[name="nivel_experiencia"]:checked');
+    var nivelTec = form.querySelector('input[name="nivel_tecnologia"]:checked');
+
+    var missing = [];
+    if (!email) missing.push('correo electrónico');
+    if (!nombres) missing.push('nombre(s)');
+    if (!apellidos) missing.push('apellido(s)');
+    if (!wa) missing.push('WhatsApp');
+    if (!nacimiento) missing.push('fecha de nacimiento');
+    if (!sexo) missing.push('sexo');
+    if (!agencia) missing.push('agencia inmobiliaria');
+    if (!pais) missing.push('país');
+    if (!ciudades) missing.push('ciudades');
+    if (!nivelExp) missing.push('nivel de experiencia');
+    if (!nivelTec) missing.push('nivel de experticia tecnológica');
+
+    if (missing.length) {
+      errorEl.textContent = 'Completá los siguientes campos: ' + missing.join(', ') + '.';
+      errorEl.style.display = 'block';
+      return;
+    }
+
+    btn.disabled = true;
+    txt.textContent = 'Enviando…';
+    spinner.style.display = 'inline-block';
+
+    var payload = {
+      email: email,
+      nombres: nombres,
+      apellidos: apellidos,
+      whatsapp: wa,
+      fecha_nacimiento: nacimiento,
+      sexo: sexo.value,
+      agencia_inmobiliaria: agencia,
+      pais: pais,
+      ciudades: ciudades,
+      nivel_experiencia: nivelExp.value,
+      nivel_tecnologia: nivelTec.value,
+      intereses: document.getElementById('f-intereses').value.trim(),
+      expectativas: document.getElementById('f-expectativas').value.trim(),
+      codigo_referencia: document.getElementById('f-codigo').value.trim(),
+      enviar_copia: document.getElementById('f-copia').checked
+    };
+
+    if (typeof STATETTY_CONFIG === 'undefined' || !STATETTY_CONFIG.WS_API_BASE) {
+      errorEl.textContent = 'Error de configuración. Intentalo de nuevo más tarde.';
+      errorEl.style.display = 'block';
+      btn.disabled = false;
+      txt.textContent = 'Enviar registro';
+      spinner.style.display = 'none';
+      return;
+    }
+
+    fetch(STATETTY_CONFIG.WS_API_BASE + "/registro", {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      btn.disabled = false;
+      txt.textContent = 'Enviar registro';
+      spinner.style.display = 'none';
+
+      if (data.ok) {
+        form.style.display = 'none';
+        successEl.classList.add('visible');
+        successEl.focus();
+      } else {
+        errorEl.textContent = data.error || 'Error del servidor. Intentalo de nuevo.';
+        errorEl.style.display = 'block';
+      }
+    })
+    .catch(function(err) {
+      btn.disabled = false;
+      txt.textContent = 'Enviar registro';
+      spinner.style.display = 'none';
+      errorEl.textContent = 'Error de conexión. Verificá tu internet e intentalo de nuevo.';
+      errorEl.style.display = 'block';
+    });
+  });
+})();
+</script>
