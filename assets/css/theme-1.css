@@ -988,3 +988,69 @@ a:hover { color: var(--blue-dark); }
   .Inicio .btns .btn { width: 100%; justify-content: center; }
   .footer-bottom { flex-direction: column; text-align: center; }
 }
+
+/* ============================================================
+   NÚMEROS
+   ============================================================ */
+.numeros-section { background: var(--blue); }
+
+.numeros-eyebrow {
+  font-family: var(--font-head);
+  font-size: .78rem;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--yellow);
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.numeros-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.numero-item {
+  padding: 8px 32px;
+  text-align: center;
+  border-right: 1px solid rgba(255,255,255,.15);
+}
+.numero-item:last-child { border-right: none; }
+
+.numero-valor {
+  display: block;
+  font-family: var(--font-head);
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 800;
+  letter-spacing: -.02em;
+  line-height: 1;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+
+.numero-label {
+  display: block;
+  margin-top: 10px;
+  font-size: .8rem;
+  color: rgba(255,255,255,.55);
+  line-height: 1.4;
+  max-width: 140px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.numero-item:last-child .numero-valor { color: var(--yellow); }
+
+@media (max-width: 640px) {
+  .numeros-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 32px 0;
+  }
+  .numero-item {
+    padding: 8px 16px;
+    border-right: none;
+  }
+  .numero-item:nth-child(odd) { border-right: 1px solid rgba(255,255,255,.15); }
+}

@@ -89,3 +89,32 @@ if (fadeEls.length && 'IntersectionObserver' in window) {
   }, { threshold: 0.15 });
   fadeEls.forEach(el => observer.observe(el));
 }
+
+/* ======= Count-up (números) ======= */
+(function () {
+  var section = document.getElementById('numeros');
+  if (!section) return;
+  var observer = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (!entry.isIntersecting) return;
+      observer.unobserve(entry.target);
+      entry.target.querySelectorAll('.numero-valor[data-target]').forEach(function (el) {
+        var target   = parseInt(el.dataset.target, 10);
+        var prefix   = el.dataset.prefix  || '';
+        var suffix   = el.dataset.suffix  || '';
+        var duration = 1400;
+        var start    = performance.now();
+        var fmt      = function (n) { return prefix + n.toLocaleString('es-BO') + suffix; };
+        var tick     = function (now) {
+          var elapsed  = now - start;
+          var progress = Math.min(elapsed / duration, 1);
+          var eased    = 1 - Math.pow(1 - progress, 3);
+          el.textContent = fmt(Math.floor(eased * target));
+          if (progress < 1) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      });
+    });
+  }, { threshold: 0.3 });
+  observer.observe(section);
+})();
