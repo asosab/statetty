@@ -8,7 +8,7 @@
     --brand-dim:   #d4a82e;
     --brand-soft:  rgba(238,191,63,.12);
     --card-bg:     #ffffff;
-    --card-border: #e0e0e0;
+    --card-border: rgba(255,255,255,.20);
     --input-bg:    #f9f9f9;
     --input-border:#d0d0d0;
     --text:        rgba(255,255,255,.88);
@@ -60,7 +60,7 @@
     display: flex;
     gap: 0;
     margin: 0 auto 32px;
-    background: #eee;
+    background: rgba(255,255,255,.15);
     border-radius: var(--radius-lg);
     padding: 4px;
     width: fit-content;
@@ -72,7 +72,7 @@
     font-family: var(--font-head);
     font-weight: 600;
     font-size: .875rem;
-    color: var(--muted);
+    color: rgba(255,255,255,.70);
     transition: var(--transition);
     cursor: pointer;
     border: none;
@@ -80,9 +80,9 @@
   }
 
   #planes .pais-btn.active {
-    background: var(--card-bg);
-    color: var(--text-strong);
-    box-shadow: 0 1px 4px rgba(0,0,0,.1);
+    background: rgba(255,255,255,.20);
+    color: #fff;
+    box-shadow: 0 1px 4px rgba(0,0,0,.15);
   }
 
   #planes .precios-grid {
@@ -93,6 +93,11 @@
   }
 
   #planes .precio-card {
+    --text:        #444;
+    --text-strong: #222;
+    --muted:       #777;
+    --muted-2:     #555;
+    --card-border: #e0e0e0;
     padding: 28px 24px;
     border: 1px solid var(--card-border);
     border-radius: var(--radius-lg);
@@ -176,6 +181,11 @@
 
   /* Calculadora */
   #planes .calc-wrap {
+    --text:        #444;
+    --text-strong: #222;
+    --muted:       #777;
+    --muted-2:     #555;
+    --card-border: #e0e0e0;
     background: var(--card-bg);
     border: 1px solid var(--card-border);
     border-radius: var(--radius-xl);
