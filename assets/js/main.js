@@ -92,7 +92,7 @@ if (fadeEls.length && 'IntersectionObserver' in window) {
 
 /* ======= Count-up (números) ======= */
 (function () {
-  var section = document.getElementById('numeros');
+  var section = document.getElementById('inicio');
   if (!section) return;
   var observer = new IntersectionObserver(function (entries) {
     entries.forEach(function (entry) {

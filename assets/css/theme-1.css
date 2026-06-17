@@ -612,6 +612,7 @@ a:hover { color: var(--blue-dark); }
   font-weight: 300; color: var(--blue-dark);
 }
 .Inicio .btns { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-bottom: 40px; }
+.Inicio .numeros-grid { margin-top: 60px; }
 .btn {
   display: inline-flex; align-items: center; gap: 8px;
   padding: 14px 32px; border-radius: 50px;
@@ -992,19 +993,6 @@ a:hover { color: var(--blue-dark); }
 /* ============================================================
    NÚMEROS
    ============================================================ */
-.numeros-section { background: var(--blue); }
-
-.numeros-eyebrow {
-  font-family: var(--font-head);
-  font-size: .78rem;
-  font-weight: 700;
-  letter-spacing: .12em;
-  text-transform: uppercase;
-  color: var(--yellow);
-  text-align: center;
-  margin-bottom: 40px;
-}
-
 .numeros-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
