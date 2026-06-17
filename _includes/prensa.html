@@ -6,19 +6,6 @@
       <p class="prensa-sub">Descargá imágenes, documentos y materiales oficiales de Statetty.</p>
     </div>
 
-    <div class="prensa-kit fade-up">
-      <div class="prensa-card">
-        <div class="prensa-card-icon" aria-hidden="true">🖼️</div>
-        <h3>Logos y marca</h3>
-        <p>Logo de Statetty en alta resolución, versión horizontal e isotipo. Formatos PNG y SVG.</p>
-      </div>
-      <div class="prensa-card">
-        <div class="prensa-card-icon" aria-hidden="true">📄</div>
-        <h3>Kit de prensa</h3>
-        <p>Ficha corporativa, historia de la empresa, datos clave y material complementario en PDF.</p>
-      </div>
-    </div>
-
     <div class="prensa-docs fade-up">
       <p class="prensa-docs-title">Archivos disponibles</p>
       {% assign prensa_files = site.static_files | where_exp: "f", "f.path contains '/assets/docs/'" %}
