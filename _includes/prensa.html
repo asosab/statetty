@@ -21,7 +21,7 @@
 
     <div class="prensa-docs fade-up">
       <p class="prensa-docs-title">Archivos disponibles</p>
-      {% assign prensa_files = site.static_files | where_exp: "f", "f.path contains '/prensa/'" %}
+      {% assign prensa_files = site.static_files | where_exp: "f", "f.path contains '/assets/docs/'" %}
       {% assign has_files = false %}
       {% for f in prensa_files %}
         {% unless f.name == "index.html" %}{% assign has_files = true %}{% endunless %}
