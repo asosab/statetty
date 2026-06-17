@@ -611,7 +611,7 @@ a:hover { color: var(--blue-dark); }
 .Inicio .title .highlight { color: var(--yellow); }
 .Inicio .intro {
   font-size: 1.35rem; max-width: 600px; margin: 0 auto 2rem;
-  font-weight: 300; color: var(--blue-light);
+  font-weight: 300; color: var(--blue-dark);
 }
 .Inicio .btns { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-bottom: 40px; }
 .btn {
