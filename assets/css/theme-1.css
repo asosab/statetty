@@ -557,6 +557,12 @@ a:hover { color: var(--blue-dark); }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 .section { padding: 80px 0; }
 
+.fade-up {
+  opacity: 0; transform: translateY(28px);
+  transition: opacity .55s ease, transform .55s ease;
+}
+.fade-up.visible { opacity: 1; transform: none; }
+
 /* ============================================================
    HEADER
    ============================================================ */
@@ -661,6 +667,99 @@ a:hover { color: var(--blue-dark); }
 .about-icon i { font-size: 1.15rem; color: var(--blue); }
 .about-item h3 { font-family: var(--font-head); font-weight: 700; color: var(--blue-dark); font-size: 1rem; margin-bottom: 8px; }
 .about-item p { font-size: .88rem; color: #666; line-height: 1.6; }
+
+/* ============================================================
+   PROBLEMA (¿Te suena familiar?)
+   ============================================================ */
+.problema-section { background: #f5f5f5; }
+.problema-intro { text-align: center; margin-bottom: 48px; }
+.problema-label {
+  font-family: var(--font-head); font-size: .78rem; font-weight: 700;
+  letter-spacing: .12em; text-transform: uppercase; color: var(--blue);
+  margin-bottom: 12px;
+}
+.problema-section .title {
+  font-family: var(--font-head); font-weight: 700; color: var(--blue-dark);
+  margin-top: 0; margin-bottom: 0; text-align: center; font-size: 2rem;
+}
+.problema-section .title:after {
+  content: ''; display: block; width: 64px; height: 4px;
+  background: var(--yellow); border-radius: 2px; margin: 12px auto 0;
+}
+.problema-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+}
+.problema-card {
+  background: #fff; border-radius: var(--radius-md); padding: 28px 24px;
+  box-shadow: var(--shadow); border: 1px solid #e8e8e8;
+  transition: var(--transition);
+}
+.problema-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
+.problema-icon {
+  font-size: 1.5rem; margin-bottom: 16px;
+  width: 48px; height: 48px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(23,186,239,.10); border-radius: var(--radius-sm);
+}
+.problema-card h3 {
+  font-family: var(--font-head); font-size: 1rem;
+  font-weight: 700; color: var(--blue-dark); margin-bottom: 10px;
+}
+.problema-card p { font-size: .875rem; color: #666; line-height: 1.65; }
+
+/* ============================================================
+   FUNCIONES (Qué hace Statetty)
+   ============================================================ */
+.funciones-section { background: var(--blue); color: #fff; }
+.funciones-intro { text-align: center; margin-bottom: 48px; }
+.funciones-label {
+  font-family: var(--font-head); font-size: .78rem; font-weight: 700;
+  letter-spacing: .12em; text-transform: uppercase; color: var(--yellow);
+  margin-bottom: 12px;
+}
+.funciones-section .title {
+  font-family: var(--font-head); font-weight: 700; color: var(--blue-dark);
+  margin-top: 0; margin-bottom: 0; text-align: center; font-size: 2rem;
+}
+.funciones-section .title:after {
+  content: ''; display: block; width: 64px; height: 4px;
+  background: var(--yellow); border-radius: 2px; margin: 12px auto 0;
+}
+.funciones-sub {
+  font-size: 1.05rem; color: rgba(255,255,255,.80);
+  max-width: 700px; margin: 16px auto 0; line-height: 1.7;
+}
+.funciones-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+.funcion-card {
+  padding: 28px 26px;
+  border-radius: var(--radius-lg);
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.12);
+  transition: var(--transition);
+}
+.funcion-card:hover { background: rgba(255,255,255,.14); border-color: rgba(255,255,255,.25); transform: translateY(-2px); }
+.funcion-icon {
+  width: 48px; height: 48px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,.12);
+  border-radius: var(--radius-md);
+  font-size: 1.4rem; margin-bottom: 18px;
+}
+.funcion-card h3 {
+  font-family: var(--font-head); font-weight: 700;
+  font-size: 1rem; color: #fff; margin-bottom: 10px;
+}
+.funcion-card p { font-size: .875rem; color: rgba(255,255,255,.70); line-height: 1.65; }
+.funcion-local {
+  margin-top: 12px; font-size: .78rem;
+  color: var(--yellow); font-weight: 600;
+}
 
 /* ============================================================
    BENEFICIOS

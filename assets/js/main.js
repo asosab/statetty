@@ -75,3 +75,17 @@ scrollLinks.forEach((scrollLink) => {
 var spy = new Gumshoe('#nav-menu .nav-link', {
 	offset: 70
 });
+
+/* ======= Scroll animation (fade-up) ======= */
+const fadeEls = document.querySelectorAll('.fade-up');
+if (fadeEls.length && 'IntersectionObserver' in window) {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15 });
+  fadeEls.forEach(el => observer.observe(el));
+}
