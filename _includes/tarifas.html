@@ -1,8 +1,8 @@
 <!-- ******tarifas****** -->
-<section id="tarifas" class="tarifas section">
+<section id="planes" class="tarifas section">
 
 <style>
-  #tarifas {
+  #planes {
     --brand:       #eebf3f;
     --brand-dim:   #d4a82e;
     --brand-soft:  rgba(238,191,63,.12);
@@ -23,12 +23,12 @@
     --transition:  0.22s cubic-bezier(.4,0,.2,1);
   }
 
-  #tarifas .precios-header {
+  #planes .precios-header {
     margin-bottom: 40px;
     text-align: center;
   }
 
-  #tarifas .section-label {
+  #planes .section-label {
     font-family: var(--font-head);
     font-size: .75rem;
     font-weight: 700;
@@ -38,7 +38,7 @@
     margin-bottom: 12px;
   }
 
-  #tarifas .section-title {
+  #planes .section-title {
     font-family: var(--font-head);
     font-size: clamp(1.6rem, 3vw, 2.4rem);
     font-weight: 700;
@@ -47,7 +47,7 @@
     margin-bottom: 12px;
   }
 
-  #tarifas .section-sub {
+  #planes .section-sub {
     font-size: .95rem;
     color: var(--muted);
     max-width: 600px;
@@ -55,7 +55,7 @@
     margin: 0 auto 20px;
   }
 
-  #tarifas .precios-selector {
+  #planes .precios-selector {
     display: flex;
     gap: 0;
     margin: 0 auto 32px;
@@ -65,7 +65,7 @@
     width: fit-content;
   }
 
-  #tarifas .pais-btn {
+  #planes .pais-btn {
     padding: 10px 24px;
     border-radius: var(--radius-md);
     font-family: var(--font-head);
@@ -78,20 +78,20 @@
     background: none;
   }
 
-  #tarifas .pais-btn.active {
+  #planes .pais-btn.active {
     background: var(--card-bg);
     color: var(--text-strong);
     box-shadow: 0 1px 4px rgba(0,0,0,.1);
   }
 
-  #tarifas .precios-grid {
+  #planes .precios-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     gap: 16px;
     margin-bottom: 36px;
   }
 
-  #tarifas .precio-card {
+  #planes .precio-card {
     padding: 28px 24px;
     border: 1px solid var(--card-border);
     border-radius: var(--radius-lg);
@@ -100,17 +100,17 @@
     position: relative;
   }
 
-  #tarifas .precio-card:hover {
+  #planes .precio-card:hover {
     border-color: var(--brand);
     box-shadow: 0 2px 12px rgba(0,0,0,.06);
   }
 
-  #tarifas .precio-card.destacado {
+  #planes .precio-card.destacado {
     border-color: var(--brand);
     box-shadow: 0 0 0 1px var(--brand);
   }
 
-  #tarifas .precio-badge {
+  #planes .precio-badge {
     position: absolute;
     top: -12px;
     left: 50%;
@@ -126,7 +126,7 @@
     white-space: nowrap;
   }
 
-  #tarifas .precio-tipo {
+  #planes .precio-tipo {
     font-family: var(--font-head);
     font-weight: 700;
     font-size: 1rem;
@@ -134,18 +134,18 @@
     margin-bottom: 4px;
   }
 
-  #tarifas .precio-desc {
+  #planes .precio-desc {
     font-size: .82rem;
     color: var(--muted);
     margin-bottom: 20px;
   }
 
-  #tarifas .precio-tabla {
+  #planes .precio-tabla {
     width: 100%;
     border-collapse: collapse;
   }
 
-  #tarifas .precio-tabla th {
+  #planes .precio-tabla th {
     font-size: .72rem;
     font-weight: 600;
     text-transform: uppercase;
@@ -155,26 +155,26 @@
     text-align: left;
   }
 
-  #tarifas .precio-tabla td {
+  #planes .precio-tabla td {
     padding: 10px 0;
     border-top: 1px solid var(--card-border);
     font-size: .9rem;
     color: var(--text);
   }
 
-  #tarifas .precio-tabla td:last-child {
+  #planes .precio-tabla td:last-child {
     text-align: right;
     font-weight: 600;
     color: var(--text-strong);
   }
 
-  #tarifas .precio-moneda {
+  #planes .precio-moneda {
     font-size: .75rem;
     color: var(--muted);
   }
 
   /* Calculadora */
-  #tarifas .calc-wrap {
+  #planes .calc-wrap {
     background: var(--card-bg);
     border: 1px solid var(--card-border);
     border-radius: var(--radius-xl);
@@ -182,7 +182,7 @@
     margin-bottom: 28px;
   }
 
-  #tarifas .calc-title {
+  #planes .calc-title {
     font-family: var(--font-head);
     font-weight: 700;
     font-size: 1.1rem;
@@ -190,13 +190,13 @@
     margin-bottom: 6px;
   }
 
-  #tarifas .calc-sub {
+  #planes .calc-sub {
     font-size: .875rem;
     color: var(--muted);
     margin-bottom: 28px;
   }
 
-  #tarifas .calc-controls {
+  #planes .calc-controls {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 20px;
@@ -204,10 +204,10 @@
   }
 
   @media (max-width: 520px) {
-    #tarifas .calc-controls { grid-template-columns: 1fr; }
+    #planes .calc-controls { grid-template-columns: 1fr; }
   }
 
-  #tarifas .calc-control label {
+  #planes .calc-control label {
     display: block;
     font-size: .8rem;
     font-weight: 500;
@@ -215,14 +215,14 @@
     margin-bottom: 8px;
   }
 
-  #tarifas .calc-control input[type=range] {
+  #planes .calc-control input[type=range] {
     width: 100%;
     accent-color: var(--brand);
     height: 4px;
     cursor: pointer;
   }
 
-  #tarifas .calc-value-display {
+  #planes .calc-value-display {
     font-family: var(--font-head);
     font-weight: 700;
     font-size: .9rem;
@@ -230,7 +230,7 @@
     margin-top: 6px;
   }
 
-  #tarifas .calc-control select {
+  #planes .calc-control select {
     width: 100%;
     padding: 11px 14px;
     background: var(--input-bg);
@@ -247,7 +247,7 @@
     padding-right: 36px;
   }
 
-  #tarifas .calc-result {
+  #planes .calc-result {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
     gap: 16px;
@@ -256,14 +256,14 @@
   }
 
   @media (max-width: 520px) {
-    #tarifas .calc-result { grid-template-columns: 1fr 1fr; }
+    #planes .calc-result { grid-template-columns: 1fr 1fr; }
   }
 
-  #tarifas .calc-result-item {
+  #planes .calc-result-item {
     text-align: center;
   }
 
-  #tarifas .calc-result-label {
+  #planes .calc-result-label {
     font-size: .72rem;
     text-transform: uppercase;
     letter-spacing: .06em;
@@ -271,24 +271,24 @@
     margin-bottom: 6px;
   }
 
-  #tarifas .calc-result-val {
+  #planes .calc-result-val {
     font-family: var(--font-head);
     font-weight: 800;
     font-size: 1.4rem;
     color: var(--text-strong);
   }
 
-  #tarifas .calc-result-val.brand {
+  #planes .calc-result-val.brand {
     color: var(--brand);
   }
 
-  #tarifas .calc-result-mon {
+  #planes .calc-result-mon {
     font-size: .72rem;
     color: var(--muted);
     margin-top: 2px;
   }
 
-  #tarifas .precios-ctas {
+  #planes .precios-ctas {
     display: flex;
     gap: 14px;
     flex-wrap: wrap;
@@ -296,7 +296,7 @@
     justify-content: center;
   }
 
-  #tarifas .calc-cta-btn {
+  #planes .calc-cta-btn {
     display: inline-flex;
     align-items: center;
     gap: 8px;
@@ -314,13 +314,13 @@
     cursor: pointer;
   }
 
-  #tarifas .calc-cta-btn:hover {
+  #planes .calc-cta-btn:hover {
     background: var(--brand-dim);
     border-color: var(--brand-dim);
     transform: translateY(-1px);
   }
 
-  #tarifas .btn-ghost {
+  #planes .btn-ghost {
     display: inline-flex;
     align-items: center;
     gap: 8px;
@@ -339,7 +339,7 @@
     text-decoration: none;
   }
 
-  #tarifas .btn-ghost:hover {
+  #planes .btn-ghost:hover {
     border-color: var(--muted-2);
     background: var(--input-bg);
     transform: translateY(-1px);
@@ -464,7 +464,7 @@ function tarifasRenderPrecios() {
    Selector de país
    ============================================================ */
 function tarifasSetPais(btn) {
-  var btns = document.querySelectorAll('#tarifas .pais-btn');
+  var btns = document.querySelectorAll('#planes .pais-btn');
   for (var i = 0; i < btns.length; i++) { btns[i].classList.remove('active'); }
   btn.classList.add('active');
   TARIFAS_PAIS = btn.getAttribute('data-pais');
@@ -554,7 +554,7 @@ tarifasCalcPrecio();
       TARIFAS_PAIS = this.value;
       tarifasRenderPrecios();
       tarifasCalcPrecio();
-      var btns = document.querySelectorAll('#tarifas .pais-btn');
+      var btns = document.querySelectorAll('#planes .pais-btn');
       for (var i = 0; i < btns.length; i++) {
         btns[i].classList.toggle('active', btns[i].getAttribute('data-pais') === TARIFAS_PAIS);
       }

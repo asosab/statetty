@@ -1,0 +1,61 @@
+<section id="prensa" class="section prensa-section">
+  <div class="container">
+    <div class="prensa-header fade-up">
+      <p class="prensa-label">Prensa</p>
+      <h2 class="section-title">Recursos para prensa</h2>
+      <p class="prensa-sub">Descargá imágenes, documentos y materiales oficiales de Statetty.</p>
+    </div>
+
+    <div class="prensa-kit fade-up">
+      <div class="prensa-card">
+        <div class="prensa-card-icon" aria-hidden="true">🖼️</div>
+        <h3>Logos y marca</h3>
+        <p>Logo de Statetty en alta resolución, versión horizontal e isotipo. Formatos PNG y SVG.</p>
+      </div>
+      <div class="prensa-card">
+        <div class="prensa-card-icon" aria-hidden="true">📄</div>
+        <h3>Kit de prensa</h3>
+        <p>Ficha corporativa, historia de la empresa, datos clave y material complementario en PDF.</p>
+      </div>
+    </div>
+
+    <div class="prensa-docs fade-up">
+      <p class="prensa-docs-title">Archivos disponibles</p>
+      {% assign prensa_files = site.static_files | where_exp: "f", "f.path contains '/prensa/'" %}
+      {% assign has_files = false %}
+      {% for f in prensa_files %}
+        {% unless f.name == "index.html" %}{% assign has_files = true %}{% endunless %}
+      {% endfor %}
+
+      {% if has_files %}
+      <ul class="prensa-file-list">
+        {% for f in prensa_files %}
+          {% unless f.name == "index.html" %}
+            {% assign ext = f.extname | downcase | remove: "." %}
+            {% if ext == "pdf" %}{% assign ico = "📄" %}
+            {% elsif ext == "png" or ext == "jpg" or ext == "jpeg" or ext == "gif" or ext == "webp" or ext == "svg" %}{% assign ico = "🖼️" %}
+            {% elsif ext == "docx" or ext == "doc" %}{% assign ico = "📝" %}
+            {% elsif ext == "xlsx" or ext == "xls" or ext == "csv" %}{% assign ico = "📊" %}
+            {% elsif ext == "pptx" or ext == "ppt" %}{% assign ico = "📋" %}
+            {% elsif ext == "zip" or ext == "rar" or ext == "7z" %}{% assign ico = "🗜️" %}
+            {% else %}{% assign ico = "📁" %}{% endif %}
+            <li class="prensa-file-item">
+              <a href="{{ f.path }}" target="_blank" rel="noopener">
+                <span class="prensa-file-icon">{{ ico }}</span>
+                <span class="prensa-file-name">{{ f.name }}</span>
+                <span class="prensa-file-badge">{{ ext }}</span>
+                <span class="prensa-file-dl">↓</span>
+              </a>
+            </li>
+          {% endunless %}
+        {% endfor %}
+      </ul>
+      {% else %}
+      <div class="prensa-empty">
+        No hay archivos en esta carpeta todavía.<br>
+        Próximamente disponibles.
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
