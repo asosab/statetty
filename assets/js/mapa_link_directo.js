@@ -567,7 +567,15 @@ function agenciasActivas() {
 }
 
 $(document).ready(function () {
-  $('#toolbox-btn').on('click', () => $('#toolbox').toggle());
+  $('#toolbox-btn').on('click', function (e) {
+    if ($('#toolbox').is(':visible')) { $('#toolbox').hide(); } else { $('#toolbox').show(); }
+    e.stopPropagation();
+  });
+  $(document).on('click', function (e) {
+    if ($('#toolbox').is(':visible') && !$(e.target).closest('#toolbox').length) {
+      $('#toolbox').hide();
+    }
+  });
 
   const agencyNames = {
     "ic":     "Info Casas",
