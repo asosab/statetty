@@ -149,6 +149,57 @@ function calcularPromedio(datos, prop) {
   return Math.round(suma / datosFiltrados.length);
 }
 
+// -----------------------------------------------------------------------
+// Datos geográficos para detección de país por coordenadas (extensible)
+// -----------------------------------------------------------------------
+var PAISES = [
+  {
+    code: 'BO',
+    callingCode: '591',
+    polygon: [
+      [-57.50, -18.17], [-58.24, -16.30], [-60.16, -16.26],
+      [-63.20, -12.63], [-65.34,  -9.76], [-67.17, -10.31],
+      [-68.67, -12.56], [-68.88, -12.90], [-68.96, -16.50],
+      [-69.39, -15.66], [-69.59, -17.58], [-69.10, -18.26],
+      [-68.76, -20.37], [-68.22, -21.49], [-67.83, -22.87],
+      [-64.38, -22.80], [-62.69, -22.25], [-62.27, -20.51],
+      [-60.04, -19.34], [-57.50, -18.17]
+    ]
+  },
+  {
+    code: 'PE',
+    callingCode: '51',
+    polygon: [
+      [-69.59, -17.58], [-70.37, -18.35], [-71.38, -17.77],
+      [-74.12, -15.27], [-76.42, -13.82], [-79.04,  -8.39],
+      [-81.25,  -6.14], [-81.41,  -4.74], [-80.30,  -3.40],
+      [-78.45,  -3.87], [-75.55,  -1.56], [-75.11,  -0.06],
+      [-73.07,  -2.31], [-70.69,  -3.74], [-69.53, -10.95],
+      [-68.67, -12.56], [-68.88, -12.90], [-68.96, -16.50],
+      [-69.39, -15.66], [-69.59, -17.58]
+    ]
+  }
+];
+
+function puntoEnPoligono(lat, lng, poligono) {
+  var dentro = false;
+  for (var i = 0, j = poligono.length - 1; i < poligono.length; j = i++) {
+    var xi = poligono[i][0], yi = poligono[i][1];
+    var xj = poligono[j][0], yj = poligono[j][1];
+    if ((yi > lat) !== (yj > lat) && lng < (xj - xi) * (lat - yi) / (yj - yi) + xi)
+      dentro = !dentro;
+  }
+  return dentro;
+}
+
+function detectarPais(lat, lng) {
+  for (var i = 0; i < PAISES.length; i++) {
+    if (puntoEnPoligono(lat, lng, PAISES[i].polygon))
+      return PAISES[i];
+  }
+  return null;
+}
+
 /**
  * Devuelve el "brand" (clave de agencia) a partir de una URL o de un marker.
  * @param {Object|string} input - Puede ser un marker objeto o una URL/uid string
@@ -181,7 +232,7 @@ function getBrand(input) {
   else if (url.includes("dueodeinmueble"))        {return 'IDI';}
   else if (url.includes("ultracasas"))            {return 'UC';}
   else if (url.includes("uno.com"))               {return 'uno';}
-  else if (url.includes("infocasas.com"))         {return 'ic';}
+  else if (url.includes("infocasas"))             {return 'ic';}
   else if (url.includes("sin-intermediarios"))    {return 'si';}
   else if (url.includes("capitalcorp"))           {return 'capital';}
   else if (url.includes("santa-cruz.estate"))     {return 'sce';}
@@ -716,12 +767,16 @@ $(document).ready(function () {
         if (cel.length === 9 && cel.startsWith('0')) cel = '591' + cel.slice(1);
         */
 
-      let cel = (dato.agentPhone || '').toString().replace(/\D/g,'');
-      // normalización Bolivia
-      if (cel.length === 8) cel = '591' + cel;
-      if (cel.length === 9 && cel.startsWith('0')) cel = '591' + cel.slice(1);
-      // validar celular Bolivia
-      const celularValido = /^591[67]\d{7}$/.test(cel);
+      var cel = '';
+      var celularValido = false;
+      var rawPhone = (dato.agentPhone || '').toString().trim();
+      if (rawPhone.includes('+')) {
+        var pn = libphonenumber.parsePhoneNumberFromString(rawPhone);
+        if (pn && pn.isValid()) {
+          cel = pn.number.slice(1);
+          celularValido = true;
+        }
+      }
 
       let soyNa = na ? ` ${na}` : '';
       let deAg = ag ? ` de ${ag}` : '';
