@@ -770,8 +770,16 @@ $(document).ready(function () {
       var cel = '';
       var celularValido = false;
       var rawPhone = (dato.agentPhone || '').toString().trim();
-      if (rawPhone.includes('+')) {
-        var pn = libphonenumber.parsePhoneNumberFromString(rawPhone);
+      if (typeof libphonenumber !== 'undefined') {
+        var pn = null;
+        if (rawPhone.includes('+')) {
+          pn = libphonenumber.parsePhoneNumberFromString(rawPhone);
+        } else {
+          var digits = rawPhone.replace(/\D/g, '');
+          if (digits.length >= 8) {
+            pn = libphonenumber.parsePhoneNumberFromString('+' + digits);
+          }
+        }
         if (pn && pn.isValid()) {
           cel = pn.number.slice(1);
           celularValido = true;
