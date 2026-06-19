@@ -239,7 +239,6 @@ function getBrand(input) {
   else if (url.includes("laencontre.com"))        {return 'laenc';}
   else if (url.includes("nexoinmobiliario.pe"))   {return 'nexoi';}
 
-  nexoinmobiliario
   else {return 'statetty';}
 }
 
