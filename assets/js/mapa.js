@@ -236,6 +236,10 @@ function getBrand(input) {
   else if (url.includes("sin-intermediarios"))    {return 'si';}
   else if (url.includes("capitalcorp"))           {return 'capital';}
   else if (url.includes("santa-cruz.estate"))     {return 'sce';}
+  else if (url.includes("laencontre.com"))        {return 'laenc';}
+  else if (url.includes("nexoinmobiliario.pe"))   {return 'nexoi';}
+
+  nexoinmobiliario
   else {return 'statetty';}
 }
 
@@ -597,6 +601,8 @@ $(document).ready(function () {
     "si":     "Sin Intermediarios",
     "capital":"Capital Corporación",
     "sce":    "Santa Cruz Estate",
+    "laenc":  "La encontré",
+    "nexoi":  "Nexo Inmobiliario",
   };
 
   var urlParams = new URLSearchParams(window.location.search);
