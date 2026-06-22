@@ -35,6 +35,8 @@ Sitio web estático Jekyll 4.3, alojado en GitHub Pages (statetty.com). Landing 
 
 ## 2026-06-21
 
+- **Fix `.remove-sel`**: agregado `e.stopPropagation()` en los handlers de la X roja de `mapa.js`, `mapaInmo.js`, `mapa_link_directo.js`, `mapatmp.js` para evitar cierre del toolbox al remover elemento de la selección.
+- **Error modal `fetchFinderResult`**: si la API devuelve `{error: ...}`, se muestra modal con el mensaje de actualizar link desde Telegram y se detiene el flujo (no fallback).
 - **Nuevo `assets/js/datos.js`**: funciones `fetchFinderResult(publicKey)` y `parseFinderResult(response)` para consultar `{WS_API_BASE}/finderresult?publicKey={k}` y transformar la respuesta al formato `locations[]` del mapa. Mapeo de campos API → Google Sheets (ej. `nombre→Titulo`, `desc→des`, `fotos[0]→foto`, etc.). Sanitización de descripción y cálculos de precioM2C/precioM2T.
 - **Refactor `mapa.js`**: extraída función `renderMap(locs, centerLat, centerLng, circleRadius, avgPrice)` que encapsula toda la creación del mapa Leaflet + marcadores + popups + filtros + restauración de seleccionados.
 - **Nuevo flujo de carga en `mapa.js`**: `init()` async — primero intenta con `k` param (API finderresult), si hay datos los usa; si no, fallback a Google Sheets. `info` provee lat, lng, dist (km→m), precioProm, userID. `usuario` provee nombre, agencia, teléfono (window.na/ag/an).

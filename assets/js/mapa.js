@@ -579,6 +579,32 @@ function agenciasActivas() {
   return activas;
 }
 
+function mostrarModalError(mensaje) {
+  var overlay = document.createElement('div');
+  overlay.id = 'modal-error-overlay';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:99999;display:flex;justify-content:center;align-items:center;';
+  
+  var box = document.createElement('div');
+  box.style.cssText = 'background:#fff;border-radius:12px;padding:32px;max-width:420px;margin:20px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.3);font-family:sans-serif;';
+  
+  box.innerHTML =
+    '<div style="font-size:48px;margin-bottom:12px;">⚠️</div>' +
+    '<p style="font-size:18px;color:#333;margin:0 0 16px;line-height:1.5;">' +
+    'actualiza tu link al mapa desde Statetty Telegram, entonces has click en el nuevo link' +
+    '</p>' +
+    '<button id="modal-error-btn" style="background:#2563eb;color:#fff;border:none;border-radius:8px;padding:10px 24px;font-size:16px;cursor:pointer;">Cerrar</button>';
+  
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+  
+  document.getElementById('modal-error-btn').addEventListener('click', function () {
+    overlay.remove();
+  });
+  overlay.addEventListener('click', function (e) {
+    if (e.target === overlay) overlay.remove();
+  });
+}
+
 $(document).ready(function () {
   $('#toolbox-btn').on('click', function () {
     $('#toolbox').toggle();
@@ -814,6 +840,11 @@ $(document).ready(function () {
 
     if (publicKey) {
       var response = await fetchFinderResult(publicKey);
+      if (response && response.error) {
+        $('#loading-indicator').hide();
+        mostrarModalError(response.error);
+        return;
+      }
       if (response && Array.isArray(response.result) && response.result.length > 0) {
         var parsed = parseFinderResult(response);
         var locs = parsed.locations;
