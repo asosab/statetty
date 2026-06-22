@@ -579,7 +579,7 @@ function agenciasActivas() {
   return activas;
 }
 
-function mostrarModalError(mensaje) {
+function mostrarModalError() {
   var overlay = document.createElement('div');
   overlay.id = 'modal-error-overlay';
   overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:99999;display:flex;justify-content:center;align-items:center;';
@@ -840,11 +840,6 @@ $(document).ready(function () {
 
     if (publicKey) {
       var response = await fetchFinderResult(publicKey);
-      if (response && response.error) {
-        $('#loading-indicator').hide();
-        mostrarModalError(response.error);
-        return;
-      }
       if (response && Array.isArray(response.result) && response.result.length > 0) {
         var parsed = parseFinderResult(response);
         var locs = parsed.locations;
@@ -889,6 +884,9 @@ $(document).ready(function () {
         renderMap(locs, lat, lng, radius, pProm);
         return;
       }
+      $('#loading-indicator').hide();
+      mostrarModalError();
+      return;
     }
 
     // Fallback: Google Sheets
@@ -1013,6 +1011,7 @@ $(document).ready(function () {
   init().catch(function(e) {
     console.error('Error al cargar datos del mapa', e);
     $('#loading-indicator').hide();
+    if (publicKey) mostrarModalError();
   });
 
   // búsqueda
