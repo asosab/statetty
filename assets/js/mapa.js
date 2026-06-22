@@ -604,155 +604,28 @@ $(document).ready(function () {
     "nexoi":  "Nexo Inmobiliario",
   };
 
-  var urlParams = new URLSearchParams(window.location.search);
-  let id = urlParams.get('id');
-  let key = urlParams.get('key');
-  let pProm = Math.round(urlParams.get('p'));
-  let userid = urlParams.get('u');
-  window.na = urlParams.get('na');
-  window.ag = urlParams.get('ag');
-  window.an = urlParams.get('an');
-  window.M2T = urlParams.get('M2T');
-  window.M2T = normalizarM2TDesdeURI();
-
-  if (!id || !key) { throw new Error("ID o clave no proporcionados en la URL"); }
-
-  var valores = 'Sheet1!A2:Y';
-  var url = 'https://sheets.googleapis.com/v4/spreadsheets/' + id + '/values/' + valores + '?key=' + key;
-
-  $('#loading-indicator').show();
-
-  $.getJSON(url, function (data) {
-    $('#loading-indicator').hide();
-
-    const columnas = [
-      "Titulo","lat","lng","dir","URL","des","ambientes","dormitorios","baños","m2construccion",
-      "m2terreno","nombre","precioM2","broker","foto","precio","agentName","agentPhone","fechaIngreso",
-      "tiempoOfertado","tipoInmueble","tipoNegocio","anoc","_id", "micros"
-    ];
-
-    window.columnasConfig = {
-      "foto":           true,
-      "Titulo":         true,
-      "dormitorios":    true,
-      "baños":          true,
-      "m2construccion": true,
-      "m2terreno":      true,
-      "lat":            false,
-      "lng":            false,
-      "dir":            false,
-      "URL":            false,
-      "des":            false,
-      "ambientes":      false,
-      "nombre":         false,
-      "precioM2":       false,
-      "precioM2C":      false,
-      "precioM2T":      false,
-      "broker":         false,
-      "precio":         false,
-      "agentName":      false,
-      "agentPhone":     false,
-      "fechaIngreso":   false,
-      "tiempoOfertado": false,
-      "tipoInmueble":   false,
-      "tipoNegocio":    false,
-      "anoc":           false,
-      "_id":            false,
-      "micros":         false,
-    };
-
-    $(data.values).each(function () {
-      let location = {};
-      columnas.forEach((col, i) => location[col] = this[i] || "");
-
-      location.lat            = parseFloat(location.lat);
-      location.lng            = parseFloat(location.lng);
-      location.precio         = parseInt(location.precio) || 0;
-      location.precioM2       = parseInt(location.precioM2) || 0;
-      location.uid            = normalizeURL(location.URL);
-      location.m2terreno      = parseInt(location.m2terreno) || 0;
-      location.m2construccion = parseInt(location.m2construccion) || 0;
-      location.tiempoOfertado = parseInt(location.tiempoOfertado) || 0;
-      location.micros         = location.micros || '';
-
-      location.precioM2C = (location.precio > 0 && location.m2construccion > 0)? location.precio / location.m2construccion: 0;
-      delete location.precioM2;
-
-      location.precioM2T = (location.precio > 0 && location.m2terreno > 0)? location.precio / location.m2terreno: 0;
-
-      let rawDesc = location.des || "";
-      rawDesc = rawDesc
-        .replace(/Ø[=<>][ÜÝÐ°Í]/g, " ")
-        .replace(/[•·•`´¨^~¬]+/g, " ")
-        .replace(/[“”"']/g, "'")
-        .replace(/[`´¨]/g, "")
-        .replace(/[\u0000-\u001F\u007F-\u009F]/g, " ")
-        .replace(/[^\x20-\x7EÀ-ÿ\n\r]/g, " ")
-        .replace(/\s{2,}/g, " ")
-        .replace(/(\r\n|\r|\n){2,}/g, "\n")
-        .replace(/\n\s+/g, "\n")
-        .replace(/\s+\n/g, "\n")
-        .trim();
-
-      rawDesc = rawDesc
-        .replace(/\+591\d{8}/g, "[...]")
-        .replace(/591\d{8}/g, "[...]")
-        .replace(/\b\d{8}\b/g, "[...]")
-        .replace(/\d{2,4}[-\s]\d{2,4}[-\s]\d{2,4}/g, "[...]")
-        .replace(/\(\d{3,4}\)\s?\d{5,8}/g, "[...]")
-        .replace(/00\s?591\d{8}/g, "[...]")
-        .replace(/wa\.me\/\d+/gi, "[...]")
-        .replace(/whatsapp\.com\/\d+/gi, "[...]");
-
-      const chrMax = 300;
-      const faltan = rawDesc.length > chrMax ? rawDesc.length - chrMax : 0;
-      const frase = faltan > 0 ? `... (y ${faltan} caracteres más)` : "";
-      location.des = rawDesc.length > chrMax ? rawDesc.substring(0, chrMax) + frase : rawDesc;
-
-      location.brand = getBrand({ dato: location });
-      locations.push(location);
-
-    });
-
-    var lat = urlParams.get('lat');
-    var lng = urlParams.get('lng');
-    var radius = urlParams.get('r');
-    if (!lat || !lng || !radius) {
-      let latSum = 0, lngSum = 0;
-      locations.forEach(loc => { latSum += loc.lat; lngSum += loc.lng; });
-      lat = latSum / locations.length;
-      lng = latSum / locations.length;
-      let maxDistance = 0;
-      locations.forEach(loc => {
-        const distance = calculateDH(lat, lng, loc.lat, loc.lng);
-        if (distance > maxDistance) { maxDistance = distance; }
-      });
-      radius = maxDistance * 1000;
-    }
-    if (isNaN(pProm) || pProm == 0) { pProm = calcularPromedio(locations, 'precio'); }
-
+  function renderMap(locs, centerLat, centerLng, circleRadius, avgPrice) {
+    locations = locs;
     map = L.map('mapid');
     initACMMapClickMarker(map);
-    
+
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap'
     }).addTo(map);
 
-    var circleCenter = L.latLng(lat, lng);
-    var circle = L.circle(circleCenter, { color: 'green', weight: 1, fillOpacity: 0, radius }).addTo(map);
+    var circleCenter = L.latLng(centerLat, centerLng);
+    var circle = L.circle(circleCenter, { color: 'green', weight: 1, fillOpacity: 0, radius: circleRadius }).addTo(map);
 
     var crossIcon = L.icon({
       iconUrl: '../../assets/images/cross_green.png',
       iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10]
     });
     var crossMarker = L.marker(circleCenter, { icon: crossIcon }).addTo(map);
-    crossMarker.bindPopup(`Coordenadas: ${lat},${lng}<br>Valor promedio: USD${formatNumber(pProm)}`);
+    crossMarker.bindPopup('Coordenadas: ' + centerLat + ',' + centerLng + '<br>Valor promedio: USD' + formatNumber(avgPrice));
 
     // markers
     locations.forEach(function (dato) {
       let url = dato.uid;
-      //var brand = getBrand(url);
-      //var brand = getBrand({ dato });
       var brand = dato.brand;
 
       var icon = new L.Icon({
@@ -773,12 +646,6 @@ $(document).ready(function () {
 
       const nombreCorto   = limpio ? ' ' + limpio.split(/\s+/).slice(0,2).join(' ') : '';
       const nombreCortito = limpio ? ' ' + limpio.split(/\s+/).slice(0,1).join(' ') : '';
-
-      /*
-        let cel = (dato.agentPhone || '').toString().replace(/\D/g, '');
-        if (cel.length === 8) cel = '591' + cel;
-        if (cel.length === 9 && cel.startsWith('0')) cel = '591' + cel.slice(1);
-        */
 
       var cel = '';
       var celularValido = false;
@@ -820,9 +687,7 @@ $(document).ready(function () {
            </div>`
         : "";
 
-
-
-      var priceDiffPercent = ((dato.precio - pProm) / pProm) * 100;
+      var priceDiffPercent = ((dato.precio - avgPrice) / avgPrice) * 100;
       var priceComparison = priceDiffPercent > 0
         ? `<span style="color: red;">↑${Math.ceil(priceDiffPercent)}%</span>`
         : `<span style="color: green;">↓${Math.ceil(Math.abs(priceDiffPercent))}%</span>`;
@@ -846,7 +711,6 @@ $(document).ready(function () {
         let chk = $(`.chk-sel[data-id='${dato.uid}']`);
         chk.prop("checked", seleccionados.some(s => s.uid === dato.uid));
 
-        // si la agencia está desactivada, deshabilitar el checkbox
         const currentMarkerObj = markers.find(mm => mm.dato.uid === dato.uid);
         if (!isMarkerActive(currentMarkerObj)) chk.prop('disabled', true);
         else chk.prop('disabled', false);
@@ -868,43 +732,33 @@ $(document).ready(function () {
       });
     });
 
-    // --- inicializar acordeón ---
+    // accordion
     $(document).on('click', '.section-header', function () {
       $('.section').removeClass('active');
       $(this).parent().addClass('active');
     });
 
-    // --- agencias únicas ---
+    // agencias únicas
     let agencies = {};
     markers.forEach(obj => {
       let brand = getBrand(obj);
       agencies[brand] = true;
     });
-
-    // Forzar selección por defecto (se mantuvo la intención original)
     localStorage.removeItem("agenciasSeleccionadas");
-
     for (let ag in agencies) {
-      if (ag === "statetty") continue; // no mostrar
+      if (ag === "statetty") continue;
       let label = agencyNames[ag] || ag;
       let checked = ag !== "ic";
-
       $('#agency-filter').append(
         `<div><label><input type="checkbox" class="chk-agency" data-ag="${ag}" ${checked ? "checked" : ""}> ${label}</label></div>`
       );
-
-      // aplicar estado inicial (map.addLayer o removeLayer se hará en la primera sincronización)
     }
 
-    // --- filtro por agencias ---
+    // filtro por agencias
     $(document).on('change', '.chk-agency', function () {
       let ag = $(this).data('ag');
       let checked = this.checked;
-
-      // manejar toggle con limpieza de seleccionados y sincronización
       handleAgencyToggle(ag, checked);
-
-      // actualizar ultimosFiltrados: si hay texto en búsqueda, re-ejecutar búsqueda para actualizar filtrados
       const query = $('#search-input').val() || '';
       if (query.trim()) {
         $('#search-input').trigger('input');
@@ -912,15 +766,14 @@ $(document).ready(function () {
         ultimosFiltrados = getVisibleLocations();
         actualizarEstadisticas(ultimosFiltrados);
       }
-
       resetLocalStoragePreservingState();
     });
 
-    // --- Restaurar seleccionados (solo si pertenecen a agencias activas) ---
+    // restaurar seleccionados
     const prevSel = cargarSeleccionados();
     const visiblesSet = new Set(getVisibleLocations().map(x => x.uid));
     prevSel.forEach(id => {
-      if (!visiblesSet.has(id)) return; // ignorar inmuebles de agencias deshabilitadas
+      if (!visiblesSet.has(id)) return;
       let obj = markers.find(m => m.dato.uid === id);
       if (obj) {
         seleccionados.push(obj.dato);
@@ -932,25 +785,203 @@ $(document).ready(function () {
     guardarSeleccionados();
     actualizarToolbox();
 
-    /*
-    const savedMap = cargarMapa();
-    if (savedMap) { map.setView(savedMap.center, savedMap.zoom);} 
-    else {
-      var group = new L.featureGroup(locations.map(function (location) {return L.marker([location.lat, location.lng]);}));
-      map.fitBounds(group.getBounds());
-    }
-    */
+    const visibles = getVisibleLocations();
+    const calc = calcularBoundsDesdeLocations(visibles);
+    if (calc && calc.bounds) { map.fitBounds(calc.bounds.pad(0.1)); } else { map.setView([centerLat, centerLng], 13); }
 
-    const visibles=getVisibleLocations();
-    const calc=calcularBoundsDesdeLocations(visibles);
-    if(calc&&calc.bounds){map.fitBounds(calc.bounds.pad(0.1));} else{map.setView([lat,lng],13);}    
-
-    // Asegurar que ultimosFiltrados inicialmente sean solo visibles
     ultimosFiltrados = getVisibleLocations();
     actualizarEstadisticas(ultimosFiltrados);
 
     map.on("moveend", guardarMapa);
     map.on("zoomend", guardarMapa);
+  }
+
+  var urlParams = new URLSearchParams(window.location.search);
+  let id = urlParams.get('id');
+  let key = urlParams.get('key');
+  let pProm = Math.round(urlParams.get('p'));
+  let userid = urlParams.get('u');
+  window.na = urlParams.get('na');
+  window.ag = urlParams.get('ag');
+  window.an = urlParams.get('an');
+  window.M2T = urlParams.get('M2T');
+  window.M2T = normalizarM2TDesdeURI();
+
+  var publicKey = urlParams.get('k');
+
+  async function init() {
+    $('#loading-indicator').show();
+
+    if (publicKey) {
+      var response = await fetchFinderResult(publicKey);
+      if (response && Array.isArray(response.result) && response.result.length > 0) {
+        var parsed = parseFinderResult(response);
+        var locs = parsed.locations;
+
+        locs.forEach(function(loc) {
+          loc.uid = normalizeURL(loc.URL);
+          loc.brand = getBrand({ dato: loc });
+        });
+
+        if (parsed.usuario) {
+          window.na = parsed.usuario.nombre || '';
+          window.ag = parsed.usuario.agencia || '';
+          window.an = parsed.usuario.telefono || '';
+        }
+
+        var info = parsed.info || {};
+        var lat = parseFloat(info.lat) || parseFloat(urlParams.get('lat'));
+        var lng = parseFloat(info.lng) || parseFloat(urlParams.get('lng'));
+        var radius;
+        if (info.dist !== undefined) radius = info.dist * 1000;
+        else if (urlParams.get('r')) radius = parseFloat(urlParams.get('r'));
+        else radius = null;
+        var pProm = Math.round(info.precioProm) || Math.round(urlParams.get('p')) || 0;
+
+        if (!lat || !lng || !radius) {
+          var latSum = 0, lngSum = 0;
+          locs.forEach(function(loc) { latSum += loc.lat; lngSum += loc.lng; });
+          lat = latSum / locs.length;
+          lng = lngSum / locs.length;
+          var maxDistance = 0;
+          locs.forEach(function(loc) {
+            var d = calculateDH(lat, lng, loc.lat, loc.lng);
+            if (d > maxDistance) maxDistance = d;
+          });
+          radius = maxDistance * 1000;
+        }
+        if (isNaN(pProm) || pProm == 0) pProm = calcularPromedio(locs, 'precio');
+
+        if (info.userID) userid = info.userID;
+
+        $('#loading-indicator').hide();
+        renderMap(locs, lat, lng, radius, pProm);
+        return;
+      }
+    }
+
+    // Fallback: Google Sheets
+    if (!id || !key) { throw new Error("ID o clave no proporcionados en la URL"); }
+
+    var valores = 'Sheet1!A2:Y';
+    var url = 'https://sheets.googleapis.com/v4/spreadsheets/' + id + '/values/' + valores + '?key=' + key;
+
+    $.getJSON(url, function (data) {
+      $('#loading-indicator').hide();
+
+      const columnas = [
+        "Titulo","lat","lng","dir","URL","des","ambientes","dormitorios","baños","m2construccion",
+        "m2terreno","nombre","precioM2","broker","foto","precio","agentName","agentPhone","fechaIngreso",
+        "tiempoOfertado","tipoInmueble","tipoNegocio","anoc","_id", "micros"
+      ];
+
+      window.columnasConfig = {
+        "foto":           true,
+        "Titulo":         true,
+        "dormitorios":    true,
+        "baños":          true,
+        "m2construccion": true,
+        "m2terreno":      true,
+        "lat":            false,
+        "lng":            false,
+        "dir":            false,
+        "URL":            false,
+        "des":            false,
+        "ambientes":      false,
+        "nombre":         false,
+        "precioM2":       false,
+        "precioM2C":      false,
+        "precioM2T":      false,
+        "broker":         false,
+        "precio":         false,
+        "agentName":      false,
+        "agentPhone":     false,
+        "fechaIngreso":   false,
+        "tiempoOfertado": false,
+        "tipoInmueble":   false,
+        "tipoNegocio":    false,
+        "anoc":           false,
+        "_id":            false,
+        "micros":         false,
+      };
+
+      $(data.values).each(function () {
+        let location = {};
+        columnas.forEach((col, i) => location[col] = this[i] || "");
+
+        location.lat            = parseFloat(location.lat);
+        location.lng            = parseFloat(location.lng);
+        location.precio         = parseInt(location.precio) || 0;
+        location.precioM2       = parseInt(location.precioM2) || 0;
+        location.uid            = normalizeURL(location.URL);
+        location.m2terreno      = parseInt(location.m2terreno) || 0;
+        location.m2construccion = parseInt(location.m2construccion) || 0;
+        location.tiempoOfertado = parseInt(location.tiempoOfertado) || 0;
+        location.micros         = location.micros || '';
+
+        location.precioM2C = (location.precio > 0 && location.m2construccion > 0)? location.precio / location.m2construccion: 0;
+        delete location.precioM2;
+
+        location.precioM2T = (location.precio > 0 && location.m2terreno > 0)? location.precio / location.m2terreno: 0;
+
+        let rawDesc = location.des || "";
+        rawDesc = rawDesc
+          .replace(/Ø[=<>][ÜÝÐ°Í]/g, " ")
+          .replace(/[•·•`´¨^~¬]+/g, " ")
+          .replace(/[“”"']/g, "'")
+          .replace(/[`´¨]/g, "")
+          .replace(/[\u0000-\u001F\u007F-\u009F]/g, " ")
+          .replace(/[^\x20-\x7EÀ-ÿ\n\r]/g, " ")
+          .replace(/\s{2,}/g, " ")
+          .replace(/(\r\n|\r|\n){2,}/g, "\n")
+          .replace(/\n\s+/g, "\n")
+          .replace(/\s+\n/g, "\n")
+          .trim();
+
+        rawDesc = rawDesc
+          .replace(/\+591\d{8}/g, "[...]")
+          .replace(/591\d{8}/g, "[...]")
+          .replace(/\b\d{8}\b/g, "[...]")
+          .replace(/\d{2,4}[-\s]\d{2,4}[-\s]\d{2,4}/g, "[...]")
+          .replace(/\(\d{3,4}\)\s?\d{5,8}/g, "[...]")
+          .replace(/00\s?591\d{8}/g, "[...]")
+          .replace(/wa\.me\/\d+/gi, "[...]")
+          .replace(/whatsapp\.com\/\d+/gi, "[...]");
+
+        const chrMax = 300;
+        const faltan = rawDesc.length > chrMax ? rawDesc.length - chrMax : 0;
+        const frase = faltan > 0 ? `... (y ${faltan} caracteres más)` : "";
+        location.des = rawDesc.length > chrMax ? rawDesc.substring(0, chrMax) + frase : rawDesc;
+
+        location.brand = getBrand({ dato: location });
+        locations.push(location);
+
+      });
+
+      var lat = urlParams.get('lat');
+      var lng = urlParams.get('lng');
+      var radius = urlParams.get('r');
+      if (!lat || !lng || !radius) {
+        let latSum = 0, lngSum = 0;
+        locations.forEach(loc => { latSum += loc.lat; lngSum += loc.lng; });
+        lat = latSum / locations.length;
+        lng = latSum / locations.length;
+        let maxDistance = 0;
+        locations.forEach(loc => {
+          const distance = calculateDH(lat, lng, loc.lat, loc.lng);
+          if (distance > maxDistance) { maxDistance = distance; }
+        });
+        radius = maxDistance * 1000;
+      }
+      if (isNaN(pProm) || pProm == 0) { pProm = calcularPromedio(locations, 'precio'); }
+
+      renderMap(locations, lat, lng, radius, pProm);
+    });
+  }
+
+  init().catch(function(e) {
+    console.error('Error al cargar datos del mapa', e);
+    $('#loading-indicator').hide();
   });
 
   // búsqueda

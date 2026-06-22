@@ -33,6 +33,13 @@ Sitio web estático Jekyll 4.3, alojado en GitHub Pages (statetty.com). Landing 
 - Probar navegación responsive, scroll header, FAQ accordion, calculadora de tarifas, formulario de contacto, y blog dinámico en producción.
 - Mover JS global (scroll header, toggle nav) de inline en header.html a `assets/js/main.js` si se desea centralizar.
 
+## 2026-06-21
+
+- **Nuevo `assets/js/datos.js`**: funciones `fetchFinderResult(publicKey)` y `parseFinderResult(response)` para consultar `{WS_API_BASE}/finderresult?publicKey={k}` y transformar la respuesta al formato `locations[]` del mapa. Mapeo de campos API → Google Sheets (ej. `nombre→Titulo`, `desc→des`, `fotos[0]→foto`, etc.). Sanitización de descripción y cálculos de precioM2C/precioM2T.
+- **Refactor `mapa.js`**: extraída función `renderMap(locs, centerLat, centerLng, circleRadius, avgPrice)` que encapsula toda la creación del mapa Leaflet + marcadores + popups + filtros + restauración de seleccionados.
+- **Nuevo flujo de carga en `mapa.js`**: `init()` async — primero intenta con `k` param (API finderresult), si hay datos los usa; si no, fallback a Google Sheets. `info` provee lat, lng, dist (km→m), precioProm, userID. `usuario` provee nombre, agencia, teléfono (window.na/ag/an).
+- **Script loading**: `datos.js` agregado en `maps/find/index.html` antes de `mapa.js`.
+
 ## 2026-06-16
 
 - **Formulario de contacto**: países restringidos a Bolivia y Perú; ciudades limitadas a Santa Cruz de la Sierra (SCZ) y Lima (LIM) con nombres completos visibles.

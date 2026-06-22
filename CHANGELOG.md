@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-06-21
+
+- **Nuevo `datos.js`**: módulo con `fetchFinderResult()` y `parseFinderResult()` para consultar el endpoint `{WS_API_BASE}/finderresult?publicKey={k}` y transformar la respuesta al formato `locations[]` que espera el mapa.
+- **Refactor `mapa.js`**: extraída `renderMap()` como función reutilizable para la creación del mapa Leaflet (marcadores, popups, filtros de agencia, restauración de seleccionados). Agregada lógica de URL param `k`: si está presente y la API responde con datos, se usan en lugar de Google Sheets. Los datos de `info` (lat, lng, dist, precioProm, userID) y `usuario` (nombre, agencia, teléfono) se cargan desde el response. Fallback a Google Sheets si no hay `k` o la API falla.
+- **Script loading**: `datos.js` agregado al orden de carga en `maps/find/index.html` (después de `acm.js`, antes de `mapa.js`).
+
 ## 2026-06-16
 
 - **Formulario de registro completo**: `registro/index.html` — página independiente con layout `default`. Formulario moderno responsivo con todos los campos de `frm.md`. Radio cards para nivel de experiencia y nivel tecnológico. Envía al mismo endpoint que `contacto.html`.
