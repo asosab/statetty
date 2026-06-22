@@ -557,7 +557,8 @@ function actualizarToolbox() {
 
   } 
 
-  $(".remove-sel").off("click").on("click", function () {
+  $(".remove-sel").off("click").on("click", function (e) {
+    e.stopPropagation();
     let id = $(this).data("id");
     seleccionados = seleccionados.filter(s => s.uid !== id);
     guardarSeleccionados();
@@ -579,12 +580,11 @@ function agenciasActivas() {
 }
 
 $(document).ready(function () {
-  $('#toolbox-btn').on('click', function (e) {
-    if ($('#toolbox').is(':visible')) { $('#toolbox').hide(); } else { $('#toolbox').show(); }
-    e.stopPropagation();
+  $('#toolbox-btn').on('click', function () {
+    $('#toolbox').toggle();
   });
   $(document).on('click', function (e) {
-    if ($('#toolbox').is(':visible') && !$(e.target).closest('#toolbox').length) {
+    if ($('#toolbox').is(':visible') && !$(e.target).closest('#toolbox, #toolbox-btn').length) {
       $('#toolbox').hide();
     }
   });
