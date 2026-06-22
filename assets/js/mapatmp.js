@@ -552,7 +552,8 @@ function actualizarToolbox() {
 
   } 
 
-  $(".remove-sel").off("click").on("click", function () {
+  $(".remove-sel").off("click").on("click", function (e) {
+    e.stopPropagation();
     let id = $(this).data("id");
     seleccionados = seleccionados.filter(s => s.uid !== id);
     guardarSeleccionados();
