@@ -6,8 +6,8 @@ async function fetchFinderResult(publicKey) {
   try {
     var url = STATETTY_CONFIG.WS_API_BASE + '/finderresult?publicKey=' + encodeURIComponent(publicKey);
     var res = await fetch(url, { headers: { 'ngrok-skip-browser-warning': '1' } });
-    if (!res.ok) return null;
-    return await res.json();
+    var data = await res.json();
+    return data;
   } catch (e) {
     console.warn('fetchFinderResult error', e);
     return null;
