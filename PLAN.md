@@ -35,6 +35,7 @@ Sitio web estático Jekyll 4.3, alojado en GitHub Pages (statetty.com). Landing 
 
 ## 2026-06-21
 
+- **Fix `openWsRedirect`**: el enlace "Contactar a..." en `mapa.js` y `mapatmp.js` ahora construye el mensaje WhatsApp en cliente, abre WhatsApp directo en paralelo y envía el tracking al servidor como fire-and-forget. Un error del servidor ya no bloquea la comunicación vía WhatsApp.
 - **Fix `.remove-sel`**: agregado `e.stopPropagation()` en los handlers de la X roja de `mapa.js`, `mapaInmo.js`, `mapa_link_directo.js`, `mapatmp.js` para evitar cierre del toolbox al remover elemento de la selección.
 - **Error modal `fetchFinderResult`**: si la API devuelve `{error: ...}`, se muestra modal con el mensaje de actualizar link desde Telegram y se detiene el flujo (no fallback).
 - **Nuevo `assets/js/datos.js`**: funciones `fetchFinderResult(publicKey)` y `parseFinderResult(response)` para consultar `{WS_API_BASE}/finderresult?publicKey={k}` y transformar la respuesta al formato `locations[]` del mapa. Mapeo de campos API → Google Sheets (ej. `nombre→Titulo`, `desc→des`, `fotos[0]→foto`, etc.). Sanitización de descripción y cálculos de precioM2C/precioM2T.

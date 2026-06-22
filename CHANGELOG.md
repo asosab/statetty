@@ -2,6 +2,7 @@
 
 ## 2026-06-21
 
+- **Fix `openWsRedirect` (mapa.js, mapatmp.js)**: "Contactar a..." ahora construye el mensaje WhatsApp en el cliente, abre WhatsApp directamente en paralelo al tracking del servidor (fire-and-forget). El fallo del servidor ya no impide la comunicación vía WhatsApp.
 - **Fix `.remove-sel`**: agregado `e.stopPropagation()` en los handlers de la X roja en `mapa.js`, `mapaInmo.js`, `mapa_link_directo.js`, `mapatmp.js` para evitar que el toolbox se cierre al hacer click (el elemento se removía del DOM antes de que el evento terminara de burbujear, dejando `e.target` detached y engañando al handler de cierre del toolbox).
 - **Error modal `fetchFinderResult`**: si la API devuelve `{error: ...}`, se muestra un modal "actualiza tu link al mapa desde Statetty Telegram, entonces has click en el nuevo link" y no se intenta el fallback a Google Sheets. Fix en `datos.js`: `fetchFinderResult` parsea el JSON incluso cuando `!res.ok`, para que el mensaje de error (`{"error":"publicKey inválida"}`) llegue a `mapa.js`.
 - **Nuevo `datos.js`**: módulo con `fetchFinderResult()` y `parseFinderResult()` para consultar el endpoint `{WS_API_BASE}/finderresult?publicKey={k}` y transformar la respuesta al formato `locations[]` que espera el mapa.

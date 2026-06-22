@@ -21,15 +21,10 @@ var checkOverlayIcon = L.divIcon({
   iconAnchor: [1, 60] // ✔️ sobre la mitad superior del marker
 });
 
-async function openWsRedirect(url) {try {
-  const res = await fetch(url, {headers: {"ngrok-skip-browser-warning": "1"}});
-  const html = await res.text();
-  const win = window.open("", "_blank");
-  if (!win) return alert("Popup bloqueado");
-  win.document.open();
-  win.document.write(html);
-  win.document.close();
-} catch (e) {console.log("openWsRedirect", e);}}
+function openWsRedirect(serverUrl, waUrl) {
+  fetch(serverUrl, {headers: {"ngrok-skip-browser-warning": "1"}}).catch(function(e) { console.log("openWsRedirect", e); });
+  window.open(waUrl, "_blank");
+}
 
 /** --------------------------------------------------------------------------------------- calcularBoundsDesdeLocations
  * Calcula bounds y centro óptimo a partir de locations visibles
@@ -796,13 +791,13 @@ $(document).ready(function () {
       let sc = (na || ag) ? ' te escribe, ' : '';
       let foto = dato.foto ? `Foto: ${dato.foto}\n\n`:'';
 
+      const msj = `Hola${nombreCortito},${soyNa}${deAg}${sc}un gusto saludarte. Por favor, podría enviarme información sobre este inmueble, en caso de que siga disponible (${dato.Titulo})\n\nGracias de antemano\n\nlink: ${url}\n\n${foto}Mensaje creado con Statetty https://statetty.com`;
+
       const server = STATETTY_CONFIG.WS_API_BASE;
       const linkSrv = `${server}?u=${encodeURIComponent(userid)}&i=${encodeURIComponent(dato._id)}`;
 
-      //const linkWA = celularValido ? `<br/><a href="${linkSrv}" target="_blank" rel="noopener">📱 Contactar a${nombreCorto}</a>` : '';
-
       const linkWA = celularValido
-        ? `<br/><a href="#" onclick="openWsRedirect('${linkSrv}');return false;">📱 Contactar a${nombreCorto}</a>`
+        ? `<br/><a href="#" onclick="openWsRedirect('${linkSrv}','https://wa.me/${cel}?text=${encodeURIComponent(msj)}');return false;">📱 Contactar a${nombreCorto}</a>`
         : '';        
 
       var distance = Math.round(calculateDH(circleCenter.lat, circleCenter.lng, dato.lat, dato.lng) * 1000);
