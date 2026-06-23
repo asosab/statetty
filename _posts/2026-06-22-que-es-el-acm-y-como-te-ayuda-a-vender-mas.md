@@ -4,7 +4,7 @@ title: "Qué es el ACM y cómo te ayuda a vender más"
 date: 2026-06-22
 categories: herramientas, acm
 comments: true
-description: "El Análisis Comparativo de Mercado (ACM) es la herramienta clave para fijar precios competitivos. Aprendé a calcularlo paso a paso y descubrí cómo Statetty lo hace en segundos."
+description: "El Análisis Comparativo de Mercado (ACM) es la herramienta clave para fijar precios competitivos. Aprendé a calcularlo paso a paso y descubrí cómo Statetty lo hace en segundos"
 tags: [acm, análisis de mercado, precios, valoración de propiedades, herramientas]
 published: true
 image: "statetty_banner.jpg"
