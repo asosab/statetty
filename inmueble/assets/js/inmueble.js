@@ -38,6 +38,8 @@
     DOM.lb         = document.getElementById('inm-lightbox');
     DOM.lbImg      = document.getElementById('inm-lb-img');
     DOM.lbCount    = document.getElementById('inm-lb-count');
+    DOM.mapSection = document.getElementById('inm-map-section');
+    DOM.mapContainer = document.getElementById('inm-map');
   }
 
   function getParam() {
@@ -98,6 +100,7 @@
     renderHeader(inm);
     renderFeatures(inm);
     renderDescription(inm);
+    renderMap(inm);
 
     document.title = (inm.nombre || 'Inmueble') + ' — Statetty';
 
@@ -234,6 +237,47 @@
       return;
     }
     DOM.desc.textContent = desc;
+  }
+
+  /* ---------- Map ---------- */
+  function renderMap(inm) {
+    var lat = parseFloat(inm.lat);
+    var lng = parseFloat(inm.lng);
+    if (isNaN(lat) || isNaN(lng)) {
+      DOM.mapSection.classList.add('inm-hidden');
+      return;
+    }
+    DOM.mapSection.classList.remove('inm-hidden');
+
+    var map = L.map(DOM.mapContainer, {
+      center: [lat, lng],
+      zoom: 15,
+      zoomControl: false,
+      scrollWheelZoom: false
+    });
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://openstreetmap.org/copyright">OSM</a>',
+      maxZoom: 19
+    }).addTo(map);
+
+    var icon = L.icon({
+      iconUrl: '/assets/images/pointers/pointer_statetty.png',
+      shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+      iconSize: [40, 60],
+      iconAnchor: [20, 60],
+      popupAnchor: [1, -54],
+      shadowSize: [60, 60]
+    });
+
+    var marker = L.marker([lat, lng], { icon: icon }).addTo(map);
+
+    marker.on('click', function () {
+      var url = 'https://www.google.com/maps/dir/?api=1&destination=' + lat + ',' + lng;
+      window.open(url, '_blank');
+    });
+
+    setTimeout(function () { map.invalidateSize(); }, 300);
   }
 
   /* ---------- Error ---------- */

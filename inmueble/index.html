@@ -12,6 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="assets/css/inmueble.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 
   <style>
     :root {
@@ -102,6 +103,13 @@
         <p class="inm-description" id="inm-desc"></p>
       </section>
 
+      <!-- Map -->
+      <section class="inm-map-section inm-hidden" id="inm-map-section">
+        <h2 class="inm-section-title">Ubicación</h2>
+        <div class="inm-map-container" id="inm-map"></div>
+        <p class="inm-map-hint">Hacé clic en el marcador para abrir en Google Maps</p>
+      </section>
+
     </div>
   </main>
 
@@ -128,6 +136,8 @@
   </footer>
 
   <!-- ==================== CONFIG ==================== -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
   <script src="../assets/js/config.js"></script>
 
   <!-- ==================== MAIN JS ==================== -->
