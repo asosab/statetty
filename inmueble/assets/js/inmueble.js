@@ -19,21 +19,22 @@
   }
 
   function cacheDOM() {
-    DOM.loading   = document.getElementById('inm-loading');
-    DOM.error     = document.getElementById('inm-error');
-    DOM.content   = document.getElementById('inm-content');
-    DOM.gallery   = document.getElementById('inm-gallery');
-    DOM.mainImg   = document.getElementById('inm-main-img');
-    DOM.galCount  = document.getElementById('inm-gal-count');
-    DOM.thumbs    = document.getElementById('inm-thumbs');
-    DOM.title     = document.getElementById('inm-title');
-    DOM.price     = document.getElementById('inm-price');
-    DOM.address   = document.getElementById('inm-address');
-    DOM.features  = document.getElementById('inm-features');
-    DOM.desc      = document.getElementById('inm-desc');
-    DOM.lb        = document.getElementById('inm-lightbox');
-    DOM.lbImg     = document.getElementById('inm-lb-img');
-    DOM.lbCount   = document.getElementById('inm-lb-count');
+    DOM.loading    = document.getElementById('inm-loading');
+    DOM.error      = document.getElementById('inm-error');
+    DOM.content    = document.getElementById('inm-content');
+    DOM.contactBar = document.getElementById('inm-contact-bar');
+    DOM.gallery    = document.getElementById('inm-gallery');
+    DOM.mainImg    = document.getElementById('inm-main-img');
+    DOM.galCount   = document.getElementById('inm-gal-count');
+    DOM.thumbs     = document.getElementById('inm-thumbs');
+    DOM.title      = document.getElementById('inm-title');
+    DOM.price      = document.getElementById('inm-price');
+    DOM.address    = document.getElementById('inm-address');
+    DOM.features   = document.getElementById('inm-features');
+    DOM.desc       = document.getElementById('inm-desc');
+    DOM.lb         = document.getElementById('inm-lightbox');
+    DOM.lbImg      = document.getElementById('inm-lb-img');
+    DOM.lbCount    = document.getElementById('inm-lb-count');
   }
 
   function getParam() {
@@ -51,25 +52,34 @@
       return;
     }
     var url = base + '/inmueble?_id=' + encodeURIComponent(id);
-    fetch(url, { headers: { 'ngrok-skip-browser-warning': '1' } })
+    var controller = new AbortController();
+    var timeout = setTimeout(function () { controller.abort(); }, 20000);
+    fetch(url, { signal: controller.signal, headers: { 'ngrok-skip-browser-warning': '1' } })
       .then(function (r) {
+        clearTimeout(timeout);
         if (!r.ok) throw new Error('HTTP ' + r.status);
         return r.json();
       })
       .then(function (res) {
         if (res.error) throw new Error(res.error);
-        var inm = res.data || res;
-        render(inm);
+        if (!res.data || typeof res.data !== 'object') throw new Error('Respuesta inválida del servidor');
+        render(res.data);
       })
       .catch(function (err) {
+        clearTimeout(timeout);
         console.warn('fetchInmueble error', err);
-        showError('Error al cargar', 'No pudimos obtener la información del inmueble. Verificá el enlace e intentá de nuevo.');
+        if (err.name === 'AbortError') {
+          showError('Tiempo de espera agotado', 'El servidor no respondió a tiempo. Verificá tu conexión e intentá de nuevo.');
+        } else {
+          showError('Error del servidor', err.message || 'No se pudo cargar la información del inmueble.');
+        }
       });
   }
 
   function render(inm) {
     DOM.loading.classList.add('inm-hidden');
     DOM.content.classList.remove('inm-hidden');
+    DOM.contactBar.classList.remove('inm-hidden');
 
     renderGallery(inm);
     renderHeader(inm);
