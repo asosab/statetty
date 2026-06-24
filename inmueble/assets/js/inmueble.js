@@ -9,8 +9,10 @@
   var DOM = {};
 
   function init() {
+    console.log('STATETTY: init');
     cacheDOM();
     var id = getParam();
+    console.log('STATETTY: id =', id);
     if (!id) {
       showError('Parámetro faltante', 'No se recibió el identificador del inmueble.');
       return;
@@ -46,34 +48,44 @@
   }
 
   function fetchInmueble(id) {
-    var base = window.STATETTY_CONFIG ? STATETTY_CONFIG.WS_API_BASE : '';
-    if (!base) {
-      showError('Error de configuración', 'No se pudo determinar el endpoint del servidor.');
-      return;
+    try {
+      var base = window.STATETTY_CONFIG ? STATETTY_CONFIG.WS_API_BASE : '';
+      if (!base) {
+        showError('Error de configuración', 'No se pudo determinar el endpoint del servidor.');
+        return;
+      }
+      var url = base + '/inmueble?_id=' + encodeURIComponent(id);
+      console.log('STATETTY: fetching', url);
+      var opts = { headers: { 'ngrok-skip-browser-warning': '1' } };
+      if (typeof AbortController !== 'undefined') {
+        var controller = new AbortController();
+        var timeout = setTimeout(function () { controller.abort(); }, 20000);
+        opts.signal = controller.signal;
+      }
+      fetch(url, opts)
+        .then(function (r) {
+          if (opts.signal) clearTimeout(timeout);
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          return r.json();
+        })
+        .then(function (res) {
+          if (res.error) throw new Error(res.error);
+          if (!res.data || typeof res.data !== 'object') throw new Error('Respuesta inválida del servidor');
+          render(res.data);
+        })
+        .catch(function (err) {
+          if (opts.signal) clearTimeout(timeout);
+          console.warn('STATETTY: fetch error', err);
+          if (err.name === 'AbortError') {
+            showError('Tiempo de espera agotado', 'El servidor no respondió a tiempo.');
+          } else {
+            showError('Error del servidor', err.message || 'No se pudo cargar la información del inmueble.');
+          }
+        });
+    } catch (err) {
+      console.warn('STATETTY: sync error', err);
+      showError('Error inesperado', err.message);
     }
-    var url = base + '/inmueble?_id=' + encodeURIComponent(id);
-    var controller = new AbortController();
-    var timeout = setTimeout(function () { controller.abort(); }, 20000);
-    fetch(url, { signal: controller.signal, headers: { 'ngrok-skip-browser-warning': '1' } })
-      .then(function (r) {
-        clearTimeout(timeout);
-        if (!r.ok) throw new Error('HTTP ' + r.status);
-        return r.json();
-      })
-      .then(function (res) {
-        if (res.error) throw new Error(res.error);
-        if (!res.data || typeof res.data !== 'object') throw new Error('Respuesta inválida del servidor');
-        render(res.data);
-      })
-      .catch(function (err) {
-        clearTimeout(timeout);
-        console.warn('fetchInmueble error', err);
-        if (err.name === 'AbortError') {
-          showError('Tiempo de espera agotado', 'El servidor no respondió a tiempo. Verificá tu conexión e intentá de nuevo.');
-        } else {
-          showError('Error del servidor', err.message || 'No se pudo cargar la información del inmueble.');
-        }
-      });
   }
 
   function render(inm) {
