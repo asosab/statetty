@@ -11,6 +11,7 @@
   function init() {
     console.log('STATETTY: init');
     cacheDOM();
+    bindEvents();
     var id = getParam();
     console.log('STATETTY: id =', id);
     if (!id) {
@@ -173,18 +174,20 @@
     openLightbox(i);
   }
 
-  DOM.lb.addEventListener('click', function (e) {
-    if (e.target === DOM.lb || e.target === DOM.lbImg) closeLightbox();
-  });
-  document.getElementById('inm-lb-close').addEventListener('click', closeLightbox);
-  document.getElementById('inm-lb-prev').addEventListener('click', prevImage);
-  document.getElementById('inm-lb-next').addEventListener('click', nextImage);
-  document.addEventListener('keydown', function (e) {
-    if (!DOM.lb.classList.contains('open')) return;
-    if (e.key === 'Escape') closeLightbox();
-    if (e.key === 'ArrowLeft') prevImage();
-    if (e.key === 'ArrowRight') nextImage();
-  });
+  function bindEvents() {
+    DOM.lb.addEventListener('click', function (e) {
+      if (e.target === DOM.lb || e.target === DOM.lbImg) closeLightbox();
+    });
+    document.getElementById('inm-lb-close').addEventListener('click', closeLightbox);
+    document.getElementById('inm-lb-prev').addEventListener('click', prevImage);
+    document.getElementById('inm-lb-next').addEventListener('click', nextImage);
+    document.addEventListener('keydown', function (e) {
+      if (!DOM.lb.classList.contains('open')) return;
+      if (e.key === 'Escape') closeLightbox();
+      if (e.key === 'ArrowLeft') prevImage();
+      if (e.key === 'ArrowRight') nextImage();
+    });
+  }
 
   /* ---------- Header Info ---------- */
   function renderHeader(inm) {
