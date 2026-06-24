@@ -48,6 +48,10 @@ Sitio web estático Jekyll 4.3, alojado en GitHub Pages (statetty.com). Landing 
 - **Formulario de contacto**: países restringidos a Bolivia y Perú; ciudades limitadas a Santa Cruz de la Sierra (SCZ) y Lima (LIM) con nombres completos visibles.
 - **Formulario de registro completo**: creado `/registro/index.html` con layout `default`. Formulario moderno responsivo con todos los campos de `frm.md`: email, nombres, apellidos, WhatsApp con código de país, fecha de nacimiento, sexo, agencia, país (Bolivia/Perú/OTRO), ciudades, nivel de experiencia (radiobuttons), nivel de tecnología (radiobuttons), intereses, expectativas, código de referencia y copia de respuestas. Envía al mismo endpoint que `contacto.html` (`WS_API_BASE + "/registro"`).
 
+## 2026-06-24
+
+- **Nueva página `/inmueble/`**: página autocontenida con header/footer propios y assets en subcarpeta (`inmueble/assets/{css,js,images}/`). Recibe `?_id={mongoId}` (query param). Consulta `{WS_API_BASE}/inmueble?_id={id}` y renderiza inmueble (galería + características + descripción). Botón "Contactar al captador" (placeholder). Sin layout Jekyll — HTML plano con JS vanilla.
+
 ## Pendiente — refactor blog/index.html
 
 - 2026-06-12: **`blog/index.html` no usa layout ni includes** — tiene header, footer y `<head>` completos hardcodeados. Crea `_layouts/blog.html`, refactoriza `blog/index.html` para que herede de él y use `{% include header.html %}` / `{% include footer.html %}`. El CSS específico del blog (hero, search, cards) puede quedar inline en `blog/index.html`.

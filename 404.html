@@ -22,3 +22,13 @@ layout: default
   <p><strong>La página no se encuentra</strong></p>
 
 </div>
+
+<script>
+(function() {
+  var m = window.location.pathname.match(/^\/inmueble\/p\/([^\/]+)\/?$/);
+  if (m) {
+    var id = m[1];
+    window.location.replace('/inmueble/?_id=' + encodeURIComponent(id));
+  }
+})();
+</script>

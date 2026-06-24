@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-06-24
+
+- **Página `/inmueble/` actualizada**: endpoint cambiado a `{WS_API_BASE}/inmueble?_id={mongoId}`. Renderiza solo inmueble (sin agente/agencia). Botón "Contactar al captador" fijo en parte inferior (placeholder, sin acción). Fallback de path redirige a `?_id=`. Probado con _id `6a3a9ac904138ca82131d909` — galería 18 fotos, precio, características, descripción.
+
 ## 2026-06-21
 
 - **Fix `openWsRedirect` (mapa.js, mapatmp.js)**: "Contactar a..." ahora construye el mensaje WhatsApp en el cliente, abre WhatsApp directamente en paralelo al tracking del servidor (fire-and-forget). El fallo del servidor ya no impide la comunicación vía WhatsApp.

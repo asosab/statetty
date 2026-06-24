@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inmueble — Statetty</title>
+  <meta name="description" content="Información completa del inmueble">
+  <meta name="robots" content="noindex, nofollow">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="assets/css/inmueble.css">
+
+  <style>
+    :root {
+      --blue:       #17baef;
+      --blue-dark:  #074f66;
+      --blue-light: #6dd0f5;
+      --yellow:     #eebf3f;
+      --yellow-pale:#f4d67a;
+      --font-head:  'Montserrat', sans-serif;
+      --font-body:  'Lato', sans-serif;
+      --radius-sm:  6px;
+      --radius-md:  12px;
+      --radius-lg:  20px;
+      --radius-xl:  32px;
+      --transition: 0.25s cubic-bezier(.4,0,.2,1);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; font-size: 16px; }
+    body {
+      font-family: var(--font-body);
+      color: #444;
+      background: #fff;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+    }
+    img { max-width: 100%; display: block; }
+    a { color: var(--blue); text-decoration: none; transition: var(--transition); }
+    a:hover { color: var(--blue-dark); }
+  </style>
+</head>
+<body>
+
+  <!-- ==================== CUSTOM HEADER ==================== -->
+  <header class="inm-header" id="inmHeader">
+    <div class="inm-header-inner">
+      <a class="inm-header-back" href="javascript:history.back()">
+        <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+        Volver
+      </a>
+      <a class="inm-header-logo" href="/">Statetty</a>
+    </div>
+  </header>
+
+  <!-- ==================== MAIN CONTENT ==================== -->
+  <main class="inmueble-page">
+
+    <!-- Loading -->
+    <div class="inmueble-loading" id="inm-loading">
+      <div class="inmueble-spinner"></div>
+      <p style="color:#888;font-size:.9rem;">Cargando información del inmueble…</p>
+    </div>
+
+    <!-- Error -->
+    <div class="inmueble-error inm-hidden" id="inm-error">
+      <div class="inmueble-error-icon">!</div>
+      <h2 id="inm-error-title">Error</h2>
+      <p id="inm-error-msg">Ocurrió un error inesperado.</p>
+    </div>
+
+    <!-- Content -->
+    <div class="inmueble-container inm-hidden" id="inm-content">
+
+      <!-- Gallery -->
+      <section class="inm-gallery" id="inm-gallery">
+        <div class="inm-gallery-main">
+          <img id="inm-main-img" src="" alt="Foto principal">
+          <span class="inm-gallery-count" id="inm-gal-count">0 / 0</span>
+        </div>
+        <div class="inm-gallery-thumbs" id="inm-thumbs"></div>
+      </section>
+
+      <!-- Header Info -->
+      <section class="inm-header-info">
+        <h1 id="inm-title">Inmueble</h1>
+        <div class="inm-price" id="inm-price"></div>
+        <p class="inm-address" id="inm-address"></p>
+      </section>
+
+      <!-- Features -->
+      <section>
+        <h2 class="inm-section-title">Características</h2>
+        <div class="inm-features" id="inm-features"></div>
+      </section>
+
+      <!-- Description -->
+      <section>
+        <h2 class="inm-section-title">Descripción</h2>
+        <p class="inm-description" id="inm-desc"></p>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- ==================== CONTACT BAR ==================== -->
+  <div class="inm-contact-bar">
+    <button class="inm-contact-btn" id="inmContactBtn">Contactar al captador</button>
+  </div>
+
+  <!-- ==================== LIGHTBOX ==================== -->
+  <div class="inm-lightbox" id="inm-lightbox">
+    <button class="inm-lightbox-close" id="inm-lb-close">&times;</button>
+    <button class="inm-lightbox-prev" id="inm-lb-prev">&lsaquo;</button>
+    <button class="inm-lightbox-next" id="inm-lb-next">&rsaquo;</button>
+    <img id="inm-lb-img" src="" alt="Foto">
+    <span class="inm-lightbox-counter" id="inm-lb-count"></span>
+  </div>
+
+  <!-- ==================== CUSTOM FOOTER ==================== -->
+  <footer class="inm-footer">
+    <div class="inm-footer-inner">
+      <p class="inm-footer-copy">&copy; <span id="inm-footer-year">2026</span> Statetty</p>
+      <a href="/">Ir al inicio</a>
+    </div>
+  </footer>
+
+  <!-- ==================== CONFIG ==================== -->
+  <script src="../assets/js/config.js"></script>
+
+  <!-- ==================== MAIN JS ==================== -->
+  <script src="assets/js/inmueble.js"></script>
+</body>
+</html>
