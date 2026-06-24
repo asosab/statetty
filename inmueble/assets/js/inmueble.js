@@ -101,6 +101,7 @@
     renderFeatures(inm);
     renderDescription(inm);
     renderMap(inm);
+    renderSEO(inm);
 
     document.title = (inm.nombre || 'Inmueble') + ' — Statetty';
 
@@ -237,6 +238,54 @@
       return;
     }
     DOM.desc.textContent = desc;
+  }
+
+  /* ---------- SEO ---------- */
+  function renderSEO(inm) {
+    var title = (inm.nombre || 'Inmueble') + ' — Statetty';
+    var desc = (inm.desc || inm.nombre || 'Inmueble en Statetty').substring(0, 200);
+    var img = Array.isArray(inm.fotos) && inm.fotos.length > 0
+      ? inm.fotos[0]
+      : 'https://statetty.com/assets/images/statetty.png';
+    var keywords = [
+      inm.tipoInmueble, inm.tipoNegocio, 'inmueble',
+      inm.ciudad, inm.zona, inm.pais
+    ].filter(Boolean).join(', ');
+    var url = window.location.href;
+
+    var tags = {
+      'description': desc,
+      'keywords': keywords,
+      'og:title': title,
+      'og:description': desc,
+      'og:image': img,
+      'og:image:alt': 'Foto de ' + (inm.nombre || 'inmueble'),
+      'og:url': url,
+      'og:type': 'article',
+      'og:site_name': 'Statetty',
+      'twitter:card': 'summary_large_image',
+      'twitter:title': title,
+      'twitter:description': desc,
+      'twitter:image:src': img,
+      'twitter:image:alt': 'Foto de ' + (inm.nombre || 'inmueble')
+    };
+
+    var name, content;
+    for (name in tags) {
+      content = tags[name];
+      var sel = 'meta[name="' + name + '"], meta[property="' + name + '"]';
+      var el = document.querySelector(sel);
+      if (!el) {
+        el = document.createElement('meta');
+        if (name.indexOf('og:') === 0 || name.indexOf('twitter:') === 0) {
+          el.setAttribute('property', name);
+        } else {
+          el.setAttribute('name', name);
+        }
+        document.head.appendChild(el);
+      }
+      el.setAttribute('content', content);
+    }
   }
 
   /* ---------- Map ---------- */
