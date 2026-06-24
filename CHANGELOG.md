@@ -3,6 +3,7 @@
 ## 2026-06-24
 
 - **Página `/inmueble/` actualizada**: endpoint cambiado a `{WS_API_BASE}/inmueble?_id={mongoId}`. Renderiza solo inmueble (sin agente/agencia). Botón "Contactar al captador" fijo en parte inferior (placeholder, sin acción). Fallback de path redirige a `?_id=`. Probado con _id `6a3a9ac904138ca82131d909` — galería 18 fotos, precio, características, descripción.
+- **Formulario de contacto `/inmueble/`**: layout 2 columnas en desktop (content + sidebar sticky con card "Pregunta al anunciante"). Mobile: formulario al final del contenido + barra fija azul que hace scroll al formulario. Campos: mensaje pre-rellenado, email, celular con desplegable código de país, nombre, checkbox privacidad, botón "Contactar al anunciante".
 
 ## 2026-06-21
 

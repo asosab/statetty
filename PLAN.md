@@ -50,7 +50,8 @@ Sitio web estático Jekyll 4.3, alojado en GitHub Pages (statetty.com). Landing 
 
 ## 2026-06-24
 
-- **Nueva página `/inmueble/`**: página autocontenida con header/footer propios y assets en subcarpeta (`inmueble/assets/{css,js,images}/`). Recibe `?_id={mongoId}` (query param). Consulta `{WS_API_BASE}/inmueble?_id={id}` y renderiza inmueble (galería + características + descripción). Botón "Contactar al captador" (placeholder). Sin layout Jekyll — HTML plano con JS vanilla.
+- **Nueva página `/inmueble/`**: página autocontenida con header/footer propios y assets en subcarpeta (`inmueble/assets/{css,js,images}/`). Recibe `?_id={mongoId}` (query param). Consulta `{WS_API_BASE}/inmueble?_id={id}` y renderiza inmueble (galería + características + descripción). Sin layout Jekyll — HTML plano con JS vanilla.
+- **Formulario de contacto en sidebar `/inmueble/`**: layout 2 columnas en desktop (main + sidebar sticky con formulario "Pregunta al anunciante"). Mobile: formulario al final del contenido + barra fija azul "Pregunta al anunciante" al tocar que hace scroll al formulario. Campos: texto pre-rellenado, email, celular con código de país, nombre, checkbox privacidad, botón "Contactar al anunciante".
 
 ## Pendiente — refactor blog/index.html
 

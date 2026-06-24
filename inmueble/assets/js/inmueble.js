@@ -26,6 +26,8 @@
     DOM.error      = document.getElementById('inm-error');
     DOM.content    = document.getElementById('inm-content');
     DOM.contactBar = document.getElementById('inm-contact-bar');
+    DOM.sidebar    = document.getElementById('inm-sidebar');
+    DOM.contactBtn = document.getElementById('inmContactBtn');
     DOM.gallery    = document.getElementById('inm-gallery');
     DOM.mainImg    = document.getElementById('inm-main-img');
     DOM.galCount   = document.getElementById('inm-gal-count');
@@ -185,6 +187,9 @@
     document.getElementById('inm-lb-close').addEventListener('click', closeLightbox);
     document.getElementById('inm-lb-prev').addEventListener('click', prevImage);
     document.getElementById('inm-lb-next').addEventListener('click', nextImage);
+    DOM.contactBtn.addEventListener('click', function () {
+      DOM.sidebar.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
     document.addEventListener('keydown', function (e) {
       if (!DOM.lb.classList.contains('open')) return;
       if (e.key === 'Escape') closeLightbox();

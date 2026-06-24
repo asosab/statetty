@@ -74,48 +74,85 @@
 
     <!-- Content -->
     <div class="inmueble-container inm-hidden" id="inm-content">
+      <div class="inmueble-layout">
 
-      <!-- Gallery -->
-      <section class="inm-gallery" id="inm-gallery">
-        <div class="inm-gallery-main">
-          <img id="inm-main-img" src="" alt="Foto principal">
-          <span class="inm-gallery-count" id="inm-gal-count">0 / 0</span>
+        <div class="inmueble-main">
+          <!-- Gallery -->
+          <section class="inm-gallery" id="inm-gallery">
+            <div class="inm-gallery-main">
+              <img id="inm-main-img" src="" alt="Foto principal">
+              <span class="inm-gallery-count" id="inm-gal-count">0 / 0</span>
+            </div>
+            <div class="inm-gallery-thumbs" id="inm-thumbs"></div>
+          </section>
+
+          <!-- Header Info -->
+          <section class="inm-header-info">
+            <h1 id="inm-title">Inmueble</h1>
+            <div class="inm-price" id="inm-price"></div>
+            <p class="inm-address" id="inm-address"></p>
+          </section>
+
+          <!-- Features -->
+          <section>
+            <h2 class="inm-section-title">Características</h2>
+            <div class="inm-features" id="inm-features"></div>
+          </section>
+
+          <!-- Description -->
+          <section>
+            <h2 class="inm-section-title">Descripción</h2>
+            <p class="inm-description" id="inm-desc"></p>
+          </section>
+
+          <!-- Map -->
+          <section class="inm-map-section inm-hidden" id="inm-map-section">
+            <h2 class="inm-section-title">Ubicación</h2>
+            <div class="inm-map-container" id="inm-map"></div>
+            <p class="inm-map-hint">Hacé clic en el marcador para abrir en Google Maps</p>
+          </section>
         </div>
-        <div class="inm-gallery-thumbs" id="inm-thumbs"></div>
-      </section>
 
-      <!-- Header Info -->
-      <section class="inm-header-info">
-        <h1 id="inm-title">Inmueble</h1>
-        <div class="inm-price" id="inm-price"></div>
-        <p class="inm-address" id="inm-address"></p>
-      </section>
+        <!-- Sidebar Contact Form -->
+        <aside class="inm-sidebar" id="inm-sidebar">
+          <div class="inm-contact-card">
+            <h3 class="inm-contact-card-title">Pregunta al anunciante</h3>
+            <textarea class="inm-form-textarea" id="inm-msg" rows="4">Hola, me interesa este piso y me gustaría hacer una visita.
 
-      <!-- Features -->
-      <section>
-        <h2 class="inm-section-title">Características</h2>
-        <div class="inm-features" id="inm-features"></div>
-      </section>
+Un saludo</textarea>
+            <input type="email" class="inm-form-input" id="inm-email" placeholder="Tu email">
+            <div class="inm-form-phone-group">
+              <select class="inm-form-select" id="inm-phone-code">
+                <option value="+591">+591 (Bolivia)</option>
+                <option value="+54">+54 (Argentina)</option>
+                <option value="+55">+55 (Brasil)</option>
+                <option value="+56">+56 (Chile)</option>
+                <option value="+57">+57 (Colombia)</option>
+                <option value="+1">+1 (US/Canadá)</option>
+                <option value="+34">+34 (España)</option>
+                <option value="+52">+52 (México)</option>
+                <option value="+51">+51 (Perú)</option>
+                <option value="+598">+598 (Uruguay)</option>
+                <option value="+58">+58 (Venezuela)</option>
+              </select>
+              <input type="tel" class="inm-form-input" id="inm-phone" placeholder="Tu celular">
+            </div>
+            <input type="text" class="inm-form-input" id="inm-name" placeholder="Tu nombre">
+            <label class="inm-form-checkbox">
+              <input type="checkbox" id="inm-privacy">
+              <span>Aceptar la política de privacidad y las condiciones generales</span>
+            </label>
+            <button class="inm-form-submit" id="inm-submit">Contactar al anunciante</button>
+          </div>
+        </aside>
 
-      <!-- Description -->
-      <section>
-        <h2 class="inm-section-title">Descripción</h2>
-        <p class="inm-description" id="inm-desc"></p>
-      </section>
-
-      <!-- Map -->
-      <section class="inm-map-section inm-hidden" id="inm-map-section">
-        <h2 class="inm-section-title">Ubicación</h2>
-        <div class="inm-map-container" id="inm-map"></div>
-        <p class="inm-map-hint">Hacé clic en el marcador para abrir en Google Maps</p>
-      </section>
-
+      </div>
     </div>
   </main>
 
-  <!-- ==================== CONTACT BAR ==================== -->
+  <!-- ==================== CONTACT BAR (mobile only) ==================== -->
   <div class="inm-contact-bar inm-hidden" id="inm-contact-bar">
-    <button class="inm-contact-btn" id="inmContactBtn">Contactar al captador</button>
+    <span class="inm-contact-text" id="inmContactBtn">Pregunta al anunciante</span>
   </div>
 
   <!-- ==================== LIGHTBOX ==================== -->
