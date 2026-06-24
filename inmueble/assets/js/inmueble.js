@@ -252,27 +252,46 @@
       inm.ciudad, inm.zona, inm.pais
     ].filter(Boolean).join(', ');
     var url = window.location.href;
+    var lat = parseFloat(inm.lat);
+    var lng = parseFloat(inm.lng);
 
     var tags = {
+      'title': title,
       'description': desc,
       'keywords': keywords,
+      'author': 'Statetty',
+
       'og:title': title,
       'og:description': desc,
       'og:image': img,
+      'og:image:type': img.match(/\.png$/i) ? 'image/png' : 'image/jpeg',
       'og:image:alt': 'Foto de ' + (inm.nombre || 'inmueble'),
       'og:url': url,
       'og:type': 'article',
       'og:site_name': 'Statetty',
+      'og:locale': 'es_BO',
+
       'twitter:card': 'summary_large_image',
+      'twitter:site': '@statetty',
       'twitter:title': title,
       'twitter:description': desc,
       'twitter:image:src': img,
-      'twitter:image:alt': 'Foto de ' + (inm.nombre || 'inmueble')
+      'twitter:image:alt': 'Foto de ' + (inm.nombre || 'inmueble'),
+      'twitter:url': url,
+      'twitter:creator': '@statetty'
     };
+
+    if (!isNaN(lat) && !isNaN(lng)) {
+      tags['geo.region'] = inm.pais || 'BO';
+      tags['geo.placename'] = [inm.ciudad, inm.zona].filter(Boolean).join(', ') || 'Bolivia';
+      tags['geo.position'] = lat + '; ' + lng;
+      tags['ICBM'] = lat + ', ' + lng;
+    }
 
     var name, content;
     for (name in tags) {
       content = tags[name];
+      if (!content) continue;
       var sel = 'meta[name="' + name + '"], meta[property="' + name + '"]';
       var el = document.querySelector(sel);
       if (!el) {
@@ -286,6 +305,15 @@
       }
       el.setAttribute('content', content);
     }
+
+    var canon = document.querySelector('link[rel="canonical"]');
+    if (!canon) {
+      canon = document.createElement('link');
+      canon.setAttribute('rel', 'canonical');
+      canon.setAttribute('itemprop', 'url');
+      document.head.appendChild(canon);
+    }
+    canon.setAttribute('href', url);
   }
 
   /* ---------- Map ---------- */
