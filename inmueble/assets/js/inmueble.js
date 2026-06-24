@@ -65,13 +65,13 @@
       fetch(url, opts)
         .then(function (r) {
           if (opts.signal) clearTimeout(timeout);
-          if (!r.ok) throw new Error('HTTP ' + r.status);
-          return r.json();
+          return r.json().then(function (body) { return { status: r.status, ok: r.ok, body: body }; });
         })
         .then(function (res) {
-          if (res.error) throw new Error(res.error);
-          if (!res.data || typeof res.data !== 'object') throw new Error('Respuesta inválida del servidor');
-          render(res.data);
+          if (!res.ok) throw new Error(res.body && res.body.error ? res.body.error : 'HTTP ' + res.status);
+          if (res.body.error) throw new Error(res.body.error);
+          if (!res.body.data || typeof res.body.data !== 'object') throw new Error('Respuesta inválida del servidor');
+          render(res.body.data);
         })
         .catch(function (err) {
           if (opts.signal) clearTimeout(timeout);
