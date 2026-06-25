@@ -202,7 +202,7 @@
   function renderHeader(inm) {
     DOM.title.textContent = inm.nombre || 'Inmueble';
     var moneda = inm.moneda || 'USD';
-    var precio = parseInt(inm.precio) || 0;
+    var precio = Math.ceil(Number(inm.precio)) || 0;
     DOM.price.innerHTML = precio
       ? moneda + ' ' + precio.toLocaleString('es-BO') + ' <small>' + (inm.tipoNegocio || '') + '</small>'
       : (inm.tipoNegocio || '');
@@ -218,8 +218,8 @@
       { label: 'Dormitorios',     value: inm.dormitorios,     icon: '🛏' },
       { label: 'Baños',           value: inm.banos,           icon: '🛁' },
       { label: 'Estacionamientos',value: inm.estacionamientos,icon: '🚗' },
-      { label: 'M² construc.',    value: inm.m2c,            icon: '📐' },
-      { label: 'M² terreno',      value: inm.m2t,            icon: '🌳' },
+      { label: 'M² construc.',    value: inm.m2c != null ? Math.ceil(inm.m2c) : inm.m2c, icon: '📐' },
+      { label: 'M² terreno',      value: inm.m2t != null ? Math.ceil(inm.m2t) : inm.m2t, icon: '🌳' },
       { label: 'Tipo',            value: inm.tipoInmueble,   icon: '🏠' }
     ];
     if (inm.vendida)  items.push({ label: 'Estado', value: 'Vendida', icon: '✅' });
