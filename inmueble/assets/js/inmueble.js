@@ -215,11 +215,12 @@
   /* ---------- Features ---------- */
   function renderFeatures(inm) {
     var items = [
-      { label: 'Dormitorios',  value: inm.dormitorios, icon: '🛏' },
-      { label: 'Baños',        value: inm.banos,       icon: '🛁' },
-      { label: 'M² construc.', value: inm.m2c,         icon: '📐' },
-      { label: 'M² terreno',   value: inm.m2t,         icon: '🌳' },
-      { label: 'Tipo',         value: inm.tipoInmueble, icon: '🏠' }
+      { label: 'Dormitorios',     value: inm.dormitorios,     icon: '🛏' },
+      { label: 'Baños',           value: inm.banos,           icon: '🛁' },
+      { label: 'Estacionamientos',value: inm.estacionamientos,icon: '🚗' },
+      { label: 'M² construc.',    value: inm.m2c,            icon: '📐' },
+      { label: 'M² terreno',      value: inm.m2t,            icon: '🌳' },
+      { label: 'Tipo',            value: inm.tipoInmueble,   icon: '🏠' }
     ];
     if (inm.vendida)  items.push({ label: 'Estado', value: 'Vendida', icon: '✅' });
     if (inm.alquilada) items.push({ label: 'Estado', value: 'Alquilada', icon: '✅' });
