@@ -93,6 +93,10 @@
     }
   }
 
+  function formatde(num) {
+    return Math.ceil(Number(num)).toLocaleString('es-BO');
+  }
+
   function render(inm) {
     DOM.loading.classList.add('inm-hidden');
     DOM.content.classList.remove('inm-hidden');
@@ -104,8 +108,6 @@
     renderDescription(inm);
     renderMap(inm);
     renderSEO(inm);
-
-    document.title = (inm.nombre || 'Inmueble') + ' — Statetty';
 
     window.scrollTo(0, 0);
   }
@@ -199,12 +201,22 @@
   }
 
   /* ---------- Header Info ---------- */
+  function buildTitulo(inm) {
+    var tipo = inm.tipoInmueble || 'Inmueble';
+    var negocio = inm.tipoNegocio || '';
+    var precio = Math.ceil(Number(inm.precio)) || 0;
+    var precioStr = precio ? '$ ' + formatde(precio) : '';
+    return tipo + ' en ' + negocio + ' por ' + precioStr;
+  }
+
   function renderHeader(inm) {
-    DOM.title.textContent = inm.nombre || 'Inmueble';
+    var titulo = buildTitulo(inm);
+    DOM.title.textContent = titulo;
+    document.title = titulo + ' — Statetty';
     var moneda = inm.moneda || 'USD';
     var precio = Math.ceil(Number(inm.precio)) || 0;
     DOM.price.innerHTML = precio
-      ? moneda + ' ' + precio.toLocaleString('es-BO') + ' <small>' + (inm.tipoNegocio || '') + '</small>'
+      ? moneda + ' ' + formatde(precio) + ' <small>' + (inm.tipoNegocio || '') + '</small>'
       : (inm.tipoNegocio || '');
     var dir = inm.direccion || '';
     if (inm.zona) dir += (dir ? ', ' : '') + inm.zona;
@@ -248,8 +260,9 @@
 
   /* ---------- SEO ---------- */
   function renderSEO(inm) {
-    var title = (inm.nombre || 'Inmueble') + ' — Statetty';
-    var desc = (inm.desc || inm.nombre || 'Inmueble en Statetty').substring(0, 200);
+    var titulo = buildTitulo(inm);
+    var title = titulo + ' — Statetty';
+    var desc = (inm.desc || titulo || 'Inmueble en Statetty').substring(0, 200);
     var img = Array.isArray(inm.fotos) && inm.fotos.length > 0
       ? inm.fotos[0]
       : 'https://statetty.com/assets/images/statetty.png';
@@ -271,7 +284,7 @@
       'og:description': desc,
       'og:image': img,
       'og:image:type': img.match(/\.png$/i) ? 'image/png' : 'image/jpeg',
-      'og:image:alt': 'Foto de ' + (inm.nombre || 'inmueble'),
+      'og:image:alt': 'Foto de ' + titulo,
       'og:url': url,
       'og:type': 'article',
       'og:site_name': 'Statetty',
@@ -282,7 +295,7 @@
       'twitter:title': title,
       'twitter:description': desc,
       'twitter:image:src': img,
-      'twitter:image:alt': 'Foto de ' + (inm.nombre || 'inmueble'),
+      'twitter:image:alt': 'Foto de ' + titulo,
       'twitter:url': url,
       'twitter:creator': '@statetty'
     };
