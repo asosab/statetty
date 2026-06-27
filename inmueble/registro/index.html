@@ -17,6 +17,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 
   <style>
     :root {
@@ -399,6 +400,118 @@
 
     /* Hide fecha_entrega by default; shown via JS for preventa/enplanos */
     #f-fecha_entrega-group { display: none; }
+
+    /* Coord input with button */
+    .coord-input-wrap {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+    }
+    .coord-input-wrap .form-group {
+      flex: 1;
+      margin-bottom: 0;
+    }
+    .coord-btn {
+      flex-shrink: 0;
+      margin-top: 20px;
+      padding: 11px 18px;
+      background: var(--blue);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-md);
+      font-family: var(--font-head);
+      font-weight: 600;
+      font-size: .82rem;
+      cursor: pointer;
+      transition: var(--transition);
+      white-space: nowrap;
+    }
+    .coord-btn:hover {
+      background: var(--blue-dark);
+    }
+
+    /* Map modal */
+    .map-modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0,0,0,.6);
+      z-index: 9999;
+      justify-content: center;
+      align-items: center;
+    }
+    .map-modal.open { display: flex; }
+    .map-modal-content {
+      background: #fff;
+      border-radius: var(--radius-xl);
+      padding: 28px;
+      max-width: 620px;
+      width: 92vw;
+      box-shadow: 0 8px 40px rgba(0,0,0,.25);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .map-modal-title {
+      font-family: var(--font-head);
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--blue-dark);
+      margin: 0 0 14px;
+    }
+    .map-modal-coords {
+      display: flex;
+      gap: 12px;
+      margin: 12px 0;
+      font-size: .85rem;
+      color: var(--muted);
+      align-items: center;
+    }
+    .map-modal-coords strong {
+      color: var(--text-strong);
+    }
+    .map-modal-map {
+      width: 100%;
+      height: 360px;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .map-modal-map .leaflet-container {
+      width: 100%;
+      height: 100%;
+    }
+    .map-modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 14px;
+    }
+    .map-modal-actions button {
+      padding: 10px 24px;
+      border: none;
+      border-radius: 50px;
+      font-family: var(--font-head);
+      font-weight: 600;
+      font-size: .88rem;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .map-modal-use {
+      background: var(--yellow);
+      color: var(--blue-dark);
+    }
+    .map-modal-use:hover {
+      background: var(--yellow-dim);
+    }
+    .map-modal-cancel {
+      background: #eee;
+      color: #666;
+    }
+    .map-modal-cancel:hover {
+      background: #ddd;
+    }
   </style>
 
   <!-- Google tag (gtag.js) -->
@@ -549,17 +662,13 @@
             <input type="text" id="f-zona" name="zona" placeholder="Ej: Equipetrol">
           </div>
         </div>
-        <div class="form-row">
+        <div class="coord-input-wrap">
           <div class="form-group">
-            <label for="f-lat">Latitud</label>
-            <input type="number" id="f-lat" name="lat" placeholder="Ej: -17.7833" step="any">
-            <span class="hint">Opcional. Para mostrar en mapa.</span>
+            <label for="f-coord">Latitud, Longitud</label>
+            <input type="text" id="f-coord" name="coord" placeholder="Ej: -17.7833, -63.1822">
+            <span class="hint">Separadas por coma. Opcional, pero recomendado para mostrar en mapa.</span>
           </div>
-          <div class="form-group">
-            <label for="f-lng">Longitud</label>
-            <input type="number" id="f-lng" name="lng" placeholder="Ej: -63.1822" step="any">
-            <span class="hint">Opcional. Para mostrar en mapa.</span>
-          </div>
+          <button type="button" class="coord-btn" id="btnMapPicker">📍 Encontrar coordenadas</button>
         </div>
 
         <hr class="form-divider">
@@ -725,8 +834,25 @@
     </div>
   </footer>
 
+  <!-- Map Modal -->
+  <div class="map-modal" id="mapModal">
+    <div class="map-modal-content">
+      <h3 class="map-modal-title">Seleccioná la ubicación</h3>
+      <p style="font-size:.85rem;color:#777;margin-bottom:8px;">Hacé clic en el mapa para marcar el punto del inmueble.</p>
+      <div class="map-modal-map" id="mapPickerMap"></div>
+      <div class="map-modal-coords">
+        <span>Coordenadas seleccionadas: <strong id="mapPickerCoords">—</strong></span>
+      </div>
+      <div class="map-modal-actions">
+        <button class="map-modal-cancel" id="btnMapCancel">Cancelar</button>
+        <button class="map-modal-use" id="btnMapUse">Usar esta ubicación</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Config -->
   <script src="/assets/js/config.js"></script>
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script src="/assets/js/ubigeo/paises.js"></script>
   <script src="/assets/js/ubigeo/BO.js"></script>
   <script src="/assets/js/ubigeo/PE.js"></script>
@@ -782,8 +908,7 @@
       DOM.fPrecio        = document.getElementById('f-precio');
       DOM.fDireccion     = document.getElementById('f-direccion');
       DOM.fZona          = document.getElementById('f-zona');
-      DOM.fLat           = document.getElementById('f-lat');
-      DOM.fLng           = document.getElementById('f-lng');
+      DOM.fCoord         = document.getElementById('f-coord');
       DOM.fDorm          = document.getElementById('f-dorm');
       DOM.fBanos         = document.getElementById('f-banos');
       DOM.fEstac         = document.getElementById('f-estac');
@@ -802,6 +927,16 @@
       DOM.fFechaEntrega  = document.getElementById('f-fecha_entrega');
       DOM.fAnoc          = document.getElementById('f-anoc');
       DOM.fAtributos     = document.getElementById('f-atributos');
+      DOM.mapModal       = document.getElementById('mapModal');
+      DOM.mapPickerMap   = document.getElementById('mapPickerMap');
+      DOM.mapPickerCoords = document.getElementById('mapPickerCoords');
+      DOM.btnMapPicker   = document.getElementById('btnMapPicker');
+      DOM.btnMapUse      = document.getElementById('btnMapUse');
+      DOM.btnMapCancel   = document.getElementById('btnMapCancel');
+      DOM.mapInstance    = null;
+      DOM.mapMarker      = null;
+      DOM.pendingLat     = null;
+      DOM.pendingLng     = null;
     }
 
     function getParam() {
@@ -882,12 +1017,14 @@
         if (inm.tipoInmueble) DOM.fTipo.value = inm.tipoInmueble;
         if (inm.tipoNegocio) DOM.fNegocio.value = inm.tipoNegocio;
         DOM.fPrecio.value = inm.precio || '';
-        if (inm.pais) DOM.fPais.value = inm.pais;
-        if (inm.ciudad) DOM.fCiudad.value = inm.ciudad;
+        if (inm.pais) {
+          DOM.fPais.value = inm.pais;
+          loadCities(inm.pais);
+          if (inm.ciudad) DOM.fCiudad.value = inm.ciudad;
+        }
         DOM.fDireccion.value = inm.direccion || '';
         DOM.fZona.value = inm.zona || '';
-        DOM.fLat.value = inm.lat || '';
-        DOM.fLng.value = inm.lng || '';
+        DOM.fCoord.value = [inm.lat, inm.lng].filter(Boolean).join(', ');
         DOM.fDorm.value = inm.dormitorios || '';
         DOM.fBanos.value = inm.banos || '';
         DOM.fEstac.value = inm.estacionamientos || '';
@@ -965,6 +1102,73 @@
       }
     }
 
+    /* ---- Map picker ---- */
+    function openMapPicker() {
+      DOM.mapModal.classList.add('open');
+      document.body.style.overflow = 'hidden';
+
+      var currentLat = -17.7833;
+      var currentLng = -63.1822;
+
+      var val = DOM.fCoord.value.trim();
+      if (val) {
+        var parts = val.split(',').map(function (s) { return parseFloat(s.trim()); });
+        if (parts.length >= 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+          currentLat = parts[0];
+          currentLng = parts[1];
+        }
+      }
+
+      if (!DOM.mapInstance) {
+        DOM.mapInstance = L.map(DOM.mapPickerMap, {
+          center: [currentLat, currentLng],
+          zoom: 14,
+          zoomControl: true,
+          scrollWheelZoom: true
+        });
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; <a href="https://openstreetmap.org/copyright">OSM</a>',
+          maxZoom: 19
+        }).addTo(DOM.mapInstance);
+
+        DOM.mapInstance.on('click', function (e) {
+          var ll = e.latlng;
+          DOM.pendingLat = ll.lat.toFixed(6);
+          DOM.pendingLng = ll.lng.toFixed(6);
+          DOM.mapPickerCoords.textContent = DOM.pendingLat + ', ' + DOM.pendingLng;
+
+          if (DOM.mapMarker) DOM.mapMarker.setLatLng(ll);
+          else DOM.mapMarker = L.marker(ll).addTo(DOM.mapInstance);
+        });
+
+        setTimeout(function () { DOM.mapInstance.invalidateSize(); }, 300);
+      } else {
+        DOM.mapInstance.setView([currentLat, currentLng], 14);
+        DOM.mapPickerCoords.textContent = '—';
+        DOM.pendingLat = null;
+        DOM.pendingLng = null;
+        if (DOM.mapMarker) {
+          DOM.mapMarker.setLatLng([currentLat, currentLng]);
+        } else {
+          DOM.mapMarker = L.marker([currentLat, currentLng]).addTo(DOM.mapInstance);
+        }
+        DOM.pendingLat = currentLat.toFixed(6);
+        DOM.pendingLng = currentLng.toFixed(6);
+        DOM.mapPickerCoords.textContent = DOM.pendingLat + ', ' + DOM.pendingLng;
+        setTimeout(function () { DOM.mapInstance.invalidateSize(); }, 150);
+      }
+    }
+
+    function closeMapPicker(useLocation) {
+      DOM.mapModal.classList.remove('open');
+      document.body.style.overflow = '';
+      if (useLocation && DOM.pendingLat && DOM.pendingLng) {
+        DOM.fCoord.value = DOM.pendingLat + ', ' + DOM.pendingLng;
+      }
+      DOM.pendingLat = null;
+      DOM.pendingLng = null;
+    }
+
     /* ---- Photos ---- */
     function addPhotoRow(url) {
       var row = document.createElement('div');
@@ -1013,8 +1217,9 @@
       var ciudad       = DOM.fCiudad.value;
       var direccion    = DOM.fDireccion.value.trim();
       var zona         = DOM.fZona.value.trim();
-      var lat          = DOM.fLat.value.trim();
-      var lng          = DOM.fLng.value.trim();
+      var coordParts   = DOM.fCoord.value.trim().split(',').map(function (s) { return s.trim(); });
+      var lat          = coordParts[0] || '';
+      var lng          = coordParts[1] || '';
       var dormitorios  = DOM.fDorm.value.trim();
       var banos        = DOM.fBanos.value.trim();
       var estac        = DOM.fEstac.value.trim();
@@ -1151,6 +1356,18 @@
       });
       DOM.fPais.addEventListener('change', function () {
         loadCities(DOM.fPais.value);
+      });
+      DOM.btnMapPicker.addEventListener('click', function () {
+        openMapPicker();
+      });
+      DOM.btnMapUse.addEventListener('click', function () {
+        closeMapPicker(true);
+      });
+      DOM.btnMapCancel.addEventListener('click', function () {
+        closeMapPicker(false);
+      });
+      DOM.mapModal.addEventListener('click', function (e) {
+        if (e.target === DOM.mapModal) closeMapPicker(false);
       });
       DOM.fEstado.addEventListener('change', function () {
         var v = DOM.fEstado.value;

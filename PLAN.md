@@ -55,8 +55,9 @@ Sitio web estático Jekyll 4.3, alojado en GitHub Pages (statetty.com). Landing 
 
 ## 2026-06-27
 
-- **Formulario `/inmueble/registro/` alineado con schema Mongoose**: secciones: Datos del agente (agentName, agentPhon, agenteID oculto), Información general (nombre + tipo + negocio), Precio (USD entero), Ubicación (pais/ciudad selects dinámicos + dirección/zona + lat/lng), Características (dorm/baños/estac/ambientes/pisos/floorLevel/m2c/m2t), Equipamiento (pileta, petsAllowed, elevadores, duchas), Multimedia (desc + fotos + videoURL), Estado comercial (select único → booleans), Detalles adicionales (anoc, fecha_entrega, atributos). Envía `nCaptacion: true`, `activo: true`. Edición: acepta `?_id=` para cargar datos existentes y usa PUT en vez de POST.
+- **Formulario `/inmueble/registro/` alineado con schema Mongoose**: secciones: Datos del agente (agentName, agentPhon, agenteID oculto), Información general (nombre + tipo + negocio), Precio (USD entero), Ubicación (pais/ciudad selects dinámicos + dirección/zona + lat,lng combo), Características (dorm/baños/estac/ambientes/pisos/floorLevel/m2c/m2t), Equipamiento (pileta, petsAllowed, elevadores, duchas), Multimedia (desc + fotos + videoURL), Estado comercial (select único → booleans), Detalles adicionales (anoc, fecha_entrega, atributos). Envía `nCaptacion: true`, `activo: true`. Edición: acepta `?_id=` para cargar datos existentes y usa PUT en vez de POST.
 - **Ubigeo**: creados `assets/js/ubigeo/paises.js`, `BO.js`, `PE.js` con departamentos y ciudades. País y ciudad en selects dinámicos.
+- **Selector de coordenadas**: lat/lng en un solo input separado por coma + botón "📍 Encontrar coordenadas" que abre modal con mapa Leaflet. Clic en mapa coloca marcador. Botones "Usar esta ubicación" y "Cancelar".
 
 ## Pendiente — refactor blog/index.html
 

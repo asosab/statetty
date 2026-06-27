@@ -3,6 +3,7 @@
 ## 2026-06-27
 
 - **Formulario `/inmueble/registro/` alineado con schema Mongoose**: secciones organizadas (datos del agente, info general, precio, ubicación, características, equipamiento, multimedia, estado comercial, detalles adicionales). Precio entero USD. País y ciudad en selects dinámicos desde `assets/js/ubigeo/`. Estado comercial mapeado a booleanos (vendida, alquilada, es_preventa, enPlanos, reserva). Envía `nCaptacion: true`, `activo: true`. Campos ocultos `_id`, `agenteID`. Edición: acepta `?_id=` para cargar datos existentes, usa PUT vs POST según corresponda.
+- **Selector de coordenadas**: lat/lng unificados en input único separado por coma + modal con mapa Leaflet para elegir ubicación con clic. Botones "Usar esta ubicación" y "Cancelar". Leaflet CSS/JS agregados.
 
 ## 2026-06-24
 
