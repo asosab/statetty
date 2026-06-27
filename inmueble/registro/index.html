@@ -810,7 +810,7 @@
       var base = STATETTY_CONFIG.WS_API_BASE;
       fetch(base + '/inmueble', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': '1' },
         body: JSON.stringify(payload)
       })
       .then(function (r) { return r.json(); })
