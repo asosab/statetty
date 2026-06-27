@@ -55,7 +55,8 @@ Sitio web estático Jekyll 4.3, alojado en GitHub Pages (statetty.com). Landing 
 
 ## 2026-06-27
 
-- **Nueva página `/inmueble/registro/`**: página autocontenida (sin layout Jekyll). Recibe `?k={publicKey}` en la URL. Al cargar, consulta `{WS_API_BASE}/getuser?publicKey={k}`. Si respuesta 200 con datos de usuario, muestra formulario de registro de inmueble con todos los campos (tipo, negocio, precio, ubicación, características, descripción, fotos, coordenadas, WhatsApp). Envía POST a `{WS_API_BASE}/inmueble`. Si no hay `k` o la API no autoriza, muestra pantalla de error/acceso denegado.
+- **Formulario `/inmueble/registro/` alineado con schema Mongoose**: secciones: Datos del agente (agentName, agentPhon, agenteID oculto), Información general (nombre + tipo + negocio), Precio (USD entero), Ubicación (pais/ciudad selects dinámicos + dirección/zona + lat/lng), Características (dorm/baños/estac/ambientes/pisos/floorLevel/m2c/m2t), Equipamiento (pileta, petsAllowed, elevadores, duchas), Multimedia (desc + fotos + videoURL), Estado comercial (select único → booleans), Detalles adicionales (anoc, fecha_entrega, atributos). Envía `nCaptacion: true`, `activo: true`. Edición: acepta `?_id=` para cargar datos existentes y usa PUT en vez de POST.
+- **Ubigeo**: creados `assets/js/ubigeo/paises.js`, `BO.js`, `PE.js` con departamentos y ciudades. País y ciudad en selects dinámicos.
 
 ## Pendiente — refactor blog/index.html
 

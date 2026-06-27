@@ -1,21 +1,73 @@
-Skip to main content
-You are about to visit:
+const mongoose    = require("mongoose");
 
-kodiak-mighty-hagfish.ngrok-free.app
+const inmueblesSchema = new mongoose.Schema(
+   {
+      id:           {type:String, unique: true},
+      brocker:      {type:String},
+      URL:          {type:String, unique: true},
+      pais:         {type:String},
+      ciudad:       {type:String},
+      nombre:       {type:String},
+      vendida:      {type:Boolean, default:false},
+      alquilada:    {type:Boolean, default:false},
+      enPlanos:     {type:Boolean},
+      nCaptacion:   {type:Boolean, default:false},
+      reserva:      {type:Boolean},
+      fotos:        {type: Array,"default":[]},
+      lat:          {type:String},
+      lng:          {type:String},
+      videoURL:     {type:String},
+      tipoNegocio:  {type:String},
+      precio:       {type:Number},
+      tipoInmueble: {type:String},
+      direccion:    {type:String},
+      zona:         {type:String},
+      ambientes:    {type:Number},
+      dormitorios:  {type:Number},
+      estacionamientos:  {type:Number},
+      banos:        {type:Number},
+      floorLevel:   {type:Number},
+      pisos:        {type:Number},
+      pileta:       {type:Boolean},
+      elevadores:   {type:Number},
+      duchas:       {type:Number},
+      petsAllowed:  {type:Boolean},
+      m2c:          {type:Number},
+      m2t:          {type:Number},
+      pm2:          {type:Number},
+      desc:         {type:String},
+      anoc:         {type:Number},
+      atributos:    {type: Array,default:[]},
+      agenteID:     {type:String},
+      agenciaID:    {type:String},
+      scrapDetail:  {type:Boolean},
+      idDuplicado:  {type:String},                       // El id del registro del que es copia
+      activo:       {type:Boolean, default:true},      // representa inmuebles que se están comercializando actualmente
+      fecha_ini:    {type:String},
+      contrato_fin: {type:String},
+      contrato_exclusivo:{type:Boolean, default:true},
+      fecha_cancel: {type:String},
+      borrador:     {type:Boolean, default:false},
+      lastScrapDate:{type: Date},
+      error404:     {type:Number},
+      agentName:    {type:String},
+      agentPhon:    {type:String},
+      micros:       {type: Array,default:[]},
+      sinMicros:    {type:Boolean, default:false},
+      fecha_entrega:{type: Date},
+      es_preventa:  {type:Boolean, default:false},
+   },{
+      timestamps: true,
+      versionkey: false
+   }
+);
 
-Website IP: 181.115.208.2
+inmueblesSchema.index({ desc: 1 }, { collation: { locale: 'es', strength: 1 } });
+inmueblesSchema.index({ activo: 1, createdAt: 1 });
+inmueblesSchema.index({ activo: 1, createdAt: 1, precio: 1 });
+inmueblesSchema.index({ activo: 1, createdAt: 1, ciudad: 1 });
+inmueblesSchema.index({ agenteID: 1 });
+inmueblesSchema.index({ agenciaID: 1 });
 
-This website is served for free through ngrok.com.
-You should only visit this website if you trust whoever sent the link to you.
-Be careful about disclosing personal or financial information like passwords, phone numbers, or credit cards.
-Visit Site
-Are you the developer?
-We display this page to prevent abuse. Visitors to your site will only see it once.
+module.exports = mongoose.model('inmuebles', inmueblesSchema); 
 
-To remove this page:
-Set and send an ngrok-skip-browser-warning request header with any value.
-Or, set and send a custom/non-standard browser User-Agent request header.
-Or, please upgrade to any paid ngrok account.
- Learn how ngrok fights abuse
-
-Powered by ngrok

@@ -184,6 +184,42 @@
       color: var(--muted-2);
     }
 
+    /* Form section titles */
+    .form-section-title {
+      font-family: var(--font-head);
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--blue-dark);
+      margin: 0 0 16px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--yellow);
+    }
+
+    /* Checkbox inline */
+    .checkbox-row .form-group {
+      display: flex;
+      align-items: center;
+    }
+    .checkbox-inline {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: .88rem;
+      color: var(--text);
+      cursor: pointer;
+    }
+    .checkbox-inline input[type="checkbox"] {
+      width: auto;
+      padding: 0;
+      -webkit-appearance: checkbox;
+      appearance: checkbox;
+      accent-color: var(--yellow);
+      transform: scale(1.15);
+    }
+    @media (max-width: 640px) {
+      .checkbox-row { grid-template-columns: 1fr; }
+    }
+
     /* Form grid */
     .form-row {
       display: grid;
@@ -360,6 +396,9 @@
 
     /* Hidden */
     .hidden { display: none; }
+
+    /* Hide fecha_entrega by default; shown via JS for preventa/enplanos */
+    #f-fecha_entrega-group { display: none; }
   </style>
 
   <!-- Google tag (gtag.js) -->
@@ -416,8 +455,34 @@
 
       <form id="inmForm" novalidate>
 
+        <!-- Hidden fields -->
+        <input type="hidden" id="f-_id" name="_id">
+        <input type="hidden" id="f-agenteID" name="agenteID">
+
+        <!-- ==================== DATOS DEL AGENTE ==================== -->
+        <h3 class="form-section-title">Tus datos</h3>
         <div class="form-row">
-          <!-- Tipo de inmueble -->
+          <div class="form-group">
+            <label for="f-agentName">Nombre del agente <span class="required">*</span></label>
+            <input type="text" id="f-agentName" name="agentName" placeholder="Tu nombre completo" required>
+          </div>
+          <div class="form-group">
+            <label for="f-wa">WhatsApp de contacto <span class="required">*</span></label>
+            <input type="tel" id="f-wa" name="whatsapp" placeholder="+591 7xxxxxxx" required autocomplete="tel" inputmode="tel">
+            <span class="hint">El número que verán los interesados para contactarte</span>
+          </div>
+        </div>
+
+        <hr class="form-divider">
+
+        <!-- ==================== INFORMACIÓN GENERAL ==================== -->
+        <h3 class="form-section-title">Información general</h3>
+        <div class="form-group">
+          <label for="f-nombre">Título del inmueble <span class="required">*</span></label>
+          <input type="text" id="f-nombre" name="nombre" placeholder="Ej: Casa en esquina con pileta" required>
+        </div>
+
+        <div class="form-row">
           <div class="form-group">
             <label for="f-tipo">Tipo de inmueble <span class="required">*</span></label>
             <select id="f-tipo" name="tipoInmueble" required>
@@ -434,8 +499,6 @@
               <option value="Otro">Otro</option>
             </select>
           </div>
-
-          <!-- Tipo de negocio -->
           <div class="form-group">
             <label for="f-negocio">Tipo de negocio <span class="required">*</span></label>
             <select id="f-negocio" name="tipoNegocio" required>
@@ -448,24 +511,34 @@
           </div>
         </div>
 
-        <!-- Precio y moneda -->
-        <div class="form-row">
-          <div class="form-group">
-            <label for="f-precio">Precio <span class="required">*</span></label>
-            <input type="number" id="f-precio" name="precio" placeholder="Ej: 120000" required min="0" step="0.01">
-          </div>
-          <div class="form-group">
-            <label for="f-moneda">Moneda <span class="required">*</span></label>
-            <select id="f-moneda" name="moneda" required>
-              <option value="USD">USD</option>
-              <option value="BOB">BOB</option>
-            </select>
-          </div>
+        <hr class="form-divider">
+
+        <!-- ==================== PRECIO ==================== -->
+        <h3 class="form-section-title">Precio</h3>
+        <div class="form-group">
+          <label for="f-precio">Precio en USD <span class="required">*</span></label>
+          <input type="number" id="f-precio" name="precio" placeholder="Ej: 120000" required min="0" step="1">
+          <span class="hint">Dólares, sin puntos ni comas. Solo números enteros.</span>
         </div>
 
         <hr class="form-divider">
 
-        <!-- Ubicación -->
+        <!-- ==================== UBICACIÓN ==================== -->
+        <h3 class="form-section-title">Ubicación</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="f-pais">País <span class="required">*</span></label>
+            <select id="f-pais" name="pais" required>
+              <option value="">Seleccioná un país</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="f-ciudad">Ciudad <span class="required">*</span></label>
+            <select id="f-ciudad" name="ciudad" required>
+              <option value="">Primero seleccioná un país</option>
+            </select>
+          </div>
+        </div>
         <div class="form-row">
           <div class="form-group">
             <label for="f-direccion">Dirección <span class="required">*</span></label>
@@ -476,21 +549,23 @@
             <input type="text" id="f-zona" name="zona" placeholder="Ej: Equipetrol">
           </div>
         </div>
-
         <div class="form-row">
           <div class="form-group">
-            <label for="f-ciudad">Ciudad <span class="required">*</span></label>
-            <input type="text" id="f-ciudad" name="ciudad" placeholder="Ej: Santa Cruz de la Sierra" required>
+            <label for="f-lat">Latitud</label>
+            <input type="number" id="f-lat" name="lat" placeholder="Ej: -17.7833" step="any">
+            <span class="hint">Opcional. Para mostrar en mapa.</span>
           </div>
           <div class="form-group">
-            <label for="f-pais">País <span class="required">*</span></label>
-            <input type="text" id="f-pais" name="pais" placeholder="Ej: Bolivia" required>
+            <label for="f-lng">Longitud</label>
+            <input type="number" id="f-lng" name="lng" placeholder="Ej: -63.1822" step="any">
+            <span class="hint">Opcional. Para mostrar en mapa.</span>
           </div>
         </div>
 
         <hr class="form-divider">
 
-        <!-- Características -->
+        <!-- ==================== CARACTERÍSTICAS ==================== -->
+        <h3 class="form-section-title">Características</h3>
         <div class="form-row">
           <div class="form-group">
             <label for="f-dorm">Dormitorios</label>
@@ -501,59 +576,72 @@
             <input type="number" id="f-banos" name="banos" placeholder="Ej: 2" min="0" step="0.5">
           </div>
         </div>
-
         <div class="form-row">
           <div class="form-group">
             <label for="f-estac">Estacionamientos</label>
             <input type="number" id="f-estac" name="estacionamientos" placeholder="Ej: 2" min="0">
           </div>
           <div class="form-group">
+            <label for="f-ambientes">Ambientes</label>
+            <input type="number" id="f-ambientes" name="ambientes" placeholder="Ej: 6" min="0">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="f-pisos">Pisos (casa)</label>
+            <input type="number" id="f-pisos" name="pisos" placeholder="Ej: 2" min="0">
+          </div>
+          <div class="form-group">
+            <label for="f-floorLevel">Piso (departamento)</label>
+            <input type="number" id="f-floorLevel" name="floorLevel" placeholder="Ej: 3" min="0">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
             <label for="f-m2c">M² construidos</label>
             <input type="number" id="f-m2c" name="m2c" placeholder="Ej: 150" min="0" step="0.01">
           </div>
-        </div>
-
-        <div class="form-row">
           <div class="form-group">
             <label for="f-m2t">M² de terreno</label>
             <input type="number" id="f-m2t" name="m2t" placeholder="Ej: 300" min="0" step="0.01">
           </div>
+        </div>
+
+        <hr class="form-divider">
+
+        <!-- ==================== EQUIPAMIENTO ==================== -->
+        <h3 class="form-section-title">Equipamiento</h3>
+        <div class="form-row checkbox-row">
           <div class="form-group">
-            <label for="f-estado">Estado</label>
-            <select id="f-estado" name="estado">
-              <option value="disponible">Disponible</option>
-              <option value="vendida">Vendida</option>
-              <option value="alquilada">Alquilada</option>
-              <option value="preventa">Pre-venta</option>
-            </select>
+            <label class="checkbox-inline">
+              <input type="checkbox" id="f-pileta"> Tiene pileta
+            </label>
+          </div>
+          <div class="form-group">
+            <label class="checkbox-inline">
+              <input type="checkbox" id="f-pets"> Acepta mascotas
+            </label>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="f-elevadores">Ascensores</label>
+            <input type="number" id="f-elevadores" name="elevadores" placeholder="Ej: 1" min="0">
+          </div>
+          <div class="form-group">
+            <label for="f-duchas">Duchas</label>
+            <input type="number" id="f-duchas" name="duchas" placeholder="Ej: 2" min="0">
           </div>
         </div>
 
         <hr class="form-divider">
 
-        <!-- Descripción -->
+        <!-- ==================== MULTIMEDIA ==================== -->
+        <h3 class="form-section-title">Multimedia</h3>
         <div class="form-group">
           <label for="f-desc">Descripción <span class="required">*</span></label>
           <textarea id="f-desc" name="desc" placeholder="Describí el inmueble con detalles relevantes…" required rows="5"></textarea>
         </div>
-
-        <!-- Coordenadas -->
-        <div class="form-row">
-          <div class="form-group">
-            <label for="f-lat">Latitud</label>
-            <input type="number" id="f-lat" name="lat" placeholder="Ej: -17.7833" step="any">
-            <span class="hint">Opcional, pero recomendado para mostrar ubicación en mapa</span>
-          </div>
-          <div class="form-group">
-            <label for="f-lng">Longitud</label>
-            <input type="number" id="f-lng" name="lng" placeholder="Ej: -63.1822" step="any">
-            <span class="hint">Opcional, pero recomendado para mostrar ubicación en mapa</span>
-          </div>
-        </div>
-
-        <hr class="form-divider">
-
-        <!-- Fotos -->
         <div class="form-group">
           <label>Fotos del inmueble</label>
           <p class="photo-info">Agregá URLs de imágenes (alojadas en Google Drive, Imgur, etc.)</p>
@@ -564,15 +652,51 @@
           </div>
           <button type="button" class="photo-add" id="photo-add-btn">+ Agregar otra foto</button>
         </div>
+        <div class="form-group">
+          <label for="f-videoURL">Video / Tour virtual</label>
+          <input type="url" id="f-videoURL" name="videoURL" placeholder="https://youtube.com/watch?v=…">
+        </div>
 
         <hr class="form-divider">
 
-        <!-- WhatsApp de contacto -->
-        <div class="form-group">
-          <label for="f-wa">WhatsApp de contacto <span class="required">*</span></label>
-          <input type="tel" id="f-wa" name="whatsapp" placeholder="+591 7xxxxxxx" required autocomplete="tel" inputmode="tel">
-          <span class="hint">El número que verán los interesados para contactarte</span>
+        <!-- ==================== ESTADO COMERCIAL ==================== -->
+        <h3 class="form-section-title">Estado comercial</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="f-estado">Estado <span class="required">*</span></label>
+            <select id="f-estado" name="estado" required>
+              <option value="disponible">Disponible</option>
+              <option value="vendida">Vendida</option>
+              <option value="alquilada">Alquilada</option>
+              <option value="preventa">Pre-venta</option>
+              <option value="reservada">Reservada</option>
+              <option value="enplanos">En planos</option>
+            </select>
+          </div>
+          <div class="form-group" id="f-fecha_entrega-group">
+            <label for="f-fecha_entrega">Fecha de entrega</label>
+            <input type="date" id="f-fecha_entrega" name="fecha_entrega">
+            <span class="hint">Aplica solo si es pre-venta o en planos</span>
+          </div>
         </div>
+
+        <hr class="form-divider">
+
+        <!-- ==================== DETALLES OPCIONALES ==================== -->
+        <h3 class="form-section-title">Detalles adicionales</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="f-anoc">Año de construcción</label>
+            <input type="number" id="f-anoc" name="anoc" placeholder="Ej: 2020" min="1900" max="2030">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="f-atributos">Atributos extra</label>
+          <textarea id="f-atributos" name="atributos" placeholder="Uno por línea, ej:&#10;Amoblado&#10;Esquinero&#10;Esquinero"></textarea>
+          <span class="hint">Características adicionales que no están en el formulario</span>
+        </div>
+
+        <hr class="form-divider">
 
         <button type="submit" class="form-submit" id="form-submit-btn">
           <span id="form-btn-text">Publicar inmueble</span>
@@ -603,6 +727,9 @@
 
   <!-- Config -->
   <script src="/assets/js/config.js"></script>
+  <script src="/assets/js/ubigeo/paises.js"></script>
+  <script src="/assets/js/ubigeo/BO.js"></script>
+  <script src="/assets/js/ubigeo/PE.js"></script>
 
   <script>
   (function () {
@@ -614,6 +741,7 @@
     function init() {
       cacheDOM();
       bindEvents();
+      populatePaises();
       DOM.loading.classList.remove('hidden');
       var k = getParam();
       if (!k) {
@@ -643,10 +771,45 @@
       DOM.photoList      = document.getElementById('photo-list');
       DOM.photoAddBtn    = document.getElementById('photo-add-btn');
       DOM.fWa            = document.getElementById('f-wa');
+      DOM.fPais          = document.getElementById('f-pais');
+      DOM.fCiudad        = document.getElementById('f-ciudad');
+      DOM.fAgenteID      = document.getElementById('f-agenteID');
+      DOM.fId            = document.getElementById('f-_id');
+      DOM.fAgentName     = document.getElementById('f-agentName');
+      DOM.fNombre        = document.getElementById('f-nombre');
+      DOM.fTipo          = document.getElementById('f-tipo');
+      DOM.fNegocio       = document.getElementById('f-negocio');
+      DOM.fPrecio        = document.getElementById('f-precio');
+      DOM.fDireccion     = document.getElementById('f-direccion');
+      DOM.fZona          = document.getElementById('f-zona');
+      DOM.fLat           = document.getElementById('f-lat');
+      DOM.fLng           = document.getElementById('f-lng');
+      DOM.fDorm          = document.getElementById('f-dorm');
+      DOM.fBanos         = document.getElementById('f-banos');
+      DOM.fEstac         = document.getElementById('f-estac');
+      DOM.fAmbientes     = document.getElementById('f-ambientes');
+      DOM.fPisos         = document.getElementById('f-pisos');
+      DOM.fFloorLevel    = document.getElementById('f-floorLevel');
+      DOM.fM2c           = document.getElementById('f-m2c');
+      DOM.fM2t           = document.getElementById('f-m2t');
+      DOM.fPileta        = document.getElementById('f-pileta');
+      DOM.fPets          = document.getElementById('f-pets');
+      DOM.fElevadores    = document.getElementById('f-elevadores');
+      DOM.fDuchas        = document.getElementById('f-duchas');
+      DOM.fDesc          = document.getElementById('f-desc');
+      DOM.fVideoURL      = document.getElementById('f-videoURL');
+      DOM.fEstado        = document.getElementById('f-estado');
+      DOM.fFechaEntrega  = document.getElementById('f-fecha_entrega');
+      DOM.fAnoc          = document.getElementById('f-anoc');
+      DOM.fAtributos     = document.getElementById('f-atributos');
     }
 
     function getParam() {
       return new URLSearchParams(window.location.search).get('k') || null;
+    }
+
+    function getEditId() {
+      return new URLSearchParams(window.location.search).get('_id') || null;
     }
 
     function verifyUser(k) {
@@ -691,9 +854,106 @@
       DOM.formSection.classList.remove('hidden');
       DOM.userName.textContent = user.nombres || user.email || 'Usuario';
       DOM.userEmail.textContent = user.email || '';
-      if (user.whatsapp) {
-        DOM.fWa.value = user.whatsapp;
+
+      var fullName = [user.nombres, user.apellidos].filter(Boolean).join(' ');
+      if (fullName) DOM.fAgentName.value = fullName;
+      if (user.whatsapp) DOM.fWa.value = user.whatsapp;
+      if (user.agenteID) DOM.fAgenteID.value = user.agenteID;
+
+      var editId = getEditId();
+      if (editId) {
+        DOM.fId.value = editId;
+        DOM.btnText.textContent = 'Actualizar inmueble';
+        loadInmueble(editId);
       }
+    }
+
+    /* ---- Load existing (edit mode) ---- */
+    function loadInmueble(id) {
+      var base = STATETTY_CONFIG.WS_API_BASE;
+      fetch(base + '/inmueble?_id=' + encodeURIComponent(id), {
+        headers: { 'ngrok-skip-browser-warning': '1' }
+      })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (!data.data) return;
+        var inm = data.data;
+        DOM.fNombre.value = inm.nombre || '';
+        if (inm.tipoInmueble) DOM.fTipo.value = inm.tipoInmueble;
+        if (inm.tipoNegocio) DOM.fNegocio.value = inm.tipoNegocio;
+        DOM.fPrecio.value = inm.precio || '';
+        if (inm.pais) DOM.fPais.value = inm.pais;
+        if (inm.ciudad) DOM.fCiudad.value = inm.ciudad;
+        DOM.fDireccion.value = inm.direccion || '';
+        DOM.fZona.value = inm.zona || '';
+        DOM.fLat.value = inm.lat || '';
+        DOM.fLng.value = inm.lng || '';
+        DOM.fDorm.value = inm.dormitorios || '';
+        DOM.fBanos.value = inm.banos || '';
+        DOM.fEstac.value = inm.estacionamientos || '';
+        DOM.fAmbientes.value = inm.ambientes || '';
+        DOM.fPisos.value = inm.pisos || '';
+        DOM.fFloorLevel.value = inm.floorLevel || '';
+        DOM.fM2c.value = inm.m2c || '';
+        DOM.fM2t.value = inm.m2t || '';
+        DOM.fPileta.checked = !!inm.pileta;
+        DOM.fPets.checked = !!inm.petsAllowed;
+        DOM.fElevadores.value = inm.elevadores || '';
+        DOM.fDuchas.value = inm.duchas || '';
+        DOM.fDesc.value = inm.desc || '';
+        DOM.fVideoURL.value = inm.videoURL || '';
+        DOM.fAnoc.value = inm.anoc || '';
+        DOM.fFechaEntrega.value = inm.fecha_entrega || '';
+        if (inm.atributos && Array.isArray(inm.atributos)) {
+          DOM.fAtributos.value = inm.atributos.join('\n');
+        }
+        if (Array.isArray(inm.fotos)) {
+          DOM.photoList.innerHTML = '';
+          inm.fotos.forEach(function (url) { addPhotoRow(url); });
+          if (!inm.fotos.length) addPhotoRow();
+        }
+        if (inm.agentName) DOM.fAgentName.value = inm.agentName;
+        if (inm.agentPhon) DOM.fWa.value = inm.agentPhon;
+      })
+      .catch(function (err) {
+        console.warn('STATETTY: loadInmueble error', err);
+      });
+    }
+
+    /* ---- Ubigeo ---- */
+    function populatePaises() {
+      DOM.fPais.innerHTML = '<option value="">Seleccioná un país</option>';
+      PAISES.forEach(function (p) {
+        var opt = document.createElement('option');
+        opt.value = p.value;
+        opt.textContent = p.label;
+        DOM.fPais.appendChild(opt);
+      });
+    }
+
+    function loadCities(paisCode) {
+      DOM.fCiudad.innerHTML = '<option value="">Cargando ciudades…</option>';
+      DOM.fCiudad.disabled = true;
+      var ciudades;
+      if (paisCode === 'BO') ciudades = CIUDADES_BO;
+      else if (paisCode === 'PE') ciudades = CIUDADES_PE;
+      else {
+        DOM.fCiudad.innerHTML = '<option value="">Primero seleccioná un país</option>';
+        DOM.fCiudad.disabled = false;
+        return;
+      }
+      DOM.fCiudad.innerHTML = '';
+      var regiones = Object.keys(ciudades);
+      regiones.forEach(function (region) {
+        var ciudadesArr = ciudades[region];
+        ciudadesArr.forEach(function (city) {
+          var opt = document.createElement('option');
+          opt.value = city;
+          opt.textContent = city + ' (' + region + ')';
+          DOM.fCiudad.appendChild(opt);
+        });
+      });
+      DOM.fCiudad.disabled = false;
     }
 
     function showStatus(type, title, msg) {
@@ -743,34 +1003,48 @@
       DOM.errorEl.textContent = '';
       DOM.errorEl.style.display = 'none';
 
-      var tipoInmueble = document.getElementById('f-tipo').value;
-      var tipoNegocio  = document.getElementById('f-negocio').value;
-      var precio       = document.getElementById('f-precio').value.trim();
-      var moneda       = document.getElementById('f-moneda').value;
-      var direccion    = document.getElementById('f-direccion').value.trim();
-      var zona         = document.getElementById('f-zona').value.trim();
-      var ciudad       = document.getElementById('f-ciudad').value.trim();
-      var pais         = document.getElementById('f-pais').value.trim();
-      var dormitorios  = document.getElementById('f-dorm').value.trim();
-      var banos        = document.getElementById('f-banos').value.trim();
-      var estac        = document.getElementById('f-estac').value.trim();
-      var m2c          = document.getElementById('f-m2c').value.trim();
-      var m2t          = document.getElementById('f-m2t').value.trim();
-      var estado       = document.getElementById('f-estado').value;
-      var desc         = document.getElementById('f-desc').value.trim();
-      var lat          = document.getElementById('f-lat').value.trim();
-      var lng          = document.getElementById('f-lng').value.trim();
+      var agentName    = DOM.fAgentName.value.trim();
       var whatsapp     = DOM.fWa.value.trim();
+      var nombre       = DOM.fNombre.value.trim();
+      var tipoInmueble = DOM.fTipo.value;
+      var tipoNegocio  = DOM.fNegocio.value;
+      var precio       = DOM.fPrecio.value.trim();
+      var pais         = DOM.fPais.value;
+      var ciudad       = DOM.fCiudad.value;
+      var direccion    = DOM.fDireccion.value.trim();
+      var zona         = DOM.fZona.value.trim();
+      var lat          = DOM.fLat.value.trim();
+      var lng          = DOM.fLng.value.trim();
+      var dormitorios  = DOM.fDorm.value.trim();
+      var banos        = DOM.fBanos.value.trim();
+      var estac        = DOM.fEstac.value.trim();
+      var ambientes    = DOM.fAmbientes.value.trim();
+      var pisos        = DOM.fPisos.value.trim();
+      var floorLevel   = DOM.fFloorLevel.value.trim();
+      var m2c          = DOM.fM2c.value.trim();
+      var m2t          = DOM.fM2t.value.trim();
+      var pileta       = DOM.fPileta.checked;
+      var petsAllowed  = DOM.fPets.checked;
+      var elevadores   = DOM.fElevadores.value.trim();
+      var duchas       = DOM.fDuchas.value.trim();
+      var desc         = DOM.fDesc.value.trim();
+      var videoURL     = DOM.fVideoURL.value.trim();
+      var estado       = DOM.fEstado.value;
+      var fechaEntrega = DOM.fFechaEntrega.value;
+      var anoc         = DOM.fAnoc.value.trim();
+      var atributosRaw = DOM.fAtributos.value.trim();
 
       var missing = [];
+      if (!agentName)    missing.push('nombre del agente');
+      if (!whatsapp)     missing.push('WhatsApp de contacto');
+      if (!nombre)       missing.push('título del inmueble');
       if (!tipoInmueble) missing.push('tipo de inmueble');
       if (!tipoNegocio)  missing.push('tipo de negocio');
       if (!precio)       missing.push('precio');
-      if (!direccion)    missing.push('dirección');
-      if (!ciudad)       missing.push('ciudad');
       if (!pais)         missing.push('país');
+      if (!ciudad)       missing.push('ciudad');
+      if (!direccion)    missing.push('dirección');
       if (!desc)         missing.push('descripción');
-      if (!whatsapp)     missing.push('WhatsApp de contacto');
 
       if (missing.length) {
         DOM.errorEl.textContent = 'Completá los siguientes campos: ' + missing.join(', ') + '.';
@@ -779,44 +1053,73 @@
       }
 
       var fotos = getPhotos();
+      var atributos = atributosRaw ? atributosRaw.split('\n').map(function (s) { return s.trim(); }).filter(Boolean) : undefined;
+
+      var estadoBools = {};
+      switch (estado) {
+        case 'vendida':   estadoBools = { vendida: true, alquilada: false, es_preventa: false, enPlanos: false, reserva: false }; break;
+        case 'alquilada': estadoBools = { vendida: false, alquilada: true, es_preventa: false, enPlanos: false, reserva: false }; break;
+        case 'preventa':  estadoBools = { vendida: false, alquilada: false, es_preventa: true, enPlanos: true, reserva: false }; break;
+        case 'reservada': estadoBools = { vendida: false, alquilada: false, es_preventa: false, enPlanos: false, reserva: true }; break;
+        case 'enplanos':  estadoBools = { vendida: false, alquilada: false, es_preventa: false, enPlanos: true, reserva: false }; break;
+        default:          estadoBools = { vendida: false, alquilada: false, es_preventa: false, enPlanos: false, reserva: false }; break;
+      }
 
       var payload = {
-        email:         USER.email || '',
-        whatsapp:      whatsapp,
-        tipoInmueble:  tipoInmueble,
-        tipoNegocio:   tipoNegocio,
-        precio:        parseFloat(precio) || 0,
-        moneda:        moneda,
-        direccion:     direccion,
-        zona:          zona,
-        ciudad:        ciudad,
-        pais:          pais,
-        dormitorios:   dormitorios ? parseInt(dormitorios, 10) : undefined,
-        banos:         banos ? parseFloat(banos) : undefined,
+        _id:             DOM.fId.value || undefined,
+        agenteID:        DOM.fAgenteID.value || undefined,
+        agentName:       agentName,
+        agentPhon:       whatsapp,
+        nombre:          nombre,
+        tipoInmueble:    tipoInmueble,
+        tipoNegocio:     tipoNegocio,
+        precio:          parseInt(precio, 10) || 0,
+        direccion:       direccion,
+        zona:            zona || undefined,
+        pais:            pais,
+        ciudad:          ciudad,
+        lat:             lat || undefined,
+        lng:             lng || undefined,
+        dormitorios:     dormitorios ? parseInt(dormitorios, 10) : undefined,
+        banos:           banos ? parseFloat(banos) : undefined,
         estacionamientos: estac ? parseInt(estac, 10) : undefined,
-        m2c:           m2c ? parseFloat(m2c) : undefined,
-        m2t:           m2t ? parseFloat(m2t) : undefined,
-        estado:        estado,
-        desc:          desc,
-        lat:           lat ? parseFloat(lat) : undefined,
-        lng:           lng ? parseFloat(lng) : undefined,
-        fotos:         fotos.length ? fotos : undefined
+        ambientes:       ambientes ? parseInt(ambientes, 10) : undefined,
+        pisos:           pisos ? parseInt(pisos, 10) : undefined,
+        floorLevel:      floorLevel ? parseInt(floorLevel, 10) : undefined,
+        m2c:             m2c ? parseFloat(m2c) : undefined,
+        m2t:             m2t ? parseFloat(m2t) : undefined,
+        pileta:          pileta || undefined,
+        petsAllowed:     petsAllowed || undefined,
+        elevadores:      elevadores ? parseInt(elevadores, 10) : undefined,
+        duchas:          duchas ? parseInt(duchas, 10) : undefined,
+        desc:            desc,
+        videoURL:        videoURL || undefined,
+        fotos:           fotos.length ? fotos : undefined,
+        anoc:            anoc ? parseInt(anoc, 10) : undefined,
+        fecha_entrega:   fechaEntrega || undefined,
+        atributos:       atributos,
+        nCaptacion:      true,
+        activo:          true
       };
+
+      Object.keys(estadoBools).forEach(function (k) { payload[k] = estadoBools[k]; });
+      if (payload._id && !payload.fecha_entrega) delete payload.fecha_entrega;
 
       DOM.submitBtn.disabled = true;
       DOM.btnText.textContent = 'Publicando…';
       DOM.spinner.style.display = 'inline-block';
 
       var base = STATETTY_CONFIG.WS_API_BASE;
+      var method = payload._id ? 'PUT' : 'POST';
       fetch(base + '/inmueble', {
-        method: 'POST',
+        method: method,
         headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': '1' },
         body: JSON.stringify(payload)
       })
       .then(function (r) { return r.json(); })
       .then(function (data) {
         DOM.submitBtn.disabled = false;
-        DOM.btnText.textContent = 'Publicar inmueble';
+        DOM.btnText.textContent = payload._id ? 'Actualizar inmueble' : 'Publicar inmueble';
         DOM.spinner.style.display = 'none';
 
         if (data.ok) {
@@ -833,7 +1136,7 @@
       })
       .catch(function (err) {
         DOM.submitBtn.disabled = false;
-        DOM.btnText.textContent = 'Publicar inmueble';
+        DOM.btnText.textContent = payload._id ? 'Actualizar inmueble' : 'Publicar inmueble';
         DOM.spinner.style.display = 'none';
         DOM.errorEl.textContent = 'Error de conexión. Verificá tu internet e intentalo de nuevo.';
         DOM.errorEl.style.display = 'block';
@@ -845,6 +1148,18 @@
       DOM.form.addEventListener('submit', handleSubmit);
       DOM.photoAddBtn.addEventListener('click', function () {
         addPhotoRow();
+      });
+      DOM.fPais.addEventListener('change', function () {
+        loadCities(DOM.fPais.value);
+      });
+      DOM.fEstado.addEventListener('change', function () {
+        var v = DOM.fEstado.value;
+        var group = document.getElementById('f-fecha_entrega-group');
+        if (v === 'preventa' || v === 'enplanos') {
+          group.style.display = 'block';
+        } else {
+          group.style.display = 'none';
+        }
       });
       window.addEventListener('scroll', function () {
         var h = document.getElementById('inmHeader');

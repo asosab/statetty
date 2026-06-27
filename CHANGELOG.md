@@ -2,7 +2,7 @@
 
 ## 2026-06-27
 
-- **Nueva página `/inmueble/registro/`**: página autocontenida para registrar inmuebles. Recibe `?k={publicKey}` (query param). Consulta `{WS_API_BASE}/getuser?publicKey={k}` para verificar acceso. Si la respuesta es 200 con datos de usuario, muestra formulario completo con campos: tipo de inmueble, tipo de negocio, precio, moneda, dirección, zona, ciudad, país, dormitorios, baños, estacionamientos, m² construidos, m² de terreno, estado, descripción, coordenadas, fotos (URLs dinámicas) y WhatsApp de contacto. Envía POST a `{WS_API_BASE}/inmueble`.
+- **Formulario `/inmueble/registro/` alineado con schema Mongoose**: secciones organizadas (datos del agente, info general, precio, ubicación, características, equipamiento, multimedia, estado comercial, detalles adicionales). Precio entero USD. País y ciudad en selects dinámicos desde `assets/js/ubigeo/`. Estado comercial mapeado a booleanos (vendida, alquilada, es_preventa, enPlanos, reserva). Envía `nCaptacion: true`, `activo: true`. Campos ocultos `_id`, `agenteID`. Edición: acepta `?_id=` para cargar datos existentes, usa PUT vs POST según corresponda.
 
 ## 2026-06-24
 
