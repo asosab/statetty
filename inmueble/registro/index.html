@@ -664,12 +664,12 @@
           return r.json().then(function (body) { return { status: r.status, ok: r.ok, body: body }; });
         })
         .then(function (res) {
-          if (!res.ok || !res.body || !res.body.data) {
+          if (!res.ok || !res.body) {
             DOM.loading.classList.add('hidden');
             DOM.unauthorized.classList.remove('hidden');
             return;
           }
-          USER = res.body.data;
+          USER = res.body.data || res.body;
           showForm(USER);
         })
         .catch(function (err) {
