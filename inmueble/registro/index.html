@@ -987,12 +987,16 @@
     function showForm(user) {
       DOM.loading.classList.add('hidden');
       DOM.formSection.classList.remove('hidden');
-      DOM.userName.textContent = user.nombres || user.email || 'Usuario';
+      DOM.userName.textContent = user.first_name
+        ? user.first_name + (user.last_name ? ' ' + user.last_name : '')
+        : user.email || 'Usuario';
       DOM.userEmail.textContent = user.email || '';
 
-      var fullName = [user.nombres, user.apellidos].filter(Boolean).join(' ');
+      var fullName = user.first_name && user.last_name
+        ? user.first_name + ' ' + user.last_name
+        : [user.nombres, user.apellidos].filter(Boolean).join(' ');
       if (fullName) DOM.fAgentName.value = fullName;
-      if (user.whatsapp) DOM.fWa.value = user.whatsapp;
+      if (user.waphone) DOM.fWa.value = user.waphone;
       if (user.agenteID) DOM.fAgenteID.value = user.agenteID;
 
       var editId = getEditId();
