@@ -1,3 +1,3 @@
 var STATETTY_CONFIG = {
-  WS_API_BASE: "https://scorpion-fast-quietly.ngrok-free.app/api/statetty"
+  WS_API_BASE: "https://kodiak-mighty-hagfish.ngrok-free.app/api/statetty"
 };
