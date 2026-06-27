@@ -624,6 +624,11 @@
           </div>
         </div>
 
+        <div class="form-group">
+          <label for="f-desc">Descripción <span class="required">*</span></label>
+          <textarea id="f-desc" name="desc" placeholder="Describí el inmueble con detalles relevantes…" required rows="5"></textarea>
+        </div>
+
         <hr class="form-divider">
 
         <!-- ==================== PRECIO ==================== -->
@@ -664,9 +669,9 @@
         </div>
         <div class="coord-input-wrap">
           <div class="form-group">
-            <label for="f-coord">Latitud, Longitud</label>
-            <input type="text" id="f-coord" name="coord" placeholder="Ej: -17.7833, -63.1822">
-            <span class="hint">Separadas por coma. Opcional, pero recomendado para mostrar en mapa.</span>
+            <label for="f-coord">Latitud, Longitud <span class="required">*</span></label>
+            <input type="text" id="f-coord" name="coord" placeholder="Ej: -17.7833, -63.1822" required>
+            <span class="hint">Coordenadas separadas por coma. Obtenelas con el botón "Encontrar coordenadas".</span>
           </div>
           <button type="button" class="coord-btn" id="btnMapPicker">📍 Encontrar coordenadas</button>
         </div>
@@ -747,10 +752,6 @@
 
         <!-- ==================== MULTIMEDIA ==================== -->
         <h3 class="form-section-title">Multimedia</h3>
-        <div class="form-group">
-          <label for="f-desc">Descripción <span class="required">*</span></label>
-          <textarea id="f-desc" name="desc" placeholder="Describí el inmueble con detalles relevantes…" required rows="5"></textarea>
-        </div>
         <div class="form-group">
           <label>Fotos del inmueble</label>
           <p class="photo-info">Agregá URLs de imágenes (alojadas en Google Drive, Imgur, etc.)</p>
@@ -1254,6 +1255,7 @@
       if (!ciudad)       missing.push('ciudad');
       if (!direccion)    missing.push('dirección');
       if (!desc)         missing.push('descripción');
+      if (!lat || !lng)  missing.push('coordenadas (lat, lng)');
 
       if (missing.length) {
         DOM.errorEl.textContent = 'Completá los siguientes campos: ' + missing.join(', ') + '.';
