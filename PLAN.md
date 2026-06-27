@@ -53,6 +53,10 @@ Sitio web estático Jekyll 4.3, alojado en GitHub Pages (statetty.com). Landing 
 - **Nueva página `/inmueble/`**: página autocontenida con header/footer propios y assets en subcarpeta (`inmueble/assets/{css,js,images}/`). Recibe `?_id={mongoId}` (query param). Consulta `{WS_API_BASE}/inmueble?_id={id}` y renderiza inmueble (galería + características + descripción). Sin layout Jekyll — HTML plano con JS vanilla.
 - **Formulario de contacto en sidebar `/inmueble/`**: layout 2 columnas en desktop (main + sidebar sticky con formulario "Pregunta al anunciante"). Mobile: formulario al final del contenido + barra fija azul "Pregunta al anunciante" al tocar que hace scroll al formulario. Campos: texto pre-rellenado, email, celular con código de país, nombre, checkbox privacidad, botón "Contactar al anunciante".
 
+## 2026-06-27
+
+- **Nueva página `/inmueble/registro/`**: página autocontenida (sin layout Jekyll). Recibe `?k={publicKey}` en la URL. Al cargar, consulta `{WS_API_BASE}/getuser?publicKey={k}`. Si respuesta 200 con datos de usuario, muestra formulario de registro de inmueble con todos los campos (tipo, negocio, precio, ubicación, características, descripción, fotos, coordenadas, WhatsApp). Envía POST a `{WS_API_BASE}/inmueble`. Si no hay `k` o la API no autoriza, muestra pantalla de error/acceso denegado.
+
 ## Pendiente — refactor blog/index.html
 
 - 2026-06-12: **`blog/index.html` no usa layout ni includes** — tiene header, footer y `<head>` completos hardcodeados. Crea `_layouts/blog.html`, refactoriza `blog/index.html` para que herede de él y use `{% include header.html %}` / `{% include footer.html %}`. El CSS específico del blog (hero, search, cards) puede quedar inline en `blog/index.html`.

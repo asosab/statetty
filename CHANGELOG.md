@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-06-27
+
+- **Nueva página `/inmueble/registro/`**: página autocontenida para registrar inmuebles. Recibe `?k={publicKey}` (query param). Consulta `{WS_API_BASE}/getuser?publicKey={k}` para verificar acceso. Si la respuesta es 200 con datos de usuario, muestra formulario completo con campos: tipo de inmueble, tipo de negocio, precio, moneda, dirección, zona, ciudad, país, dormitorios, baños, estacionamientos, m² construidos, m² de terreno, estado, descripción, coordenadas, fotos (URLs dinámicas) y WhatsApp de contacto. Envía POST a `{WS_API_BASE}/inmueble`.
+
 ## 2026-06-24
 
 - **Página `/inmueble/` actualizada**: endpoint cambiado a `{WS_API_BASE}/inmueble?_id={mongoId}`. Renderiza solo inmueble (sin agente/agencia). Botón "Contactar al captador" fijo en parte inferior (placeholder, sin acción). Fallback de path redirige a `?_id=`. Probado con _id `6a3a9ac904138ca82131d909` — galería 18 fotos, precio, características, descripción.
