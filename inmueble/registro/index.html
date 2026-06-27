@@ -331,6 +331,67 @@
       background: rgba(23,186,239,.05);
     }
 
+    /* Atributos list (reuses same visual pattern as photos) */
+    .attr-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    .attr-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .attr-row input {
+      flex: 1;
+      padding: 11px 14px;
+      background: #f9f9f9;
+      border: 1px solid var(--input-border);
+      border-radius: var(--radius-md);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: .88rem;
+      transition: var(--transition);
+      outline: none;
+    }
+    .attr-row input:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(23,186,239,.12);
+    }
+    .attr-remove {
+      background: none;
+      border: none;
+      color: #e74c3c;
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 4px 8px;
+      line-height: 1;
+      border-radius: 50%;
+      transition: var(--transition);
+    }
+    .attr-remove:hover {
+      background: rgba(231,76,60,.1);
+    }
+    .attr-add {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: none;
+      border: 1px dashed var(--input-border);
+      border-radius: var(--radius-sm);
+      padding: 8px 16px;
+      font-family: var(--font-body);
+      font-size: .82rem;
+      color: var(--blue);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .attr-add:hover {
+      border-color: var(--blue);
+      background: rgba(23,186,239,.05);
+    }
+
     /* Divider */
     .form-divider {
       border: none; border-top: 1px solid var(--border);
@@ -801,9 +862,14 @@
           </div>
         </div>
         <div class="form-group">
-          <label for="f-atributos">Atributos extra</label>
-          <textarea id="f-atributos" name="atributos" placeholder="Uno por línea, ej:&#10;Amoblado&#10;Esquinero&#10;Esquinero"></textarea>
-          <span class="hint">Características adicionales que no están en el formulario</span>
+          <label>Atributos extra</label>
+          <p class="photo-info">Características adicionales que no están en el formulario</p>
+          <div class="attr-list" id="attr-list">
+            <div class="attr-row">
+              <input type="text" class="attr-input" placeholder="Ej: Amoblado">
+            </div>
+          </div>
+          <button type="button" class="attr-add" id="attr-add-btn">+ Agregar otro atributo</button>
         </div>
 
         <hr class="form-divider">
@@ -927,7 +993,8 @@
       DOM.fEstado        = document.getElementById('f-estado');
       DOM.fFechaEntrega  = document.getElementById('f-fecha_entrega');
       DOM.fAnoc          = document.getElementById('f-anoc');
-      DOM.fAtributos     = document.getElementById('f-atributos');
+      DOM.attrList       = document.getElementById('attr-list');
+      DOM.attrAddBtn     = document.getElementById('attr-add-btn');
       DOM.mapModal       = document.getElementById('mapModal');
       DOM.mapPickerMap   = document.getElementById('mapPickerMap');
       DOM.mapPickerCoords = document.getElementById('mapPickerCoords');
@@ -1047,7 +1114,12 @@
         DOM.fAnoc.value = inm.anoc || '';
         DOM.fFechaEntrega.value = inm.fecha_entrega || '';
         if (inm.atributos && Array.isArray(inm.atributos)) {
-          DOM.fAtributos.value = inm.atributos.join('\n');
+          DOM.attrList.innerHTML = '';
+          if (inm.atributos.length) {
+            inm.atributos.forEach(function (a) { addAttrRow(a); });
+          } else {
+            addAttrRow();
+          }
         }
         if (Array.isArray(inm.fotos)) {
           DOM.photoList.innerHTML = '';
@@ -1205,6 +1277,35 @@
       return urls;
     }
 
+    /* ---- Atributos ---- */
+    function addAttrRow(val) {
+      var row = document.createElement('div');
+      row.className = 'attr-row';
+      var input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'attr-input';
+      input.placeholder = 'Ej: Amoblado';
+      if (val) input.value = val;
+      var removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.className = 'attr-remove';
+      removeBtn.textContent = '\u00d7';
+      removeBtn.addEventListener('click', function () { row.remove(); });
+      row.appendChild(input);
+      row.appendChild(removeBtn);
+      DOM.attrList.appendChild(row);
+    }
+
+    function getAtributos() {
+      var inputs = DOM.attrList.querySelectorAll('.attr-input');
+      var vals = [];
+      inputs.forEach(function (inp) {
+        var v = inp.value.trim();
+        if (v) vals.push(v);
+      });
+      return vals.length ? vals : undefined;
+    }
+
     /* ---- Submit ---- */
     function handleSubmit(e) {
       e.preventDefault();
@@ -1242,8 +1343,6 @@
       var estado       = DOM.fEstado.value;
       var fechaEntrega = DOM.fFechaEntrega.value;
       var anoc         = DOM.fAnoc.value.trim();
-      var atributosRaw = DOM.fAtributos.value.trim();
-
       var missing = [];
       if (!agentName)    missing.push('nombre del agente');
       if (!whatsapp)     missing.push('WhatsApp de contacto');
@@ -1264,7 +1363,7 @@
       }
 
       var fotos = getPhotos();
-      var atributos = atributosRaw ? atributosRaw.split('\n').map(function (s) { return s.trim(); }).filter(Boolean) : undefined;
+      var atributos = getAtributos();
 
       var estadoBools = {};
       switch (estado) {
@@ -1359,6 +1458,9 @@
       DOM.form.addEventListener('submit', handleSubmit);
       DOM.photoAddBtn.addEventListener('click', function () {
         addPhotoRow();
+      });
+      DOM.attrAddBtn.addEventListener('click', function () {
+        addAttrRow();
       });
       DOM.fPais.addEventListener('change', function () {
         loadCities(DOM.fPais.value);
