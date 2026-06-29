@@ -33,6 +33,11 @@ Sitio web estático Jekyll 4.3, alojado en GitHub Pages (statetty.com). Landing 
 - Probar navegación responsive, scroll header, FAQ accordion, calculadora de tarifas, formulario de contacto, y blog dinámico en producción.
 - Mover JS global (scroll header, toggle nav) de inline en header.html a `assets/js/main.js` si se desea centralizar.
 
+## 2026-06-29
+
+- **Cloudflare Tunnel**: configurado `cloudflared` en Contabo VPS para exponer la API Node.js (`localhost:3030`) bajo `https://api.statetty.com`. Resuelve el error Mixed Content al consumir la API HTTP desde el frontend HTTPS (GitHub Pages). Registro CNAME `api → statetty-api.trycloudflare.com` en Cloudflare. `assets/js/config.js` actualizado de `http://161.97.176.137:3030/api/statetty` a `https://api.statetty.com/api/statetty`.
+- **Documentación**: creado `documentación/configuracion-api-statetty.md` con el proceso completo de configuración del tunnel.
+
 ## 2026-06-21
 
 - **Fix `openWsRedirect`**: el enlace "Contactar a..." en `mapa.js` y `mapatmp.js` ahora construye el mensaje WhatsApp en cliente, abre WhatsApp directo en paralelo y envía el tracking al servidor como fire-and-forget. Un error del servidor ya no bloquea la comunicación vía WhatsApp.

@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-06-29
+
+- **Cloudflare Tunnel**: configurado `cloudflared` en Contabo VPS como proxy inverso HTTPS para la API Node.js en `localhost:3030`. Registro CNAME `api.statetty.com → statetty-api.trycloudflare.com` en Cloudflare (Proxied). `assets/js/config.js` actualizado de `http://161.97.176.137:3030/api/statetty` a `https://api.statetty.com/api/statetty`. Resuelve el error Mixed Content del frontend HTTPS.
+- **Documentación**: creado `documentación/configuracion-api-statetty.md` con el proceso completo de configuración del tunnel.
+
 ## 2026-06-27
 
 - **Formulario `/inmueble/registro/` alineado con schema Mongoose**: secciones organizadas (datos del agente, info general, precio, ubicación, características, equipamiento, multimedia, estado comercial, detalles adicionales). Precio entero USD. País y ciudad en selects dinámicos desde `assets/js/ubigeo/`. Estado comercial mapeado a booleanos (vendida, alquilada, es_preventa, enPlanos, reserva). Envía `nCaptacion: true`, `activo: true`. Campos ocultos `_id`, `agenteID`. Edición: acepta `?_id=` para cargar datos existentes, usa PUT vs POST según corresponda.
