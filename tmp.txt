@@ -1,73 +1,85 @@
-const mongoose    = require("mongoose");
-
-const inmueblesSchema = new mongoose.Schema(
-   {
-      id:           {type:String, unique: true},
-      brocker:      {type:String},
-      URL:          {type:String, unique: true},
-      pais:         {type:String},
-      ciudad:       {type:String},
-      nombre:       {type:String},
-      vendida:      {type:Boolean, default:false},
-      alquilada:    {type:Boolean, default:false},
-      enPlanos:     {type:Boolean},
-      nCaptacion:   {type:Boolean, default:false},
-      reserva:      {type:Boolean},
-      fotos:        {type: Array,"default":[]},
-      lat:          {type:String},
-      lng:          {type:String},
-      videoURL:     {type:String},
-      tipoNegocio:  {type:String},
-      precio:       {type:Number},
-      tipoInmueble: {type:String},
-      direccion:    {type:String},
-      zona:         {type:String},
-      ambientes:    {type:Number},
-      dormitorios:  {type:Number},
-      estacionamientos:  {type:Number},
-      banos:        {type:Number},
-      floorLevel:   {type:Number},
-      pisos:        {type:Number},
-      pileta:       {type:Boolean},
-      elevadores:   {type:Number},
-      duchas:       {type:Number},
-      petsAllowed:  {type:Boolean},
-      m2c:          {type:Number},
-      m2t:          {type:Number},
-      pm2:          {type:Number},
-      desc:         {type:String},
-      anoc:         {type:Number},
-      atributos:    {type: Array,default:[]},
-      agenteID:     {type:String},
-      agenciaID:    {type:String},
-      scrapDetail:  {type:Boolean},
-      idDuplicado:  {type:String},                       // El id del registro del que es copia
-      activo:       {type:Boolean, default:true},      // representa inmuebles que se están comercializando actualmente
-      fecha_ini:    {type:String},
-      contrato_fin: {type:String},
-      contrato_exclusivo:{type:Boolean, default:true},
-      fecha_cancel: {type:String},
-      borrador:     {type:Boolean, default:false},
-      lastScrapDate:{type: Date},
-      error404:     {type:Number},
-      agentName:    {type:String},
-      agentPhon:    {type:String},
-      micros:       {type: Array,default:[]},
-      sinMicros:    {type:Boolean, default:false},
-      fecha_entrega:{type: Date},
-      es_preventa:  {type:Boolean, default:false},
-   },{
-      timestamps: true,
-      versionkey: false
-   }
-);
-
-inmueblesSchema.index({ desc: 1 }, { collation: { locale: 'es', strength: 1 } });
-inmueblesSchema.index({ activo: 1, createdAt: 1 });
-inmueblesSchema.index({ activo: 1, createdAt: 1, precio: 1 });
-inmueblesSchema.index({ activo: 1, createdAt: 1, ciudad: 1 });
-inmueblesSchema.index({ agenteID: 1 });
-inmueblesSchema.index({ agenciaID: 1 });
-
-module.exports = mongoose.model('inmuebles', inmueblesSchema); 
-
+datos.js:8 Mixed Content: The page at 'https://statetty.com/maps/find/index.html?k=8e2a162c25818353' was loaded over HTTPS, but requested an insecure resource 'http://161.97.176.137:3030/api/statetty/finderresult?publicKey=8e2a162c25818353'. This request has been blocked; the content must be served over HTTPS.
+fetchFinderResult @ datos.js:8
+init @ mapa.js:838
+(anonymous) @ mapa.js:1007
+e @ jquery.min.js:2
+t @ jquery.min.js:2
+setTimeout
+(anonymous) @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+fire @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+ready @ jquery.min.js:2
+B @ jquery.min.js:2
+datos.js:12 fetchFinderResult error TypeError: Failed to fetch
+    at fetchFinderResult (datos.js:8:21)
+    at init (mapa.js:838:28)
+    at HTMLDocument.<anonymous> (mapa.js:1007:3)
+    at e (jquery.min.js:2:30005)
+    at t (jquery.min.js:2:30307)
+fetchFinderResult @ datos.js:12
+await in fetchFinderResult
+init @ mapa.js:838
+(anonymous) @ mapa.js:1007
+e @ jquery.min.js:2
+t @ jquery.min.js:2
+setTimeout
+(anonymous) @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+fire @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+ready @ jquery.min.js:2
+B @ jquery.min.js:2
+content-script.js:22 Document already loaded, running initialization immediately
+content-script.js:4 Attempting to initialize AdUnit
+content-script.js:6 AdUnit initialized successfully
+app-DKKA8w9L.js:58 ⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+Km @ app-DKKA8w9L.js:58
+fa @ app-DKKA8w9L.js:58
+Gm @ app-DKKA8w9L.js:58
+(anonymous) @ app-DKKA8w9L.js:58
+Go @ app-DKKA8w9L.js:40
+mn @ app-DKKA8w9L.js:40
+(anonymous) @ app-DKKA8w9L.js:40
+C @ app-DKKA8w9L.js:25
+Pn @ app-DKKA8w9L.js:25
+postMessage
+jn @ app-DKKA8w9L.js:25
+Pn @ app-DKKA8w9L.js:25
+postMessage
+jn @ app-DKKA8w9L.js:25
+fl @ app-DKKA8w9L.js:25
+e.unstable_scheduleCallback @ app-DKKA8w9L.js:25
+$f @ app-DKKA8w9L.js:40
+ve @ app-DKKA8w9L.js:40
+Be @ app-DKKA8w9L.js:40
+qo @ app-DKKA8w9L.js:40
+Yo.render.$s.render @ app-DKKA8w9L.js:40
+(anonymous) @ app-DKKA8w9L.js:63
+app-DKKA8w9L.js:58 ⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+Km @ app-DKKA8w9L.js:58
+fa @ app-DKKA8w9L.js:58
+Gm @ app-DKKA8w9L.js:58
+(anonymous) @ app-DKKA8w9L.js:58
+Go @ app-DKKA8w9L.js:40
+mn @ app-DKKA8w9L.js:40
+(anonymous) @ app-DKKA8w9L.js:40
+C @ app-DKKA8w9L.js:25
+Pn @ app-DKKA8w9L.js:25
+postMessage
+jn @ app-DKKA8w9L.js:25
+Pn @ app-DKKA8w9L.js:25
+postMessage
+jn @ app-DKKA8w9L.js:25
+fl @ app-DKKA8w9L.js:25
+e.unstable_scheduleCallback @ app-DKKA8w9L.js:25
+$f @ app-DKKA8w9L.js:40
+ve @ app-DKKA8w9L.js:40
+Be @ app-DKKA8w9L.js:40
+qo @ app-DKKA8w9L.js:40
+Yo.render.$s.render @ app-DKKA8w9L.js:40
+(anonymous) @ app-DKKA8w9L.js:63
