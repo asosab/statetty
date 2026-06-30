@@ -1394,11 +1394,13 @@
       DOM.photoUploadStat.innerHTML = '<span class="photo-upload-progress"></span> Subiendo…';
       DOM.photoUploadStat.style.color = 'var(--muted)';
 
+      var base = STATETTY_CONFIG.WS_API_BASE;
+
       var formData = new FormData();
       formData.append('imagen', file);
       formData.append('publicKey', k);
 
-      fetch('/api/imagenes/imagen/subir', {
+      fetch(base + '/api/imagenes/imagen/subir', {
         method: 'POST',
         body: formData
       })
