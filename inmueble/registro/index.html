@@ -1407,7 +1407,7 @@
       .then(function (r) { return r.json(); })
       .then(function (data) {
         if (data.ok) {
-          var url = '/api/imagenes/imagen/' + data.md5 + '.webp';
+          var url = base + 'imagenes/imagen/' + data.md5 + '.webp';
           DOM.photoUploadStat.innerHTML = '✅ Subida exitosa (' + (data.size / 1024).toFixed(1) + ' KB)';
           DOM.photoUploadStat.style.color = '#27ae60';
           addPhotoRow(url);
