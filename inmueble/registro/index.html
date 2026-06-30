@@ -284,6 +284,36 @@
       color: var(--muted);
       margin-bottom: 8px;
     }
+    .photo-upload-area {
+      padding: 16px;
+      background: #f9f9f9;
+      border: 2px dashed var(--input-border);
+      border-radius: var(--radius-md);
+      text-align: center;
+      transition: var(--transition);
+      margin-bottom: 8px;
+    }
+    .photo-upload-area.dragover {
+      border-color: var(--blue);
+      background: rgba(23,186,239,.06);
+    }
+    .photo-upload-preview-img {
+      max-width: 100%;
+      max-height: 200px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      margin: 0 auto;
+    }
+    .photo-upload-progress {
+      display: inline-block;
+      width: 18px; height: 18px;
+      border: 2px solid rgba(23,186,239,.2);
+      border-top-color: var(--blue);
+      border-radius: 50%;
+      animation: btnspin .6s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
     .photo-list {
       display: flex;
       flex-direction: column;
@@ -815,13 +845,21 @@
         <h3 class="form-section-title">Multimedia</h3>
         <div class="form-group">
           <label>Fotos del inmueble</label>
-          <p class="photo-info">Agregá URLs de imágenes (alojadas en Google Drive, Imgur, etc.)</p>
+          <div class="photo-upload-area" id="photo-upload-area">
+            <input type="file" id="photo-file-input" accept="image/jpeg,image/png,image/webp" style="display:none">
+            <div id="photo-upload-preview" style="display:none;margin-bottom:8px"></div>
+            <button type="button" class="photo-add" id="photo-upload-btn">📷 Subir imagen</button>
+            <span style="font-size:.72rem;color:var(--muted-2);margin-left:8px">JPEG, PNG o WebP · máx 1 MB</span>
+            <div id="photo-upload-status" style="font-size:.8rem;margin-top:4px;color:var(--muted)"></div>
+          </div>
+          <hr style="border:none;border-top:1px solid var(--border);margin:12px 0">
+          <p class="photo-info">O pegá URLs directamente:</p>
           <div class="photo-list" id="photo-list">
             <div class="photo-row">
               <input type="url" class="photo-input" placeholder="https://…">
             </div>
           </div>
-          <button type="button" class="photo-add" id="photo-add-btn">+ Agregar otra foto</button>
+          <button type="button" class="photo-add" id="photo-add-btn">+ Agregar otra URL</button>
         </div>
         <div class="form-group">
           <label for="f-videoURL">Video / Tour virtual</label>
@@ -1005,6 +1043,11 @@
       DOM.mapMarker      = null;
       DOM.pendingLat     = null;
       DOM.pendingLng     = null;
+      DOM.photoUploadBtn  = document.getElementById('photo-upload-btn');
+      DOM.photoFileInput  = document.getElementById('photo-file-input');
+      DOM.photoUploadArea = document.getElementById('photo-upload-area');
+      DOM.photoUploadPrev = document.getElementById('photo-upload-preview');
+      DOM.photoUploadStat = document.getElementById('photo-upload-status');
     }
 
     function getParam() {
@@ -1306,6 +1349,80 @@
       return vals.length ? vals : undefined;
     }
 
+    /* ---- Image upload ---- */
+    var selectedUploadFile = null;
+
+    function triggerFileInput() {
+      DOM.photoFileInput.click();
+    }
+
+    function handleFileSelect(e) {
+      var file = e.target.files[0];
+      if (!file) return;
+      selectedUploadFile = file;
+
+      if (!['image/jpeg','image/png','image/webp'].includes(file.type)) {
+        DOM.photoUploadStat.textContent = 'Solo se aceptan JPEG, PNG o WebP';
+        DOM.photoUploadStat.style.color = '#e74c3c';
+        return;
+      }
+
+      if (file.size > 1048576) {
+        DOM.photoUploadStat.textContent = 'La imagen no debe superar 1 MB';
+        DOM.photoUploadStat.style.color = '#e74c3c';
+        return;
+      }
+
+      DOM.photoUploadStat.textContent = '';
+      var reader = new FileReader();
+      reader.onload = function (ev) {
+        DOM.photoUploadPrev.innerHTML = '<img src="' + ev.target.result + '" class="photo-upload-preview-img" />';
+        DOM.photoUploadPrev.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+      uploadSelectedFile(file);
+    }
+
+    function uploadSelectedFile(file) {
+      var k = getParam();
+      if (!k) {
+        DOM.photoUploadStat.textContent = 'Error: no hay clave de acceso';
+        DOM.photoUploadStat.style.color = '#e74c3c';
+        return;
+      }
+
+      DOM.photoUploadStat.innerHTML = '<span class="photo-upload-progress"></span> Subiendo…';
+      DOM.photoUploadStat.style.color = 'var(--muted)';
+
+      var formData = new FormData();
+      formData.append('imagen', file);
+      formData.append('publicKey', k);
+
+      fetch('/api/imagenes/imagen/subir', {
+        method: 'POST',
+        body: formData
+      })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data.ok) {
+          var url = '/api/imagenes/imagen/' + data.md5 + '.webp';
+          DOM.photoUploadStat.innerHTML = '✅ Subida exitosa (' + (data.size / 1024).toFixed(1) + ' KB)';
+          DOM.photoUploadStat.style.color = '#27ae60';
+          addPhotoRow(url);
+          DOM.photoUploadPrev.style.display = 'none';
+          DOM.photoFileInput.value = '';
+          selectedUploadFile = null;
+        } else {
+          DOM.photoUploadStat.textContent = 'Error: ' + (data.error || 'Falló la subida');
+          DOM.photoUploadStat.style.color = '#e74c3c';
+        }
+      })
+      .catch(function (err) {
+        DOM.photoUploadStat.textContent = 'Error de red: ' + err.message;
+        DOM.photoUploadStat.style.color = '#e74c3c';
+      });
+    }
+
     /* ---- Submit ---- */
     function handleSubmit(e) {
       e.preventDefault();
@@ -1456,6 +1573,27 @@
     /* ---- Events ---- */
     function bindEvents() {
       DOM.form.addEventListener('submit', handleSubmit);
+      DOM.photoUploadBtn.addEventListener('click', triggerFileInput);
+      DOM.photoFileInput.addEventListener('change', handleFileSelect);
+      DOM.photoUploadArea.addEventListener('click', function (e) {
+        if (e.target === DOM.photoUploadArea) triggerFileInput();
+      });
+      DOM.photoUploadArea.addEventListener('dragover', function (e) {
+        e.preventDefault();
+        DOM.photoUploadArea.classList.add('dragover');
+      });
+      DOM.photoUploadArea.addEventListener('dragleave', function () {
+        DOM.photoUploadArea.classList.remove('dragover');
+      });
+      DOM.photoUploadArea.addEventListener('drop', function (e) {
+        e.preventDefault();
+        DOM.photoUploadArea.classList.remove('dragover');
+        var files = e.dataTransfer.files;
+        if (files.length) {
+          DOM.photoFileInput.files = files;
+          handleFileSelect({ target: DOM.photoFileInput });
+        }
+      });
       DOM.photoAddBtn.addEventListener('click', function () {
         addPhotoRow();
       });
