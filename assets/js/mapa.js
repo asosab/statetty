@@ -694,7 +694,7 @@ $(document).ready(function () {
       const msj = `Hola${nombreCortito},${soyNa}${deAg}${sc}un gusto saludarte. Por favor, podría enviarme información sobre este inmueble, en caso de que siga disponible (${dato.Titulo})\n\nGracias de antemano\n\nlink: ${url}\n\n${foto}Mensaje creado con Statetty https://statetty.com`;
 
       const server = STATETTY_CONFIG.WS_API_BASE;
-      const linkSrv = `${server}/usrClckWsInm?u=${encodeURIComponent(userid)}&i=${encodeURIComponent(dato._id)}`;
+      const linkSrv = `${server}statetty/usrClckWsInm?u=${encodeURIComponent(userid)}&i=${encodeURIComponent(dato._id)}`;
 
       const linkWA = celularValido
         ? `<br/><a href="#" onclick="openWsRedirect('${linkSrv}','https://wa.me/${cel}?text=${encodeURIComponent(msj)}');return false;">📱 Contactar a${nombreCorto}</a>`

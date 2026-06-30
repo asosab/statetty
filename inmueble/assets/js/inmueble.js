@@ -59,7 +59,7 @@
         showError('Error de configuración', 'No se pudo determinar el endpoint del servidor.');
         return;
       }
-      var url = base + '/inmueble?_id=' + encodeURIComponent(id);
+      var url = base + 'statetty/inmueble?_id=' + encodeURIComponent(id);
       console.log('STATETTY: fetching', url);
       var opts = { headers: { 'ngrok-skip-browser-warning': '1' } };
       if (typeof AbortController !== 'undefined') {

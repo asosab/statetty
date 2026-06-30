@@ -466,7 +466,7 @@ tags: [registro, formulario, Statetty, real state, inmuebles]
       return;
     }
 
-    fetch(STATETTY_CONFIG.WS_API_BASE + "/registro", {
+    fetch(STATETTY_CONFIG.WS_API_BASE + "statetty/registro", {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)

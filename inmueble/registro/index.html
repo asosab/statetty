@@ -1065,7 +1065,7 @@
           showStatus('error', 'Error de configuración', 'No se pudo determinar el endpoint del servidor.');
           return;
         }
-        var url = base + '/getuser?publicKey=' + encodeURIComponent(k);
+        var url = base + 'statetty/getuser?publicKey=' + encodeURIComponent(k);
         fetch(url, {
           headers: { 'ngrok-skip-browser-warning': '1' }
         })
@@ -1121,7 +1121,7 @@
     /* ---- Load existing (edit mode) ---- */
     function loadInmueble(id) {
       var base = STATETTY_CONFIG.WS_API_BASE;
-      fetch(base + '/inmueble?_id=' + encodeURIComponent(id), {
+      fetch(base + 'statetty/inmueble?_id=' + encodeURIComponent(id), {
         headers: { 'ngrok-skip-browser-warning': '1' }
       })
       .then(function (r) { return r.json(); })
@@ -1400,7 +1400,7 @@
       formData.append('imagen', file);
       formData.append('publicKey', k);
 
-      fetch(base + '/api/imagen/subir', {
+      fetch(base + 'imagen/subir', {
         method: 'POST',
         body: formData
       })
@@ -1540,7 +1540,7 @@
 
       var base = STATETTY_CONFIG.WS_API_BASE;
       var method = payload._id ? 'PUT' : 'POST';
-      fetch(base + '/inmueble', {
+      fetch(base + 'statetty/inmueble', {
         method: method,
         headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': '1' },
         body: JSON.stringify(payload)
