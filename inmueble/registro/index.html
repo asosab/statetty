@@ -638,8 +638,8 @@
   <!-- Unauthorized state -->
   <div class="page-status hidden" id="status-unauthorized">
     <div class="page-status-icon">🔒</div>
-    <h2>Acceso no autorizado</h2>
-    <p>No tenés permiso para acceder a esta página. Si creés que esto es un error, contactanos desde <a href="/">statetty.com</a>.</p>
+    <h2 id="err-title-unauth">Acceso no autorizado</h2>
+    <p id="err-msg-unauth"></p>
   </div>
 
   <!-- Registration form -->
@@ -976,7 +976,7 @@
       DOM.loading.classList.remove('hidden');
       var k = getParam();
       if (!k) {
-        showStatus('error', 'Parámetro faltante', 'No se recibió la clave de acceso. Asegurate de usar el enlace completo desde Telegram.');
+        showStatus('unauthorized', 'Llave no encontrada', 'No se recibió la llave de acceso. Asegurate de usar el enlace completo desde Telegram.');
         return;
       }
       verifyUser(k);
@@ -993,6 +993,8 @@
       DOM.userEmail      = document.getElementById('user-email');
       DOM.errTitle       = document.getElementById('err-title');
       DOM.errMsg         = document.getElementById('err-msg');
+      DOM.errTitleUnauth = document.getElementById('err-title-unauth');
+      DOM.errMsgUnauth   = document.getElementById('err-msg-unauth');
       DOM.submitBtn      = document.getElementById('form-submit-btn');
       DOM.btnText        = document.getElementById('form-btn-text');
       DOM.spinner        = document.getElementById('form-spinner');
@@ -1074,8 +1076,14 @@
         })
         .then(function (res) {
           if (!res.ok || !res.body) {
-            DOM.loading.classList.add('hidden');
-            DOM.unauthorized.classList.remove('hidden');
+            var errMsg = (res.body && res.body.error) || '';
+            if (errMsg === 'publicKey inválida') {
+              showStatus('unauthorized', 'Llave no válida', 'Parece que tu llave de acceso no es válida. Generá una nueva desde Statetty en Telegram.');
+            } else if (errMsg === 'publicKey vencida') {
+              showStatus('unauthorized', 'Llave expirada', 'Parece que tu llave de acceso expiró. Andá a Statetty en Telegram y solicitá una nueva.');
+            } else {
+              showStatus('unauthorized', 'Acceso no autorizado', 'Algo salió mal. Si el problema persiste, contactanos desde la comunidad en https://t.me/Statetty');
+            }
             return;
           }
           USER = res.body.data || res.body;
@@ -1217,8 +1225,14 @@
       DOM.loading.classList.add('hidden');
       if (type === 'error') {
         DOM.error.classList.remove('hidden');
+        DOM.unauthorized.classList.add('hidden');
         DOM.errTitle.textContent = title || 'Error';
         DOM.errMsg.textContent  = msg  || 'Ocurrió un error inesperado.';
+      } else if (type === 'unauthorized') {
+        DOM.unauthorized.classList.remove('hidden');
+        DOM.error.classList.add('hidden');
+        DOM.errTitleUnauth.textContent = title || 'Acceso no autorizado';
+        DOM.errMsgUnauth.textContent   = msg  || '';
       }
     }
 

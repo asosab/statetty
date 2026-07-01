@@ -67,6 +67,7 @@ Sitio web estático Jekyll 4.3, alojado en GitHub Pages (statetty.com). Landing 
 ## 2026-07-01
 
 - **Carga de datos vía `?k=` en formularios**: `_includes/contacto.html` y `registro/index.html` ahora leen `?k=` de la URL, consultan `getuser?publicKey=...` y pre-llenan los campos mapeables del formulario. El payload del POST incluye `publicKey` cuando `k` está presente. Select `f-pais` cambiado a valores `Bolivia`/`Peru` (capitalizados), select `f-ciudad` a `SCZ`/`LIM`. La página `/registro/` normaliza país y sexo con `.toLowerCase()` para coincidir con los valores del formulario.
+- **Mensajes amigables en `inmueble/registro/`**: al fallar `?k=` (inválida, vencida, faltante) se muestran mensajes específicos y en tono coloquial en lugar del genérico "Acceso no autorizado". Se parsea `res.body.error` de la API para distinguir entre `publicKey inválida`, `publicKey vencida` y otros errores.
 
 ## Pendiente — refactor blog/index.html
 
