@@ -281,8 +281,8 @@ tags: [registro, formulario, Statetty, real state, inmuebles]
             <label for="f-pais">País donde operas <span class="required">*</span></label>
             <select id="f-pais" name="pais" required>
               <option value="">Seleccioná</option>
-              <option value="bolivia" selected>Bolivia</option>
-              <option value="peru">Perú</option>
+              <option value="Bolivia" selected>Bolivia</option>
+              <option value="Peru">Perú</option>
             </select>
           </div>
           <div class="form-group">
@@ -400,11 +400,11 @@ tags: [registro, formulario, Statetty, real state, inmuebles]
   var successEl = document.getElementById('form-success');
 
   var CIUDADES = {
-    bolivia: [
+    Bolivia: [
       { value: '', label: 'Seleccioná una ciudad' },
       { value: 'SCZ', label: 'Santa Cruz de la Sierra' }
     ],
-    peru: [
+    Peru: [
       { value: '', label: 'Seleccioná una ciudad' },
       { value: 'LIM', label: 'Lima' }
     ]
@@ -413,7 +413,7 @@ tags: [registro, formulario, Statetty, real state, inmuebles]
   function poblarCiudades(pais) {
     var sel = document.getElementById('f-ciudad');
     sel.innerHTML = '';
-    (CIUDADES[pais] || CIUDADES['bolivia']).forEach(function(c) {
+    (CIUDADES[pais] || CIUDADES['Bolivia']).forEach(function(c) {
       var opt = document.createElement('option');
       opt.value = c.value;
       opt.textContent = c.label;
@@ -425,7 +425,7 @@ tags: [registro, formulario, Statetty, real state, inmuebles]
     poblarCiudades(this.value);
   });
 
-  poblarCiudades('bolivia');
+  poblarCiudades('Bolivia');
 
   // ── Cargar datos de usuario si viene ?k= ──
   if (k) {
@@ -450,15 +450,15 @@ tags: [registro, formulario, Statetty, real state, inmuebles]
           }
           if (el('f-agencia') && user.agencia) el('f-agencia').value = user.agencia;
 
-          // Normalizar país y cargar ciudades
+          // Normalizar país (capitalizar) y cargar ciudades
           if (user.pais) {
-            var paisLower = user.pais.toLowerCase();
+            var paisCap = user.pais.charAt(0).toUpperCase() + user.pais.slice(1).toLowerCase();
             var paisEl = el('f-pais');
             if (paisEl) {
-              var match = Array.from(paisEl.options).some(function(opt) { return opt.value === paisLower; });
+              var match = Array.from(paisEl.options).some(function(opt) { return opt.value === paisCap; });
               if (match) {
-                paisEl.value = paisLower;
-                poblarCiudades(paisLower);
+                paisEl.value = paisCap;
+                poblarCiudades(paisCap);
                 if (el('f-ciudad') && user.ciudad) {
                   var ciudadMatch = Array.from(el('f-ciudad').options).some(function(opt) { return opt.value === user.ciudad; });
                   if (ciudadMatch) el('f-ciudad').value = user.ciudad;
