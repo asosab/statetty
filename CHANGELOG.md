@@ -2,6 +2,7 @@
 
 ## 2026-07-01
 
+- **Formulario de registro (`registro/index.html`)**: el campo ciudad ahora usa un `<select>` dinámico con valores `SCZ`/`LIM` controlado por el país seleccionado, igual que el formulario de contacto. Eliminada la opción "Otro" del país. El payload envía `ciudad` (uppercase) en lugar de `ciudades` (texto libre). La precarga con `?k=` pobla el select y selecciona la ciudad del usuario.
 - **Formulario principal y registro**: al recibir `?k=` en la URL, se consulta `getuser?publicKey=...` y se pre-llenan los campos del formulario (nombres, apellidos, WhatsApp, email, agencia, país, ciudad/región, fecha de nacimiento, sexo). Se incluye `publicKey` en el payload del POST. Indicador visual "✓ Datos cargados desde tu cuenta". Valores de select `f-pais` cambiados a `Bolivia`/`Peru` y `f-ciudad` a `SCZ`/`LIM` para coincidir con la respuesta del API.
 - **Mensajes amigables en `inmueble/registro/`**: al fallar `?k=` (inválida, vencida, faltante) se muestran mensajes específicos y en tono coloquial en lugar del genérico "Acceso no autorizado". Se parsea `res.body.error` de la API para distinguir entre `publicKey inválida`, `publicKey vencida` y otros errores.
 

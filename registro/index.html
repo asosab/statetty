@@ -283,12 +283,12 @@ tags: [registro, formulario, Statetty, real state, inmuebles]
               <option value="">Seleccioná</option>
               <option value="bolivia" selected>Bolivia</option>
               <option value="peru">Perú</option>
-              <option value="otro">Otro</option>
             </select>
           </div>
           <div class="form-group">
-            <label for="f-ciudades">Ciudades o regiones donde operas <span class="required">*</span></label>
-            <input type="text" id="f-ciudades" name="ciudades" placeholder="Ej: Santa Cruz de la Sierra, Lima" required>
+            <label for="f-ciudad">Ciudad donde operas <span class="required">*</span></label>
+            <select id="f-ciudad" name="ciudad" required>
+            </select>
           </div>
         </div>
 
@@ -399,6 +399,34 @@ tags: [registro, formulario, Statetty, real state, inmuebles]
   var errorEl = document.getElementById('form-error');
   var successEl = document.getElementById('form-success');
 
+  var CIUDADES = {
+    bolivia: [
+      { value: '', label: 'Seleccioná una ciudad' },
+      { value: 'SCZ', label: 'Santa Cruz de la Sierra' }
+    ],
+    peru: [
+      { value: '', label: 'Seleccioná una ciudad' },
+      { value: 'LIM', label: 'Lima' }
+    ]
+  };
+
+  function poblarCiudades(pais) {
+    var sel = document.getElementById('f-ciudad');
+    sel.innerHTML = '';
+    (CIUDADES[pais] || CIUDADES['bolivia']).forEach(function(c) {
+      var opt = document.createElement('option');
+      opt.value = c.value;
+      opt.textContent = c.label;
+      sel.appendChild(opt);
+    });
+  }
+
+  document.getElementById('f-pais').addEventListener('change', function() {
+    poblarCiudades(this.value);
+  });
+
+  poblarCiudades('bolivia');
+
   // ── Cargar datos de usuario si viene ?k= ──
   if (k) {
     (function() {
@@ -422,17 +450,22 @@ tags: [registro, formulario, Statetty, real state, inmuebles]
           }
           if (el('f-agencia') && user.agencia) el('f-agencia').value = user.agencia;
 
-          // Normalizar país
+          // Normalizar país y cargar ciudades
           if (user.pais) {
             var paisLower = user.pais.toLowerCase();
             var paisEl = el('f-pais');
             if (paisEl) {
               var match = Array.from(paisEl.options).some(function(opt) { return opt.value === paisLower; });
-              if (match) paisEl.value = paisLower;
+              if (match) {
+                paisEl.value = paisLower;
+                poblarCiudades(paisLower);
+                if (el('f-ciudad') && user.ciudad) {
+                  var ciudadMatch = Array.from(el('f-ciudad').options).some(function(opt) { return opt.value === user.ciudad; });
+                  if (ciudadMatch) el('f-ciudad').value = user.ciudad;
+                }
+              }
             }
           }
-
-          if (el('f-ciudades') && user.region) el('f-ciudades').value = user.region;
 
           // Indicador visual
           var ind = document.createElement('p');
@@ -460,7 +493,7 @@ tags: [registro, formulario, Statetty, real state, inmuebles]
     var agencia = document.getElementById('f-agencia').value.trim();
     var paisSelect = document.getElementById('f-pais');
     var pais = paisSelect.options[paisSelect.selectedIndex].value;
-    var ciudades = document.getElementById('f-ciudades').value.trim();
+    var ciudad = document.getElementById('f-ciudad').value;
     var nivelExp = form.querySelector('input[name="nivel_experiencia"]:checked');
     var nivelTec = form.querySelector('input[name="nivel_tecnologia"]:checked');
 
@@ -473,7 +506,7 @@ tags: [registro, formulario, Statetty, real state, inmuebles]
     if (!sexo) missing.push('sexo');
     if (!agencia) missing.push('agencia inmobiliaria');
     if (!pais) missing.push('país');
-    if (!ciudades) missing.push('ciudades');
+    if (!ciudad) missing.push('ciudad');
     if (!nivelExp) missing.push('nivel de experiencia');
     if (!nivelTec) missing.push('nivel de experticia tecnológica');
 
@@ -496,7 +529,7 @@ tags: [registro, formulario, Statetty, real state, inmuebles]
       sexo: sexo.value,
       agencia_inmobiliaria: agencia,
       pais: pais,
-      ciudades: ciudades,
+      ciudad: ciudad.toUpperCase(),
       nivel_experiencia: nivelExp.value,
       nivel_tecnologia: nivelTec.value,
       intereses: document.getElementById('f-intereses').value.trim(),
