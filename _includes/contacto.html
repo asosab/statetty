@@ -205,8 +205,8 @@
               <label for="f-pais">País *</label>
               <select id="f-pais" name="pais" required>
                 <option value="">Seleccioná</option>
-                <option value="bolivia" selected>Bolivia</option>
-                <option value="peru">Perú</option>
+                <option value="Bolivia" selected>Bolivia</option>
+                <option value="Peru">Perú</option>
               </select>
             </div>
             <div class="form-group">
@@ -252,21 +252,22 @@
 
 <script>
 (function() {
+  var k = new URLSearchParams(window.location.search).get('k');
   var CIUDADES = {
-    bolivia: [
+    Bolivia: [
       { value: '', label: 'Seleccioná una ciudad' },
-      { value: 'scz', label: 'Santa Cruz de la Sierra' }
+      { value: 'SCZ', label: 'Santa Cruz de la Sierra' }
     ],
-    peru: [
+    Peru: [
       { value: '', label: 'Seleccioná una ciudad' },
-      { value: 'lim', label: 'Lima' }
+      { value: 'LIM', label: 'Lima' }
     ]
   };
 
   function poblarCiudades(pais) {
     var sel = document.getElementById('f-ciudad');
     sel.innerHTML = '';
-    (CIUDADES[pais] || CIUDADES.bolivia).forEach(function(c) {
+    (CIUDADES[pais] || CIUDADES['Bolivia']).forEach(function(c) {
       var opt = document.createElement('option');
       opt.value = c.value;
       opt.textContent = c.label;
@@ -278,7 +279,57 @@
     poblarCiudades(this.value);
   });
 
-  poblarCiudades('bolivia');
+  poblarCiudades('Bolivia');
+
+  // ── Cargar datos de usuario si viene ?k= ──
+  if (k) {
+    (function() {
+      var base = typeof STATETTY_CONFIG !== 'undefined' ? STATETTY_CONFIG.WS_API_BASE : '';
+      if (!base) return;
+      fetch(base + 'statetty/getuser?publicKey=' + encodeURIComponent(k))
+        .then(function(r) { return r.json(); })
+        .then(function(res) {
+          var user = res.data || res;
+          if (!user) return;
+
+          var nombresEl = document.getElementById('f-nombres');
+          var apellidosEl = document.getElementById('f-apellidos');
+          var waEl = document.getElementById('f-wa');
+          var emailEl = document.getElementById('f-email');
+          var agenciaEl = document.getElementById('f-agencia');
+          var paisEl = document.getElementById('f-pais');
+          var ciudadEl = document.getElementById('f-ciudad');
+
+          if (nombresEl && user.first_name) nombresEl.value = user.first_name;
+          if (apellidosEl && user.last_name) apellidosEl.value = user.last_name;
+          if (waEl && user.waphone) waEl.value = user.waphone;
+          if (emailEl && user.email) emailEl.value = user.email;
+          if (agenciaEl && user.agencia) agenciaEl.value = user.agencia;
+
+          // Normalizar país (capitalizar primera letra) y validar contra opciones
+          if (user.pais && paisEl) {
+            var cap = user.pais.charAt(0).toUpperCase() + user.pais.slice(1).toLowerCase();
+            var match = Array.from(paisEl.options).some(function(opt) { return opt.value === cap; });
+            if (match) {
+              paisEl.value = cap;
+              poblarCiudades(cap);
+              if (user.ciudad && ciudadEl) {
+                var ciudadMatch = Array.from(ciudadEl.options).some(function(opt) { return opt.value === user.ciudad; });
+                if (ciudadMatch) ciudadEl.value = user.ciudad;
+              }
+            }
+          }
+
+          // Indicador visual
+          var ind = document.createElement('p');
+          ind.style.cssText = 'font-size:.78rem;color:var(--brand);margin-top:-10px;margin-bottom:14px;';
+          ind.textContent = '\u2713 Datos cargados desde tu cuenta';
+          var title = document.querySelector('#Contacto .form-title');
+          if (title) title.parentNode.insertBefore(ind, title.nextSibling);
+        })
+        .catch(function(err) { console.warn('statetty: no se pudieron cargar datos del usuario', err); });
+    })();
+  }
 
   document.getElementById('contactForm').addEventListener('submit', function(e) {
     e.preventDefault();
@@ -322,6 +373,7 @@
       ciudad: ciudad.toUpperCase(),
       mensaje: document.getElementById('f-mensaje').value.trim()
     };
+    if (k) { payload.publicKey = k; }
 
     if (typeof STATETTY_CONFIG === 'undefined' || !STATETTY_CONFIG.WS_API_BASE) {
       errorEl.textContent = 'Error de configuración. Intentalo de nuevo más tarde.';
