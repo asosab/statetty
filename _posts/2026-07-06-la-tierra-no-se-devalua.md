@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "Tierra que no se devalúa: por qué los lotes ganan terreno como refugio de valor en Suramérica"
-date: 2026-04-06
+date: 2026-07-06
 categories: mercado, analisis
 comments: true
 description: "Por qué los terrenos y lotes se consolidan como refugio de valor en Bolivia, Perú y el resto de Suramérica, y cómo sustentar esa recomendación con datos en lugar de intuición."
