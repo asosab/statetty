@@ -64,6 +64,10 @@ Sitio web estático Jekyll 4.3, alojado en GitHub Pages (statetty.com). Landing 
 - **Ubigeo**: creados `assets/js/ubigeo/paises.js`, `BO.js`, `PE.js` con departamentos y ciudades. País y ciudad en selects dinámicos.
 - **Selector de coordenadas**: lat/lng en un solo input separado por coma + botón "📍 Encontrar coordenadas" que abre modal con mapa Leaflet. Clic en mapa coloca marcador. Botones "Usar esta ubicación" y "Cancelar".
 
+## 2026-07-01
+
+- **Carga de datos vía `?k=` en formularios**: `_includes/contacto.html` y `registro/index.html` ahora leen `?k=` de la URL, consultan `getuser?publicKey=...` y pre-llenan los campos mapeables del formulario. El payload del POST incluye `publicKey` cuando `k` está presente. Select `f-pais` cambiado a valores `Bolivia`/`Peru` (capitalizados), select `f-ciudad` a `SCZ`/`LIM`. La página `/registro/` normaliza país y sexo con `.toLowerCase()` para coincidir con los valores del formulario.
+
 ## Pendiente — refactor blog/index.html
 
 - 2026-06-12: **`blog/index.html` no usa layout ni includes** — tiene header, footer y `<head>` completos hardcodeados. Crea `_layouts/blog.html`, refactoriza `blog/index.html` para que herede de él y use `{% include header.html %}` / `{% include footer.html %}`. El CSS específico del blog (hero, search, cards) puede quedar inline en `blog/index.html`.

@@ -391,12 +391,59 @@ tags: [registro, formulario, Statetty, real state, inmuebles]
 
 <script>
 (function() {
+  var k = new URLSearchParams(window.location.search).get('k');
   var form = document.getElementById('registroForm');
   var btn = document.getElementById('form-submit-btn');
   var txt = document.getElementById('form-btn-text');
   var spinner = document.getElementById('form-spinner');
   var errorEl = document.getElementById('form-error');
   var successEl = document.getElementById('form-success');
+
+  // ── Cargar datos de usuario si viene ?k= ──
+  if (k) {
+    (function() {
+      var base = typeof STATETTY_CONFIG !== 'undefined' ? STATETTY_CONFIG.WS_API_BASE : '';
+      if (!base) return;
+      fetch(base + 'statetty/getuser?publicKey=' + encodeURIComponent(k))
+        .then(function(r) { return r.json(); })
+        .then(function(res) {
+          var user = res.data || res;
+          if (!user) return;
+
+          var el = function(id) { return document.getElementById(id); };
+          if (el('f-email') && user.email) el('f-email').value = user.email;
+          if (el('f-nombres') && user.first_name) el('f-nombres').value = user.first_name;
+          if (el('f-apellidos') && user.last_name) el('f-apellidos').value = user.last_name;
+          if (el('f-wa') && user.waphone) el('f-wa').value = user.waphone;
+          if (el('f-nacimiento') && user.birthday) el('f-nacimiento').value = user.birthday.split('T')[0];
+          if (user.sexo) {
+            var sr = form.querySelector('input[name="sexo"][value="' + user.sexo.toLowerCase() + '"]');
+            if (sr) sr.checked = true;
+          }
+          if (el('f-agencia') && user.agencia) el('f-agencia').value = user.agencia;
+
+          // Normalizar país
+          if (user.pais) {
+            var paisLower = user.pais.toLowerCase();
+            var paisEl = el('f-pais');
+            if (paisEl) {
+              var match = Array.from(paisEl.options).some(function(opt) { return opt.value === paisLower; });
+              if (match) paisEl.value = paisLower;
+            }
+          }
+
+          if (el('f-ciudades') && user.region) el('f-ciudades').value = user.region;
+
+          // Indicador visual
+          var ind = document.createElement('p');
+          ind.style.cssText = 'font-size:.78rem;color:var(--brand);margin-top:-10px;margin-bottom:18px;';
+          ind.textContent = '\u2713 Datos cargados desde tu cuenta';
+          var sub = document.querySelector('#RegistroForm .registro-subtitle');
+          if (sub) sub.parentNode.insertBefore(ind, sub.nextSibling);
+        })
+        .catch(function(err) { console.warn('statetty: no se pudieron cargar datos del usuario', err); });
+    })();
+  }
 
   form.addEventListener('submit', function(e) {
     e.preventDefault();
@@ -456,6 +503,7 @@ tags: [registro, formulario, Statetty, real state, inmuebles]
       expectativas: document.getElementById('f-expectativas').value.trim(),
       codigo_referencia: document.getElementById('f-codigo').value.trim(),
     };
+    if (k) { payload.publicKey = k; }
 
     if (typeof STATETTY_CONFIG === 'undefined' || !STATETTY_CONFIG.WS_API_BASE) {
       errorEl.textContent = 'Error de configuración. Intentalo de nuevo más tarde.';

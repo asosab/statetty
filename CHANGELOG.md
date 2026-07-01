@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-07-01
+
+- **Formulario principal y registro**: al recibir `?k=` en la URL, se consulta `getuser?publicKey=...` y se pre-llenan los campos del formulario (nombres, apellidos, WhatsApp, email, agencia, país, ciudad/región, fecha de nacimiento, sexo). Se incluye `publicKey` en el payload del POST. Indicador visual "✓ Datos cargados desde tu cuenta". Valores de select `f-pais` cambiados a `Bolivia`/`Peru` y `f-ciudad` a `SCZ`/`LIM` para coincidir con la respuesta del API.
+
 ## 2026-06-29
 
 - **Cloudflare Tunnel**: configurado `cloudflared` en Contabo VPS como proxy inverso HTTPS para la API Node.js en `localhost:3030`. Registro CNAME `api.statetty.com → statetty-api.trycloudflare.com` en Cloudflare (Proxied). `assets/js/config.js` actualizado de `http://161.97.176.137:3030/api/statetty` a `https://api.statetty.com/api/statetty`. Resuelve el error Mixed Content del frontend HTTPS.
