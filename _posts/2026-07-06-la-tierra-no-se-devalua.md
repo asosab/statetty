@@ -10,6 +10,8 @@ published: true
 image: "radar_tierras.png"
 ---
 
+¿Sin tiempo para leer? Escucha el artículo en [Statetty Podcast](https://open.spotify.com/episode/6xZYrwqlUuJ2nBHig8157r)
+
 
 # Tierra que no se devalúa: por qué los lotes ganan terreno como refugio de valor en Suramérica
 
