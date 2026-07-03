@@ -467,6 +467,13 @@ tags: [registro, formulario, Statetty, real state, inmuebles]
             }
           }
 
+          // Saludo en el header
+          var greetingEl = document.getElementById('header-greeting');
+          if (greetingEl && user.first_name) {
+            greetingEl.textContent = '\u00a1Hola ' + user.first_name + '!';
+            greetingEl.style.display = '';
+          }
+
           // Indicador visual
           var ind = document.createElement('p');
           ind.style.cssText = 'font-size:.78rem;color:var(--brand);margin-top:-10px;margin-bottom:18px;';

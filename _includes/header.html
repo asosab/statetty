@@ -21,7 +21,10 @@
       <a href="/">Inicio</a>
       <a href="/#planes">Planes</a>
       <a href="/blog/">Blog</a>
+      {% unless page.url contains '/registro/' %}
       <a href="/#Contacto" class="btn-nav-cta">Empezá ahora</a>
+      {% endunless %}
+      <span id="header-greeting" class="btn-nav-cta" style="display:none"></span>
 {% endif %}
     </nav>
   </div>
