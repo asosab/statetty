@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "Tokenización inmobiliaria en Suramérica: la propiedad que cabe en el celular"
-date: 2026-07-013
+date: 2026-07-13
 categories: tecnologia, mercado
 comments: true
 description: "Qué es la tokenización inmobiliaria, cómo está regulada país por país en Suramérica, y qué necesita Bolivia para sumarse a esta revolución. Explicado sin jerga técnica."
