@@ -28,10 +28,16 @@ Sitio web estático Jekyll 4.3, alojado en GitHub Pages (statetty.com). Landing 
 
 **Toda página debe cargar su estilo general desde `assets/css/theme-1.css`** (incluido vía `{% include head.html %}` -> `theme-1.css`). Esto garantiza consistencia visual (paleta, tipografía, resets, variables `:root`) y que un cambio en la marca se refleje en todo el sitio. Ninguna página debe duplicar variables, resets o estilos generales inline.
 
-## Próximos pasos
+## Pendiente — refactor blog/index.html
 
-- Probar navegación responsive, scroll header, FAQ accordion, calculadora de tarifas, formulario de contacto, y blog dinámico en producción.
-- Mover JS global (scroll header, toggle nav) de inline en header.html a `assets/js/main.js` si se desea centralizar.
+- 2026-06-12: **`blog/index.html` no usa layout ni includes** — tiene header, footer y `<head>` completos hardcodeados. Crea `_layouts/blog.html`, refactoriza `blog/index.html` para que herede de él y use `{% include header.html %}` / `{% include footer.html %}`. El CSS específico del blog (hero, search, cards) puede quedar inline en `blog/index.html`.
+
+## 2026-07-06
+
+- **Fix calculadora de tarifas**: la lógica de `tarifasCalcPrecio()` no diferenciaba individual (1-4 agentes) de grupo5. Corregido: ahora usa `p.individual` para 1-4, `p.grupo5` para 5-9, `p.grupo10` para 10+. Slider cambiado de min=2 a min=1.
+- **FAQ corregido**: textos "Bs. 75" → "Bs. 100" en `_includes/faq.html`.
+- **Eliminado `test.html`**: contenía precios viejos ({30:75}) y no tenía referencias.
+- **Verificar**: probar calculadora con 1, 2, 4, 5, 9, 10, 15 agentes y distintas duraciones en ambos países.
 
 ## 2026-06-29
 
@@ -69,7 +75,3 @@ Sitio web estático Jekyll 4.3, alojado en GitHub Pages (statetty.com). Landing 
 - **Carga de datos vía `?k=` en formularios**: `_includes/contacto.html` y `registro/index.html` ahora leen `?k=` de la URL, consultan `getuser?publicKey=...` y pre-llenan los campos mapeables del formulario. El payload del POST incluye `publicKey` cuando `k` está presente. Select `f-pais` cambiado a valores `Bolivia`/`Peru` (capitalizados), select `f-ciudad` a `SCZ`/`LIM`. La página `/registro/` normaliza país y sexo con `.toLowerCase()` para coincidir con los valores del formulario.
 - **Ciudad como select en `/registro/`**: el campo `ciudades` (texto libre) reemplazado por `<select id="f-ciudad">` con opciones dinámicas `SCZ`/`LIM` según el país, igual que `_includes/contacto.html`. Eliminada la opción `otro` del país. Payload actualizado a `ciudad: ciudad.toUpperCase()`.
 - **Mensajes amigables en `inmueble/registro/`**: al fallar `?k=` (inválida, vencida, faltante) se muestran mensajes específicos y en tono coloquial en lugar del genérico "Acceso no autorizado". Se parsea `res.body.error` de la API para distinguir entre `publicKey inválida`, `publicKey vencida` y otros errores.
-
-## Pendiente — refactor blog/index.html
-
-- 2026-06-12: **`blog/index.html` no usa layout ni includes** — tiene header, footer y `<head>` completos hardcodeados. Crea `_layouts/blog.html`, refactoriza `blog/index.html` para que herede de él y use `{% include header.html %}` / `{% include footer.html %}`. El CSS específico del blog (hero, search, cards) puede quedar inline en `blog/index.html`.

@@ -386,8 +386,8 @@
       <div class="calc-controls">
         <div class="calc-control">
           <label for="calc-agentes">Número de agentes: <span id="calc-agentes-val">5</span></label>
-          <input type="range" id="calc-agentes" min="2" max="30" value="5" step="1"
-                 oninput="tarifasCalcPrecio()" aria-valuemin="2" aria-valuemax="30">
+          <input type="range" id="calc-agentes" min="1" max="30" value="5" step="1"
+                 oninput="tarifasCalcPrecio()" aria-valuemin="1" aria-valuemax="30">
         </div>
         <div class="calc-control">
           <label for="calc-duracion">Duración del plan</label>
@@ -505,8 +505,9 @@ function tarifasCalcPrecio() {
   document.getElementById('calc-agentes-val').textContent = agentes;
 
   var base, cuentasBase;
-  if (agentes >= 10) { base = p.grupo10; cuentasBase = 10; }
-  else               { base = p.grupo5;  cuentasBase = 5;  }
+  if (agentes >= 10)      { base = p.grupo10; cuentasBase = 10; }
+  else if (agentes >= 5)  { base = p.grupo5;  cuentasBase = 5;  }
+  else                    { base = p.individual; cuentasBase = 1; }
 
   var bsPaquete = base[duracion];
   var total = Math.round((bsPaquete / cuentasBase) * agentes);

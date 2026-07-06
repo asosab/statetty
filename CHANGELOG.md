@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-07-06
+
+- **Fix calculadora de tarifas**: la calculadora aplicaba precio de grupo5 a partir de 2 agentes, pero ese plan solo aplica desde 5. Ahora usa precio individual (100 Bs.) para 1–4 agentes, grupo5 para 5–9, grupo10 para 10+. Rango del slider cambiado de min=2 a min=1. Datos `TARIFAS_PRECIOS` ya estaban correctos (actualizados el 2026-07-01).
+- **FAQ**: texto corregido de "Bs. 75 por 30 días" a "Bs. 100 por 30 días".
+- **Eliminado `test.html`**: archivo de pruebas con precios desactualizados, no referenciado desde ningún lado.
+
 ## 2026-07-01
 
 - **Formulario de registro (`registro/index.html`)**: el campo ciudad ahora usa un `<select>` dinámico con valores `SCZ`/`LIM` controlado por el país seleccionado, igual que el formulario de contacto. Eliminada la opción "Otro" del país. El payload envía `ciudad` (uppercase) en lugar de `ciudades` (texto libre). La precarga con `?k=` pobla el select y selecciona la ciudad del usuario.
