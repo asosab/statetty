@@ -968,13 +968,15 @@
 
     var DOM = {};
     var USER = null;
+    var K = null;
+    var SAVE_KEY = 'inmFormDraft';
 
     function init() {
       cacheDOM();
       bindEvents();
       populatePaises();
       DOM.loading.classList.remove('hidden');
-      var k = getParam();
+      var k = getParam(); K = k;
       if (!k) {
         showStatus('unauthorized', 'Llave no encontrada', 'No se recibió la llave de acceso. Asegurate de usar el enlace completo desde Telegram.');
         return;
@@ -1123,6 +1125,8 @@
         DOM.fId.value = editId;
         DOM.btnText.textContent = 'Actualizar inmueble';
         loadInmueble(editId);
+      } else {
+        restoreDraft();
       }
     }
 
@@ -1179,6 +1183,7 @@
         }
         if (inm.agentName) DOM.fAgentName.value = inm.agentName;
         if (inm.agentPhon) DOM.fWa.value = inm.agentPhon;
+        restoreDraft();
       })
       .catch(function (err) {
         console.warn('STATETTY: loadInmueble error', err);
@@ -1363,6 +1368,105 @@
       return vals.length ? vals : undefined;
     }
 
+    /* ---- Draft autosave ---- */
+    function collectFormState() {
+      return {
+        agentName:    DOM.fAgentName.value,
+        whatsapp:     DOM.fWa.value,
+        nombre:       DOM.fNombre.value,
+        tipoInmueble: DOM.fTipo.value,
+        tipoNegocio:  DOM.fNegocio.value,
+        desc:         DOM.fDesc.value,
+        precio:       DOM.fPrecio.value,
+        pais:         DOM.fPais.value,
+        ciudad:       DOM.fCiudad.value,
+        direccion:    DOM.fDireccion.value,
+        zona:         DOM.fZona.value,
+        coord:        DOM.fCoord.value,
+        dormitorios:  DOM.fDorm.value,
+        banos:        DOM.fBanos.value,
+        estac:        DOM.fEstac.value,
+        ambientes:    DOM.fAmbientes.value,
+        pisos:        DOM.fPisos.value,
+        floorLevel:   DOM.fFloorLevel.value,
+        m2c:          DOM.fM2c.value,
+        m2t:          DOM.fM2t.value,
+        pileta:       DOM.fPileta.checked,
+        petsAllowed:  DOM.fPets.checked,
+        elevadores:   DOM.fElevadores.value,
+        duchas:       DOM.fDuchas.value,
+        videoURL:     DOM.fVideoURL.value,
+        estado:       DOM.fEstado.value,
+        fecha_entrega: DOM.fFechaEntrega.value,
+        anoc:         DOM.fAnoc.value,
+        fotos:        getPhotos(),
+        atributos:    getAtributos(),
+        timestamp:    Date.now()
+      };
+    }
+
+    function saveDraft() {
+      try {
+        var state = collectFormState();
+        localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+      } catch (e) {}
+    }
+
+    function restoreDraft() {
+      try {
+        var raw = localStorage.getItem(SAVE_KEY);
+        if (!raw) return;
+        var state = JSON.parse(raw);
+        if (!state || !state.timestamp) return;
+        var THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
+        if (Date.now() - state.timestamp > THIRTY_DAYS) {
+          localStorage.removeItem(SAVE_KEY);
+          return;
+        }
+        DOM.fNombre.value       = state.nombre || '';
+        DOM.fTipo.value         = state.tipoInmueble || '';
+        DOM.fNegocio.value      = state.tipoNegocio || '';
+        DOM.fDesc.value         = state.desc || '';
+        DOM.fPrecio.value       = state.precio || '';
+        DOM.fDireccion.value    = state.direccion || '';
+        DOM.fZona.value         = state.zona || '';
+        DOM.fCoord.value        = state.coord || '';
+        DOM.fDorm.value         = state.dormitorios || '';
+        DOM.fBanos.value         = state.banos || '';
+        DOM.fEstac.value        = state.estac || '';
+        DOM.fAmbientes.value    = state.ambientes || '';
+        DOM.fPisos.value        = state.pisos || '';
+        DOM.fFloorLevel.value   = state.floorLevel || '';
+        DOM.fM2c.value          = state.m2c || '';
+        DOM.fM2t.value          = state.m2t || '';
+        DOM.fPileta.checked     = !!state.pileta;
+        DOM.fPets.checked       = !!state.petsAllowed;
+        DOM.fElevadores.value   = state.elevadores || '';
+        DOM.fDuchas.value       = state.duchas || '';
+        DOM.fVideoURL.value     = state.videoURL || '';
+        DOM.fAnoc.value         = state.anoc || '';
+        DOM.fFechaEntrega.value = state.fecha_entrega || '';
+        DOM.fEstado.value       = state.estado || 'disponible';
+        if (state.pais) {
+          DOM.fPais.value = state.pais;
+          loadCities(state.pais);
+        }
+        if (Array.isArray(state.fotos) && state.fotos.length) {
+          DOM.photoList.innerHTML = '';
+          state.fotos.forEach(function (url) { addPhotoRow(url); });
+        }
+        if (Array.isArray(state.atributos) && state.atributos.length) {
+          DOM.attrList.innerHTML = '';
+          state.atributos.forEach(function (v) { addAttrRow(v); });
+        }
+        DOM.fEstado.dispatchEvent(new Event('change'));
+      } catch (e) {}
+    }
+
+    function clearDraft() {
+      try { localStorage.removeItem(SAVE_KEY); } catch (e) {}
+    }
+
     /* ---- Image upload ---- */
     var selectedUploadFile = null;
 
@@ -1542,7 +1646,8 @@
         fecha_entrega:   fechaEntrega || undefined,
         atributos:       atributos,
         nCaptacion:      true,
-        activo:          true
+        activo:          true,
+        publicKey:       K
       };
 
       Object.keys(estadoBools).forEach(function (k) { payload[k] = estadoBools[k]; });
@@ -1566,6 +1671,7 @@
         DOM.spinner.style.display = 'none';
 
         if (data.ok) {
+          clearDraft();
           DOM.form.style.display = 'none';
           DOM.successEl.classList.add('visible');
           if (data.id) {
@@ -1640,6 +1746,19 @@
           group.style.display = 'none';
         }
       });
+      var saveTimer = null;
+      function triggerSave() {
+        if (saveTimer) clearTimeout(saveTimer);
+        saveTimer = setTimeout(saveDraft, 500);
+      }
+      var formFields = DOM.form.querySelectorAll('input, select, textarea');
+      formFields.forEach(function (el) {
+        el.addEventListener('input', triggerSave);
+        el.addEventListener('change', triggerSave);
+      });
+      DOM.photoAddBtn.addEventListener('click', triggerSave);
+      DOM.attrAddBtn.addEventListener('click', triggerSave);
+
       window.addEventListener('scroll', function () {
         var h = document.getElementById('inmHeader');
         if (window.scrollY > 20) {
