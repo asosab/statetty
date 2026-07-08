@@ -781,6 +781,23 @@
       background: #f0f0f0;
       color: #888;
     }
+    .list-modal-view-link {
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      color: var(--muted-2);
+      text-decoration: none;
+      font-size: 1rem;
+      transition: var(--transition);
+    }
+    .list-modal-view-link:hover {
+      background: var(--blue-soft, #e8f1fc);
+      color: var(--blue, #2f6fed);
+    }
   </style>
 
   <!-- Google tag (gtag.js) -->
@@ -1172,6 +1189,7 @@
     var USER = null;
     var K = null;
     var photoThumbCache = {};   // url -> 'ok' | 'error'  (evita re-cargar la misma imagen varias veces)
+    var misInmueblesCache = null; // lista de "Mis inmuebles" cacheada; null = hay que pedirla de nuevo
     var SAVE_KEY = 'inmFormDraft';
 
     // El borrador se escopa por _id para que el draft de un inmueble
@@ -1489,7 +1507,18 @@
     /* ---- Mis inmuebles (toolbox) ---- */
     function openMisInmueblesModal() {
       DOM.misInmueblesModal.classList.add('open');
-      fetchMisInmuebles();
+      // Sólo se pide al servidor la primera vez (o luego de invalidar el
+      // caché, ver invalidateMisInmueblesCache). Abrir el modal de nuevo
+      // reutiliza lo ya descargado.
+      if (misInmueblesCache) {
+        renderMisInmueblesList(misInmueblesCache);
+      } else {
+        fetchMisInmuebles();
+      }
+    }
+
+    function invalidateMisInmueblesCache() {
+      misInmueblesCache = null;
     }
 
     function closeMisInmueblesModal() {
@@ -1535,7 +1564,8 @@
               setMisInmueblesState('error', errMsg);
               return;
             }
-            renderMisInmueblesList(res.body.data || []);
+            misInmueblesCache = res.body.data || []; // cachea para no volver a pedirlo
+            renderMisInmueblesList(misInmueblesCache);
           })
           .catch(function (err) {
             setButtonLoading(DOM.btnMisInmuebles, false);
@@ -1577,9 +1607,21 @@
         var badgeSpan = document.createElement('span');
         badgeSpan.className = 'list-modal-badge ' + badgeClass;
         badgeSpan.textContent = badgeText;
+        var viewLink = document.createElement('a');
+        viewLink.className = 'list-modal-view-link';
+        viewLink.href = 'https://statetty.com/inmueble/?_id=' + encodeURIComponent(item._id);
+        viewLink.target = '_blank';
+        viewLink.rel = 'noopener noreferrer';
+        viewLink.title = 'Ver en la página';
+        viewLink.setAttribute('aria-label', 'Ver inmueble en la página (se abre en una pestaña nueva)');
+        viewLink.textContent = '👁';
+        viewLink.addEventListener('click', function (e) {
+          e.stopPropagation(); // no debe disparar la selección/edición del inmueble
+        });
         li.appendChild(nameSpan);
         li.appendChild(priceSpan);
         li.appendChild(badgeSpan);
+        li.appendChild(viewLink);
         li.addEventListener('click', function () {
           selectMisInmueble(item._id);
         });
@@ -2331,6 +2373,7 @@
 
         if (data.ok) {
           clearDraft();
+          invalidateMisInmueblesCache(); // la lista cambió: la próxima vez que se abra el toolbox, se vuelve a pedir
           DOM.form.style.display = 'none';
           DOM.successEl.classList.add('visible');
           if (data.id) {

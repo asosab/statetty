@@ -326,29 +326,40 @@
       align-items: center;
       background: #fff;
       border-radius: var(--radius-sm);
-      transition: var(--transition), transform .15s ease;
+      position: relative;
+      transition: box-shadow .15s ease;
     }
     .photo-row input {
       flex: 1;
     }
     .photo-row.dragging {
-      opacity: .4;
+      box-shadow: 0 6px 18px rgba(0,0,0,.18);
+      z-index: 5;
+      transition: none;
     }
-    .photo-row.drag-over {
-      box-shadow: 0 -2px 0 0 var(--blue) inset;
-      transform: translateY(1px);
+    .photo-row.dragging, .photo-row.dragging * {
+      user-select: none;
+    }
+    .photo-row.photo-row-broken {
+      box-shadow: 0 0 0 1px #e74c3c inset;
+      border-radius: var(--radius-sm);
     }
     .photo-drag-handle {
       flex-shrink: 0;
       cursor: grab;
       color: var(--muted-2);
-      font-size: 1rem;
+      font-size: 1.3rem;
       line-height: 1;
-      padding: 6px 2px;
+      width: 32px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       user-select: none;
       touch-action: none;
+      -webkit-tap-highlight-color: transparent;
     }
-    .photo-drag-handle:active { cursor: grabbing; }
+    .photo-drag-handle:active { cursor: grabbing; color: var(--blue); }
     .photo-row-thumb-wrap {
       flex-shrink: 0;
       width: 44px;
@@ -369,6 +380,17 @@
     .photo-row-thumb-placeholder {
       font-size: .9rem;
       color: var(--muted-2);
+    }
+    .photo-warning {
+      display: none;
+      font-size: .78rem;
+      color: var(--yellow-dim);
+      background: var(--yellow-soft);
+      border: 1px solid var(--yellow);
+      border-radius: var(--radius-sm);
+      padding: 8px 12px;
+      margin-top: 6px;
+      line-height: 1.5;
     }
     .photo-remove {
       background: none;
@@ -1019,6 +1041,7 @@
           <p class="photo-info">O pegá URLs directamente:</p>
           <div class="photo-list" id="photo-list"></div>
           <button type="button" class="photo-add" id="photo-add-btn">+ Agregar otra URL</button>
+          <div class="photo-warning" id="photo-warning"></div>
         </div>
         <div class="form-group">
           <label for="f-videoURL">Video / Tour virtual</label>
@@ -1149,7 +1172,6 @@
     var USER = null;
     var K = null;
     var photoThumbCache = {};   // url -> 'ok' | 'error'  (evita re-cargar la misma imagen varias veces)
-    var draggedPhotoRow = null; // fila de foto que se está arrastrando actualmente
     var SAVE_KEY = 'inmFormDraft';
 
     // El borrador se escopa por _id para que el draft de un inmueble
@@ -1194,6 +1216,7 @@
       DOM.successIdInfo  = document.getElementById('success-id-info');
       DOM.photoList      = document.getElementById('photo-list');
       DOM.photoAddBtn    = document.getElementById('photo-add-btn');
+      DOM.photoWarning   = document.getElementById('photo-warning');
       DOM.fWa            = document.getElementById('f-wa');
       DOM.fPais          = document.getElementById('f-pais');
       DOM.fCiudad        = document.getElementById('f-ciudad');
@@ -1690,30 +1713,111 @@
       DOM.pendingLng = null;
     }
 
+    /* ---- Reordenar filas de fotos con Pointer Events (mouse + touch) ---- */
+    function initDragHandle(handle, row) {
+      var pointerId = null;
+      var startY = 0;
+      var autoScrollTimer = null;
+
+      function stopAutoScroll() {
+        if (autoScrollTimer) { clearInterval(autoScrollTimer); autoScrollTimer = null; }
+      }
+
+      // Cerca de los bordes de la pantalla, hace scroll solo automático:
+      // imprescindible en mobile, donde la lista de fotos puede ser más alta
+      // que la pantalla y no hay forma de "soltar y volver a agarrar".
+      function maybeAutoScroll(clientY) {
+        stopAutoScroll();
+        var margin = 60;
+        var vh = window.innerHeight;
+        var dir = 0;
+        if (clientY < margin) dir = -1;
+        else if (clientY > vh - margin) dir = 1;
+        if (!dir) return;
+        autoScrollTimer = setInterval(function () {
+          window.scrollBy(0, dir * 12);
+        }, 16);
+      }
+
+      function reorder(clientY) {
+        var iterations = 0;
+        var moved = true;
+        while (moved && iterations < 50) {
+          moved = false;
+          iterations++;
+          var deltaY = clientY - startY;
+          row.style.transform = 'translateY(' + deltaY + 'px)';
+          var rowRect = row.getBoundingClientRect();
+          var rowMidY = rowRect.top + rowRect.height / 2;
+
+          var next = row.nextElementSibling;
+          if (next) {
+            var nextRect = next.getBoundingClientRect();
+            if (rowMidY > nextRect.top + nextRect.height / 2) {
+              DOM.photoList.insertBefore(next, row);
+              startY += nextRect.height;
+              moved = true;
+              continue;
+            }
+          }
+          var prev = row.previousElementSibling;
+          if (prev) {
+            var prevRect = prev.getBoundingClientRect();
+            if (rowMidY < prevRect.top + prevRect.height / 2) {
+              DOM.photoList.insertBefore(row, prev);
+              startY -= prevRect.height;
+              moved = true;
+            }
+          }
+        }
+      }
+
+      function onPointerDown(e) {
+        if (e.button !== undefined && e.button !== 0) return; // solo click primario en mouse
+        pointerId = e.pointerId;
+        try { handle.setPointerCapture(pointerId); } catch (err) {}
+        startY = e.clientY;
+        row.classList.add('dragging');
+        e.preventDefault();
+      }
+
+      function onPointerMove(e) {
+        if (pointerId === null || e.pointerId !== pointerId) return;
+        e.preventDefault();
+        reorder(e.clientY);
+        maybeAutoScroll(e.clientY);
+      }
+
+      function endDrag(e) {
+        if (pointerId === null) return;
+        if (e && e.pointerId !== undefined && e.pointerId !== pointerId) return;
+        try { handle.releasePointerCapture(pointerId); } catch (err) {}
+        pointerId = null;
+        stopAutoScroll();
+        row.style.transform = '';
+        row.classList.remove('dragging');
+      }
+
+      handle.addEventListener('pointerdown', onPointerDown);
+      handle.addEventListener('pointermove', onPointerMove);
+      handle.addEventListener('pointerup', endDrag);
+      handle.addEventListener('pointercancel', endDrag);
+    }
+
     /* ---- Photos ---- */
     function addPhotoRow(url) {
       var row = document.createElement('div');
       row.className = 'photo-row';
 
       // --- Handle de arrastre: permite reordenar la fila completa ---
+      // Se usa Pointer Events (en vez de HTML5 drag&drop) porque el DnD nativo
+      // no funciona con touch en la mayoría de navegadores móviles.
       var handle = document.createElement('span');
       handle.className = 'photo-drag-handle';
-      handle.setAttribute('draggable', 'true');
       handle.title = 'Arrastrá para reordenar';
+      handle.setAttribute('aria-label', 'Reordenar foto');
       handle.textContent = '⠿';
-      handle.addEventListener('dragstart', function (e) {
-        draggedPhotoRow = row;
-        row.classList.add('dragging');
-        e.dataTransfer.effectAllowed = 'move';
-        try { e.dataTransfer.setData('text/plain', ''); } catch (err) {}
-      });
-      handle.addEventListener('dragend', function () {
-        row.classList.remove('dragging');
-        draggedPhotoRow = null;
-        DOM.photoList.querySelectorAll('.photo-row.drag-over').forEach(function (r) {
-          r.classList.remove('drag-over');
-        });
-      });
+      initDragHandle(handle, row);
 
       // --- Miniatura de la foto (con caché para no recargar la misma URL) ---
       var thumbWrap = document.createElement('div');
@@ -2027,6 +2131,56 @@
     }
 
     /* ---- Submit ---- */
+    /* ---- Validación de fotos antes de publicar ----
+       No se envían fotos que no cargan; se avisa al usuario cuáles se excluyeron.
+       Reutiliza photoThumbCache: las URLs ya verificadas no se vuelven a pedir. */
+    function validatePhotoUrls(urls, timeoutMs) {
+      timeoutMs = timeoutMs || 6000;
+      var checks = urls.map(function (url) {
+        var cached = photoThumbCache[url];
+        if (cached === 'ok')    return Promise.resolve({ url: url, ok: true });
+        if (cached === 'error') return Promise.resolve({ url: url, ok: false });
+        return new Promise(function (resolve) {
+          var done = false;
+          var img = new Image();
+          var timer = setTimeout(function () {
+            if (done) return;
+            done = true;
+            // Se agotó el tiempo de espera, pero no es un error confirmado
+            // (podría ser una imagen simplemente lenta): se deja pasar para
+            // no bloquear la publicación por una demora de red.
+            resolve({ url: url, ok: true });
+          }, timeoutMs);
+          img.onload = function () {
+            if (done) return;
+            done = true;
+            clearTimeout(timer);
+            photoThumbCache[url] = 'ok';
+            resolve({ url: url, ok: true });
+          };
+          img.onerror = function () {
+            if (done) return;
+            done = true;
+            clearTimeout(timer);
+            photoThumbCache[url] = 'error';
+            resolve({ url: url, ok: false });
+          };
+          img.src = url;
+        });
+      });
+      return Promise.all(checks);
+    }
+
+    function markBrokenPhotoRows(brokenUrls) {
+      var brokenSet = {};
+      brokenUrls.forEach(function (u) { brokenSet[u] = true; });
+      DOM.photoList.querySelectorAll('.photo-row').forEach(function (row) {
+        var inp = row.querySelector('.photo-input');
+        var isBroken = inp && brokenSet[inp.value.trim()];
+        row.classList.toggle('photo-row-broken', !!isBroken);
+      });
+    }
+
     function handleSubmit(e) {
       e.preventDefault();
 
@@ -2083,9 +2237,7 @@
         return;
       }
 
-      var fotos = getPhotos();
       var atributos = getAtributos();
-
       var estadoBools = {};
       switch (estado) {
         case 'vendida':   estadoBools = { vendida: true, alquilada: false, es_preventa: false, enPlanos: false, reserva: false }; break;
@@ -2095,6 +2247,31 @@
         case 'enplanos':  estadoBools = { vendida: false, alquilada: false, es_preventa: false, enPlanos: true, reserva: false }; break;
         default:          estadoBools = { vendida: false, alquilada: false, es_preventa: false, enPlanos: false, reserva: false }; break;
       }
+
+      DOM.photoWarning.style.display = 'none';
+      var todasLasFotos = getPhotos();
+      setSubmitLoading(true, 'Verificando fotos…');
+
+      validatePhotoUrls(todasLasFotos).then(function (results) {
+        var fotos = results.filter(function (r) { return r.ok; }).map(function (r) { return r.url; });
+        var excluidas = results.filter(function (r) { return !r.ok; }).map(function (r) { return r.url; });
+
+        markBrokenPhotoRows(excluidas);
+        if (excluidas.length) {
+          DOM.photoWarning.textContent = 'Se excluyeron ' + excluidas.length +
+            ' foto(s) que no cargan y no se publicarán (marcadas en rojo): ' +
+            excluidas.join(', ');
+          DOM.photoWarning.style.display = 'block';
+        }
+
+        enviarInmueble(fotos, atributos, estadoBools);
+      }).catch(function () {
+        // Si la verificación misma falla por algún motivo inesperado, no
+        // bloqueamos la publicación: se envían las fotos tal cual estaban.
+        enviarInmueble(todasLasFotos, atributos, estadoBools);
+      });
+
+      function enviarInmueble(fotos, atributos, estadoBools) {
 
       var payload = {
         _id:             DOM.fId.value || undefined,
@@ -2139,9 +2316,7 @@
       Object.keys(estadoBools).forEach(function (k) { payload[k] = estadoBools[k]; });
       if (payload._id && !payload.fecha_entrega) delete payload.fecha_entrega;
 
-      DOM.submitBtn.disabled = true;
-      DOM.btnText.textContent = 'Publicando…';
-      DOM.spinner.style.display = 'inline-block';
+      setSubmitLoading(true, 'Publicando…');
 
       var base = STATETTY_CONFIG.WS_API_BASE;
       var method = payload._id ? 'PUT' : 'POST';
@@ -2152,9 +2327,7 @@
       })
       .then(function (r) { return r.json(); })
       .then(function (data) {
-        DOM.submitBtn.disabled = false;
-        DOM.btnText.textContent = payload._id ? 'Actualizar inmueble' : 'Publicar inmueble';
-        DOM.spinner.style.display = 'none';
+        setSubmitLoading(false, payload._id ? 'Actualizar inmueble' : 'Publicar inmueble');
 
         if (data.ok) {
           clearDraft();
@@ -2170,12 +2343,11 @@
         }
       })
       .catch(function (err) {
-        DOM.submitBtn.disabled = false;
-        DOM.btnText.textContent = payload._id ? 'Actualizar inmueble' : 'Publicar inmueble';
-        DOM.spinner.style.display = 'none';
+        setSubmitLoading(false, payload._id ? 'Actualizar inmueble' : 'Publicar inmueble');
         DOM.errorEl.textContent = 'Error de conexión. Verificá tu internet e intentalo de nuevo.';
         DOM.errorEl.style.display = 'block';
       });
+      } // fin enviarInmueble
     }
 
     /* ---- Events ---- */
@@ -2204,33 +2376,6 @@
       });
       DOM.photoAddBtn.addEventListener('click', function () {
         addPhotoRow();
-      });
-      // Reordenar filas de fotos por drag & drop (delegado en el contenedor).
-      DOM.photoList.addEventListener('dragover', function (e) {
-        if (!draggedPhotoRow) return;
-        var overRow = e.target.closest ? e.target.closest('.photo-row') : null;
-        if (!overRow || overRow === draggedPhotoRow) return;
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
-        DOM.photoList.querySelectorAll('.photo-row.drag-over').forEach(function (r) {
-          if (r !== overRow) r.classList.remove('drag-over');
-        });
-        overRow.classList.add('drag-over');
-      });
-      DOM.photoList.addEventListener('drop', function (e) {
-        if (!draggedPhotoRow) return;
-        var overRow = e.target.closest ? e.target.closest('.photo-row') : null;
-        e.preventDefault();
-        if (overRow) overRow.classList.remove('drag-over');
-        if (!overRow || overRow === draggedPhotoRow) return;
-        var rows = Array.prototype.slice.call(DOM.photoList.children);
-        var fromIdx = rows.indexOf(draggedPhotoRow);
-        var toIdx = rows.indexOf(overRow);
-        if (fromIdx < toIdx) {
-          DOM.photoList.insertBefore(draggedPhotoRow, overRow.nextSibling);
-        } else {
-          DOM.photoList.insertBefore(draggedPhotoRow, overRow);
-        }
       });
       DOM.attrAddBtn.addEventListener('click', function () {
         addAttrRow();
