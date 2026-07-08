@@ -128,7 +128,7 @@
         <aside class="inm-sidebar" id="inm-sidebar">
           <div class="inm-contact-card">
             <h3 class="inm-contact-card-title">Pregunta al anunciante</h3>
-            <textarea class="inm-form-textarea" id="inm-msg" rows="4">me interesa este imueble y me gustaría hacer una visita.
+            <textarea class="inm-form-textarea" id="inm-msg" rows="4">Hola, me interesa este imueble y me gustaría hacer una visita.
 
 Un saludo</textarea>
             <input type="email" class="inm-form-input" id="inm-email" placeholder="Tu email">
@@ -198,6 +198,7 @@ Un saludo</textarea>
 
     var FEEDCLICK_ENDPOINT = 'statetty/feedclick';
     var FEEDCLICK_FALLBACK_URL = 'https://api.statetty.com/api/statetty/feedclick';
+    var STORAGE_KEY = 'statetty_contact_form';
 
     function getPropertyId() {
       var params = new URLSearchParams(window.location.search);
@@ -227,6 +228,24 @@ Un saludo</textarea>
       return base ? (base + FEEDCLICK_ENDPOINT) : FEEDCLICK_FALLBACK_URL;
     }
 
+    function loadSavedForm() {
+      try {
+        var raw = window.localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : null;
+      } catch (err) {
+        console.warn('STATETTY: no se pudo leer el formulario guardado', err);
+        return null;
+      }
+    }
+
+    function saveForm(data) {
+      try {
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      } catch (err) {
+        console.warn('STATETTY: no se pudo guardar el formulario', err);
+      }
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
       var submitBtn = document.getElementById('inm-submit');
       if (!submitBtn) return;
@@ -238,6 +257,33 @@ Un saludo</textarea>
       var nameEl = document.getElementById('inm-name');
       var privacyEl = document.getElementById('inm-privacy');
       var privacyLabelEl = document.getElementById('inm-privacy-label');
+
+      // Restore previously entered contact info (message default stays untouched
+      // unless the user had customized it before).
+      var saved = loadSavedForm();
+      if (saved) {
+        if (saved.email) emailEl.value = saved.email;
+        if (saved.phoneCode) phoneCodeEl.value = saved.phoneCode;
+        if (saved.phone) phoneEl.value = saved.phone;
+        if (saved.nombre) nameEl.value = saved.nombre;
+        if (saved.mensaje) msgEl.value = saved.mensaje;
+      }
+
+      function persistCurrentValues() {
+        saveForm({
+          email: emailEl.value.trim(),
+          phoneCode: phoneCodeEl.value,
+          phone: phoneEl.value.trim(),
+          nombre: nameEl.value.trim(),
+          mensaje: msgEl.value
+        });
+      }
+
+      [msgEl, emailEl, phoneCodeEl, phoneEl, nameEl].forEach(function (el) {
+        if (!el) return;
+        var evt = (el.tagName === 'SELECT') ? 'change' : 'input';
+        el.addEventListener(evt, persistCurrentValues);
+      });
 
       // Clear invalid state as the user fixes things
       if (phoneEl) phoneEl.addEventListener('input', function () { setFieldInvalid(phoneEl, false); });
@@ -279,6 +325,8 @@ Un saludo</textarea>
 
         var fullPhone = (phoneCodeEl ? phoneCodeEl.value : '') + phone;
         var url = buildFeedclickUrl();
+
+        persistCurrentValues();
 
         console.log('STATETTY: enviando consulta a', url);
 
