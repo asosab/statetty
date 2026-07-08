@@ -603,6 +603,107 @@
     .map-modal-cancel:hover {
       background: #ddd;
     }
+
+    /* Mis inmuebles: header button + list modal */
+    .form-section-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 0 0 16px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--yellow);
+    }
+    .form-section-title-row .form-section-title {
+      margin: 0;
+      padding: 0;
+      border-bottom: none;
+    }
+    .btn-mis-inmuebles {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      background: var(--blue);
+      color: #fff;
+      border: none;
+      border-radius: 50px;
+      font-family: var(--font-head);
+      font-weight: 600;
+      font-size: .82rem;
+      cursor: pointer;
+      transition: var(--transition);
+      white-space: nowrap;
+    }
+    .btn-mis-inmuebles:hover {
+      background: var(--blue-dark);
+    }
+    .btn-mis-inmuebles:disabled {
+      opacity: .6;
+      cursor: not-allowed;
+    }
+    .list-modal-state {
+      text-align: center;
+      padding: 24px 10px;
+      color: var(--muted);
+      font-size: .9rem;
+    }
+    .list-modal-state.error {
+      color: #c0392b;
+    }
+    .list-modal-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      max-height: 50vh;
+      overflow-y: auto;
+    }
+    .list-modal-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .list-modal-item:hover {
+      background: var(--yellow-soft);
+      border-color: var(--yellow);
+    }
+    .list-modal-item-name {
+      font-weight: 600;
+      color: var(--text-strong);
+      font-size: .88rem;
+      flex: 1;
+    }
+    .list-modal-item-price {
+      color: var(--blue-dark);
+      font-weight: 700;
+      font-size: .85rem;
+      white-space: nowrap;
+    }
+    .list-modal-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: .74rem;
+      padding: 3px 9px;
+      border-radius: 50px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .list-modal-badge.active {
+      background: #e5f7ea;
+      color: #1e8a43;
+    }
+    .list-modal-badge.inactive {
+      background: #f0f0f0;
+      color: #888;
+    }
   </style>
 
   <!-- Google tag (gtag.js) -->
@@ -662,6 +763,8 @@
         <!-- Hidden fields -->
         <input type="hidden" id="f-_id" name="_id">
         <input type="hidden" id="f-agenteID" name="agenteID">
+        <!-- agenciaID: fijo para esta página, no editable. El brocker lo agrega el servidor. -->
+        <input type="hidden" id="f-agenciaID" name="agenciaID" value="BO_Statetty">
 
         <!-- ==================== DATOS DEL AGENTE ==================== -->
         <h3 class="form-section-title">Tus datos</h3>
@@ -680,7 +783,12 @@
         <hr class="form-divider">
 
         <!-- ==================== INFORMACIÓN GENERAL ==================== -->
-        <h3 class="form-section-title">Información general</h3>
+        <div class="form-section-title-row">
+          <h3 class="form-section-title">Información general</h3>
+          <button type="button" class="btn-mis-inmuebles" id="btnMisInmuebles">
+            <span aria-hidden="true">📋</span> Mis inmuebles
+          </button>
+        </div>
         <div class="form-group">
           <label for="f-nombre">Título del inmueble <span class="required">*</span></label>
           <input type="text" id="f-nombre" name="nombre" placeholder="Ej: Casa en esquina con pileta" required>
@@ -888,6 +996,14 @@
             <span class="hint">Aplica solo si es pre-venta o en planos</span>
           </div>
         </div>
+        <div class="form-row checkbox-row">
+          <div class="form-group">
+            <label class="checkbox-inline">
+              <input type="checkbox" id="f-borrador"> Guardar como borrador
+            </label>
+            <span class="hint">No se publica todavía; podés terminarlo y activarlo más adelante.</span>
+          </div>
+        </div>
 
         <hr class="form-divider">
 
@@ -955,6 +1071,18 @@
     </div>
   </div>
 
+  <!-- Mis Inmuebles Modal -->
+  <div class="map-modal" id="misInmueblesModal">
+    <div class="map-modal-content">
+      <h3 class="map-modal-title">Mis inmuebles</h3>
+      <div class="list-modal-state" id="misInmueblesState">Cargando…</div>
+      <ul class="list-modal-list hidden" id="misInmueblesList"></ul>
+      <div class="map-modal-actions">
+        <button class="map-modal-cancel" id="btnMisInmueblesClose">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Config -->
   <script src="/assets/js/config.js"></script>
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
@@ -970,6 +1098,13 @@
     var USER = null;
     var K = null;
     var SAVE_KEY = 'inmFormDraft';
+
+    // El borrador se escopa por _id para que el draft de un inmueble
+    // nunca pise el de otro (o el de una publicación nueva en curso).
+    function draftKey() {
+      var id = DOM.fId ? DOM.fId.value : '';
+      return id ? (SAVE_KEY + ':' + id) : (SAVE_KEY + ':new');
+    }
 
     function init() {
       cacheDOM();
@@ -1009,6 +1144,7 @@
       DOM.fPais          = document.getElementById('f-pais');
       DOM.fCiudad        = document.getElementById('f-ciudad');
       DOM.fAgenteID      = document.getElementById('f-agenteID');
+      DOM.fAgenciaID     = document.getElementById('f-agenciaID');
       DOM.fId            = document.getElementById('f-_id');
       DOM.fAgentName     = document.getElementById('f-agentName');
       DOM.fNombre        = document.getElementById('f-nombre');
@@ -1034,6 +1170,7 @@
       DOM.fVideoURL      = document.getElementById('f-videoURL');
       DOM.fEstado        = document.getElementById('f-estado');
       DOM.fFechaEntrega  = document.getElementById('f-fecha_entrega');
+      DOM.fBorrador      = document.getElementById('f-borrador');
       DOM.fAnoc          = document.getElementById('f-anoc');
       DOM.attrList       = document.getElementById('attr-list');
       DOM.attrAddBtn     = document.getElementById('attr-add-btn');
@@ -1052,6 +1189,11 @@
       DOM.photoUploadArea = document.getElementById('photo-upload-area');
       DOM.photoUploadPrev = document.getElementById('photo-upload-preview');
       DOM.photoUploadStat = document.getElementById('photo-upload-status');
+      DOM.btnMisInmuebles      = document.getElementById('btnMisInmuebles');
+      DOM.misInmueblesModal    = document.getElementById('misInmueblesModal');
+      DOM.misInmueblesState    = document.getElementById('misInmueblesState');
+      DOM.misInmueblesList     = document.getElementById('misInmueblesList');
+      DOM.btnMisInmueblesClose = document.getElementById('btnMisInmueblesClose');
     }
 
     function getParam() {
@@ -1183,11 +1325,139 @@
         }
         if (inm.agentName) DOM.fAgentName.value = inm.agentName;
         if (inm.agentPhon) DOM.fWa.value = inm.agentPhon;
+
+        // Bug #2: reconstruir el <select> de estado comercial a partir de los booleanos
+        var estadoVal = 'disponible';
+        if (inm.vendida)          estadoVal = 'vendida';
+        else if (inm.alquilada)   estadoVal = 'alquilada';
+        else if (inm.es_preventa) estadoVal = 'preventa';
+        else if (inm.reserva)     estadoVal = 'reservada';
+        else if (inm.enPlanos)    estadoVal = 'enplanos';
+        DOM.fEstado.value = estadoVal;
+        DOM.fEstado.dispatchEvent(new Event('change')); // muestra/oculta fecha_entrega
+
+        DOM.fBorrador.checked = !!inm.borrador;
+
+        // agenciaID es fijo para esta página: nunca se toma del servidor.
+        DOM.fAgenciaID.value = 'BO_Statetty';
+
+        // Bug #1 (arreglado): el draft ahora está escopado por _id, así que
+        // restaurarlo acá solo recupera una edición interrumpida de ESTE
+        // mismo inmueble, sin pisar campos con el borrador de otro.
         restoreDraft();
       })
       .catch(function (err) {
         console.warn('STATETTY: loadInmueble error', err);
       });
+    }
+
+    /* ---- Mis inmuebles (toolbox) ---- */
+    function openMisInmueblesModal() {
+      DOM.misInmueblesModal.classList.add('open');
+      fetchMisInmuebles();
+    }
+
+    function closeMisInmueblesModal() {
+      DOM.misInmueblesModal.classList.remove('open');
+    }
+
+    function setMisInmueblesState(mode, msg) {
+      DOM.misInmueblesState.classList.remove('hidden', 'error');
+      if (mode === 'ready') {
+        DOM.misInmueblesState.classList.add('hidden');
+        DOM.misInmueblesList.classList.remove('hidden');
+        return;
+      }
+      DOM.misInmueblesList.classList.add('hidden');
+      if (mode === 'error') DOM.misInmueblesState.classList.add('error');
+      DOM.misInmueblesState.textContent = msg;
+    }
+
+    function fetchMisInmuebles() {
+      setMisInmueblesState('loading', 'Cargando tus inmuebles…');
+      DOM.btnMisInmuebles.disabled = true;
+      try {
+        var base = window.STATETTY_CONFIG ? STATETTY_CONFIG.WS_API_BASE : '';
+        if (!base) {
+          DOM.btnMisInmuebles.disabled = false;
+          setMisInmueblesState('error', 'No se pudo determinar el endpoint del servidor.');
+          return;
+        }
+        if (!USER || !USER._id || !K) {
+          DOM.btnMisInmuebles.disabled = false;
+          setMisInmueblesState('error', 'No se pudo determinar tu usuario. Recargá la página e intentá de nuevo.');
+          return;
+        }
+        var url = base + 'statetty/ginlius?_id=' + encodeURIComponent(USER._id) + '&publicKey=' + encodeURIComponent(K);
+        fetch(url, { headers: { 'ngrok-skip-browser-warning': '1' } })
+          .then(function (r) {
+            return r.json().then(function (body) { return { status: r.status, ok: r.ok, body: body }; });
+          })
+          .then(function (res) {
+            DOM.btnMisInmuebles.disabled = false;
+            if (!res.ok || !res.body || res.body.ok !== true) {
+              var errMsg = (res.body && res.body.error) || 'No se pudo obtener tu lista de inmuebles.';
+              setMisInmueblesState('error', errMsg);
+              return;
+            }
+            renderMisInmueblesList(res.body.data || []);
+          })
+          .catch(function (err) {
+            DOM.btnMisInmuebles.disabled = false;
+            console.warn('[Statetty][ginlius] fetch error', err);
+            if (err.name === 'AbortError') {
+              setMisInmueblesState('error', 'Tiempo de espera agotado. El servidor no respondió a tiempo.');
+            } else {
+              setMisInmueblesState('error', err.message || 'No se pudo obtener tu lista de inmuebles.');
+            }
+          });
+      } catch (err) {
+        DOM.btnMisInmuebles.disabled = false;
+        console.warn('[Statetty][ginlius] sync error', err);
+        setMisInmueblesState('error', err.message || 'Ocurrió un error inesperado.');
+      }
+    }
+
+    function renderMisInmueblesList(data) {
+      if (!data.length) {
+        setMisInmueblesState('empty', 'No tenés inmuebles cargados todavía.');
+        return;
+      }
+      setMisInmueblesState('ready');
+      DOM.misInmueblesList.innerHTML = '';
+      var fmt = new Intl.NumberFormat('es-BO', { maximumFractionDigits: 0 });
+      data.forEach(function (item) {
+        var li = document.createElement('li');
+        li.className = 'list-modal-item';
+        li.setAttribute('data-id', item._id);
+        var precioStr = item.precio != null ? '$ ' + fmt.format(item.precio) : '—';
+        var badgeClass = item.activo ? 'active' : 'inactive';
+        var badgeText = item.activo ? '● Activo' : '● Inactivo';
+        var nameSpan = document.createElement('span');
+        nameSpan.className = 'list-modal-item-name';
+        nameSpan.textContent = item.nombre || 'Sin título';
+        var priceSpan = document.createElement('span');
+        priceSpan.className = 'list-modal-item-price';
+        priceSpan.textContent = precioStr;
+        var badgeSpan = document.createElement('span');
+        badgeSpan.className = 'list-modal-badge ' + badgeClass;
+        badgeSpan.textContent = badgeText;
+        li.appendChild(nameSpan);
+        li.appendChild(priceSpan);
+        li.appendChild(badgeSpan);
+        li.addEventListener('click', function () {
+          selectMisInmueble(item._id);
+        });
+        DOM.misInmueblesList.appendChild(li);
+      });
+    }
+
+    function selectMisInmueble(id) {
+      closeMisInmueblesModal();
+      DOM.fId.value = id;
+      DOM.btnText.textContent = 'Actualizar inmueble';
+      loadInmueble(id);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     /* ---- Ubigeo ---- */
@@ -1397,6 +1667,7 @@
         duchas:       DOM.fDuchas.value,
         videoURL:     DOM.fVideoURL.value,
         estado:       DOM.fEstado.value,
+        borrador:     DOM.fBorrador.checked,
         fecha_entrega: DOM.fFechaEntrega.value,
         anoc:         DOM.fAnoc.value,
         fotos:        getPhotos(),
@@ -1408,19 +1679,20 @@
     function saveDraft() {
       try {
         var state = collectFormState();
-        localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+        localStorage.setItem(draftKey(), JSON.stringify(state));
       } catch (e) {}
     }
 
     function restoreDraft() {
       try {
-        var raw = localStorage.getItem(SAVE_KEY);
+        var key = draftKey();
+        var raw = localStorage.getItem(key);
         if (!raw) return;
         var state = JSON.parse(raw);
         if (!state || !state.timestamp) return;
         var THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
         if (Date.now() - state.timestamp > THIRTY_DAYS) {
-          localStorage.removeItem(SAVE_KEY);
+          localStorage.removeItem(key);
           return;
         }
         DOM.fNombre.value       = state.nombre || '';
@@ -1447,6 +1719,7 @@
         DOM.fAnoc.value         = state.anoc || '';
         DOM.fFechaEntrega.value = state.fecha_entrega || '';
         DOM.fEstado.value       = state.estado || 'disponible';
+        DOM.fBorrador.checked   = !!state.borrador;
         if (state.pais) {
           DOM.fPais.value = state.pais;
           loadCities(state.pais);
@@ -1464,7 +1737,7 @@
     }
 
     function clearDraft() {
-      try { localStorage.removeItem(SAVE_KEY); } catch (e) {}
+      try { localStorage.removeItem(draftKey()); } catch (e) {}
     }
 
     /* ---- Image upload ---- */
@@ -1580,6 +1853,7 @@
       var estado       = DOM.fEstado.value;
       var fechaEntrega = DOM.fFechaEntrega.value;
       var anoc         = DOM.fAnoc.value.trim();
+      var borrador     = DOM.fBorrador.checked;
       var missing = [];
       if (!agentName)    missing.push('nombre del agente');
       if (!whatsapp)     missing.push('WhatsApp de contacto');
@@ -1615,6 +1889,7 @@
       var payload = {
         _id:             DOM.fId.value || undefined,
         agenteID:        DOM.fAgenteID.value || undefined,
+        agenciaID:       'BO_Statetty', // fijo para esta página; el brocker lo agrega el servidor
         agentName:       agentName,
         agentPhon:       whatsapp,
         nombre:          nombre,
@@ -1646,7 +1921,8 @@
         fecha_entrega:   fechaEntrega || undefined,
         atributos:       atributos,
         nCaptacion:      true,
-        activo:          true,
+        borrador:        borrador,
+        activo:          !borrador, // si es borrador, no se comercializa todavía
         publicKey:       K
       };
 
@@ -1736,6 +2012,11 @@
       });
       DOM.mapModal.addEventListener('click', function (e) {
         if (e.target === DOM.mapModal) closeMapPicker(false);
+      });
+      DOM.btnMisInmuebles.addEventListener('click', openMisInmueblesModal);
+      DOM.btnMisInmueblesClose.addEventListener('click', closeMisInmueblesModal);
+      DOM.misInmueblesModal.addEventListener('click', function (e) {
+        if (e.target === DOM.misInmueblesModal) closeMisInmueblesModal();
       });
       DOM.fEstado.addEventListener('change', function () {
         var v = DOM.fEstado.value;
