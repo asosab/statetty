@@ -763,6 +763,8 @@
         <!-- Hidden fields -->
         <input type="hidden" id="f-_id" name="_id">
         <input type="hidden" id="f-agenteID" name="agenteID">
+        <!-- agenciaID: fijo para esta página, no editable. El brocker lo agrega el servidor. -->
+        <input type="hidden" id="f-agenciaID" name="agenciaID" value="BO_Statetty">
 
         <!-- ==================== DATOS DEL AGENTE ==================== -->
         <h3 class="form-section-title">Tus datos</h3>
@@ -994,6 +996,14 @@
             <span class="hint">Aplica solo si es pre-venta o en planos</span>
           </div>
         </div>
+        <div class="form-row checkbox-row">
+          <div class="form-group">
+            <label class="checkbox-inline">
+              <input type="checkbox" id="f-borrador"> Guardar como borrador
+            </label>
+            <span class="hint">No se publica todavía; podés terminarlo y activarlo más adelante.</span>
+          </div>
+        </div>
 
         <hr class="form-divider">
 
@@ -1089,6 +1099,13 @@
     var K = null;
     var SAVE_KEY = 'inmFormDraft';
 
+    // El borrador se escopa por _id para que el draft de un inmueble
+    // nunca pise el de otro (o el de una publicación nueva en curso).
+    function draftKey() {
+      var id = DOM.fId ? DOM.fId.value : '';
+      return id ? (SAVE_KEY + ':' + id) : (SAVE_KEY + ':new');
+    }
+
     function init() {
       cacheDOM();
       bindEvents();
@@ -1127,6 +1144,7 @@
       DOM.fPais          = document.getElementById('f-pais');
       DOM.fCiudad        = document.getElementById('f-ciudad');
       DOM.fAgenteID      = document.getElementById('f-agenteID');
+      DOM.fAgenciaID     = document.getElementById('f-agenciaID');
       DOM.fId            = document.getElementById('f-_id');
       DOM.fAgentName     = document.getElementById('f-agentName');
       DOM.fNombre        = document.getElementById('f-nombre');
@@ -1152,6 +1170,7 @@
       DOM.fVideoURL      = document.getElementById('f-videoURL');
       DOM.fEstado        = document.getElementById('f-estado');
       DOM.fFechaEntrega  = document.getElementById('f-fecha_entrega');
+      DOM.fBorrador      = document.getElementById('f-borrador');
       DOM.fAnoc          = document.getElementById('f-anoc');
       DOM.attrList       = document.getElementById('attr-list');
       DOM.attrAddBtn     = document.getElementById('attr-add-btn');
@@ -1306,6 +1325,25 @@
         }
         if (inm.agentName) DOM.fAgentName.value = inm.agentName;
         if (inm.agentPhon) DOM.fWa.value = inm.agentPhon;
+
+        // Bug #2: reconstruir el <select> de estado comercial a partir de los booleanos
+        var estadoVal = 'disponible';
+        if (inm.vendida)          estadoVal = 'vendida';
+        else if (inm.alquilada)   estadoVal = 'alquilada';
+        else if (inm.es_preventa) estadoVal = 'preventa';
+        else if (inm.reserva)     estadoVal = 'reservada';
+        else if (inm.enPlanos)    estadoVal = 'enplanos';
+        DOM.fEstado.value = estadoVal;
+        DOM.fEstado.dispatchEvent(new Event('change')); // muestra/oculta fecha_entrega
+
+        DOM.fBorrador.checked = !!inm.borrador;
+
+        // agenciaID es fijo para esta página: nunca se toma del servidor.
+        DOM.fAgenciaID.value = 'BO_Statetty';
+
+        // Bug #1 (arreglado): el draft ahora está escopado por _id, así que
+        // restaurarlo acá solo recupera una edición interrumpida de ESTE
+        // mismo inmueble, sin pisar campos con el borrador de otro.
         restoreDraft();
       })
       .catch(function (err) {
@@ -1629,6 +1667,7 @@
         duchas:       DOM.fDuchas.value,
         videoURL:     DOM.fVideoURL.value,
         estado:       DOM.fEstado.value,
+        borrador:     DOM.fBorrador.checked,
         fecha_entrega: DOM.fFechaEntrega.value,
         anoc:         DOM.fAnoc.value,
         fotos:        getPhotos(),
@@ -1640,19 +1679,20 @@
     function saveDraft() {
       try {
         var state = collectFormState();
-        localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+        localStorage.setItem(draftKey(), JSON.stringify(state));
       } catch (e) {}
     }
 
     function restoreDraft() {
       try {
-        var raw = localStorage.getItem(SAVE_KEY);
+        var key = draftKey();
+        var raw = localStorage.getItem(key);
         if (!raw) return;
         var state = JSON.parse(raw);
         if (!state || !state.timestamp) return;
         var THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
         if (Date.now() - state.timestamp > THIRTY_DAYS) {
-          localStorage.removeItem(SAVE_KEY);
+          localStorage.removeItem(key);
           return;
         }
         DOM.fNombre.value       = state.nombre || '';
@@ -1679,6 +1719,7 @@
         DOM.fAnoc.value         = state.anoc || '';
         DOM.fFechaEntrega.value = state.fecha_entrega || '';
         DOM.fEstado.value       = state.estado || 'disponible';
+        DOM.fBorrador.checked   = !!state.borrador;
         if (state.pais) {
           DOM.fPais.value = state.pais;
           loadCities(state.pais);
@@ -1696,7 +1737,7 @@
     }
 
     function clearDraft() {
-      try { localStorage.removeItem(SAVE_KEY); } catch (e) {}
+      try { localStorage.removeItem(draftKey()); } catch (e) {}
     }
 
     /* ---- Image upload ---- */
@@ -1812,6 +1853,7 @@
       var estado       = DOM.fEstado.value;
       var fechaEntrega = DOM.fFechaEntrega.value;
       var anoc         = DOM.fAnoc.value.trim();
+      var borrador     = DOM.fBorrador.checked;
       var missing = [];
       if (!agentName)    missing.push('nombre del agente');
       if (!whatsapp)     missing.push('WhatsApp de contacto');
@@ -1847,6 +1889,7 @@
       var payload = {
         _id:             DOM.fId.value || undefined,
         agenteID:        DOM.fAgenteID.value || undefined,
+        agenciaID:       'BO_Statetty', // fijo para esta página; el brocker lo agrega el servidor
         agentName:       agentName,
         agentPhon:       whatsapp,
         nombre:          nombre,
@@ -1878,7 +1921,8 @@
         fecha_entrega:   fechaEntrega || undefined,
         atributos:       atributos,
         nCaptacion:      true,
-        activo:          true,
+        borrador:        borrador,
+        activo:          !borrador, // si es borrador, no se comercializa todavía
         publicKey:       K
       };
 
