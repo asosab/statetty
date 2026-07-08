@@ -324,9 +324,51 @@
       display: flex;
       gap: 8px;
       align-items: center;
+      background: #fff;
+      border-radius: var(--radius-sm);
+      transition: var(--transition), transform .15s ease;
     }
     .photo-row input {
       flex: 1;
+    }
+    .photo-row.dragging {
+      opacity: .4;
+    }
+    .photo-row.drag-over {
+      box-shadow: 0 -2px 0 0 var(--blue) inset;
+      transform: translateY(1px);
+    }
+    .photo-drag-handle {
+      flex-shrink: 0;
+      cursor: grab;
+      color: var(--muted-2);
+      font-size: 1rem;
+      line-height: 1;
+      padding: 6px 2px;
+      user-select: none;
+      touch-action: none;
+    }
+    .photo-drag-handle:active { cursor: grabbing; }
+    .photo-row-thumb-wrap {
+      flex-shrink: 0;
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: #f0f0f0;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .photo-row-thumb {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .photo-row-thumb-placeholder {
+      font-size: .9rem;
+      color: var(--muted-2);
     }
     .photo-remove {
       background: none;
@@ -443,6 +485,19 @@
     .form-submit:disabled { opacity: .5; cursor: not-allowed; transform: none; }
     .form-spinner { display: none; width: 18px; height: 18px; border: 2px solid rgba(255,255,255,.3); border-top-color: #fff; border-radius: 50%; animation: btnspin .6s linear infinite; }
     @keyframes btnspin { to { transform: rotate(360deg); } }
+
+    /* Spinner genérico inyectado en cualquier botón mientras hace una llamada ajax */
+    .btn-inline-spinner {
+      display: inline-block;
+      width: 13px; height: 13px;
+      margin-right: 6px;
+      border: 2px solid rgba(0,0,0,.25);
+      border-top-color: currentColor;
+      border-radius: 50%;
+      vertical-align: -2px;
+      animation: btnspin .6s linear infinite;
+    }
+    button.btn-loading { opacity: .75; cursor: wait; pointer-events: none; }
     .form-error {
       color: #e74c3c; font-size: .85rem;
       margin-top: 10px; text-align: center; display: none;
@@ -962,11 +1017,7 @@
           </div>
           <hr style="border:none;border-top:1px solid var(--border);margin:12px 0">
           <p class="photo-info">O pegá URLs directamente:</p>
-          <div class="photo-list" id="photo-list">
-            <div class="photo-row">
-              <input type="url" class="photo-input" placeholder="https://…">
-            </div>
-          </div>
+          <div class="photo-list" id="photo-list"></div>
           <button type="button" class="photo-add" id="photo-add-btn">+ Agregar otra URL</button>
         </div>
         <div class="form-group">
@@ -1097,6 +1148,8 @@
     var DOM = {};
     var USER = null;
     var K = null;
+    var photoThumbCache = {};   // url -> 'ok' | 'error'  (evita re-cargar la misma imagen varias veces)
+    var draggedPhotoRow = null; // fila de foto que se está arrastrando actualmente
     var SAVE_KEY = 'inmFormDraft';
 
     // El borrador se escopa por _id para que el draft de un inmueble
@@ -1110,6 +1163,7 @@
       cacheDOM();
       bindEvents();
       populatePaises();
+      addPhotoRow(); // fila inicial vacía, con el mismo formato (handle + thumbnail) que el resto
       DOM.loading.classList.remove('hidden');
       var k = getParam(); K = k;
       if (!k) {
@@ -1196,6 +1250,29 @@
       DOM.btnMisInmueblesClose = document.getElementById('btnMisInmueblesClose');
     }
 
+    /* ---- Loader genérico para botones que disparan una llamada ajax ---- */
+    function setButtonLoading(btn, loading, loadingLabel) {
+      if (!btn) return;
+      if (loading) {
+        if (btn.dataset.originalHtml === undefined) btn.dataset.originalHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.classList.add('btn-loading');
+        btn.innerHTML = '<span class="btn-inline-spinner"></span>' + (loadingLabel || 'Procesando…');
+      } else {
+        btn.disabled = false;
+        btn.classList.remove('btn-loading');
+        if (btn.dataset.originalHtml !== undefined) {
+          btn.innerHTML = btn.dataset.originalHtml;
+        }
+      }
+    }
+
+    function setSubmitLoading(loading, label) {
+      DOM.submitBtn.disabled = loading;
+      DOM.spinner.style.display = loading ? 'inline-block' : 'none';
+      if (label) DOM.btnText.textContent = label;
+    }
+
     function getParam() {
       return new URLSearchParams(window.location.search).get('k') || null;
     }
@@ -1273,8 +1350,35 @@
     }
 
     /* ---- Load existing (edit mode) ---- */
+    /* ---- Selección robusta de <option> ----
+       Selecciona por valor exacto y, si no matchea (acentos/mayúsculas/espacios
+       distintos entre lo guardado en el servidor y las opciones del <select>),
+       intenta un match normalizado para no dejar el campo vacío. */
+    function normalizeForMatch(s) {
+      return String(s || '')
+        .trim()
+        .toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, ''); // saca acentos
+    }
+    function setSelectValueSmart(selectEl, value) {
+      if (!selectEl || value == null || value === '') return false;
+      selectEl.value = value;
+      if (selectEl.value === String(value)) return true; // matcheó exacto
+      var target = normalizeForMatch(value);
+      var options = selectEl.querySelectorAll('option');
+      for (var i = 0; i < options.length; i++) {
+        if (normalizeForMatch(options[i].value) === target || normalizeForMatch(options[i].textContent) === target) {
+          selectEl.value = options[i].value;
+          return true;
+        }
+      }
+      console.warn('STATETTY: no se encontró opción para', selectEl.id, '=', value);
+      return false;
+    }
+
     function loadInmueble(id) {
       var base = STATETTY_CONFIG.WS_API_BASE;
+      setSubmitLoading(true, 'Cargando datos…');
       fetch(base + 'statetty/inmueble?_id=' + encodeURIComponent(id), {
         headers: { 'ngrok-skip-browser-warning': '1' }
       })
@@ -1287,9 +1391,14 @@
         if (inm.tipoNegocio) DOM.fNegocio.value = inm.tipoNegocio;
         DOM.fPrecio.value = inm.precio || '';
         if (inm.pais) {
-          DOM.fPais.value = inm.pais;
-          loadCities(inm.pais);
-          if (inm.ciudad) DOM.fCiudad.value = inm.ciudad;
+          // El <select> de ciudad depende de que el país quede correctamente
+          // seleccionado ANTES de poblar sus opciones (loadCities) y de fijar
+          // el valor de ciudad. Se hace de forma robusta con setSelectValueSmart
+          // para que funcione aunque el valor guardado difiera en formato
+          // (mayúsculas/acentos) del value de las <option>.
+          setSelectValueSmart(DOM.fPais, inm.pais);
+          loadCities(DOM.fPais.value || inm.pais);
+          if (inm.ciudad) setSelectValueSmart(DOM.fCiudad, inm.ciudad);
         }
         DOM.fDireccion.value = inm.direccion || '';
         DOM.fZona.value = inm.zona || '';
@@ -1341,12 +1450,15 @@
         // agenciaID es fijo para esta página: nunca se toma del servidor.
         DOM.fAgenciaID.value = 'BO_Statetty';
 
+        setSubmitLoading(false, 'Actualizar inmueble');
+
         // Bug #1 (arreglado): el draft ahora está escopado por _id, así que
         // restaurarlo acá solo recupera una edición interrumpida de ESTE
         // mismo inmueble, sin pisar campos con el borrador de otro.
         restoreDraft();
       })
       .catch(function (err) {
+        setSubmitLoading(false, 'Actualizar inmueble');
         console.warn('STATETTY: loadInmueble error', err);
       });
     }
@@ -1375,16 +1487,16 @@
 
     function fetchMisInmuebles() {
       setMisInmueblesState('loading', 'Cargando tus inmuebles…');
-      DOM.btnMisInmuebles.disabled = true;
+      setButtonLoading(DOM.btnMisInmuebles, true, 'Cargando…');
       try {
         var base = window.STATETTY_CONFIG ? STATETTY_CONFIG.WS_API_BASE : '';
         if (!base) {
-          DOM.btnMisInmuebles.disabled = false;
+          setButtonLoading(DOM.btnMisInmuebles, false);
           setMisInmueblesState('error', 'No se pudo determinar el endpoint del servidor.');
           return;
         }
         if (!USER || !USER._id || !K) {
-          DOM.btnMisInmuebles.disabled = false;
+          setButtonLoading(DOM.btnMisInmuebles, false);
           setMisInmueblesState('error', 'No se pudo determinar tu usuario. Recargá la página e intentá de nuevo.');
           return;
         }
@@ -1394,7 +1506,7 @@
             return r.json().then(function (body) { return { status: r.status, ok: r.ok, body: body }; });
           })
           .then(function (res) {
-            DOM.btnMisInmuebles.disabled = false;
+            setButtonLoading(DOM.btnMisInmuebles, false);
             if (!res.ok || !res.body || res.body.ok !== true) {
               var errMsg = (res.body && res.body.error) || 'No se pudo obtener tu lista de inmuebles.';
               setMisInmueblesState('error', errMsg);
@@ -1403,7 +1515,7 @@
             renderMisInmueblesList(res.body.data || []);
           })
           .catch(function (err) {
-            DOM.btnMisInmuebles.disabled = false;
+            setButtonLoading(DOM.btnMisInmuebles, false);
             console.warn('[Statetty][ginlius] fetch error', err);
             if (err.name === 'AbortError') {
               setMisInmueblesState('error', 'Tiempo de espera agotado. El servidor no respondió a tiempo.');
@@ -1412,7 +1524,7 @@
             }
           });
       } catch (err) {
-        DOM.btnMisInmuebles.disabled = false;
+        setButtonLoading(DOM.btnMisInmuebles, false);
         console.warn('[Statetty][ginlius] sync error', err);
         setMisInmueblesState('error', err.message || 'Ocurrió un error inesperado.');
       }
@@ -1582,11 +1694,46 @@
     function addPhotoRow(url) {
       var row = document.createElement('div');
       row.className = 'photo-row';
+
+      // --- Handle de arrastre: permite reordenar la fila completa ---
+      var handle = document.createElement('span');
+      handle.className = 'photo-drag-handle';
+      handle.setAttribute('draggable', 'true');
+      handle.title = 'Arrastrá para reordenar';
+      handle.textContent = '⠿';
+      handle.addEventListener('dragstart', function (e) {
+        draggedPhotoRow = row;
+        row.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        try { e.dataTransfer.setData('text/plain', ''); } catch (err) {}
+      });
+      handle.addEventListener('dragend', function () {
+        row.classList.remove('dragging');
+        draggedPhotoRow = null;
+        DOM.photoList.querySelectorAll('.photo-row.drag-over').forEach(function (r) {
+          r.classList.remove('drag-over');
+        });
+      });
+
+      // --- Miniatura de la foto (con caché para no recargar la misma URL) ---
+      var thumbWrap = document.createElement('div');
+      thumbWrap.className = 'photo-row-thumb-wrap';
+      var thumb = document.createElement('img');
+      thumb.className = 'photo-row-thumb';
+      thumb.alt = 'Miniatura';
+      thumb.style.display = 'none';
+      var thumbPlaceholder = document.createElement('span');
+      thumbPlaceholder.className = 'photo-row-thumb-placeholder';
+      thumbPlaceholder.textContent = '🖼️';
+      thumbWrap.appendChild(thumb);
+      thumbWrap.appendChild(thumbPlaceholder);
+
       var input = document.createElement('input');
       input.type = 'url';
       input.className = 'photo-input';
       input.placeholder = 'https://…';
       if (url) input.value = url;
+
       var removeBtn = document.createElement('button');
       removeBtn.type = 'button';
       removeBtn.className = 'photo-remove';
@@ -1594,9 +1741,68 @@
       removeBtn.addEventListener('click', function () {
         row.remove();
       });
+
+      row.appendChild(handle);
+      row.appendChild(thumbWrap);
       row.appendChild(input);
       row.appendChild(removeBtn);
       DOM.photoList.appendChild(row);
+
+      function updateThumb() {
+        var v = input.value.trim();
+        if (!v) {
+          thumb.style.display = 'none';
+          thumb.removeAttribute('src');
+          thumbPlaceholder.style.display = 'flex';
+          thumbPlaceholder.textContent = '🖼️';
+          return;
+        }
+        var cached = photoThumbCache[v];
+        // Ya sabemos si esta URL carga bien o no: no la volvemos a pedir.
+        if (cached === 'ok') {
+          thumb.src = v;
+          thumb.style.display = 'block';
+          thumbPlaceholder.style.display = 'none';
+          return;
+        }
+        if (cached === 'error') {
+          thumb.style.display = 'none';
+          thumbPlaceholder.style.display = 'flex';
+          thumbPlaceholder.textContent = '⚠️';
+          return;
+        }
+        // Primera vez que se ve esta URL: se prueba una sola vez y se cachea el resultado.
+        thumbPlaceholder.style.display = 'flex';
+        thumbPlaceholder.textContent = '…';
+        thumb.style.display = 'none';
+        var tester = new Image();
+        tester.onload = function () {
+          photoThumbCache[v] = 'ok';
+          if (input.value.trim() === v) {
+            thumb.src = v;
+            thumb.style.display = 'block';
+            thumbPlaceholder.style.display = 'none';
+          }
+        };
+        tester.onerror = function () {
+          photoThumbCache[v] = 'error';
+          if (input.value.trim() === v) {
+            thumb.style.display = 'none';
+            thumbPlaceholder.style.display = 'flex';
+            thumbPlaceholder.textContent = '⚠️';
+          }
+        };
+        tester.src = v;
+      }
+
+      var thumbDebounce = null;
+      input.addEventListener('input', function () {
+        clearTimeout(thumbDebounce);
+        thumbDebounce = setTimeout(updateThumb, 450);
+      });
+      input.addEventListener('change', updateThumb);
+
+      if (url) updateThumb();
     }
 
     function getPhotos() {
@@ -1721,8 +1927,9 @@
         DOM.fEstado.value       = state.estado || 'disponible';
         DOM.fBorrador.checked   = !!state.borrador;
         if (state.pais) {
-          DOM.fPais.value = state.pais;
-          loadCities(state.pais);
+          setSelectValueSmart(DOM.fPais, state.pais);
+          loadCities(DOM.fPais.value || state.pais);
+          if (state.ciudad) setSelectValueSmart(DOM.fCiudad, state.ciudad);
         }
         if (Array.isArray(state.fotos) && state.fotos.length) {
           DOM.photoList.innerHTML = '';
@@ -1784,6 +1991,7 @@
 
       DOM.photoUploadStat.innerHTML = '<span class="photo-upload-progress"></span> Subiendo…';
       DOM.photoUploadStat.style.color = 'var(--muted)';
+      setButtonLoading(DOM.photoUploadBtn, true, 'Subiendo…');
 
       var base = STATETTY_CONFIG.WS_API_BASE;
 
@@ -1797,6 +2005,7 @@
       })
       .then(function (r) { return r.json(); })
       .then(function (data) {
+        setButtonLoading(DOM.photoUploadBtn, false);
         if (data.ok) {
           var url = base + 'imagenes/imagen/' + data.md5 + '.webp';
           DOM.photoUploadStat.innerHTML = '✅ Subida exitosa (' + (data.size / 1024).toFixed(1) + ' KB)';
@@ -1811,6 +2020,7 @@
         }
       })
       .catch(function (err) {
+        setButtonLoading(DOM.photoUploadBtn, false);
         DOM.photoUploadStat.textContent = 'Error de red: ' + err.message;
         DOM.photoUploadStat.style.color = '#e74c3c';
       });
@@ -1994,6 +2204,33 @@
       });
       DOM.photoAddBtn.addEventListener('click', function () {
         addPhotoRow();
+      });
+      // Reordenar filas de fotos por drag & drop (delegado en el contenedor).
+      DOM.photoList.addEventListener('dragover', function (e) {
+        if (!draggedPhotoRow) return;
+        var overRow = e.target.closest ? e.target.closest('.photo-row') : null;
+        if (!overRow || overRow === draggedPhotoRow) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        DOM.photoList.querySelectorAll('.photo-row.drag-over').forEach(function (r) {
+          if (r !== overRow) r.classList.remove('drag-over');
+        });
+        overRow.classList.add('drag-over');
+      });
+      DOM.photoList.addEventListener('drop', function (e) {
+        if (!draggedPhotoRow) return;
+        var overRow = e.target.closest ? e.target.closest('.photo-row') : null;
+        e.preventDefault();
+        if (overRow) overRow.classList.remove('drag-over');
+        if (!overRow || overRow === draggedPhotoRow) return;
+        var rows = Array.prototype.slice.call(DOM.photoList.children);
+        var fromIdx = rows.indexOf(draggedPhotoRow);
+        var toIdx = rows.indexOf(overRow);
+        if (fromIdx < toIdx) {
+          DOM.photoList.insertBefore(draggedPhotoRow, overRow.nextSibling);
+        } else {
+          DOM.photoList.insertBefore(draggedPhotoRow, overRow);
+        }
       });
       DOM.attrAddBtn.addEventListener('click', function () {
         addAttrRow();
