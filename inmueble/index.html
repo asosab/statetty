@@ -128,7 +128,7 @@
         <aside class="inm-sidebar" id="inm-sidebar">
           <div class="inm-contact-card">
             <h3 class="inm-contact-card-title">Pregunta al anunciante</h3>
-            <textarea class="inm-form-textarea" id="inm-msg" rows="4">Hola, me interesa este imueble y me gustaría hacer una visita.
+            <textarea class="inm-form-textarea" id="inm-msg" rows="4">me interesa este imueble y me gustaría hacer una visita.
 
 Un saludo</textarea>
             <input type="email" class="inm-form-input" id="inm-email" placeholder="Tu email">
@@ -320,13 +320,14 @@ Un saludo</textarea>
             if (result.ok && body.ok === true) {
               var payload = body.data || {};
               var agentName = payload.agentName || '';
+              var agentNameCorto = agentName.trim().split(/\s+/)[0] || '';
               var agentPhon = payload.agentPhon != null ? String(payload.agentPhon) : '';
 
               var fotoUrl = getFirstPhotoUrl();
               var paginaUrl = 'https://statetty.com/inmueble/?_id=' + propertyId;
 
               var textoWhatsapp =
-                'Hola ' + agentName + '\n' +
+                'Hola ' + agentNameCorto + '\n' +
                 'Me llamo ' + nombre + ', ' + mensaje + ',\n' +
                 'Foto: ' + fotoUrl + '\n' +
                 'Página: ' + paginaUrl;
