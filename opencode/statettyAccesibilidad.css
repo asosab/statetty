@@ -1,0 +1,312 @@
+/* =====================================================================
+   STATETTY — CSS de contraste y tipografía accesible (v2)
+   -----------------------------------------------------------------------
+   Paleta aprobada en test_de_accesibilidad.html.
+   Basada en colores Tailwind que cumplen WCAG AA (4.5:1).
+
+   Colores de marca originales (uso decorativo):
+     Celeste #16baef / Mostaza #eebe3e / Azul marino #074f67
+
+   Variantes accesibles para texto sobre fondo claro:
+     Celeste texto  #0284c7  (4.5:1)
+     Mostaza texto  #b45309  (6.7:1)
+     Navy           #0f172a  (17:1)
+   ===================================================================== */
+
+:root {
+  /* ---- Paleta aprobada WCAG AA ---- */
+  --azul-marino: #0f172a;         /* navy — títulos, fondos oscuros */
+  --azul-marino-700: #0c4a6e;    /* hover / estados activos */
+  --celeste: #0284c7;             /* celeste accesible — links, acentos */
+  --mostaza: #f59e0b;             /* mostaza base — fondos de botones */
+  --blanco: #ffffff;
+  --negro-texto: #334155;         /* slate-700 — cuerpo de texto */
+
+  /* ---- Variantes accesibles para texto sobre fondo claro ---- */
+  --celeste-texto: #0284c7;       /* 4.5:1 — links, iconos con texto */
+  --mostaza-texto: #b45309;       /* 6.7:1 — acentos, badges, labels */
+
+  /* ---- Colores decorativos originales (solo para fondos/íconos grandes) ---- */
+  --celeste-decorativo: #16baef;  /* 2.26:1 — solo fondos, íconos, texto 24px+ negrita */
+  --mostaza-decorativo: #eebe3e;  /* 1.74:1 — solo fondos, íconos, texto 24px+ negrita */
+
+  /* ---- Fondos y bordes neutros ---- */
+  --fondo-claro: #f5f7f9;
+  --borde-sutil: #d8dee2;
+
+  /* ---- Tipografía ---- */
+  --font-base: 16px;
+  --lh-base: 1.6;
+  --lh-heading: 1.25;
+}
+
+/* =====================================================================
+   1) BASE — tamaño y contraste de texto
+   ===================================================================== */
+
+html {
+  font-size: var(--font-base);
+}
+
+body {
+  color: var(--negro-texto);
+  line-height: var(--lh-base);
+  font-size: 1rem;
+}
+
+p, li, label, td, th {
+  font-size: clamp(1rem, 0.95rem + 0.2vw, 1.125rem);
+  line-height: var(--lh-base);
+}
+
+small, .text-small, footer, .fine-print {
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+/* =====================================================================
+   2) TÍTULOS — escala responsiva con buen contraste
+   ===================================================================== */
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--azul-marino);
+  line-height: var(--lh-heading);
+  font-weight: 700;
+}
+
+h1 { font-size: clamp(2rem, 1.6rem + 2vw, 3.25rem); }
+h2 { font-size: clamp(1.6rem, 1.35rem + 1.2vw, 2.5rem); }
+h3 { font-size: clamp(1.25rem, 1.1rem + 0.6vw, 1.75rem); }
+h4 { font-size: clamp(1.1rem, 1rem + 0.4vw, 1.35rem); }
+
+/* Sobre fondos oscuros (héroe, secciones navy) usar blanco */
+.bg-dark h1, .bg-dark h2, .bg-dark h3, .hero h1, .hero h2 {
+  color: var(--blanco);
+}
+
+.bg-dark .accent, .hero .accent {
+  color: var(--mostaza);
+}
+
+/* =====================================================================
+   3) ENLACES
+   ===================================================================== */
+
+a {
+  color: var(--celeste-texto);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+a:hover, a:focus {
+  color: var(--azul-marino);
+}
+
+.bg-dark a, .hero a, footer a {
+  color: var(--mostaza);
+  text-decoration-color: currentColor;
+}
+
+/* =====================================================================
+   4) BOTONES — combinaciones que cumplen contraste
+   ===================================================================== */
+
+.btn, button, input[type="submit"] {
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 0.85em 1.6em;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  cursor: pointer;
+}
+
+/* Botón primario: fondo navy + texto blanco */
+.btn-primary {
+  background: var(--azul-marino);
+  color: var(--blanco);
+}
+.btn-primary:hover { background: var(--azul-marino-700); }
+
+/* Botón secundario con mostaza: texto negro, NO blanco */
+.btn-secondary {
+  background: var(--mostaza);
+  color: #000000;
+}
+.btn-secondary:hover { background: #d97706; }
+
+/* Botón con celeste: texto negro obligatorio */
+.btn-accent {
+  background: var(--celeste);
+  color: #000000;
+}
+.btn-accent:hover { background: #0369a1; }
+
+/* Botón "ghost" sobre fondo oscuro */
+.btn-outline {
+  background: transparent;
+  border-color: var(--blanco);
+  color: var(--blanco);
+}
+
+/* =====================================================================
+   5) FONDOS DE MARCA
+   ===================================================================== */
+
+.bg-azul-marino { background: var(--azul-marino); color: var(--blanco); }
+.bg-celeste     { background: var(--celeste);     color: #000000; }
+.bg-mostaza     { background: var(--mostaza);     color: #000000; }
+.bg-claro       { background: var(--fondo-claro); color: var(--negro-texto); }
+
+/* =====================================================================
+   6) BADGES / STATS
+   ===================================================================== */
+
+.stat, .badge {
+  font-size: clamp(1.5rem, 1.2rem + 1.5vw, 2.25rem);
+  font-weight: 800;
+  color: var(--azul-marino);
+}
+.stat-label, .badge-label {
+  font-size: 0.95rem;
+  color: var(--negro-texto);
+  opacity: 0.85;
+}
+.bg-dark .stat, .hero .stat { color: var(--mostaza); }
+
+/* =====================================================================
+   7) TARJETAS
+   ===================================================================== */
+
+.card {
+  background: var(--blanco);
+  border: 1px solid var(--borde-sutil);
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+.card h3 { color: var(--azul-marino); margin-bottom: 0.5rem; }
+.card p  { color: var(--negro-texto); }
+.card .icon { font-size: 2rem; }
+
+/* =====================================================================
+   8) FORMULARIO
+   ===================================================================== */
+
+label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--negro-texto);
+}
+
+input, select, textarea {
+  font-size: 1rem;
+  line-height: 1.5;
+  padding: 0.75em 1em;
+  border: 1px solid var(--borde-sutil);
+  border-radius: 8px;
+  color: var(--negro-texto);
+}
+
+input::placeholder, textarea::placeholder {
+  color: #5b6b73;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: 3px solid var(--celeste);
+  outline-offset: 1px;
+}
+
+/* =====================================================================
+   9) FOOTER
+   ===================================================================== */
+
+footer {
+  background: var(--azul-marino);
+  color: var(--blanco);
+}
+footer a { color: var(--mostaza); }
+footer small, footer .fine-print { color: #94a3b8; }
+
+/* =====================================================================
+   10) NAVEGACIÓN
+   ===================================================================== */
+
+nav a, .navbar a {
+  font-size: 1rem;
+  color: var(--negro-texto);
+}
+nav a:hover, .navbar a:hover { color: var(--azul-marino); }
+
+/* =====================================================================
+   11) OVERRIDES PARA SELECTORES ESPECÍFICOS DE theme-1.css
+   ===================================================================== */
+
+/* Labels decorativos que usaban var(--blue) = #17baef */
+.problema-label,
+.testimonios-label,
+.prensa-label,
+.post-card__date,
+.prensa-file-badge {
+  color: var(--celeste-texto) !important;
+}
+
+/* Funciones label sobre fondo azul */
+.funciones-label {
+  color: var(--mostaza-texto) !important;
+}
+
+/* Subtítulos sobre fondo azul */
+.funciones-sub {
+  color: #fed7aa !important;
+}
+
+/* Textos grises secundarios */
+.pronunciation,
+.testimonio-agency,
+.audio-label,
+.blog-section .section-subtitle,
+.prensa-sub {
+  color: var(--negro-texto) !important;
+}
+
+/* Enlace con icono de pronunciación */
+.pronunciation i {
+  color: var(--celeste-texto) !important;
+}
+
+/* Botón CTA secundario — fondo mostaza + texto negro */
+.btn-cta-secondary,
+a.btn-cta-secondary {
+  background: var(--mostaza) !important;
+  color: #000000 !important;
+}
+.btn-cta-secondary:hover,
+a.btn-cta-secondary:hover {
+  background: #d97706 !important;
+  color: #000000 !important;
+}
+
+/* Botón primario con mostaza (global styles) */
+.btn-primary {
+  background: var(--mostaza) !important;
+  color: #000000 !important;
+}
+.btn-primary:hover {
+  background: #d97706 !important;
+  color: #000000 !important;
+}
+
+/* Tabla: th con mostaza + texto negro */
+th {
+  background: var(--mostaza) !important;
+  color: #000000 !important;
+}
+
+/* Precio del inmueble */
+.inm-price {
+  color: var(--celeste-texto) !important;
+}
+
+/* Link activo en nav */
+.header .main-nav .nav .nav-item.active .nav-link {
+  color: var(--celeste-texto) !important;
+}

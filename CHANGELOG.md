@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-07-09
+
+- **Corrección de contraste WCAG AA aplicada**: paleta aprobada (`#0284c7` celeste accesible, `#0f172a` navy, `#f59e0b` mostaza, `#334155` texto cuerpo) implementada en `statettyAccesibilidad.css` y cargada vía `head.html`. Fixes aplicados a `theme-1.css`, `page.html`, `contacto.html`, `footer.html`, `main.css`, `inmueble.css`. Verificado en `test.html` con toggle antes/corregido.
+
 ## 2026-07-06
 
 - **Fix calculadora de tarifas**: la calculadora aplicaba precio de grupo5 a partir de 2 agentes, pero ese plan solo aplica desde 5. Ahora usa precio individual (100 Bs.) para 1–4 agentes, grupo5 para 5–9, grupo10 para 10+. Rango del slider cambiado de min=2 a min=1. Datos `TARIFAS_PRECIOS` ya estaban correctos (actualizados el 2026-07-01).

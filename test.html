@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test accesibilidad — Statetty (paleta aprobada)</title>
+  <link href="https://fonts.googleapis.com/css?family=Lato:300,400,300italic,400italic" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet">
+  <link rel="stylesheet" href="assets/plugins/bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" href="assets/css/theme-1.css">
+
+  <style>
+    /* ================================================================
+       PALETA APROBADA — desde test_de_accesibilidad.html
+       ================================================================ */
+    :root {
+      --celeste-accesible: #0284c7;
+      --navy-accesible:    #0f172a;
+      --mostaza-bg:        #f59e0b;
+      --mostaza-texto:     #b45309;
+      --texto-cuerpo:      #334155;
+      --accento-oscuro:    #fed7aa;
+    }
+
+    /* ================================================================
+       OVERRIDES — paleta corregida (modo "CORREGIDO")
+       ================================================================ */
+
+    /* --- Links --- */
+    a { color: var(--celeste-accesible) !important; }
+    a:hover { color: var(--navy-accesible) !important; }
+    a:visited { color: #0c4a6e; }
+
+    /* --- Títulos --- */
+    h1, h2, h3, h4, h5, h6 { color: var(--navy-accesible) !important; }
+
+    /* --- Botón CTA secundario (mostaza) --- */
+    .btn-cta-secondary,
+    a.btn-cta-secondary {
+      background: var(--mostaza-bg) !important;
+      color: #000000 !important;
+    }
+    .btn-cta-secondary:hover,
+    a.btn-cta-secondary:hover {
+      background: #d97706 !important;
+      color: #000000 !important;
+    }
+
+    /* --- Botón primario (reutiliza mostaza en el test pero respeta estilo original) --- */
+    .btn-primary {
+      background: var(--mostaza-bg) !important;
+      color: #000000 !important;
+    }
+    .btn-primary:hover {
+      background: #d97706 !important;
+      color: #000000 !important;
+    }
+
+    /* --- Nav activo --- */
+    .header .main-nav .nav .nav-item.active .nav-link { color: var(--celeste-accesible) !important; }
+
+    /* --- Precio --- */
+    .inm-price { color: var(--celeste-accesible) !important; }
+
+    /* --- Tabla th --- */
+    th {
+      background: var(--mostaza-bg) !important;
+      color: #000000 !important;
+    }
+
+    /* --- Labels decorativos (problema, testimonios, prensa, fecha post) --- */
+    .problema-label,
+    .testimonios-label,
+    .prensa-label,
+    .post-card__date { color: var(--celeste-accesible) !important; }
+
+    /* --- Funciones label sobre fondo azul --- */
+    .funciones-label { color: var(--mostaza-texto) !important; }
+    .funciones-sub { color: var(--accento-oscuro); }
+
+    /* --- Badge prensa --- */
+    .prensa-file-badge { color: var(--celeste-accesible) !important; }
+
+    /* --- Textos grises a texto-cuerpo --- */
+    .pronunciation,
+    .testimonio-agency,
+    .audio-label,
+    .blog-section .section-subtitle,
+    .prensa-sub,
+    .post-header .meta { color: var(--texto-cuerpo) !important; }
+
+    /* Texto de cuerpo */
+    body { color: var(--texto-cuerpo); }
+    p, li, .card p, .problema-card p { color: var(--texto-cuerpo); }
+
+    /* ================================================================
+       BANNER DE COMPARACIÓN
+       ================================================================ */
+    .test-banner {
+      background: #0f172a;
+      color: #cbd5e1;
+      font-family: 'Montserrat', sans-serif;
+      font-size: .8rem;
+      padding: 10px 16px;
+      text-align: center;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 99999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .test-banner a {
+      color: #38bdf8 !important;
+      text-decoration: underline !important;
+    }
+    .test-banner .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 10px;
+      border-radius: 9999px;
+      font-size: .7rem;
+      font-weight: 700;
+    }
+    .badge-pass { background: #10b981; color: #fff; }
+    .badge-fail { background: #ef4444; color: #fff; }
+    .test-banner .btn-toggle {
+      border: none;
+      padding: 5px 16px;
+      border-radius: 20px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: .75rem;
+      background: #f59e0b;
+      color: #000;
+    }
+    .test-banner .btn-toggle.off { background: #475569; color: #cbd5e1; }
+
+    /* --- MODO ANTES: desactiva correcciones --- */
+    body.antes .test-override a { color: #17baef !important; }
+    body.antes .test-override a:hover { color: #0e98c5 !important; }
+    body.antes .test-override h1, body.antes .test-override h2,
+    body.antes .test-override h3, body.antes .test-override h4,
+    body.antes .test-override h5, body.antes .test-override h6 { color: #17baef !important; }
+    body.antes .test-override .btn-cta-secondary,
+    body.antes .test-override a.btn-cta-secondary { background: #eebf3f !important; color: #fff !important; }
+    body.antes .test-override .btn-primary { background: #eebf3f !important; color: #fff !important; }
+    body.antes .test-override th { background: #eebe3e !important; color: #fff !important; }
+    body.antes .test-override .inm-price { color: #17baef !important; }
+    body.antes .test-override .funciones-label { color: #eebf3f !important; }
+    body.antes .test-override .funciones-sub { color: rgba(255,255,255,.80); }
+    body.antes .test-override .problema-label,
+    body.antes .test-override .testimonios-label,
+    body.antes .test-override .prensa-label,
+    body.antes .test-override .post-card__date { color: #17baef !important; }
+    body.antes .test-override .pronunciation,
+    body.antes .test-override .testimonio-agency,
+    body.antes .test-override .audio-label,
+    body.antes .test-override .blog-section .section-subtitle,
+    body.antes .test-override .prensa-sub,
+    body.antes .test-override .post-header .meta { color: #777 !important; }
+
+    body { padding-bottom: 60px; }
+
+    .demo-table-wrap { max-width: 600px; margin: 0 auto; padding: 40px 24px; }
+    .demo-table-wrap table { width: 100%; border-collapse: collapse; }
+    .demo-table-wrap th, .demo-table-wrap td { padding: 12px; text-align: center; border: 1px solid #ddd; }
+    .demo-table-wrap td { background: #fff; color: var(--texto-cuerpo); }
+
+    .demo-price { padding: 40px 24px; max-width: 600px; margin: 0 auto; }
+  </style>
+</head>
+<body class="test-override">
+
+<div class="test-banner" id="testBanner">
+  <span>🧪 <strong>Paleta APROBADA</strong> — mostrando <strong id="stateLabel">CORREGIDO</strong></span>
+  <span class="badge badge-pass" id="wcagBadge">WCAG AA ✅</span>
+  <button class="btn-toggle" id="toggleBtn" onclick="toggleAccesibilidad()">Ver ANTES</button>
+  <span class="text-slate-500">|</span>
+  <a href="test_de_accesibilidad.html">Laboratorio Tailwind</a>
+</div>
+
+<script>
+function toggleAccesibilidad() {
+  var b = document.body;
+  var btn = document.getElementById('toggleBtn');
+  var label = document.getElementById('stateLabel');
+  var badge = document.getElementById('wcagBadge');
+  b.classList.toggle('antes');
+  if (b.classList.contains('antes')) {
+    btn.textContent = 'Ver CORREGIDO';
+    label.textContent = 'ORIGINAL (falla)';
+    badge.textContent = 'FALLA WCAG ❌';
+    badge.className = 'badge badge-fail';
+    btn.className = 'btn-toggle off';
+  } else {
+    btn.textContent = 'Ver ANTES';
+    label.textContent = 'CORREGIDO';
+    badge.textContent = 'WCAG AA ✅';
+    badge.className = 'badge badge-pass';
+    btn.className = 'btn-toggle';
+  }
+}
+</script>
+
+<!-- ======== HERO ======== -->
+<section class="Inicio section" style="padding-top:100px;padding-bottom:60px;">
+  <div class="container text-center">
+    <h2 class="title">State<span class="highlight">tty</span></h2>
+    <p class="intro">Trabaja diferente. Sé el agente que siempre llega primero</p>
+    <div class="btns">
+      <a class="btn btn-cta-secondary" href="#">¡Empezá ahora!</a>
+      <a class="btn btn-cta-primary" href="#">Probá el bot</a>
+    </div>
+    <div class="numeros-grid" style="margin-top:40px;">
+      <div class="numero-item"><span class="numero-valor">+120.000</span><span class="numero-label">Inmuebles indexados</span></div>
+      <div class="numero-item"><span class="numero-valor">+100</span><span class="numero-label">Grupos activos</span></div>
+      <div class="numero-item"><span class="numero-valor">+145</span><span class="numero-label">Agentes usando Statetty</span></div>
+      <div class="numero-item"><span class="numero-valor">~66 hs</span><span class="numero-label">Ahorradas al mes</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ======== PROBLEMA ======== -->
+<section class="section problema-section" style="background:#f5f5f5;padding:60px 0;">
+  <div class="container">
+    <div class="problema-intro text-center" style="margin-bottom:40px;">
+      <p class="problema-label" style="font-size:.78rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin-bottom:12px;">¿Te suena familiar?</p>
+      <h2 class="title">El trabajo de un agente no debería verse así</h2>
+    </div>
+    <div class="row">
+      <div class="col-md-3 col-sm-6" style="margin-bottom:20px;">
+        <div class="problema-card" style="background:#fff;border-radius:12px;padding:24px;box-shadow:0 4px 20px rgba(0,0,0,.06);">
+          <h3 style="font-size:1rem;font-weight:700;margin-bottom:10px;">Horas en portales</h3>
+          <p style="font-size:.875rem;line-height:1.65;">Revisás RE/MAX, C21 y cinco grupos antes de desayunar.</p>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6" style="margin-bottom:20px;">
+        <div class="problema-card" style="background:#fff;border-radius:12px;padding:24px;box-shadow:0 4px 20px rgba(0,0,0,.06);">
+          <h3 style="font-size:1rem;font-weight:700;margin-bottom:10px;">El lead que se escapó</h3>
+          <p style="font-size:.875rem;line-height:1.65;">Lo viste dos horas tarde.</p>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6" style="margin-bottom:20px;">
+        <div class="problema-card" style="background:#fff;border-radius:12px;padding:24px;box-shadow:0 4px 20px rgba(0,0,0,.06);">
+          <h3 style="font-size:1rem;font-weight:700;margin-bottom:10px;">El ACM a mano</h3>
+          <p style="font-size:.875rem;line-height:1.65;">Te consume media mañana.</p>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6" style="margin-bottom:20px;">
+        <div class="problema-card" style="background:#fff;border-radius:12px;padding:24px;box-shadow:0 4px 20px rgba(0,0,0,.06);">
+          <h3 style="font-size:1rem;font-weight:700;margin-bottom:10px;">Datos dispersos</h3>
+          <p style="font-size:.875rem;line-height:1.65;">Sin centralización no hay claridad.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======== FUNCIONES (fondo azul) ======== -->
+<section class="section" style="background:#17baef;color:#fff;padding:60px 0;">
+  <div class="container text-center">
+    <p class="funciones-label" style="font-size:.78rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin-bottom:12px;">Qué hace Statetty</p>
+    <h2 class="title" style="color:#074f67;margin-bottom:16px;">Todo en un solo lugar</h2>
+    <p class="funciones-sub" style="max-width:700px;margin:0 auto 40px;line-height:1.7;">Construido para el mercado inmobiliario con soporte nativo para anticrético.</p>
+    <div class="row">
+      <div class="col-md-4" style="margin-bottom:20px;">
+        <div style="padding:24px;background:rgba(255,255,255,.08);border-radius:20px;">
+          <h3 style="font-size:1rem;font-weight:700;color:#fff;">Mapa interactivo</h3>
+          <p style="font-size:.875rem;color:rgba(255,255,255,.70);">Todos los inmuebles en un mapa con filtros.</p>
+        </div>
+      </div>
+      <div class="col-md-4" style="margin-bottom:20px;">
+        <div style="padding:24px;background:rgba(255,255,255,.08);border-radius:20px;">
+          <h3 style="font-size:1rem;font-weight:700;color:#fff;">Monitor de WhatsApp</h3>
+          <p style="font-size:.875rem;color:rgba(255,255,255,.70);">Alertas en Telegram al instante.</p>
+        </div>
+      </div>
+      <div class="col-md-4" style="margin-bottom:20px;">
+        <div style="padding:24px;background:rgba(255,255,255,.08);border-radius:20px;">
+          <h3 style="font-size:1rem;font-weight:700;color:#fff;">ACM automático</h3>
+          <p style="font-size:.875rem;color:rgba(255,255,255,.70);">Análisis comparativo en segundos.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======== TABLA DE PRECIOS ======== -->
+<div class="demo-table-wrap">
+  <h2 class="text-center" style="margin-bottom:24px;">Planes</h2>
+  <table>
+    <thead>
+      <tr><th>Plan</th><th>Precio</th><th>Agentes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Individual</td><td>Bs. 100</td><td>1</td></tr>
+      <tr><td>Equipo</td><td>Bs. 80 c/u</td><td>5-9</td></tr>
+      <tr><td>Corporativo</td><td>Bs. 65 c/u</td><td>10+</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ======== PRECIO INMUEBLE ======== -->
+<div class="demo-price">
+  <h2>Precio de inmueble</h2>
+  <p class="inm-price" style="font-size:1.8rem;font-weight:700;font-family:'Montserrat',sans-serif;">USD 120.000</p>
+  <p style="color:var(--texto-cuerpo);">Santa Cruz de la Sierra · 3 dorm · 2 baños</p>
+</div>
+
+<!-- ======== TESTIMONIOS ======== -->
+<section class="section testimonios-section" style="background:#f5f5f5;padding:60px 0;">
+  <div class="container">
+    <div class="text-center" style="margin-bottom:40px;">
+      <p class="testimonios-label" style="font-size:.78rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin-bottom:12px;">Agentes que ya trabajan diferente</p>
+      <h2 class="section-title" style="font-size:2rem;font-weight:700;">Lo que dicen quienes lo usan</h2>
+    </div>
+    <div class="row">
+      <div class="col-md-6" style="margin-bottom:20px;">
+        <div class="testimonio-card" style="background:#fff;border-radius:12px;padding:24px;border:1px solid #e8e8e8;">
+          <p class="testimonio-quote" style="font-size:.95rem;font-style:italic;">"Antes pasaba horas buscando entre cientos de mensajes."</p>
+          <div style="margin-top:12px;"><span class="testimonio-resultado" style="background:#f59e0b;padding:6px 14px;border-radius:6px;font-size:.82rem;font-weight:600;color:#000;">Búsqueda → cero</span></div>
+          <div class="testimonio-author" style="display:flex;align-items:center;gap:12px;margin-top:16px;padding-top:12px;border-top:1px solid #e8e8e8;">
+            <div>
+              <div class="testimonio-name" style="font-weight:600;">Siria Useche</div>
+              <div class="testimonio-agency" style="font-size:.8rem;">Century 21 Nexo</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======== BLOG CARD ======== -->
+<section class="section" style="padding:60px 0;">
+  <div class="container">
+    <div class="text-center" style="margin-bottom:30px;">
+      <h2 class="section-title" style="font-size:2rem;font-weight:700;">Últimos artículos</h2>
+      <p class="blog-section .section-subtitle" style="max-width:600px;margin:10px auto 0;">Consejos y novedades para agentes inmobiliarios</p>
+    </div>
+    <div class="row">
+      <div class="col-md-4" style="margin-bottom:20px;">
+        <div class="post-card" style="background:#fff;border-radius:12px;border:1px solid #e8e8e8;">
+          <div style="padding:20px;">
+            <span class="post-card__date" style="font-size:.78rem;text-transform:uppercase;font-weight:700;">15 Junio, 2026</span>
+            <h3 style="font-size:1.1rem;margin:8px 0;">Cómo usar WhatsApp para crecer</h3>
+            <p style="font-size:.88rem;">Tips para aprovechar el monitoreo de grupos.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======== PRONUNCIACIÓN ======== -->
+<section style="padding:40px 0;background:#f9f9f9;">
+  <div class="container text-center">
+    <p class="pronunciation" style="font-size:.95rem;">
+      Así se dice: <strong>Statetty</strong> /steɪt.ti/
+      <i style="cursor:pointer;margin-left:6px;">🔊</i>
+    </p>
+  </div>
+</section>
+
+<!-- ======== FOOTER LEGACY ======== -->
+<footer class="site-footer" style="border-top:1px solid #e8e8e8;padding:30px 0;">
+  <div class="wrap" style="max-width:800px;margin:0 auto;padding:0 30px;">
+    <p style="font-size:15px;text-align:center;">&copy; 2026 Statetty. Footer legacy (main.css)</p>
+  </div>
+</footer>
+
+</body>
+</html>

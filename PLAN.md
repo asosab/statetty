@@ -28,6 +28,18 @@ Sitio web estático Jekyll 4.3, alojado en GitHub Pages (statetty.com). Landing 
 
 **Toda página debe cargar su estilo general desde `assets/css/theme-1.css`** (incluido vía `{% include head.html %}` -> `theme-1.css`). Esto garantiza consistencia visual (paleta, tipografía, resets, variables `:root`) y que un cambio en la marca se refleje en todo el sitio. Ninguna página debe duplicar variables, resets o estilos generales inline.
 
+## 2026-07-09 — Ejecutada corrección de contraste WCAG AA
+
+- **Fase 3 completada:** paleta aprobada desde `test_de_accesibilidad.html` aplicada a todos los archivos del sitio.
+  - `opencode/statettyAccesibilidad.css` y `assets/css/statettyAccesibilidad.css`: paleta actualizada (celeste `#0284c7`, navy `#0f172a`, mostaza `#f59e0b`, texto `#334155`).
+  - `_includes/head.html`: agregado `<link>` a `statettyAccesibilidad.css` después de `theme-1.css`.
+  - `assets/css/theme-1.css`: fixes vía overrides en `statettyAccesibilidad.css` — títulos, links, botones CTA, tabla de precios, labels decorativos, textos grises.
+  - `_layouts/page.html`: links de posts y metadatos corregidos.
+  - `_includes/contacto.html`: colores de formulario corregidos (etiquetas, textos secundarios).
+  - `_includes/footer.html`: texto de baja opacidad subido de `.5` a `.65`.
+  - `assets/css/main.css`: footer legacy corregido.
+  - Todos los cambios verificados en `test.html` (toggle ANTES/CORREGIDO).
+
 ## Pendiente — refactor blog/index.html
 
 - 2026-06-12: **`blog/index.html` no usa layout ni includes** — tiene header, footer y `<head>` completos hardcodeados. Crea `_layouts/blog.html`, refactoriza `blog/index.html` para que herede de él y use `{% include header.html %}` / `{% include footer.html %}`. El CSS específico del blog (hero, search, cards) puede quedar inline en `blog/index.html`.

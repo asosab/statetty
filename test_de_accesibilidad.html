@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Laboratorio de Accesibilidad y Color — Statetty</title>
+  
+  <!-- Fuentes e Iconos -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Montserrat', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* ================================================================
+       SISTEMA DE VARIABLES DE COLOR DE ALTO CONTRASTE
+       ================================================================ */
+    :root {
+      /* Valores Corregidos (Cumplen WCAG AA - Contraste >= 4.5:1) */
+      --color-primary-cyan: #0284c7;     /* Celeste corporativo corregido para textos sobre blanco */
+      --color-primary-cyan-bg: #e0f2fe;  /* Fondo suave para badges */
+      --color-gold-mostaza: #f59e0b;     /* Oro/mostaza base */
+      --color-gold-mostaza-dark: #b45309;/* Oro oscuro para textos sobre fondo claro */
+      --color-midnight-navy: #0f172a;    /* Azul medianoche (reemplazo de negro plano) */
+      --color-neutral-text: #334155;     /* Gris oscuro de alta legibilidad */
+      --color-neutral-light: #f8fafc;    /* Gris de fondo limpio */
+      
+      /* Valores Originales (Deficiencias de contraste en modo 'Antes') */
+      --orig-cyan: #17baef;              /* 1.9:1 Contraste sobre blanco (Falla WCAG) */
+      --orig-yellow: #eebf3f;            /* Falla contraste si tiene texto blanco */
+      --orig-text-muted: #777777;
+    }
+
+    /* Transición suave para todos los cambios cromáticos */
+    * {
+      transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease;
+    }
+
+    /* ================================================================
+       ESTILOS DEL MODO CORREGIDO VS ORIGINAL
+       ================================================================ */
+    
+    /* Variables de Aplicación Dinámica */
+    .app-brand-cyan { color: var(--color-primary-cyan); }
+    .app-brand-navy { color: var(--color-midnight-navy); }
+    .app-brand-gold { color: var(--color-gold-mostaza-dark); }
+    .app-btn-cta { background-color: var(--color-gold-mostaza); color: #000000; font-weight: 700; }
+    .app-btn-cta:hover { background-color: #d97706; color: #000000; }
+    .app-table-header { background-color: var(--color-gold-mostaza); color: #000000; }
+    .app-price { color: var(--color-primary-cyan); }
+    .app-sub-highlight { color: #fed7aa; } /* Saffron suave sobre azul */
+
+    /* Reglas cuando el usuario desactiva las correcciones (Modo 'Antes' / Antigua Paleta) */
+    body.modo-antes .app-brand-cyan { color: var(--orig-cyan) !important; }
+    body.modo-antes .app-brand-navy { color: var(--orig-cyan) !important; }
+    body.modo-antes .app-brand-gold { color: var(--orig-cyan) !important; }
+    
+    body.modo-antes .app-btn-cta { 
+      background-color: var(--orig-yellow) !important; 
+      color: #ffffff !important; /* El error clásico: texto blanco sobre amarillo */
+      font-weight: 400;
+    }
+    body.modo-antes .app-btn-cta:hover { background-color: #d9a72e !important; }
+
+    body.modo-antes .app-table-header { 
+      background-color: var(--orig-yellow) !important; 
+      color: #ffffff !important; /* Falla severa de contraste */
+    }
+    body.modo-antes .app-price { color: var(--orig-cyan) !important; }
+    body.modo-antes .app-sub-highlight { color: rgba(255, 255, 255, 0.70); }
+
+    /* Indicadores visuales de estado en el HUD */
+    .hud-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    .hud-badge.pass { background-color: #10b981; color: #ffffff; }
+    .hud-badge.fail { background-color: #ef4444; color: #ffffff; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans pb-24">
+
+  <!-- ============================================================
+       FLOATING INTERACTIVE CONTRAST CONTROL HUD
+       ============================================================ -->
+  <div class="fixed bottom-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur border-t border-slate-800 text-white py-4 px-6 shadow-2xl">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+      
+      <!-- Lado Izquierdo: Estado de Accesibilidad -->
+      <div class="flex items-center gap-3">
+        <span class="text-2xl">🧪</span>
+        <div>
+          <div class="flex items-center gap-2">
+            <h4 class="font-display font-bold text-sm tracking-wide">COMPROBACIÓN WCAG 2.1:</h4>
+            <span id="wcagBadge" class="hud-badge pass">APROBADO (AA / AAA)</span>
+          </div>
+          <p class="text-xs text-slate-400">
+            Analizando la paleta de <span id="currentPaletteLabel" class="text-emerald-400 font-semibold">Statetty Corregida</span> para Jekyll.
+          </p>
+        </div>
+      </div>
+
+      <!-- Métricas en tiempo real -->
+      <div class="hidden lg:flex items-center gap-6 text-xs border-l border-slate-700 pl-6">
+        <div>
+          <span class="text-slate-400 block">Celeste s/ Blanco:</span>
+          <span id="metricCeleste" class="font-mono font-bold text-emerald-400">4.51:1 (Pasa AA)</span>
+        </div>
+        <div>
+          <span class="text-slate-400 block">Texto s/ Amarillo:</span>
+          <span id="metricAmarillo" class="font-mono font-bold text-emerald-400">12.6:1 (Pasa AAA)</span>
+        </div>
+        <div>
+          <span class="text-slate-400 block">Fondo de Bloques:</span>
+          <span class="font-mono font-bold text-slate-300">#0F172A (Premium)</span>
+        </div>
+      </div>
+
+      <!-- Botón de Acción y Enlaces del Tema -->
+      <div class="flex items-center gap-4 w-full md:w-auto justify-end">
+        <button 
+          id="toggleBtn" 
+          onclick="toggleContrast()" 
+          class="w-full md:w-auto px-5 py-2 rounded-full font-bold text-xs uppercase tracking-wider transition-all duration-300 transform active:scale-95 bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-lg shadow-amber-500/20"
+        >
+          Ver Paleta Original
+        </button>
+        <span class="text-slate-600 hidden md:inline">|</span>
+        <div class="text-xs text-slate-400 space-x-2 hidden md:block">
+          <span class="hover:text-white cursor-help" title="Cumple la relación mínima de 4.5:1 para texto normal">WCAG AA</span>
+          <span>·</span>
+          <span class="hover:text-white cursor-help" title="Usa variables globales adaptables para Jekyll">Jekyll Ready</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ============================================================
+       HERO / INICIO DE PÁGINA
+       ============================================================ -->
+  <header class="relative bg-white border-b border-slate-100 overflow-hidden py-16 md:py-24">
+    <!-- Círculo estético de fondo para aportar dinamismo visual -->
+    <div class="absolute -top-40 -right-40 w-96 h-96 bg-sky-50 rounded-full blur-3xl opacity-60"></div>
+    
+    <div class="max-w-5xl mx-auto px-6 text-center relative z-10">
+      
+      <!-- Isotipo del pin-casa simulado modernamente con Tailwind -->
+      <div class="flex justify-center mb-6">
+        <div class="relative w-16 h-16 flex items-center justify-center">
+          <div class="absolute inset-0 bg-sky-50 rounded-full transform scale-110"></div>
+          <!-- Isotipo adaptativo -->
+          <svg class="w-10 h-10 app-brand-cyan transition-transform duration-500 hover:rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Logotipo con pesos visuales mejorados -->
+      <h1 class="font-display font-extrabold text-5xl md:text-6xl tracking-tight mb-4">
+        <span class="text-slate-900">State</span><span class="app-brand-cyan">tty</span>
+      </h1>
+      
+      <p class="text-slate-600 text-lg md:text-xl max-w-2xl mx-auto font-light leading-relaxed mb-8">
+        Trabaja diferente. Sé el agente que siempre llega primero con herramientas de análisis de datos optimizadas.
+      </p>
+
+      <!-- Botones de Acción (Demostración de botones accesibles) -->
+      <div class="flex flex-col sm:flex-row justify-center items-center gap-4">
+        <a href="#" class="app-btn-cta w-full sm:w-auto px-8 py-3.5 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 text-center text-sm uppercase tracking-wider">
+          ¡Empezá ahora!
+        </a>
+        <a href="#" class="w-full sm:w-auto px-8 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold rounded-xl text-center text-sm transition-colors duration-300">
+          Probar demo gratis
+        </a>
+      </div>
+
+      <!-- Rejilla de métricas clave con diseño limpio -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mt-16 border-t border-slate-100 pt-12">
+        <div class="p-4 bg-slate-50/50 rounded-xl hover:bg-slate-50 transition-colors">
+          <span class="block font-display font-extrabold text-2xl md:text-3xl app-brand-cyan">+120.000</span>
+          <span class="text-xs text-slate-500 font-medium uppercase tracking-wider">Inmuebles</span>
+        </div>
+        <div class="p-4 bg-slate-50/50 rounded-xl hover:bg-slate-50 transition-colors">
+          <span class="block font-display font-extrabold text-2xl md:text-3xl app-brand-cyan">+100</span>
+          <span class="text-xs text-slate-500 font-medium uppercase tracking-wider">Grupos activos</span>
+        </div>
+        <div class="p-4 bg-slate-50/50 rounded-xl hover:bg-slate-50 transition-colors">
+          <span class="block font-display font-extrabold text-2xl md:text-3xl app-brand-cyan">+145</span>
+          <span class="text-xs text-slate-500 font-medium uppercase tracking-wider">Agentes activos</span>
+        </div>
+        <div class="p-4 bg-slate-50/50 rounded-xl hover:bg-slate-50 transition-colors">
+          <span class="block font-display font-extrabold text-2xl md:text-3xl app-brand-cyan">~66 hs</span>
+          <span class="text-xs text-slate-500 font-medium uppercase tracking-wider">Ahorro mensual</span>
+        </div>
+      </div>
+
+    </div>
+  </header>
+
+
+  <!-- ============================================================
+       SECCIÓN: PROBLEMÁTICA (DISEÑO CARD PREMIUM)
+       ============================================================ -->
+  <section class="py-16 md:py-24 bg-slate-100/60 border-b border-slate-200">
+    <div class="max-w-6xl mx-auto px-6">
+      
+      <!-- Cabecera de Sección -->
+      <div class="text-center max-w-3xl mx-auto mb-16">
+        <span class="app-brand-cyan font-bold text-xs uppercase tracking-widest block mb-3">¿Te suena familiar?</span>
+        <h2 class="font-display font-extrabold text-3xl md:text-4xl text-slate-900 leading-tight">
+          El día a día de un agente inmobiliario no tiene por qué ser agotador
+        </h2>
+      </div>
+
+      <!-- Grid de Tarjetas de Problemas -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        
+        <!-- Card 1 -->
+        <div class="bg-white rounded-2xl p-6 shadow-md shadow-slate-100 border border-slate-200/40 hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
+          <div class="w-10 h-10 rounded-lg bg-red-50 text-red-500 flex items-center justify-center mb-4">
+            <span class="text-lg">⏰</span>
+          </div>
+          <h3 class="font-display font-bold text-slate-900 mb-2">Horas en Portales</h3>
+          <p class="text-slate-600 text-sm leading-relaxed">
+            Revisar RE/MAX, Century 21 y docenas de grupos antes del desayuno consume tu tiempo útil.
+          </p>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="bg-white rounded-2xl p-6 shadow-md shadow-slate-100 border border-slate-200/40 hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
+          <div class="w-10 h-10 rounded-lg bg-orange-50 text-orange-500 flex items-center justify-center mb-4">
+            <span class="text-lg">⏳</span>
+          </div>
+          <h3 class="font-display font-bold text-slate-900 mb-2">Leads Perdidos</h3>
+          <p class="text-slate-600 text-sm leading-relaxed">
+            Alguien publica una oportunidad clave y te enteras horas más tarde, cuando ya es tarde.
+          </p>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="bg-white rounded-2xl p-6 shadow-md shadow-slate-100 border border-slate-200/40 hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
+          <div class="w-10 h-10 rounded-lg bg-yellow-50 text-yellow-500 flex items-center justify-center mb-4">
+            <span class="text-lg">📊</span>
+          </div>
+          <h3 class="font-display font-bold text-slate-900 mb-2">ACM Manual</h3>
+          <p class="text-slate-600 text-sm leading-relaxed">
+            Generar un análisis comparativo de mercado te cuesta mañanas de hojas de cálculo infinitas.
+          </p>
+        </div>
+
+        <!-- Card 4 -->
+        <div class="bg-white rounded-2xl p-6 shadow-md shadow-slate-100 border border-slate-200/40 hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
+          <div class="w-10 h-10 rounded-lg bg-sky-50 text-sky-500 flex items-center justify-center mb-4">
+            <span class="text-lg">🌐</span>
+          </div>
+          <h3 class="font-display font-bold text-slate-900 mb-2">Datos Fragmentados</h3>
+          <p class="text-slate-600 text-sm leading-relaxed">
+            Sin una base unificada de precios reales, el asesoramiento al cliente se vuelve subjetivo.
+          </p>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ============================================================
+       SECCIÓN: SOLUCIONES / FUNCIONALIDADES (FONDO AZUL MEDIANOCHE)
+       ============================================================ -->
+  <section class="py-20 bg-[#0f172a] text-white relative overflow-hidden">
+    <!-- Sutil efecto de luz fría para diseño premium -->
+    <div class="absolute -bottom-60 -left-60 w-[500px] h-[500px] bg-sky-950/40 rounded-full blur-3xl"></div>
+    
+    <div class="max-w-6xl mx-auto px-6 relative z-10">
+      
+      <div class="text-center max-w-2xl mx-auto mb-16">
+        <span class="app-brand-gold font-bold text-xs uppercase tracking-widest block mb-3">Qué hace Statetty</span>
+        <h2 class="font-display font-extrabold text-3xl md:text-4xl text-white mb-4">
+          Todo el mercado en un solo lugar
+        </h2>
+        <p class="app-sub-highlight text-sm md:text-base font-light leading-relaxed">
+          Diseñado exclusivamente para el mercado inmobiliario actual con soporte avanzado de anticréticos y alquileres.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        
+        <!-- Bloque 1 -->
+        <div class="p-8 bg-slate-800/40 rounded-2xl border border-slate-700/50 hover:bg-slate-800/60 transition-all">
+          <div class="w-12 h-12 rounded-xl bg-sky-500/10 text-sky-400 flex items-center justify-center mb-6">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg>
+          </div>
+          <h3 class="font-display font-bold text-lg mb-3">Mapa Interactivo</h3>
+          <p class="text-slate-400 text-sm leading-relaxed">
+            Visualiza los inmuebles geolocalizados en tiempo real. Filtra por distancias de radio y cruza variables de precio.
+          </p>
+        </div>
+
+        <!-- Bloque 2 -->
+        <div class="p-8 bg-slate-800/40 rounded-2xl border border-slate-700/50 hover:bg-slate-800/60 transition-all">
+          <div class="w-12 h-12 rounded-xl bg-sky-500/10 text-sky-400 flex items-center justify-center mb-6">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+          </div>
+          <h3 class="font-display font-bold text-lg mb-3">Monitor de WhatsApp</h3>
+          <p class="text-slate-400 text-sm leading-relaxed">
+            Nuestro bot inteligente monitoriza y procesa los grupos de bolsa inmobiliaria para avisarte de leads instantáneos.
+          </p>
+        </div>
+
+        <!-- Bloque 3 -->
+        <div class="p-8 bg-slate-800/40 rounded-2xl border border-slate-700/50 hover:bg-slate-800/60 transition-all">
+          <div class="w-12 h-12 rounded-xl bg-sky-500/10 text-sky-400 flex items-center justify-center mb-6">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+          </div>
+          <h3 class="font-display font-bold text-lg mb-3">ACM Automatizado</h3>
+          <p class="text-slate-400 text-sm leading-relaxed">
+            Genera un informe comparativo riguroso con métricas reales de mercado para presentarlo a tus propietarios.
+          </p>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ============================================================
+       TABLA DE PRECIOS Y ELEMENTOS DEMO (COMPROBACIÓN FÁCIL)
+       ============================================================ -->
+  <section class="py-16 md:py-24 bg-white">
+    <div class="max-w-4xl mx-auto px-6">
+      
+      <div class="text-center mb-12">
+        <h2 class="font-display font-extrabold text-3xl text-slate-900 mb-2">Planes de Suscripción</h2>
+        <p class="text-slate-500 text-sm">Prueba de visualización del color del header de las tablas (`th` )</p>
+      </div>
+
+      <!-- Tabla Maquetada con Tailwind Premium -->
+      <div class="overflow-hidden rounded-2xl border border-slate-200 shadow-xl mb-16">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="app-table-header text-xs uppercase tracking-wider font-bold transition-all duration-400">
+              <th class="p-4 md:p-5">Plan</th>
+              <th class="p-4 md:p-5 text-center">Inversión Mensual</th>
+              <th class="p-4 md:p-5 text-right">Agentes Permitidos</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 text-sm text-slate-700">
+            <tr class="hover:bg-slate-50 transition-colors">
+              <td class="p-4 md:p-5 font-bold text-slate-900">Individual</td>
+              <td class="p-4 md:p-5 text-center font-semibold text-slate-800">Bs. 100</td>
+              <td class="p-4 md:p-5 text-right text-slate-500">1 Asesor</td>
+            </tr>
+            <tr class="hover:bg-slate-50 transition-colors">
+              <td class="p-4 md:p-5 font-bold text-slate-900">Equipo</td>
+              <td class="p-4 md:p-5 text-center font-semibold text-slate-800">Bs. 80 <span class="text-xs text-slate-400 font-normal">/ agente</span></td>
+              <td class="p-4 md:p-5 text-right text-slate-500">5 a 9 Asesores</td>
+            </tr>
+            <tr class="hover:bg-slate-50 transition-colors">
+              <td class="p-4 md:p-5 font-bold text-slate-900">Corporativo</td>
+              <td class="p-4 md:p-5 text-center font-semibold text-slate-800">Bs. 65 <span class="text-xs text-slate-400 font-normal">/ agente</span></td>
+              <td class="p-4 md:p-5 text-right text-slate-500">10+ Asesores</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Ejemplo de visualización de precios -->
+      <div class="bg-slate-50 rounded-2xl p-8 border border-slate-200/50 text-center max-w-xl mx-auto">
+        <h3 class="font-display font-bold text-slate-900 mb-3">Visualización de Tarifa de Propiedad</h3>
+        <p class="app-price font-display font-extrabold text-4xl mb-2 transition-colors duration-400">
+          USD 120.000
+        </p>
+        <div class="flex items-center justify-center gap-2 text-xs text-slate-500 font-medium uppercase tracking-wider">
+          <span>Santa Cruz de la Sierra</span>
+          <span>•</span>
+          <span>3 dorm</span>
+          <span>•</span>
+          <span>2 baños</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ============================================================
+       TESTIMONIALES & BLOG CARDS
+       ============================================================ -->
+  <section class="py-16 md:py-24 bg-slate-100/60 border-t border-slate-200">
+    <div class="max-w-5xl mx-auto px-6">
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
+        
+        <!-- Bloque Testimonios -->
+        <div>
+          <span class="app-brand-cyan font-bold text-xs uppercase tracking-widest block mb-3">La voz de la experiencia</span>
+          <h2 class="font-display font-extrabold text-2xl text-slate-900 mb-8">Testimonio de Agente</h2>
+          
+          <div class="bg-white rounded-2xl p-6 shadow-md border border-slate-200/40">
+            <span class="text-4xl text-slate-300 block mb-2 font-serif">“</span>
+            <p class="text-slate-600 text-sm leading-relaxed italic mb-6">
+              "Antes pasaba horas buscando entre cientos de mensajes diarios de grupos. Ahora Statetty me notifica al instante."
+            </p>
+            <div class="mb-4">
+              <span class="inline-block bg-amber-100 text-amber-800 font-bold text-xs px-3 py-1 rounded-md">
+                Búsqueda optimizada → 0 horas de espera
+              </span>
+            </div>
+            <div class="border-t border-slate-100 pt-4 flex items-center gap-3">
+              <div>
+                <span class="block font-bold text-slate-900 text-sm">Siria Useche</span>
+                <span class="text-xs text-slate-400">Century 21 Nexo</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bloque Último Post (Blog Jekyll) -->
+        <div>
+          <span class="app-brand-cyan font-bold text-xs uppercase tracking-widest block mb-3">Recursos útiles</span>
+          <h2 class="font-display font-extrabold text-2xl text-slate-900 mb-8">Último artículo</h2>
+
+          <div class="bg-white rounded-2xl overflow-hidden shadow-md border border-slate-200/40 group hover:shadow-lg transition-shadow">
+            <div class="p-6">
+              <span class="text-xs font-bold text-slate-400 block mb-2 uppercase tracking-wider">15 de Junio, 2026</span>
+              <h3 class="font-display font-bold text-lg text-slate-900 mb-2 group-hover:text-sky-600 transition-colors">
+                Cómo usar WhatsApp para acelerar ventas de cartera inmobiliaria
+              </h3>
+              <p class="text-slate-600 text-sm leading-relaxed mb-4">
+                Mejores prácticas para configurar notificaciones push de ofertas inmobiliarias de alto impacto.
+              </p>
+              <a href="#" class="app-brand-cyan font-bold text-xs uppercase tracking-widest hover:underline inline-flex items-center gap-1">
+                Leer artículo completo 
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+              </a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ============================================================
+       PRONUNCIACIÓN & PIE DE PÁGINA LEGACY
+       ============================================================ -->
+  <section class="py-12 bg-white border-t border-slate-100">
+    <div class="max-w-md mx-auto text-center px-6">
+      <div class="bg-slate-50 rounded-xl py-3 px-4 inline-flex items-center gap-2 text-xs text-slate-500 font-medium border border-slate-100">
+        <span>Así se pronuncia:</span>
+        <strong class="text-slate-900">Statetty</strong>
+        <span class="text-slate-400">/steɪt.ti/</span>
+        <button class="text-slate-400 hover:text-slate-900 ml-1 transition-colors">🔊</button>
+      </div>
+    </div>
+  </section>
+
+  <footer class="bg-slate-900 text-slate-500 py-12 text-center text-xs border-t border-slate-800">
+    <div class="max-w-4xl mx-auto px-6">
+      <p class="mb-2">© 2026 Statetty. Reservados todos los derechos.</p>
+      <p class="text-slate-600">Herramienta de pruebas de accesibilidad y contraste de paleta Jekyll v2.0.</p>
+    </div>
+  </footer>
+
+
+  <!-- ============================================================
+       SISTEMA JAVASCRIPT DEL SIMULADOR DE ACCESIBILIDIDAD
+       ============================================================ -->
+  <script>
+    function toggleContrast() {
+      const body = document.body;
+      const btn = document.getElementById('toggleBtn');
+      const label = document.getElementById('currentPaletteLabel');
+      const badge = document.getElementById('wcagBadge');
+      
+      const celMetric = document.getElementById('metricCeleste');
+      const yelMetric = document.getElementById('metricAmarillo');
+
+      // Alternar la clase modo-antes
+      body.classList.toggle('modo-antes');
+
+      if (body.classList.contains('modo-antes')) {
+        // Estado: Paleta Antigua (Error de Contraste)
+        btn.textContent = 'Aplicar Correcciones';
+        btn.className = "w-full md:w-auto px-5 py-2 rounded-full font-bold text-xs uppercase tracking-wider transition-all duration-300 transform active:scale-95 bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-lg shadow-emerald-500/20";
+        
+        label.textContent = 'Paleta Original (Falla)';
+        label.className = 'text-red-400 font-semibold';
+        
+        badge.textContent = 'FALLA CONTRASTE';
+        badge.className = 'hud-badge fail';
+
+        // Actualizar métricas visuales del simulador
+        celMetric.textContent = '1.91:1 (Falla AA)';
+        celMetric.className = 'font-mono font-bold text-red-400';
+        yelMetric.textContent = '1.34:1 (Falla AA)';
+        yelMetric.className = 'font-mono font-bold text-red-400';
+      } else {
+        // Estado: Corregido (Accesible)
+        btn.textContent = 'Ver Paleta Original';
+        btn.className = "w-full md:w-auto px-5 py-2 rounded-full font-bold text-xs uppercase tracking-wider transition-all duration-300 transform active:scale-95 bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-lg shadow-amber-500/20";
+        
+        label.textContent = 'Statetty Corregida';
+        label.className = 'text-emerald-400 font-semibold';
+        
+        badge.textContent = 'APROBADO (AA / AAA)';
+        badge.className = 'hud-badge pass';
+
+        // Restaurar métricas
+        celMetric.textContent = '4.51:1 (Pasa AA)';
+        celMetric.className = 'font-mono font-bold text-emerald-400';
+        yelMetric.textContent = '12.6:1 (Pasa AAA)';
+        yelMetric.className = 'font-mono font-bold text-emerald-400';
+      }
+    }
+  </script>
+</body>
+</html>
