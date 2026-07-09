@@ -996,12 +996,12 @@ a:hover { color: var(--blue-dark); }
 .numeros-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  max-width: 960px;
+  max-width: 1100px;
   margin: 0 auto;
 }
 
 .numero-item {
-  padding: 8px 32px;
+  padding: 8px 24px;
   text-align: center;
   border-right: 1px solid rgba(255,255,255,.15);
 }
@@ -1016,6 +1016,7 @@ a:hover { color: var(--blue-dark); }
   line-height: 1;
   color: #fff;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .numero-label {
