@@ -12,7 +12,8 @@
 .inmueble-container {
   max-width: 1160px;
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0 clamp(16px, 4vw, 24px);
+  padding-bottom: 0;
 }
 
 /* ---- Loading / Error ---- */
@@ -67,7 +68,9 @@
   height: 64px;
   max-width: 1160px;
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0 clamp(16px, 4vw, 24px);
+  padding-left: max(clamp(16px, 4vw, 24px), env(safe-area-inset-left, 0px));
+  padding-right: max(clamp(16px, 4vw, 24px), env(safe-area-inset-right, 0px));
 }
 .inm-header-back {
   display: inline-flex;
@@ -79,26 +82,30 @@
   text-decoration: none;
   font-family: var(--font-head);
   transition: var(--transition);
+  padding: 12px 4px;
+  margin: -12px -4px;
 }
 .inm-header-back:hover { color: #fff; }
-.inm-header-back svg { width: 20px; height: 20px; fill: currentColor; }
+.inm-header-back svg { width: 20px; height: 20px; fill: currentColor; flex-shrink: 0; }
 .inm-header-logo {
   font-family: var(--font-head);
   font-weight: 800;
   font-size: 1.1rem;
   color: #fff;
   text-decoration: none;
+  padding: 12px 4px;
+  margin: -12px -4px;
 }
 .inm-header-logo:hover { color: var(--yellow); }
 
 /* ---- Gallery ---- */
 .inm-gallery {
-  margin-bottom: 32px;
+  margin-bottom: 24px;
 }
 .inm-gallery-main {
   position: relative;
-  width: 80%;
-  margin: 0 auto 12px;
+  width: 100%;
+  margin: 0 0 12px;
   border-radius: var(--radius-lg);
   overflow: hidden;
   background: #f0f0f0;
@@ -217,9 +224,9 @@
 .inm-section-title {
   font-family: var(--font-head);
   font-weight: 700;
-  font-size: 1.5rem;
+  font-size: clamp(1.2rem, 4vw, 1.5rem);
   color: var(--blue-dark);
-  margin: 0 0 20px;
+  margin: 0 0 16px;
   padding-bottom: 12px;
   border-bottom: 2px solid var(--yellow);
 }
@@ -236,7 +243,7 @@
 .inm-price {
   font-family: var(--font-head);
   font-weight: 700;
-  font-size: 1.8rem;
+  font-size: clamp(1.5rem, 6vw, 1.8rem);
   color: var(--blue);
   margin: 0 0 4px;
 }
@@ -301,7 +308,7 @@
 .inm-map-section { margin-bottom: 24px; }
 .inm-map-container {
   width: 100%;
-  height: 320px;
+  height: 220px;
   border-radius: var(--radius-lg);
   overflow: hidden;
   border: 1px solid #e0e0e0;
@@ -317,22 +324,24 @@
   margin-top: 8px;
 }
 
-/* ---- Layout (desktop two-column) ---- */
+/* ---- Layout ----
+   Mobile-first: una sola columna por defecto. Pasa a dos
+   columnas (sidebar sticky) desde tablet/escritorio, ver
+   media query (min-width: 900px) más abajo. */
 .inmueble-layout {
   display: flex;
-  gap: 32px;
-  align-items: flex-start;
+  flex-direction: column;
+  align-items: stretch;
 }
 .inmueble-main {
   flex: 1;
   min-width: 0;
 }
 .inm-sidebar {
-  width: 340px;
+  width: 100%;
   flex-shrink: 0;
-  position: sticky;
-  top: 88px;
-  align-self: flex-start;
+  position: static;
+  margin-top: 32px;
 }
 
 /* ---- Contact Card ---- */
@@ -340,7 +349,7 @@
   background: #fff;
   border: 1px solid #e8e8e8;
   border-radius: var(--radius-lg);
-  padding: 24px;
+  padding: clamp(18px, 5vw, 24px);
   box-shadow: 0 4px 24px rgba(0,0,0,.06);
 }
 .inm-contact-card-title {
@@ -358,11 +367,11 @@
 .inm-form-input,
 .inm-form-select {
   width: 100%;
-  padding: 10px 14px;
+  padding: 13px 14px;
   border: 1px solid #ddd;
   border-radius: var(--radius-sm);
   font-family: var(--font-body);
-  font-size: .9rem;
+  font-size: 1rem;
   color: #444;
   background: #fafafa;
   transition: var(--transition);
@@ -386,15 +395,18 @@
 }
 .inm-form-phone-group {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
 }
 .inm-form-phone-group .inm-form-select {
   width: auto;
-  flex: 0 0 130px;
+  flex: 1 1 108px;
+  min-width: 100px;
   margin-bottom: 12px;
 }
 .inm-form-phone-group .inm-form-input {
-  flex: 1;
+  flex: 3 1 140px;
+  min-width: 140px;
   margin-bottom: 12px;
 }
 .inm-form-checkbox {
@@ -408,12 +420,16 @@
   line-height: 1.4;
 }
 .inm-form-checkbox input[type="checkbox"] {
-  margin-top: 3px;
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
   flex-shrink: 0;
+  accent-color: var(--blue);
 }
 .inm-form-submit {
   display: block;
   width: 100%;
+  min-height: 48px;
   padding: 14px 24px;
   border: none;
   border-radius: 50px;
@@ -421,7 +437,7 @@
   color: var(--blue-dark);
   font-family: var(--font-head);
   font-weight: 700;
-  font-size: .95rem;
+  font-size: 1rem;
   cursor: pointer;
   transition: var(--transition);
 }
@@ -451,10 +467,6 @@
   letter-spacing: .02em;
 }
 
-.inmueble-container {
-  padding-bottom: 0;
-}
-
 /* ---- Footer (custom) ---- */
 .inm-footer {
   background: var(--blue-dark);
@@ -465,7 +477,7 @@
 .inm-footer-inner {
   max-width: 1160px;
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0 clamp(16px, 4vw, 24px);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -495,25 +507,46 @@
   border-radius: var(--radius-lg);
 }
 
-/* ---- Responsive ---- */
-@media (max-width: 768px) {
-  .inmueble-layout {
-    flex-direction: column;
-    gap: 0;
-  }
-  .inm-sidebar {
-    width: 100%;
-    position: static;
-    margin-top: 32px;
-  }
+/* ---- Responsive ----
+   Mobile-first: por defecto el layout ya está optimizado para
+   celular (una sola columna, barra de contacto fija, mapa más
+   bajo, tipografía fluida). Los siguientes breakpoints solo
+   añaden mejoras a partir de tablet/escritorio. */
+
+/* Celular: barra de contacto fija visible + espacio para que no tape contenido */
+@media (max-width: 899px) {
   .inm-contact-bar {
     display: block;
   }
   .inmueble-container {
-    padding-bottom: 80px;
+    padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
   }
 }
-@media (max-width: 640px) {
+
+/* Tablet / escritorio: layout de dos columnas con sidebar sticky */
+@media (min-width: 900px) {
+  .inmueble-layout {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 32px;
+  }
+  .inm-sidebar {
+    width: min(340px, 34vw);
+    position: sticky;
+    top: 88px;
+    margin-top: 0;
+  }
+  .inm-map-container {
+    height: 320px;
+  }
+  .inm-gallery {
+    margin-bottom: 32px;
+  }
+}
+
+/* Pantallas muy angostas: miniaturas y features más compactas */
+@media (max-width: 480px) {
   .inm-gallery-thumb { flex: 0 0 64px; height: 48px; }
   .inm-features { grid-template-columns: repeat(2, 1fr); }
+  .inm-footer-inner { justify-content: center; text-align: center; }
 }

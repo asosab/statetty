@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Inmueble — Statetty</title>
   <meta name="description" content="Información completa del inmueble">
   <meta name="robots" content="index, follow">
@@ -11,8 +11,8 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/images/favicon/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/assets/images/favicon/favicon-16x16.png">
   <link rel="manifest" href="/assets/images/favicon/site.webmanifest">
-  <meta name="msapplication-TileColor" content="#ffffff">
-  <meta name="theme-color" content="#ffffff">
+  <meta name="msapplication-TileColor" content="#17baef">
+  <meta name="theme-color" content="#17baef">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -37,13 +37,15 @@
       --transition: 0.25s cubic-bezier(.4,0,.2,1);
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; font-size: 16px; }
+    html { scroll-behavior: smooth; font-size: 16px; overflow-x: hidden; }
     body {
       font-family: var(--font-body);
       color: #444;
       background: #fff;
       line-height: 1.65;
       -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+      -webkit-tap-highlight-color: transparent;
     }
     img { max-width: 100%; display: block; }
     a { color: var(--blue); text-decoration: none; transition: var(--transition); }

@@ -128,9 +128,7 @@
         <aside class="inm-sidebar" id="inm-sidebar">
           <div class="inm-contact-card">
             <h3 class="inm-contact-card-title">Pregunta al anunciante</h3>
-            <textarea class="inm-form-textarea" id="inm-msg" rows="4">Hola, me interesa este imueble y me gustaría hacer una visita.
-
-Un saludo</textarea>
+            <textarea class="inm-form-textarea" id="inm-msg" rows="4">me interesa este inmueble ¿Podría enviarme información?</textarea>
             <input type="email" class="inm-form-input" id="inm-email" placeholder="Tu email">
             <div class="inm-form-phone-group">
               <select class="inm-form-select" id="inm-phone-code">
@@ -146,12 +144,12 @@ Un saludo</textarea>
                 <option value="+598">+598 (Uruguay)</option>
                 <option value="+58">+58 (Venezuela)</option>
               </select>
-              <input type="tel" class="inm-form-input" id="inm-phone" placeholder="Tu celular">
+              <input type="tel" class="inm-form-input" id="inm-phone" placeholder="Tu celular *" required>
             </div>
             <input type="text" class="inm-form-input" id="inm-name" placeholder="Tu nombre">
-            <label class="inm-form-checkbox">
-              <input type="checkbox" id="inm-privacy">
-              <span>Aceptar la política de privacidad y las condiciones generales</span>
+            <label class="inm-form-checkbox" id="inm-privacy-label">
+              <input type="checkbox" id="inm-privacy" required>
+              <span>Aceptar la <a href="https://statetty.com/politica_de_privacidad.html" target="_blank" rel="noopener">política de privacidad</a> y las <a href="https://statetty.com/terminos_y_condiciones.html" target="_blank" rel="noopener">condiciones generales</a></span>
             </label>
             <button class="inm-form-submit" id="inm-submit">Contactar al anunciante</button>
           </div>
@@ -190,5 +188,221 @@ Un saludo</textarea>
 
   <!-- ==================== MAIN JS ==================== -->
   <script src="assets/js/inmueble.js"></script>
+
+  <!-- ==================== CONTACT FORM (WhatsApp handoff) ==================== -->
+  <script>
+  (function () {
+    'use strict';
+
+    var FEEDCLICK_ENDPOINT = 'statetty/feedclick';
+    var FEEDCLICK_FALLBACK_URL = 'https://api.statetty.com/api/statetty/feedclick';
+    var STORAGE_KEY = 'statetty_contact_form';
+
+    function getPropertyId() {
+      var params = new URLSearchParams(window.location.search);
+      return params.get('_id') || params.get('p') || '';
+    }
+
+    function getFirstPhotoUrl() {
+      var main = document.getElementById('inm-main-img');
+      if (main && main.src) return main.src;
+      var thumb = document.querySelector('#inm-thumbs img');
+      if (thumb && thumb.src) return thumb.src;
+      return '';
+    }
+
+    function setFieldInvalid(el, invalid) {
+      if (!el) return;
+      el.style.borderColor = invalid ? '#e53e3e' : '';
+    }
+
+    function setCheckboxInvalid(checkboxEl, labelEl, invalid) {
+      if (checkboxEl) checkboxEl.style.outline = invalid ? '2px solid #e53e3e' : '';
+      if (labelEl) labelEl.style.color = invalid ? '#e53e3e' : '';
+    }
+
+    function buildFeedclickUrl() {
+      var base = window.STATETTY_CONFIG ? STATETTY_CONFIG.WS_API_BASE : '';
+      return base ? (base + FEEDCLICK_ENDPOINT) : FEEDCLICK_FALLBACK_URL;
+    }
+
+    function loadSavedForm() {
+      try {
+        var raw = window.localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : null;
+      } catch (err) {
+        console.warn('STATETTY: no se pudo leer el formulario guardado', err);
+        return null;
+      }
+    }
+
+    function saveForm(data) {
+      try {
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      } catch (err) {
+        console.warn('STATETTY: no se pudo guardar el formulario', err);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      var submitBtn = document.getElementById('inm-submit');
+      if (!submitBtn) return;
+
+      var msgEl = document.getElementById('inm-msg');
+      var emailEl = document.getElementById('inm-email');
+      var phoneCodeEl = document.getElementById('inm-phone-code');
+      var phoneEl = document.getElementById('inm-phone');
+      var nameEl = document.getElementById('inm-name');
+      var privacyEl = document.getElementById('inm-privacy');
+      var privacyLabelEl = document.getElementById('inm-privacy-label');
+
+      // Restore previously entered contact info (message default stays untouched
+      // unless the user had customized it before).
+      var saved = loadSavedForm();
+      if (saved) {
+        if (saved.email) emailEl.value = saved.email;
+        if (saved.phoneCode) phoneCodeEl.value = saved.phoneCode;
+        if (saved.phone) phoneEl.value = saved.phone;
+        if (saved.nombre) nameEl.value = saved.nombre;
+        if (saved.mensaje) msgEl.value = saved.mensaje;
+      }
+
+      function persistCurrentValues() {
+        saveForm({
+          email: emailEl.value.trim(),
+          phoneCode: phoneCodeEl.value,
+          phone: phoneEl.value.trim(),
+          nombre: nameEl.value.trim(),
+          mensaje: msgEl.value
+        });
+      }
+
+      [msgEl, emailEl, phoneCodeEl, phoneEl, nameEl].forEach(function (el) {
+        if (!el) return;
+        var evt = (el.tagName === 'SELECT') ? 'change' : 'input';
+        el.addEventListener(evt, persistCurrentValues);
+      });
+
+      // Clear invalid state as the user fixes things
+      if (phoneEl) phoneEl.addEventListener('input', function () { setFieldInvalid(phoneEl, false); });
+      if (privacyEl) privacyEl.addEventListener('change', function () {
+        if (privacyEl.checked) setCheckboxInvalid(privacyEl, privacyLabelEl, false);
+      });
+
+      submitBtn.addEventListener('click', function () {
+        var mensaje = (msgEl && msgEl.value || '').trim();
+        var email = (emailEl && emailEl.value || '').trim();
+        var phone = (phoneEl && phoneEl.value || '').trim();
+        var nombre = (nameEl && nameEl.value || '').trim();
+        var privacyOk = !!(privacyEl && privacyEl.checked);
+
+        var valid = true;
+
+        setFieldInvalid(phoneEl, false);
+        setCheckboxInvalid(privacyEl, privacyLabelEl, false);
+
+        if (!phone) {
+          setFieldInvalid(phoneEl, true);
+          valid = false;
+        }
+        if (!privacyOk) {
+          setCheckboxInvalid(privacyEl, privacyLabelEl, true);
+          valid = false;
+        }
+
+        if (!valid) {
+          alert('Por favor completá tu celular y aceptá la política de privacidad y las condiciones generales antes de continuar.');
+          return;
+        }
+
+        var propertyId = getPropertyId();
+        if (!propertyId) {
+          alert('No se pudo identificar el inmueble. Por favor recargá la página e intentá nuevamente.');
+          return;
+        }
+
+        var fullPhone = (phoneCodeEl ? phoneCodeEl.value : '') + phone;
+        var url = buildFeedclickUrl();
+
+        persistCurrentValues();
+
+        console.log('STATETTY: enviando consulta a', url);
+
+        var opts = {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'ngrok-skip-browser-warning': '1'
+          },
+          body: JSON.stringify({
+            inmueble_id: propertyId,
+            mensaje: mensaje,
+            email: email,
+            phone: fullPhone,
+            nombre: nombre
+          })
+        };
+
+        var controller, timeout;
+        if (typeof AbortController !== 'undefined') {
+          controller = new AbortController();
+          timeout = setTimeout(function () { controller.abort(); }, 20000);
+          opts.signal = controller.signal;
+        }
+
+        var originalText = submitBtn.textContent;
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Enviando…';
+
+        fetch(url, opts)
+          .then(function (res) {
+            if (opts.signal) clearTimeout(timeout);
+            return res.json().then(function (body) {
+              return { status: res.status, ok: res.ok, body: body };
+            });
+          })
+          .then(function (result) {
+            var body = result.body || {};
+            if (result.ok && body.ok === true) {
+              var payload = body.data || {};
+              var agentName = payload.agentName || '';
+              var agentNameCorto = agentName.trim().split(/\s+/)[0] || '';
+              var agentPhon = payload.agentPhon != null ? String(payload.agentPhon) : '';
+
+              var fotoUrl = getFirstPhotoUrl();
+              var paginaUrl = 'https://statetty.com/inmueble/?_id=' + propertyId;
+
+              var textoWhatsapp =
+                'Hola ' + agentNameCorto + '\n' +
+                'Me llamo ' + nombre + ', ' + mensaje + ',\n' +
+                'Foto: ' + fotoUrl + '\n' +
+                'Página: ' + paginaUrl;
+
+              var agentPhonLimpio = agentPhon.replace(/^\+/, '').replace(/\D/g, '');
+              var waUrl = 'https://wa.me/' + agentPhonLimpio + '?text=' + encodeURIComponent(textoWhatsapp);
+
+              window.open(waUrl, '_blank');
+            } else {
+              console.warn('STATETTY: feedclick error', body);
+              alert('No pudimos enviar tu consulta. Por favor intentá nuevamente en unos minutos.');
+            }
+          })
+          .catch(function (err) {
+            if (opts.signal) clearTimeout(timeout);
+            console.warn('STATETTY: feedclick fetch error', err);
+            if (err.name === 'AbortError') {
+              alert('El servidor tardó demasiado en responder. Por favor intentá nuevamente.');
+            } else {
+              alert('Ocurrió un error de conexión. Por favor intentá nuevamente.');
+            }
+          })
+          .finally(function () {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+          });
+      });
+    });
+  })();
+  </script>
 </body>
 </html>
