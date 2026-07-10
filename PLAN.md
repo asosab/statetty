@@ -2,7 +2,7 @@
 
 ## Estado actual
 
-Sitio web estático Jekyll 4.3, alojado en GitHub Pages (statetty.com). Landing page corporativa + mapas interactivos Leaflet + generación de PDF. Producto principal: bot de Telegram @statettybot.
+Sitio web estático Jekyll 4.3, alojado en GitHub Pages (statetty.com). Landing page corporativa + mapas interactivos Leaflet + generación de PDF + SW caché de imágenes. Producto principal: bot de Telegram @statettybot.
 
 ## Paleta de colores base (logo oficial)
 
@@ -27,6 +27,15 @@ Sitio web estático Jekyll 4.3, alojado en GitHub Pages (statetty.com). Landing 
 ## Principio de arquitectura
 
 **Toda página debe cargar su estilo general desde `assets/css/theme-1.css`** (incluido vía `{% include head.html %}` -> `theme-1.css`). Esto garantiza consistencia visual (paleta, tipografía, resets, variables `:root`) y que un cambio en la marca se refleje en todo el sitio. Ninguna página debe duplicar variables, resets o estilos generales inline.
+
+## 2026-07-10 — Service Worker: caché de imágenes en página de detalle
+
+- **Creado `sw.js`** en raíz del sitio: Service Worker con estrategia `stale-while-revalidate`.
+- Solo intercepta peticiones `GET` con `destination === 'image'`, excluye tiles de OSM.
+- Las imágenes se sirven desde caché inmediatamente si ya fueron descargadas; en background se revalida con la red y se actualiza la caché.
+- Soporta respuestas opacas (imágenes cross-origin sin CORS).
+- Limpieza automática de versiones viejas de caché al activarse.
+- **Registro** en `inmueble.js` post-`load`, con guard `'serviceWorker' in navigator` y fallback silencioso.
 
 ## 2026-07-10 — Formulario de contacto: validación de celular con libphonenumber-js + adiós a los alert()
 

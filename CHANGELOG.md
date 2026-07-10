@@ -2,6 +2,8 @@
 
 ## 2026-07-10
 
+- **Service Worker (`sw.js`)**: caché de imágenes en página de detalle (`/inmueble/`). Estrategia `stale-while-revalidate` para imágenes (`request.destination === 'image'`), excluye tiles de OSM. Registro lazy post-`load` en `inmueble.js` con fallback silencioso en navegadores sin soporte.
+
 - **Formulario de contacto (`inmueble/index.html`)**: validación de celular con libphonenumber-js v1.13.8 (carga lazy via `import()` dinámico desde CDN unpkg con `?module`). Se usa `isValidPhoneNumber(fullPhone)` en formato E.164. Si la CDN falla, se omite validación de formato (fallback a solo no-vacío). Cero `alert()` restantes — todos los mensajes de error van a `#inm-form-status` con clases `show error`. `setFieldInvalid`/`setCheckboxInvalid` ahora usan `classList.toggle('error', ...)` en vez de estilos inline.
 
 ## 2026-07-09

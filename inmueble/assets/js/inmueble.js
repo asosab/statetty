@@ -390,4 +390,13 @@
   } else {
     init();
   }
+
+  /* ---------- Service Worker (images cache) ---------- */
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('/sw.js').catch(function (err) {
+        console.warn('STATETTY: Service Worker registration failed', err);
+      });
+    });
+  }
 })();
