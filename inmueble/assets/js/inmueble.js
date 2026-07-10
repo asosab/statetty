@@ -220,7 +220,7 @@
 
   function renderHeader(inm) {
     var titulo = buildTitulo(inm);
-    DOM.title.textContent = titulo;
+    DOM.title.textContent = inm.nombre || titulo;
     document.title = titulo + ' — Statetty';
     var moneda = inm.moneda || 'USD';
     var precio = Math.ceil(Number(inm.precio)) || 0;
