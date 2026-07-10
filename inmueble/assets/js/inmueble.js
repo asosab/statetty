@@ -407,12 +407,14 @@
         var el = document.createElement('div');
         el.className = 'inm-sim-item';
 
-        var img = document.createElement('img');
-        img.className = 'inm-sim-item-img';
-        img.src = (Array.isArray(item.fotos) && item.fotos[0]) || '';
-        img.alt = item.nombre || 'Similar';
-        img.loading = 'lazy';
-        el.appendChild(img);
+        if (item.fotos) {
+          var img = document.createElement('img');
+          img.className = 'inm-sim-item-img';
+          img.src = item.fotos;
+          img.alt = item.nombre || 'Similar';
+          img.loading = 'lazy';
+          el.appendChild(img);
+        }
 
         var info = document.createElement('div');
         info.className = 'inm-sim-item-info';
