@@ -263,7 +263,7 @@
     var _phoneLib = null;
     function loadPhoneLib() {
       if (_phoneLib) return _phoneLib;
-      _phoneLib = import('https://unpkg.com/libphonenumber-js@1.13.8/bundle/libphonenumber-js.min.js?module')
+      _phoneLib = import('https://unpkg.com/libphonenumber-js@1.13.8/index.js')
         .then(function (m) { return m; })
         .catch(function () {
           console.warn('STATETTY: no se pudo cargar libphonenumber-js, fallback a validación básica');
