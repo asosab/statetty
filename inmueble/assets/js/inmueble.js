@@ -42,6 +42,8 @@
     DOM.lbCount    = document.getElementById('inm-lb-count');
     DOM.mapSection = document.getElementById('inm-map-section');
     DOM.mapContainer = document.getElementById('inm-map');
+    DOM.simCard = document.getElementById('inm-sim-card');
+    DOM.simList = document.getElementById('inm-sim-list');
   }
 
   function getParam() {
@@ -108,6 +110,7 @@
     renderDescription(inm);
     renderMap(inm);
     renderSEO(inm);
+    renderSimilares(inm._id || getParam());
 
     window.scrollTo(0, 0);
   }
@@ -390,6 +393,55 @@
     document.getElementById('inm-error-msg').textContent  = msg  || 'Ocurrió un error inesperado.';
   }
 
+  /* ---------- Similares ---------- */
+  function renderSimilares(id) {
+    getInmSim(id, { max: 4 }, function (lista) {
+      if (!Array.isArray(lista) || lista.length === 0) return;
+      DOM.simCard.classList.remove('inm-hidden');
+      DOM.simList.innerHTML = '';
+      var k = new URLSearchParams(window.location.search).get('k');
+      lista.forEach(function (item) {
+        var url = 'https://statetty.com/inmueble/?_id=' + encodeURIComponent(item._id);
+        if (k) url += '&k=' + encodeURIComponent(k);
+
+        var el = document.createElement('div');
+        el.className = 'inm-sim-item';
+
+        var img = document.createElement('img');
+        img.className = 'inm-sim-item-img';
+        img.src = (Array.isArray(item.fotos) && item.fotos[0]) || '';
+        img.alt = item.nombre || 'Similar';
+        img.loading = 'lazy';
+        el.appendChild(img);
+
+        var info = document.createElement('div');
+        info.className = 'inm-sim-item-info';
+
+        var precio = document.createElement('div');
+        precio.className = 'inm-sim-item-precio';
+        var p = Math.ceil(Number(item.precio)) || 0;
+        precio.textContent = p ? '$ ' + formatde(p) : '';
+        info.appendChild(precio);
+
+        var tipo = document.createElement('div');
+        tipo.className = 'inm-sim-item-tipo';
+        tipo.textContent = item.nombre || item.tipoNegocio || '';
+        info.appendChild(tipo);
+
+        if (item.distanciaKm != null) {
+          var dist = document.createElement('div');
+          dist.className = 'inm-sim-item-dist';
+          dist.textContent = 'a ~' + Math.round(item.distanciaKm) + ' km';
+          info.appendChild(dist);
+        }
+
+        el.appendChild(info);
+        el.addEventListener('click', function () { window.location.href = url; });
+        DOM.simList.appendChild(el);
+      });
+    }, function () {});
+  }
+
   /* ---------- Bootstrap ---------- */
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
@@ -405,4 +457,74 @@
       });
     });
   }
+
+  /**
+   * getInmSim
+   * Llama al endpoint route_getInmSim para obtener inmuebles similares al inmueble actual.
+   *
+   * @param {String} id - _id del inmueble objetivo (el mismo que se usa en fetchInmueble).
+   * @param {Object} [opciones] - Parámetros opcionales de búsqueda (si no se envían, el servidor usa sus defaults: max=10, pDesde=20, pHasta=20, KmRadio=5).
+   * @param {Number} [opciones.max]     - Cantidad máxima de resultados a traer.
+   * @param {Number} [opciones.pDesde]  - % por debajo del precio objetivo.
+   * @param {Number} [opciones.pHasta]  - % por arriba del precio objetivo.
+   * @param {Number} [opciones.KmRadio] - Radio de búsqueda en Km.
+   * @param {Function} onSuccess - callback(lista) invocado con el array de inmuebles similares
+   *                                (cada uno con: _id, nombre, precio, tipoNegocio, fotos [String url o ""], distanciaKm).
+   * @param {Function} [onError] - callback(mensaje) invocado si falla la petición o el servidor devuelve error.
+   */
+  function getInmSim(id, opciones, onSuccess, onError) {
+    try {
+      var base = window.STATETTY_CONFIG ? STATETTY_CONFIG.WS_API_BASE : '';
+      if (!base) {
+        if (onError) onError('No se pudo determinar el endpoint del servidor.');
+        return;
+      }
+
+      var params = new URLSearchParams();
+      params.set('_id', id);
+      if (opciones && opciones.max     !== undefined) params.set('max', opciones.max);
+      if (opciones && opciones.pDesde  !== undefined) params.set('pDesde', opciones.pDesde);
+      if (opciones && opciones.pHasta  !== undefined) params.set('pHasta', opciones.pHasta);
+      if (opciones && opciones.KmRadio !== undefined) params.set('KmRadio', opciones.KmRadio);
+
+      var url = base + 'statetty/getInmSim?' + params.toString();
+      console.log('STATETTY: fetching', url);
+
+      var opts = { headers: { 'ngrok-skip-browser-warning': '1' } };
+      var controller, timeout;
+      if (typeof AbortController !== 'undefined') {
+        controller = new AbortController();
+        timeout = setTimeout(function () { controller.abort(); }, 20000);
+        opts.signal = controller.signal;
+      }
+
+      fetch(url, opts)
+        .then(function (r) {
+          if (opts.signal) clearTimeout(timeout);
+          return r.json().then(function (body) { return { status: r.status, ok: r.ok, body: body }; });
+        })
+        .then(function (res) {
+          if (!res.ok) throw new Error(res.body && res.body.error ? res.body.error : 'HTTP ' + res.status);
+          if (res.body.error) throw new Error(res.body.error);
+          if (!Array.isArray(res.body.data)) throw new Error('Respuesta inválida del servidor');
+          onSuccess(res.body.data);
+        })
+        .catch(function (err) {
+          if (opts.signal) clearTimeout(timeout);
+          console.warn('STATETTY: getInmSim fetch error', err);
+          if (onError) {
+            if (err.name === 'AbortError') {
+              onError('El servidor no respondió a tiempo.');
+            } else {
+              onError(err.message || 'No se pudo cargar los inmuebles similares.');
+            }
+          }
+        });
+    } catch (err) {
+      console.warn('STATETTY: getInmSim sync error', err);
+      if (onError) onError(err.message);
+    }
+  }
+
+
 })();

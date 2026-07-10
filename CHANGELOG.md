@@ -2,6 +2,8 @@
 
 ## 2026-07-10
 
+- **Inmuebles similares (`inmueble/`)**: nueva card en sidebar que muestra hasta 4 inmuebles similares vía `getInmSim`. Muestra foto, precio, nombre/tipo, distancia. Al hacer clic navega a la misma página con el `_id` del similar, preservando `?k=`. Card oculta si no hay resultados. HTML, CSS y JS agregados.
+
 - **Prioridad de carga en galería (`inmueble.js`)**: `renderGallery` ahora prioriza la imagen principal (`fetchPriority = 'high'`) y difiere la creación de miniaturas hasta que la principal carga o falla (eventos `load`/`error` con `{ once: true }`). Cada miniatura lleva `loading="lazy"` + `fetchPriority = 'low'`.
 
 - **Service Worker (`sw.js`)**: caché de imágenes en página de detalle (`/inmueble/`). Estrategia `stale-while-revalidate` para imágenes (`request.destination === 'image'`), excluye tiles de OSM. Registro lazy post-`load` en `inmueble.js` con fallback silencioso en navegadores sin soporte.

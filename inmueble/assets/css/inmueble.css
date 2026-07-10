@@ -659,3 +659,82 @@
     color .2s ease,
     opacity .2s ease;
 }
+
+/* ============================================================
+   Similar Properties
+   ============================================================ */
+
+.inm-sim-card {
+  margin-top: 20px;
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: var(--radius-lg);
+  padding: clamp(18px, 5vw, 24px);
+  box-shadow: 0 4px 24px rgba(0,0,0,.06);
+}
+
+.inm-sim-card-title {
+  font-family: var(--font-head);
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: var(--blue-dark);
+  margin: 0 0 16px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--yellow);
+}
+
+.inm-sim-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.inm-sim-item {
+  display: flex;
+  gap: 12px;
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition);
+  align-items: center;
+}
+
+.inm-sim-item:hover {
+  background: #f5faff;
+}
+
+.inm-sim-item-img {
+  width: 70px;
+  height: 60px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  flex-shrink: 0;
+  background: #f0f0f0;
+}
+
+.inm-sim-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.inm-sim-item-precio {
+  font-family: var(--font-head);
+  font-weight: 700;
+  font-size: .95rem;
+  color: var(--blue);
+}
+
+.inm-sim-item-tipo {
+  font-size: .8rem;
+  color: #888;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+
+.inm-sim-item-dist {
+  font-size: .72rem;
+  color: #aaa;
+  margin-top: 2px;
+}
