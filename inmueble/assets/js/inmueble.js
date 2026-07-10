@@ -122,23 +122,29 @@
     STATE.fotos = fotos;
     STATE.currentIndex = 0;
 
+    DOM.mainImg.fetchPriority = 'high';
     setMainImage(0);
     DOM.galCount.textContent = '1 / ' + fotos.length;
-
-    DOM.thumbs.innerHTML = '';
-    fotos.forEach(function (url, i) {
-      var thumb = document.createElement('div');
-      thumb.className = 'inm-gallery-thumb' + (i === 0 ? ' active' : '');
-      var img = document.createElement('img');
-      img.src = url;
-      img.alt = 'Foto ' + (i + 1);
-      img.loading = 'lazy';
-      thumb.appendChild(img);
-      thumb.addEventListener('click', function () { selectImage(i); });
-      DOM.thumbs.appendChild(thumb);
-    });
-
     DOM.mainImg.addEventListener('click', function () { openLightbox(0); });
+
+    function renderThumbs() {
+      DOM.thumbs.innerHTML = '';
+      fotos.forEach(function (url, i) {
+        var thumb = document.createElement('div');
+        thumb.className = 'inm-gallery-thumb' + (i === 0 ? ' active' : '');
+        var img = document.createElement('img');
+        img.src = url;
+        img.alt = 'Foto ' + (i + 1);
+        img.loading = 'lazy';
+        img.fetchPriority = 'low';
+        thumb.appendChild(img);
+        thumb.addEventListener('click', function () { selectImage(i); });
+        DOM.thumbs.appendChild(thumb);
+      });
+    }
+
+    DOM.mainImg.addEventListener('load', renderThumbs, { once: true });
+    DOM.mainImg.addEventListener('error', renderThumbs, { once: true });
   }
 
   function setMainImage(index) {

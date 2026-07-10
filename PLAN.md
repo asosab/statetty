@@ -28,6 +28,11 @@ Sitio web estático Jekyll 4.3, alojado en GitHub Pages (statetty.com). Landing 
 
 **Toda página debe cargar su estilo general desde `assets/css/theme-1.css`** (incluido vía `{% include head.html %}` -> `theme-1.css`). Esto garantiza consistencia visual (paleta, tipografía, resets, variables `:root`) y que un cambio en la marca se refleje en todo el sitio. Ninguna página debe duplicar variables, resets o estilos generales inline.
 
+## 2026-07-10 — Priorizar primera imagen de galería en página de detalle
+
+- **`renderGallery`** dividida en dos pasos: (1) imagen principal arranca ya con `fetchPriority = 'high'`, (2) miniaturas se crean recién en el evento `load` (o `error`) de la principal.
+- Cada miniatura ahora lleva `loading="lazy"` + `fetchPriority = 'low'`.
+
 ## 2026-07-10 — Service Worker: caché de imágenes en página de detalle
 
 - **Creado `sw.js`** en raíz del sitio: Service Worker con estrategia `stale-while-revalidate`.
