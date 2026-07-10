@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-07-10
+
+- **Formulario de contacto (`inmueble/index.html`)**: validación de celular con libphonenumber-js v1.13.8 (carga lazy via `import()` dinámico desde CDN unpkg con `?module`). Se usa `isValidPhoneNumber(fullPhone)` en formato E.164. Si la CDN falla, se omite validación de formato (fallback a solo no-vacío). Cero `alert()` restantes — todos los mensajes de error van a `#inm-form-status` con clases `show error`. `setFieldInvalid`/`setCheckboxInvalid` ahora usan `classList.toggle('error', ...)` en vez de estilos inline.
+
 ## 2026-07-09
 
 - **Corrección de contraste WCAG AA aplicada**: paleta aprobada (`#0284c7` celeste accesible, `#0f172a` navy, `#f59e0b` mostaza, `#334155` texto cuerpo) implementada en `statettyAccesibilidad.css` y cargada vía `head.html`. Fixes aplicados a `theme-1.css`, `page.html`, `contacto.html`, `footer.html`, `main.css`, `inmueble.css`. Verificado en `test.html` con toggle antes/corregido.

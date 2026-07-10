@@ -243,12 +243,34 @@
 
     function setFieldInvalid(el, invalid) {
       if (!el) return;
-      el.style.borderColor = invalid ? '#e53e3e' : '';
+      el.classList.toggle('error', invalid);
     }
 
-    function setCheckboxInvalid(checkboxEl, labelEl, invalid) {
-      if (checkboxEl) checkboxEl.style.outline = invalid ? '2px solid #e53e3e' : '';
-      if (labelEl) labelEl.style.color = invalid ? '#e53e3e' : '';
+    function setCheckboxInvalid(labelEl, invalid) {
+      if (labelEl) labelEl.classList.toggle('error', invalid);
+    }
+
+    function setFormStatus(type, msg) {
+      var el = document.getElementById('inm-form-status');
+      if (!el) return;
+      el.classList.remove('show', 'success', 'warning', 'error');
+      if (msg) {
+        el.textContent = msg;
+        el.classList.add('show', type);
+      }
+    }
+
+    var _phoneLib = null;
+    function loadPhoneLib() {
+      if (_phoneLib) return _phoneLib;
+      _phoneLib = import('https://unpkg.com/libphonenumber-js@1.13.8/bundle/libphonenumber-js.min.js?module')
+        .then(function (m) { return m; })
+        .catch(function () {
+          console.warn('STATETTY: no se pudo cargar libphonenumber-js, fallback a validación básica');
+          _phoneLib = null;
+          return null;
+        });
+      return _phoneLib;
     }
 
     function buildFeedclickUrl() {
@@ -289,8 +311,6 @@
 
       var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-      // Restore previously entered contact info (message default stays untouched
-      // unless the user had customized it before).
       var saved = loadSavedForm();
       if (saved) {
         if (saved.email) emailEl.value = saved.email;
@@ -298,8 +318,6 @@
         if (saved.phone) phoneEl.value = saved.phone;
         if (saved.nombre) nameEl.value = saved.nombre;
         if (saved.mensaje) msgEl.value = saved.mensaje;
-        // El newsletter viene marcado por defecto; sólo lo desmarcamos si
-        // el usuario explícitamente lo había desmarcado antes.
         if (newsletterEl && saved.newsletter === false) newsletterEl.checked = false;
       }
 
@@ -321,15 +339,14 @@
       });
       if (newsletterEl) newsletterEl.addEventListener('change', persistCurrentValues);
 
-      // Clear invalid state as the user fixes things
       if (nameEl) nameEl.addEventListener('input', function () { setFieldInvalid(nameEl, false); });
       if (emailEl) emailEl.addEventListener('input', function () { setFieldInvalid(emailEl, false); });
       if (phoneEl) phoneEl.addEventListener('input', function () { setFieldInvalid(phoneEl, false); });
       if (privacyEl) privacyEl.addEventListener('change', function () {
-        if (privacyEl.checked) setCheckboxInvalid(privacyEl, privacyLabelEl, false);
+        if (privacyEl.checked) setCheckboxInvalid(privacyLabelEl, false);
       });
 
-      submitBtn.addEventListener('click', function () {
+      submitBtn.addEventListener('click', async function () {
         var mensaje = (msgEl && msgEl.value || '').trim();
         var email = (emailEl && emailEl.value || '').trim();
         var phone = (phoneEl && phoneEl.value || '').trim();
@@ -337,13 +354,17 @@
         var privacyOk = !!(privacyEl && privacyEl.checked);
         var newsletterOk = !!(newsletterEl && newsletterEl.checked);
 
+        var fullPhone = (phoneCodeEl ? phoneCodeEl.value : '') + phone;
+
         var valid = true;
         var faltantes = [];
+
+        setFormStatus();
 
         setFieldInvalid(nameEl, false);
         setFieldInvalid(emailEl, false);
         setFieldInvalid(phoneEl, false);
-        setCheckboxInvalid(privacyEl, privacyLabelEl, false);
+        setCheckboxInvalid(privacyLabelEl, false);
 
         if (!nombre) {
           setFieldInvalid(nameEl, true);
@@ -359,31 +380,36 @@
           setFieldInvalid(phoneEl, true);
           faltantes.push('tu celular');
           valid = false;
+        } else {
+          var lib = await loadPhoneLib();
+          if (lib && lib.isValidPhoneNumber && !lib.isValidPhoneNumber(fullPhone)) {
+            setFieldInvalid(phoneEl, true);
+            faltantes.push('un número de celular válido');
+            valid = false;
+          }
         }
         if (!privacyOk) {
-          setCheckboxInvalid(privacyEl, privacyLabelEl, true);
+          setCheckboxInvalid(privacyLabelEl, true);
           valid = false;
         }
 
         if (!valid) {
-          var partesAlerta = [];
-          if (faltantes.length) partesAlerta.push('Por favor completá ' + faltantes.join(', ') + '.');
-          if (!privacyOk) partesAlerta.push('Aceptá la política de privacidad y las condiciones generales.');
-          alert(partesAlerta.join(' '));
+          var partes = [];
+          if (faltantes.length) partes.push('Por favor completá ' + faltantes.join(', ') + '.');
+          if (!privacyOk) partes.push('Aceptá la política de privacidad y las condiciones generales.');
+          setFormStatus('error', partes.join(' '));
           return;
         }
 
         var propertyId = getPropertyId();
         if (!propertyId) {
-          alert('No se pudo identificar el inmueble. Por favor recargá la página e intentá nuevamente.');
+          setFormStatus('error', 'No se pudo identificar el inmueble. Por favor recargá la página e intentá nuevamente.');
           return;
         }
 
-        var fullPhone = (phoneCodeEl ? phoneCodeEl.value : '') + phone;
-        var url = buildFeedclickUrl();
-
         persistCurrentValues();
 
+        var url = buildFeedclickUrl();
         console.log('STATETTY: enviando consulta a', url);
 
         var opts = {
@@ -413,54 +439,48 @@
         submitBtn.disabled = true;
         submitBtn.textContent = 'Enviando…';
 
-        fetch(url, opts)
-          .then(function (res) {
-            if (opts.signal) clearTimeout(timeout);
-            return res.json().then(function (body) {
-              return { status: res.status, ok: res.ok, body: body };
+        try {
+          var res = await fetch(url, opts);
+          if (opts.signal) clearTimeout(timeout);
+          var body = await res.json();
+
+          if (res.ok && body.ok === true) {
+            var payload = body.data || {};
+            var agentName = payload.agentName || '';
+            var agentNameCorto = agentName.trim().split(/\s+/)[0] || '';
+            var agentPhon = payload.agentPhon != null ? String(payload.agentPhon) : '';
+
+            var fotoUrl = getFirstPhotoUrl();
+            var paginaUrl = 'https://statetty.com/inmueble/?_id=' + propertyId;
+
+            var textoWhatsapp = buildTextoWhatsapp({
+              agentNameCorto: agentNameCorto,
+              nombre: nombre,
+              mensaje: mensaje,
+              fotoUrl: fotoUrl,
+              paginaUrl: paginaUrl
             });
-          })
-          .then(function (result) {
-            var body = result.body || {};
-            if (result.ok && body.ok === true) {
-              var payload = body.data || {};
-              var agentName = payload.agentName || '';
-              var agentNameCorto = agentName.trim().split(/\s+/)[0] || '';
-              var agentPhon = payload.agentPhon != null ? String(payload.agentPhon) : '';
 
-              var fotoUrl = getFirstPhotoUrl();
-              var paginaUrl = 'https://statetty.com/inmueble/?_id=' + propertyId;
+            var agentPhonLimpio = agentPhon.replace(/^\+/, '').replace(/\D/g, '');
+            var waUrl = 'https://wa.me/' + agentPhonLimpio + '?text=' + encodeURIComponent(textoWhatsapp);
 
-              var textoWhatsapp = buildTextoWhatsapp({
-                agentNameCorto: agentNameCorto,
-                nombre: nombre,
-                mensaje: mensaje,
-                fotoUrl: fotoUrl,
-                paginaUrl: paginaUrl
-              });
-
-              var agentPhonLimpio = agentPhon.replace(/^\+/, '').replace(/\D/g, '');
-              var waUrl = 'https://wa.me/' + agentPhonLimpio + '?text=' + encodeURIComponent(textoWhatsapp);
-
-              window.open(waUrl, '_blank');
-            } else {
-              console.warn('STATETTY: feedclick error', body);
-              alert('No pudimos enviar tu consulta. Por favor intentá nuevamente en unos minutos.');
-            }
-          })
-          .catch(function (err) {
-            if (opts.signal) clearTimeout(timeout);
-            console.warn('STATETTY: feedclick fetch error', err);
-            if (err.name === 'AbortError') {
-              alert('El servidor tardó demasiado en responder. Por favor intentá nuevamente.');
-            } else {
-              alert('Ocurrió un error de conexión. Por favor intentá nuevamente.');
-            }
-          })
-          .finally(function () {
-            submitBtn.disabled = false;
-            submitBtn.textContent = originalText;
-          });
+            window.open(waUrl, '_blank');
+          } else {
+            console.warn('STATETTY: feedclick error', body);
+            setFormStatus('error', 'No pudimos enviar tu consulta. Por favor intentá nuevamente en unos minutos.');
+          }
+        } catch (err) {
+          if (opts.signal) clearTimeout(timeout);
+          console.warn('STATETTY: feedclick fetch error', err);
+          if (err.name === 'AbortError') {
+            setFormStatus('error', 'El servidor tardó demasiado en responder. Por favor intentá nuevamente.');
+          } else {
+            setFormStatus('error', 'Ocurrió un error de conexión. Por favor intentá nuevamente.');
+          }
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.textContent = originalText;
+        }
       });
     });
   })();

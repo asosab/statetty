@@ -28,6 +28,16 @@ Sitio web estático Jekyll 4.3, alojado en GitHub Pages (statetty.com). Landing 
 
 **Toda página debe cargar su estilo general desde `assets/css/theme-1.css`** (incluido vía `{% include head.html %}` -> `theme-1.css`). Esto garantiza consistencia visual (paleta, tipografía, resets, variables `:root`) y que un cambio en la marca se refleje en todo el sitio. Ninguna página debe duplicar variables, resets o estilos generales inline.
 
+## 2026-07-10 — Formulario de contacto: validación de celular con libphonenumber-js + adiós a los alert()
+
+- **libphonenumber-js v1.13.8** cargado lazy vía `import()` dinámico (no bloquea carga inicial).
+- **`isValidPhoneNumber(fullPhone)`** validación E.164 sin mapeo país ISO.
+- **Cero `alert()`**: reemplazados por mensajes inline en `#inm-form-status` con clases `show` + `error`.
+- **Campos inválidos** ahora usan `classList.toggle('error', ...)` en lugar de estilos inline.
+- **Checkbox de privacidad** usa clase `error` en label (CSS ya cubre input + texto).
+- **Fallback**: si la CDN falla, se omite validación de formato y solo se verifica no vacío.
+- No se tocó `inmueble.js`, `inmueble.css`, ni lógica de localStorage/feedclick/WhatsApp.
+
 ## 2026-07-09 — Ejecutada corrección de contraste WCAG AA
 
 - **Fase 3 completada:** paleta aprobada desde `test_de_accesibilidad.html` aplicada a todos los archivos del sitio.
