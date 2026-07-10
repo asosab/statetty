@@ -550,3 +550,112 @@
   .inm-features { grid-template-columns: repeat(2, 1fr); }
   .inm-footer-inner { justify-content: center; text-align: center; }
 }
+
+/* ============================================================
+   Estados del formulario
+   ============================================================ */
+
+.inm-form-status {
+  display: none;
+  margin-top: 14px;
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  font-size: .92rem;
+  line-height: 1.5;
+  font-weight: 400;
+  animation: inmStatusFade .25s ease;
+}
+
+.inm-form-status.show {
+  display: block;
+}
+
+.inm-form-status.success {
+  background: #edfdf3;
+  color: #0f7a39;
+  border-color: #9de2b4;
+}
+
+.inm-form-status.warning {
+  background: #fff8e6;
+  color: #8a6500;
+  border-color: #f2d36b;
+}
+
+.inm-form-status.error {
+  background: #fff1f1;
+  color: #b42318;
+  border-color: #efb5b5;
+}
+
+@keyframes inmStatusFade {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================================
+   Campos con error
+   ============================================================ */
+
+.inm-form-input.error,
+.inm-form-select.error,
+.inm-form-textarea.error {
+  border-color: #d92d20 !important;
+  background: #fff5f5;
+  box-shadow: 0 0 0 3px rgba(217,45,32,.12);
+}
+
+.inm-form-input.error:focus,
+.inm-form-select.error:focus,
+.inm-form-textarea.error:focus {
+  border-color: #d92d20 !important;
+  box-shadow: 0 0 0 4px rgba(217,45,32,.15);
+}
+
+.inm-form-checkbox.error {
+  color: #b42318;
+}
+
+.inm-form-checkbox.error input[type="checkbox"] {
+  outline: 2px solid #d92d20;
+  outline-offset: 2px;
+}
+
+/* ============================================================
+   Botón enviando
+   ============================================================ */
+
+.inm-form-submit:disabled {
+  opacity: .7;
+  cursor: wait;
+  transform: none;
+  box-shadow: none;
+}
+
+.inm-form-submit:disabled:hover {
+  background: var(--yellow);
+}
+
+/* ============================================================
+   Transiciones
+   ============================================================ */
+
+.inm-form-input,
+.inm-form-select,
+.inm-form-textarea,
+.inm-form-checkbox,
+.inm-form-status {
+  transition:
+    border-color .2s ease,
+    box-shadow .2s ease,
+    background-color .2s ease,
+    color .2s ease,
+    opacity .2s ease;
+}

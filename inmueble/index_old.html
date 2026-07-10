@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Inmueble — Statetty</title>
   <meta name="description" content="Información completa del inmueble">
   <meta name="robots" content="index, follow">
@@ -11,8 +11,8 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/images/favicon/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/assets/images/favicon/favicon-16x16.png">
   <link rel="manifest" href="/assets/images/favicon/site.webmanifest">
-  <meta name="msapplication-TileColor" content="#ffffff">
-  <meta name="theme-color" content="#ffffff">
+  <meta name="msapplication-TileColor" content="#17baef">
+  <meta name="theme-color" content="#17baef">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -37,13 +37,15 @@
       --transition: 0.25s cubic-bezier(.4,0,.2,1);
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; font-size: 16px; }
+    html { scroll-behavior: smooth; font-size: 16px; overflow-x: hidden; }
     body {
       font-family: var(--font-body);
       color: #444;
       background: #fff;
       line-height: 1.65;
       -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+      -webkit-tap-highlight-color: transparent;
     }
     img { max-width: 100%; display: block; }
     a { color: var(--blue); text-decoration: none; transition: var(--transition); }
@@ -129,7 +131,8 @@
           <div class="inm-contact-card">
             <h3 class="inm-contact-card-title">Pregunta al anunciante</h3>
             <textarea class="inm-form-textarea" id="inm-msg" rows="4">me interesa este inmueble ¿Podría enviarme información?</textarea>
-            <input type="email" class="inm-form-input" id="inm-email" placeholder="Tu email">
+            <input type="text" class="inm-form-input" id="inm-name" placeholder="Tu nombre *" required>
+            <input type="email" class="inm-form-input" id="inm-email" placeholder="Tu email *" required>
             <div class="inm-form-phone-group">
               <select class="inm-form-select" id="inm-phone-code">
                 <option value="+591">+591 (Bolivia)</option>
@@ -146,10 +149,13 @@
               </select>
               <input type="tel" class="inm-form-input" id="inm-phone" placeholder="Tu celular *" required>
             </div>
-            <input type="text" class="inm-form-input" id="inm-name" placeholder="Tu nombre">
             <label class="inm-form-checkbox" id="inm-privacy-label">
               <input type="checkbox" id="inm-privacy" required>
               <span>Aceptar la <a href="https://statetty.com/politica_de_privacidad.html" target="_blank" rel="noopener">política de privacidad</a> y las <a href="https://statetty.com/terminos_y_condiciones.html" target="_blank" rel="noopener">condiciones generales</a></span>
+            </label>
+            <label class="inm-form-checkbox" id="inm-newsletter-label">
+              <input type="checkbox" id="inm-newsletter" checked>
+              <span>Acepto recibir correos con opciones parecidas a este inmueble y otras oportunidades</span>
             </label>
             <button class="inm-form-submit" id="inm-submit">Contactar al anunciante</button>
           </div>
@@ -211,6 +217,29 @@
       return '';
     }
 
+    function buildTextoWhatsapp(datos) {
+      var nombre = datos.nombre || '';
+      var mensaje = datos.mensaje || '';
+      var agentNameCorto = datos.agentNameCorto || '';
+      var fotoUrl = datos.fotoUrl || '';
+      var paginaUrl = datos.paginaUrl || '';
+
+      var lineas = [];
+      lineas.push(agentNameCorto ? ('Hola ' + agentNameCorto + ',') : 'Hola,');
+      lineas.push('Soy ' + nombre + ' y estoy interesado en este inmueble.');
+
+      if (mensaje) {
+        lineas.push('');
+        lineas.push(mensaje);
+      }
+
+      lineas.push('');
+      if (fotoUrl) lineas.push('Foto: ' + fotoUrl);
+      lineas.push('Página: ' + paginaUrl);
+
+      return lineas.join('\n');
+    }
+
     function setFieldInvalid(el, invalid) {
       if (!el) return;
       el.style.borderColor = invalid ? '#e53e3e' : '';
@@ -255,6 +284,9 @@
       var nameEl = document.getElementById('inm-name');
       var privacyEl = document.getElementById('inm-privacy');
       var privacyLabelEl = document.getElementById('inm-privacy-label');
+      var newsletterEl = document.getElementById('inm-newsletter');
+
+      var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
       // Restore previously entered contact info (message default stays untouched
       // unless the user had customized it before).
@@ -265,6 +297,9 @@
         if (saved.phone) phoneEl.value = saved.phone;
         if (saved.nombre) nameEl.value = saved.nombre;
         if (saved.mensaje) msgEl.value = saved.mensaje;
+        // El newsletter viene marcado por defecto; sólo lo desmarcamos si
+        // el usuario explícitamente lo había desmarcado antes.
+        if (newsletterEl && saved.newsletter === false) newsletterEl.checked = false;
       }
 
       function persistCurrentValues() {
@@ -273,7 +308,8 @@
           phoneCode: phoneCodeEl.value,
           phone: phoneEl.value.trim(),
           nombre: nameEl.value.trim(),
-          mensaje: msgEl.value
+          mensaje: msgEl.value,
+          newsletter: !!(newsletterEl && newsletterEl.checked)
         });
       }
 
@@ -282,8 +318,11 @@
         var evt = (el.tagName === 'SELECT') ? 'change' : 'input';
         el.addEventListener(evt, persistCurrentValues);
       });
+      if (newsletterEl) newsletterEl.addEventListener('change', persistCurrentValues);
 
       // Clear invalid state as the user fixes things
+      if (nameEl) nameEl.addEventListener('input', function () { setFieldInvalid(nameEl, false); });
+      if (emailEl) emailEl.addEventListener('input', function () { setFieldInvalid(emailEl, false); });
       if (phoneEl) phoneEl.addEventListener('input', function () { setFieldInvalid(phoneEl, false); });
       if (privacyEl) privacyEl.addEventListener('change', function () {
         if (privacyEl.checked) setCheckboxInvalid(privacyEl, privacyLabelEl, false);
@@ -295,14 +334,29 @@
         var phone = (phoneEl && phoneEl.value || '').trim();
         var nombre = (nameEl && nameEl.value || '').trim();
         var privacyOk = !!(privacyEl && privacyEl.checked);
+        var newsletterOk = !!(newsletterEl && newsletterEl.checked);
 
         var valid = true;
+        var faltantes = [];
 
+        setFieldInvalid(nameEl, false);
+        setFieldInvalid(emailEl, false);
         setFieldInvalid(phoneEl, false);
         setCheckboxInvalid(privacyEl, privacyLabelEl, false);
 
+        if (!nombre) {
+          setFieldInvalid(nameEl, true);
+          faltantes.push('tu nombre');
+          valid = false;
+        }
+        if (!email || !EMAIL_RE.test(email)) {
+          setFieldInvalid(emailEl, true);
+          faltantes.push(email ? 'un email válido' : 'tu email');
+          valid = false;
+        }
         if (!phone) {
           setFieldInvalid(phoneEl, true);
+          faltantes.push('tu celular');
           valid = false;
         }
         if (!privacyOk) {
@@ -311,7 +365,10 @@
         }
 
         if (!valid) {
-          alert('Por favor completá tu celular y aceptá la política de privacidad y las condiciones generales antes de continuar.');
+          var partesAlerta = [];
+          if (faltantes.length) partesAlerta.push('Por favor completá ' + faltantes.join(', ') + '.');
+          if (!privacyOk) partesAlerta.push('Aceptá la política de privacidad y las condiciones generales.');
+          alert(partesAlerta.join(' '));
           return;
         }
 
@@ -339,7 +396,8 @@
             mensaje: mensaje,
             email: email,
             phone: fullPhone,
-            nombre: nombre
+            nombre: nombre,
+            newsletter: newsletterOk
           })
         };
 
@@ -372,11 +430,13 @@
               var fotoUrl = getFirstPhotoUrl();
               var paginaUrl = 'https://statetty.com/inmueble/?_id=' + propertyId;
 
-              var textoWhatsapp =
-                'Hola ' + agentNameCorto + '\n' +
-                'Me llamo ' + nombre + ', ' + mensaje + ',\n' +
-                'Foto: ' + fotoUrl + '\n' +
-                'Página: ' + paginaUrl;
+              var textoWhatsapp = buildTextoWhatsapp({
+                agentNameCorto: agentNameCorto,
+                nombre: nombre,
+                mensaje: mensaje,
+                fotoUrl: fotoUrl,
+                paginaUrl: paginaUrl
+              });
 
               var agentPhonLimpio = agentPhon.replace(/^\+/, '').replace(/\D/g, '');
               var waUrl = 'https://wa.me/' + agentPhonLimpio + '?text=' + encodeURIComponent(textoWhatsapp);
