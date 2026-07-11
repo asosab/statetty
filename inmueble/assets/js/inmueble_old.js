@@ -9,27 +9,16 @@
   var DOM = {};
 
   function init() {
-    console.log('STATETTY: init (versión cacheada, datos estáticos)');
+    console.log('STATETTY: init');
     cacheDOM();
     bindEvents();
-
-    // El resto del inmueble (header, features, descripción, mapa, SEO) ya
-    // viene renderizado server-side en el HTML cacheado, así que NO se hace
-    // fetch a la API. fetchInmueble()/render() y sus funciones auxiliares
-    // se dejan definidas más abajo por si hacen falta más adelante, pero no
-    // se ejecutan para esas secciones.
-    //
-    // La galería es la excepción: sí necesita JS para la interactividad
-    // (lightbox, thumbs), así que se sigue usando renderGallery(), pero
-    // alimentada con los datos que el .ejs ya embebió en la página
-    // (window.STATETTY_FOTOS), sin volver a pedirlos a la API.
-    renderGallery({ fotos: window.STATETTY_FOTOS || [] });
-
     var id = getParam();
     console.log('STATETTY: id =', id);
-    if (id) {
-      renderSimilares(id);
+    if (!id) {
+      showError('Parámetro faltante', 'No se recibió el identificador del inmueble.');
+      return;
     }
+    fetchInmueble(id);
   }
 
   function cacheDOM() {
@@ -58,19 +47,11 @@
   }
 
   function getParam() {
-    // 1) Versión cacheada: _id inyectado server-side desde el .ejs.
-    if (window.STATETTY_INMUEBLE_ID) return window.STATETTY_INMUEBLE_ID;
-
-    // 2) Compat con la versión dinámica (?_id= o ?p=).
     var p = new URLSearchParams(window.location.search).get('_id');
     if (!p) {
       p = new URLSearchParams(window.location.search).get('p');
     }
-    if (p) return p;
-
-    // 3) Fallback: parsear /inmueble/<_id> directamente de la ruta.
-    var m = window.location.pathname.match(/\/inmueble\/([^\/?#]+)\/?$/);
-    return m ? decodeURIComponent(m[1]) : null;
+    return p || null;
   }
 
   function fetchInmueble(id) {
@@ -165,15 +146,8 @@
       });
     }
 
-    if (DOM.mainImg.complete) {
-      // La imagen principal ya está cargada (típico en la versión cacheada,
-      // donde viene servida directo en el HTML estático): el evento 'load'
-      // puede no volver a dispararse, así que armamos los thumbs ya mismo.
-      renderThumbs();
-    } else {
-      DOM.mainImg.addEventListener('load', renderThumbs, { once: true });
-      DOM.mainImg.addEventListener('error', renderThumbs, { once: true });
-    }
+    DOM.mainImg.addEventListener('load', renderThumbs, { once: true });
+    DOM.mainImg.addEventListener('error', renderThumbs, { once: true });
   }
 
   function setMainImage(index) {
