@@ -25,6 +25,10 @@
     // (window.STATETTY_FOTOS), sin volver a pedirlos a la API.
     renderGallery({ fotos: window.STATETTY_FOTOS || [] });
 
+    // El mapa usa coordenadas inyectadas server-side en STATETTY_COORDS.
+    // Cuando el inmueble no tiene coordenadas renderMap() oculta la sección.
+    renderMap(window.STATETTY_COORDS || {});
+
     var id = getParam();
     console.log('STATETTY: id =', id);
     if (id) {
