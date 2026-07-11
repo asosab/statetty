@@ -28,7 +28,7 @@ layout: default
   var m = window.location.pathname.match(/^\/inmueble\/p\/([^\/]+)\/?$/);
   if (m) {
     var id = m[1];
-    window.location.replace('/inmueble/?_id=' + encodeURIComponent(id));
+    window.location.replace('/inmueble/' + encodeURIComponent(id));
   }
 })();
 </script>

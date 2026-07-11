@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-07-11
+
+- **URLs de inmueble migradas a path-based (`/inmueble/{id}`)**: el route worker de Cloudflare cambió el patrón. `inmueble.js` ya estaba actualizado; corregidos `inmueble/index.html`, `inmueble/index_old.html`, `inmueble/registro/index.html` y `404.html` que aún generaban URLs con `?_id=`.
+
 ## 2026-07-10
 
 - **Inmuebles similares (`inmueble/`)**: nueva card en sidebar que muestra hasta 4 inmuebles similares vía `getInmSim`. Muestra foto, precio, nombre/tipo, distancia. Al hacer clic navega a la misma página con el `_id` del similar, preservando `?k=`. Card oculta si no hay resultados. HTML, CSS y JS agregados.

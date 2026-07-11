@@ -24,6 +24,16 @@ Sitio web estático Jekyll 4.3, alojado en GitHub Pages (statetty.com). Landing 
 - 2025-06-12: **GitHub Actions workflow** creado (`.github/workflows/jekyll.yml`) para build con Jekyll 4.3 y deploy a Pages. Fix de `Gemfile.lock`: agregada plataforma `x86_64-linux` para compatibilidad con runner Ubuntu. Build y deploy verificados exitosos.
 - 2025-06-12: **Fix imagen blog**: `_includes/blog.html` usaba `{{ post.image | prepend: site.url }}` sin la ruta `/assets/images/`, generando URLs rotas (ej. `https://statetty.comstatetty_phone.jpg`). Corregido a `{{ post.image | prepend: site.imageFolder | prepend: site.url }}`, usando la variable `site.imageFolder` ya existente en `_config.yml`.
 
+## 2026-07-11 — URLs de inmueble migradas de query params a path-based
+
+- El route worker de Cloudflare cambió el patrón de `/inmueble/?_id={id}` a `/inmueble/{id}`.
+- `inmueble/assets/js/inmueble.js` ya usaba path-based (API call línea 83, URLs públicas línea 430, regex línea 72).
+- Corregidos los HTML que aún generaban URLs con `?_id=`:
+  - `inmueble/index.html:458` (WhatsApp share)
+  - `inmueble/index_old.html:431` (WhatsApp share)
+  - `inmueble/registro/index.html:1612` (view link)
+  - `404.html:31` (redirect desde `/inmueble/p/{id}`)
+
 ## Principio de arquitectura
 
 **Toda página debe cargar su estilo general desde `assets/css/theme-1.css`** (incluido vía `{% include head.html %}` -> `theme-1.css`). Esto garantiza consistencia visual (paleta, tipografía, resets, variables `:root`) y que un cambio en la marca se refleje en todo el sitio. Ninguna página debe duplicar variables, resets o estilos generales inline.
