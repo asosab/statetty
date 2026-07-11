@@ -376,13 +376,22 @@
 
   /* ---------- Map ---------- */
   function renderMap(inm) {
-    var lat = parseFloat(inm.lat);
-    var lng = parseFloat(inm.lng);
+    // Coordenadas desde los data-* del DOM (si el servidor las incluyó),
+    // con fallback al objeto inm (STATETTY_COORDS o API). Esto permite
+    // compatibilidad con HTML cacheados viejos que no tienen la variable
+    // global STATETTY_COORDS pero sí los data-* en el section.
+    var section = DOM.mapSection;
+    var lat = section ? parseFloat(section.dataset.lat) : NaN;
+    var lng = section ? parseFloat(section.dataset.lng) : NaN;
     if (isNaN(lat) || isNaN(lng)) {
-      DOM.mapSection.classList.add('inm-hidden');
+      lat = parseFloat(inm && inm.lat);
+      lng = parseFloat(inm && inm.lng);
+    }
+    if (isNaN(lat) || isNaN(lng)) {
+      if (section) section.classList.add('inm-hidden');
       return;
     }
-    DOM.mapSection.classList.remove('inm-hidden');
+    if (section) section.classList.remove('inm-hidden');
 
     var map = L.map(DOM.mapContainer, {
       center: [lat, lng],
