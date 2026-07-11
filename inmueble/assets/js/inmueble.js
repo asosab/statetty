@@ -80,7 +80,7 @@
         showError('Error de configuración', 'No se pudo determinar el endpoint del servidor.');
         return;
       }
-      var url = base + 'statetty/inmueble?_id=' + encodeURIComponent(id);
+      var url = base + 'statetty/inmueble/' + encodeURIComponent(id);
       console.log('STATETTY: fetching', url);
       var opts = { headers: { 'ngrok-skip-browser-warning': '1' } };
       if (typeof AbortController !== 'undefined') {
@@ -427,7 +427,7 @@
       DOM.simList.innerHTML = '';
       var k = new URLSearchParams(window.location.search).get('k');
       lista.forEach(function (item) {
-        var url = 'https://statetty.com/inmueble/?_id=' + encodeURIComponent(item._id);
+        var url = 'https://statetty.com/inmueble/' + encodeURIComponent(item._id);
         if (k) url += '&k=' + encodeURIComponent(k);
 
         var el = document.createElement('div');
