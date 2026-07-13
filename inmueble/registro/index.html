@@ -529,15 +529,49 @@
       margin-top: 10px; text-align: center; display: none;
     }
     .form-success {
-      display: none; text-align: center; padding: 30px 20px;
+      display: none;
+      position: fixed;
+      top: 24px; right: 24px;
+      z-index: 3000;
+      width: min(360px, calc(100vw - 48px));
+      text-align: center;
+      padding: 28px 24px 22px;
+      background: var(--card-bg);
+      border-radius: var(--radius-lg);
+      box-shadow: 0 12px 40px rgba(0,0,0,.22);
+      border: 1px solid var(--border);
     }
-    .form-success.visible { display: block; }
-    .form-success-icon { font-size: 3rem; margin-bottom: 12px; }
+    .form-success.visible { display: block; animation: formSuccessIn .3s cubic-bezier(.4,0,.2,1); }
+    .form-success.closing { animation: formSuccessOut .25s ease-in forwards; }
+    @keyframes formSuccessIn {
+      from { opacity: 0; transform: translateY(-12px) scale(.97); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes formSuccessOut {
+      from { opacity: 1; transform: translateY(0) scale(1); }
+      to   { opacity: 0; transform: translateY(-12px) scale(.97); }
+    }
+    .form-success-close {
+      position: absolute; top: 10px; right: 10px;
+      width: 28px; height: 28px;
+      border: none; background: transparent;
+      border-radius: 50%;
+      color: var(--muted);
+      font-size: 1.1rem; line-height: 1;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: var(--transition);
+    }
+    .form-success-close:hover { background: var(--section-bg); color: var(--text-strong); }
+    .form-success-icon { font-size: 2.6rem; margin-bottom: 10px; }
     .form-success h3 {
       font-family: var(--font-head); font-weight: 700;
-      color: var(--text-strong); font-size: 1.3rem; margin-bottom: 10px;
+      color: var(--text-strong); font-size: 1.15rem; margin-bottom: 8px;
     }
-    .form-success p { color: var(--muted); font-size: .9rem; line-height: 1.65; margin-bottom: 6px; }
+    .form-success p { color: var(--muted); font-size: .88rem; line-height: 1.6; margin-bottom: 6px; }
+    @media (max-width: 480px) {
+      .form-success { top: 12px; right: 12px; left: 12px; width: auto; }
+    }
 
     /* Footer */
     .inm-footer {
@@ -1151,7 +1185,8 @@
 
       </form>
 
-      <div class="form-success" id="form-success" aria-live="polite">
+      <div class="form-success" id="form-success" role="status" aria-live="polite">
+        <button type="button" class="form-success-close" id="form-success-close" aria-label="Cerrar aviso">&times;</button>
         <div class="form-success-icon" aria-hidden="true">✅</div>
         <h3>¡Inmueble registrado con éxito!</h3>
         <p>Tu inmueble fue enviado para revisión. En breve estará visible en Statetty.</p>
@@ -1343,6 +1378,7 @@
       DOM.errorEl        = document.getElementById('form-error');
       DOM.successEl      = document.getElementById('form-success');
       DOM.successIdInfo  = document.getElementById('success-id-info');
+      DOM.successCloseBtn = document.getElementById('form-success-close');
       DOM.photoList      = document.getElementById('photo-list');
       DOM.photoAddBtn    = document.getElementById('photo-add-btn');
       DOM.photoWarning   = document.getElementById('photo-warning');
@@ -2155,6 +2191,55 @@
       try { localStorage.removeItem(draftKey()); } catch (e) {}
     }
 
+    /* ---- Dejar el formulario en blanco tras un registro/actualización exitosa ----
+       Así queda listo tanto para cargar un inmueble nuevo como para elegir
+       otro desde "Mis inmuebles" y editarlo. */
+    function resetInmuebleForm() {
+      DOM.form.reset();
+
+      DOM.fId.value = '';
+      setSubmitLoading(false, 'Publicar inmueble');
+
+      DOM.photoList.innerHTML = '';
+      addPhotoRow();
+
+      DOM.attrList.innerHTML = '';
+      addAttrRow();
+
+      DOM.fEstado.value = 'disponible';
+      DOM.fEstado.dispatchEvent(new Event('change'));
+      DOM.fAgenciaID.value = 'BO_Statetty';
+
+      // Ya no estamos editando ningún inmueble puntual: se quita el _id de la URL
+      // para que un refresh no vuelva a cargar los datos del que se acaba de guardar.
+      try {
+        var url = new URL(window.location.href);
+        if (url.searchParams.has('_id')) {
+          url.searchParams.delete('_id');
+          window.history.replaceState({}, '', url.pathname + url.search + url.hash);
+        }
+      } catch (e) {}
+    }
+
+    var successAutoCloseTimer = null;
+
+    function showSuccessToast(idText) {
+      if (successAutoCloseTimer) { clearTimeout(successAutoCloseTimer); successAutoCloseTimer = null; }
+      DOM.successEl.classList.remove('closing');
+      DOM.successIdInfo.textContent = idText || '';
+      DOM.successEl.classList.add('visible');
+      successAutoCloseTimer = setTimeout(hideSuccessToast, 5000);
+    }
+
+    function hideSuccessToast() {
+      if (successAutoCloseTimer) { clearTimeout(successAutoCloseTimer); successAutoCloseTimer = null; }
+      if (!DOM.successEl.classList.contains('visible')) return;
+      DOM.successEl.classList.add('closing');
+      setTimeout(function () {
+        DOM.successEl.classList.remove('visible', 'closing');
+      }, 250);
+    }
+
     /* ---- Image upload ---- */
     var selectedUploadFile = null;
 
@@ -2436,12 +2521,8 @@
         if (data.ok) {
           clearDraft();
           invalidateMisInmueblesCache(); // la lista cambió: la próxima vez que se abra el toolbox, se vuelve a pedir
-          DOM.form.style.display = 'none';
-          DOM.successEl.classList.add('visible');
-          if (data.id) {
-            DOM.successIdInfo.textContent = 'ID de referencia: ' + data.id;
-          }
-          DOM.successEl.focus();
+          resetInmuebleForm();
+          showSuccessToast(data.id ? ('ID de referencia: ' + data.id) : '');
         } else {
           DOM.errorEl.textContent = data.error || 'Error del servidor. Intentalo de nuevo.';
           DOM.errorEl.style.display = 'block';
@@ -2458,6 +2539,7 @@
     /* ---- Events ---- */
     function bindEvents() {
       DOM.form.addEventListener('submit', handleSubmit);
+      DOM.successCloseBtn.addEventListener('click', hideSuccessToast);
       DOM.photoUploadBtn.addEventListener('click', triggerFileInput);
       DOM.photoFileInput.addEventListener('change', handleFileSelect);
       DOM.photoUploadArea.addEventListener('click', function (e) {
