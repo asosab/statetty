@@ -15,7 +15,7 @@ image: "tokenizacion.png"
 
 # Tokenización inmobiliaria en Suramérica: la propiedad que cabe en el celular
 
-Imaginate poder comprar el 0,5% de un edificio en Miraflores, Lima, con 50 dólares desde tu teléfono, y recibir tu parte proporcional del alquiler cada mes de forma automática, sin trámites, sin notaría, sin esperar que nadie transfiera nada. Eso es, en esencia, la tokenización inmobiliaria. No es ciencia ficción: <cite index="9-1">en enero de 2026, el mercado de crédito privado tokenizado a nivel global rondaba los 29.000 millones de dólares</cite>, y en Arabia Saudí ya se completó la primera operación donde <cite index="9-1">el token no representa el derecho sobre la propiedad, sino que directamente es el derecho: la escritura digital validada por la Autoridad General Inmobiliaria en su blockchain soberana.</cite>
+Imaginate poder comprar el 0,5% de un edificio en Miraflores, Lima, con 50 dólares desde tu teléfono, y recibir tu parte proporcional del alquiler cada mes de forma automática, sin trámites, sin notaría, sin esperar que nadie transfiera nada. Eso es, en esencia, la tokenización inmobiliaria. No es ciencia ficción: <cite index="9-1">en enero de 2026, el mercado de crédito privado tokenizado a nivel global rondaba los 29.000 millones de dólares</cite>, y en Arabia Saudí ya se completó la primera operación donde <cite index="9-1">el token no representa el derecho sobre la propiedad, sino que directamente es el derecho: la escritura digital validada por la Autoridad General Inmobiliaria en su blockchain soberana.</cite> 
 
 Suramérica mira eso desde lejos, con distintos niveles de preparación. Este artículo explica qué es, cómo está el mapa legal en la región, y qué le falta concretamente a Bolivia para subirse al tren.
 
