@@ -173,7 +173,9 @@
 
   function handleKeyReady(e) {
     var detail = e.detail || {};
-    if (!detail.usuario) return; // no logueado o error: se deja el CTA original
+    // Solo se considera "logueado" si user.js trajo un usuario con _id real.
+    // Un objeto usuario vacío/incompleto (o un error) no debe disparar el reemplazo.
+    if (!detail.usuario || !detail.usuario._id) return; // no logueado o error: se deja el CTA original
 
     if (document.body.dataset[READY_FLAG]) return; // evita duplicados si el evento se dispara más de una vez
     injectStyles();
