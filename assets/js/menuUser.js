@@ -111,7 +111,7 @@
 
     var img = document.createElement('img');
     img.className = 'stt-user-avatar';
-    img.src = (usuario && usuario.userIcon) || DEFAULT_ICON;
+    img.src = (usuario && usuario.usrIconURL) || DEFAULT_ICON;
     img.alt = usuario && usuario.nombre ? usuario.nombre : 'Usuario';
     img.referrerPolicy = 'no-referrer';
     img.onerror = function () {
