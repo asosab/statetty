@@ -212,6 +212,29 @@ tags: [registro, formulario, Statetty, real state, inmuebles]
     color: var(--muted-2); text-align: center; line-height: 1.6;
   }
   #RegistroForm .form-legal a { color: var(--muted); text-decoration: underline; text-underline-offset: 2px; }
+  #RegistroForm .avatar-field {
+    display: flex; align-items: center; gap: 12px;
+  }
+  #RegistroForm .avatar-field input { flex: 1; margin: 0; }
+  #RegistroForm .avatar-preview,
+  #RegistroForm .avatar-placeholder {
+    width: 48px; height: 48px; min-width: 48px;
+    border-radius: 50%;
+    border: 2px solid var(--input-border);
+    box-sizing: border-box;
+  }
+  #RegistroForm .avatar-preview {
+    object-fit: cover;
+    display: none;
+  }
+  #RegistroForm .avatar-placeholder {
+    display: flex; align-items: center; justify-content: center;
+    background: #f0f0f0; color: var(--muted); font-size: 1.3rem;
+  }
+  #RegistroForm .field-error {
+    display: block; color: #e74c3c; font-size: .78rem;
+    margin-top: 5px;
+  }
 </style>
 
 <section id="RegistroForm" class="registro-section">
@@ -225,6 +248,18 @@ tags: [registro, formulario, Statetty, real state, inmuebles]
       </p>
 
       <form id="registroForm" novalidate>
+
+        <!-- ICONO DE USUARIO -->
+        <div class="form-group">
+          <label for="f-usricon">URL de tu icono de usuario</label>
+          <div class="avatar-field">
+            <img id="f-usricon-preview" class="avatar-preview" alt="Vista previa del icono de usuario">
+            <div id="f-usricon-placeholder" class="avatar-placeholder" aria-hidden="true">👤</div>
+            <input type="url" id="f-usricon" name="usrIconURL" placeholder="https://ejemplo.com/mi-foto.jpg" inputmode="url">
+          </div>
+          <span class="hint">Pegá el enlace a una imagen (se mostrará recortada en círculo). Peso máximo: 200 KB</span>
+          <span class="field-error" id="f-usricon-error" style="display:none;"></span>
+        </div>
 
         <!-- CORREO -->
         <div class="form-group">
@@ -399,6 +434,70 @@ tags: [registro, formulario, Statetty, real state, inmuebles]
   var errorEl = document.getElementById('form-error');
   var successEl = document.getElementById('form-success');
 
+  // ── Icono de usuario (usrIconURL) ──
+  var MAX_ICON_BYTES = 200 * 1024; // 200 KB
+  var usrIconInput = document.getElementById('f-usricon');
+  var usrIconPreview = document.getElementById('f-usricon-preview');
+  var usrIconPlaceholder = document.getElementById('f-usricon-placeholder');
+  var usrIconErrorEl = document.getElementById('f-usricon-error');
+  var usrIconOversize = false; // true solo si confirmamos que pesa más de 200KB
+
+  function mostrarErrorIcono(msg) {
+    usrIconErrorEl.textContent = msg;
+    usrIconErrorEl.style.display = 'block';
+  }
+  function ocultarErrorIcono() {
+    usrIconErrorEl.textContent = '';
+    usrIconErrorEl.style.display = 'none';
+  }
+  function resetPreviewIcono() {
+    usrIconPreview.style.display = 'none';
+    usrIconPreview.removeAttribute('src');
+    usrIconPlaceholder.style.display = 'flex';
+  }
+
+  function actualizarIconoUsuario(url) {
+    ocultarErrorIcono();
+    usrIconOversize = false;
+
+    if (!url) {
+      resetPreviewIcono();
+      return;
+    }
+
+    // Vista previa (la carga de <img> no requiere permisos CORS)
+    var probe = new Image();
+    probe.onload = function() {
+      usrIconPreview.src = url;
+      usrIconPreview.style.display = 'block';
+      usrIconPlaceholder.style.display = 'none';
+    };
+    probe.onerror = function() {
+      resetPreviewIcono();
+      mostrarErrorIcono('No se pudo cargar una imagen desde esa URL.');
+    };
+    probe.src = url;
+
+    // Verificación de peso (best-effort; algunos servidores no exponen
+    // Content-Length o bloquean la solicitud por CORS, en cuyo caso no
+    // podemos confirmar el peso y se deja continuar).
+    fetch(url, { method: 'HEAD' })
+      .then(function(res) {
+        var len = res.headers.get('content-length');
+        if (len && parseInt(len, 10) > MAX_ICON_BYTES) {
+          usrIconOversize = true;
+          mostrarErrorIcono('La imagen pesa más de 200 KB. Elegí una imagen más liviana.');
+        }
+      })
+      .catch(function() {
+        // No se pudo verificar el peso (CORS/red); se permite continuar.
+      });
+  }
+
+  usrIconInput.addEventListener('input', function() {
+    actualizarIconoUsuario(this.value.trim());
+  });
+
   var CIUDADES = {
     Bolivia: [
       { value: '', label: 'Seleccioná una ciudad' },
@@ -435,6 +534,10 @@ tags: [registro, formulario, Statetty, real state, inmuebles]
     if (!user) return;
 
     var el = function(id) { return document.getElementById(id); };
+    if (el('f-usricon') && user.usrIconURL) {
+      el('f-usricon').value = user.usrIconURL;
+      actualizarIconoUsuario(user.usrIconURL);
+    }
     if (el('f-email') && user.email) el('f-email').value = user.email;
     if (el('f-nombres') && user.first_name) el('f-nombres').value = user.first_name;
     if (el('f-apellidos') && user.last_name) el('f-apellidos').value = user.last_name;
@@ -512,11 +615,18 @@ tags: [registro, formulario, Statetty, real state, inmuebles]
       return;
     }
 
+    if (usrIconOversize) {
+      errorEl.textContent = 'La imagen del icono de usuario pesa más de 200 KB. Elegí una imagen más liviana.';
+      errorEl.style.display = 'block';
+      return;
+    }
+
     btn.disabled = true;
     txt.textContent = 'Enviando…';
     spinner.style.display = 'inline-block';
 
     var payload = {
+      usrIconURL: usrIconInput.value.trim(),
       email: email,
       nombres: nombres,
       apellidos: apellidos,
