@@ -821,9 +821,6 @@ $(document).ready(function () {
   var urlParams = new URLSearchParams(window.location.search);
   let pProm = Math.round(urlParams.get('p'));
   let userid = urlParams.get('u');
-  window.na = urlParams.get('na');
-  window.ag = urlParams.get('ag');
-  window.an = urlParams.get('an');
   window.M2T = urlParams.get('M2T');
   window.M2T = normalizarM2TDesdeURI();
 
@@ -850,12 +847,6 @@ $(document).ready(function () {
           loc.uid = normalizeURL(loc.URL);
           loc.brand = getBrand({ dato: loc });
         });
-
-        if (parsed.usuario) {
-          window.na = parsed.usuario.nombre || '';
-          window.ag = parsed.usuario.agencia || '';
-          window.an = parsed.usuario.telefono || '';
-        }
 
         var info = parsed.info || {};
         var lat = parseFloat(info.lat) || parseFloat(urlParams.get('lat'));
