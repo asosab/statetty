@@ -21,8 +21,25 @@
       var url=new URL(location.href),k=url.searchParams.get('k')||readCookie(COOKIE_NAME)||localStorage.getItem(COOKIE_NAME);
       if(!k){document.dispatchEvent(new CustomEvent('statetty:key-ready',{detail:{key:null,usuario:null,error:null}}));return;}
       var base=window.STATETTY_CONFIG?STATETTY_CONFIG.WS_API_BASE:'';
-      var res=await fetch(base+'statetty/getuser?publicKey='+encodeURIComponent(k),{credentials:'include'});
+
+      // NOTA: se quitó credentials:'include'. Si el backend NO depende de una
+      // cookie de sesión para identificar al usuario (usa solo publicKey),
+      // esto convierte la request en un GET "simple" y evita el conflicto
+      // Access-Control-Allow-Origin:'*' + credentials que bloquea la respuesta.
+      // Si el backend SÍ necesita cookies de sesión, hay que volver a agregar
+      // credentials:'include' y en su lugar arreglar el CORS del servidor
+      // (Access-Control-Allow-Origin exacto + Access-Control-Allow-Credentials:true).
+      var res=await fetch(base+'statetty/getuser?publicKey='+encodeURIComponent(k));
+
+      console.log('[Statetty] [K] status:',res.status,res.ok);
+
+      if(!res.ok){
+        throw new Error('HTTP '+res.status+' al consultar getuser');
+      }
+
       var data=await res.json();
+      console.log('[Statetty] [K] data recibida:',data);
+
       if(data.usuario){writeCookie(COOKIE_NAME,k,data.expiresAt);localStorage.setItem(COOKIE_NAME,k);window.publicKey=k;}
       else{document.cookie=COOKIE_NAME+'=; Max-Age=0; Path='+COOKIE_PATH+'; Domain='+COOKIE_DOMAIN;localStorage.removeItem(COOKIE_NAME);}
       document.dispatchEvent(new CustomEvent('statetty:key-ready',{detail:{key:data.usuario?k:null,usuario:data.usuario||null,error:data&&data.error||null}}));
