@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-07-12
+
+- **`user.js` catch dispatch**: `captureAndVerifyUser` ahora dispara `statetty:key-ready` incluso en error de red/parse — evita loading eterno.
+- **`inmueble/registro/` errores simplificados**: los 4 branches de error se unifican en un único mensaje "Pedí el enlace desde Telegram". Solo usuarios con `K && USER` ven el formulario.
+- **`registro/index.html` refactorizado**: eliminado el inline `getuser` fetch duplicado. Ahora escucha `statetty:key-ready` y usa `publicKey` del evento para el payload del POST.
+- **`contacto.html` refactorizado**: mismo cambio — elimina el inline `getuser` duplicado, usa `statetty:key-ready`.
+
 ## 2026-07-11
 
 - **URLs de inmueble migradas a path-based (`/inmueble/{id}`)**: el route worker de Cloudflare cambió el patrón. `inmueble.js` ya estaba actualizado; corregidos `inmueble/index.html`, `inmueble/index_old.html`, `inmueble/registro/index.html` y `404.html` que aún generaban URLs con `?_id=`.

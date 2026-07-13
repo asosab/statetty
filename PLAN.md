@@ -34,6 +34,13 @@ Sitio web estático Jekyll 4.3, alojado en GitHub Pages (statetty.com). Landing 
   - `inmueble/registro/index.html:1612` (view link)
   - `404.html:31` (redirect desde `/inmueble/p/{id}`)
 
+## 2026-07-12 — `inmueble/registro/` + `user.js`: catch dispatch + simplificación de errores + `registro/` usa `statetty:key-ready`
+
+- `user.js`: el catch de `captureAndVerifyUser` ahora dispara `statetty:key-ready` con `error` — evita loading eterno si falla el fetch.
+- `inmueble/registro/index.html`: unificados los 4 branches de error en uno solo. Cualquier caso sin `K && USER` muestra "Pedí el enlace desde @statettybot en Telegram".
+- `registro/index.html`: reemplazado el inline `getuser` fetch duplicado por un listener de `statetty:key-ready`. Usa `publicKey` del evento para el payload del POST.
+- `contacto.html`: mismo refactor — eliminado inline `getuser` duplicado, ahora escucha `statetty:key-ready`.
+
 ## Principio de arquitectura
 
 **Toda página debe cargar su estilo general desde `assets/css/theme-1.css`** (incluido vía `{% include head.html %}` -> `theme-1.css`). Esto garantiza consistencia visual (paleta, tipografía, resets, variables `:root`) y que un cambio en la marca se refleje en todo el sitio. Ninguna página debe duplicar variables, resets o estilos generales inline.

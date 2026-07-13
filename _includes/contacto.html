@@ -252,7 +252,7 @@
 
 <script>
 (function() {
-  var k = new URLSearchParams(window.location.search).get('k');
+  var publicKey = null;
   var CIUDADES = {
     Bolivia: [
       { value: '', label: 'Seleccioná una ciudad' },
@@ -281,55 +281,48 @@
 
   poblarCiudades('Bolivia');
 
-  // ── Cargar datos de usuario si viene ?k= ──
-  if (k) {
-    (function() {
-      var base = typeof STATETTY_CONFIG !== 'undefined' ? STATETTY_CONFIG.WS_API_BASE : '';
-      if (!base) return;
-      fetch(base + 'statetty/getuser?publicKey=' + encodeURIComponent(k))
-        .then(function(r) { return r.json(); })
-        .then(function(res) {
-          var user = res.data || res;
-          if (!user) return;
+  // ── Cargar datos de usuario desde user.js ──
+  document.addEventListener('statetty:key-ready', function(e) {
+    var k = e.detail.key;
+    var user = e.detail.usuario;
+    if (k) publicKey = k;
+    if (!user) return;
 
-          var nombresEl = document.getElementById('f-nombres');
-          var apellidosEl = document.getElementById('f-apellidos');
-          var waEl = document.getElementById('f-wa');
-          var emailEl = document.getElementById('f-email');
-          var agenciaEl = document.getElementById('f-agencia');
-          var paisEl = document.getElementById('f-pais');
-          var ciudadEl = document.getElementById('f-ciudad');
+    var nombresEl = document.getElementById('f-nombres');
+    var apellidosEl = document.getElementById('f-apellidos');
+    var waEl = document.getElementById('f-wa');
+    var emailEl = document.getElementById('f-email');
+    var agenciaEl = document.getElementById('f-agencia');
+    var paisEl = document.getElementById('f-pais');
+    var ciudadEl = document.getElementById('f-ciudad');
 
-          if (nombresEl && user.first_name) nombresEl.value = user.first_name;
-          if (apellidosEl && user.last_name) apellidosEl.value = user.last_name;
-          if (waEl && user.waphone) waEl.value = user.waphone;
-          if (emailEl && user.email) emailEl.value = user.email;
-          if (agenciaEl && user.agencia) agenciaEl.value = user.agencia;
+    if (nombresEl && user.first_name) nombresEl.value = user.first_name;
+    if (apellidosEl && user.last_name) apellidosEl.value = user.last_name;
+    if (waEl && user.waphone) waEl.value = user.waphone;
+    if (emailEl && user.email) emailEl.value = user.email;
+    if (agenciaEl && user.agencia) agenciaEl.value = user.agencia;
 
-          // Normalizar país (capitalizar primera letra) y validar contra opciones
-          if (user.pais && paisEl) {
-            var cap = user.pais.charAt(0).toUpperCase() + user.pais.slice(1).toLowerCase();
-            var match = Array.from(paisEl.options).some(function(opt) { return opt.value === cap; });
-            if (match) {
-              paisEl.value = cap;
-              poblarCiudades(cap);
-              if (user.ciudad && ciudadEl) {
-                var ciudadMatch = Array.from(ciudadEl.options).some(function(opt) { return opt.value === user.ciudad; });
-                if (ciudadMatch) ciudadEl.value = user.ciudad;
-              }
-            }
-          }
+    // Normalizar país (capitalizar primera letra) y validar contra opciones
+    if (user.pais && paisEl) {
+      var cap = user.pais.charAt(0).toUpperCase() + user.pais.slice(1).toLowerCase();
+      var match = Array.from(paisEl.options).some(function(opt) { return opt.value === cap; });
+      if (match) {
+        paisEl.value = cap;
+        poblarCiudades(cap);
+        if (user.ciudad && ciudadEl) {
+          var ciudadMatch = Array.from(ciudadEl.options).some(function(opt) { return opt.value === user.ciudad; });
+          if (ciudadMatch) ciudadEl.value = user.ciudad;
+        }
+      }
+    }
 
-          // Indicador visual
-          var ind = document.createElement('p');
-          ind.style.cssText = 'font-size:.78rem;color:var(--brand);margin-top:-10px;margin-bottom:14px;';
-          ind.textContent = '\u2713 Datos cargados desde tu cuenta';
-          var title = document.querySelector('#Contacto .form-title');
-          if (title) title.parentNode.insertBefore(ind, title.nextSibling);
-        })
-        .catch(function(err) { console.warn('statetty: no se pudieron cargar datos del usuario', err); });
-    })();
-  }
+    // Indicador visual
+    var ind = document.createElement('p');
+    ind.style.cssText = 'font-size:.78rem;color:var(--brand);margin-top:-10px;margin-bottom:14px;';
+    ind.textContent = '\u2713 Datos cargados desde tu cuenta';
+    var title = document.querySelector('#Contacto .form-title');
+    if (title) title.parentNode.insertBefore(ind, title.nextSibling);
+  });
 
   document.getElementById('contactForm').addEventListener('submit', function(e) {
     e.preventDefault();
@@ -373,7 +366,7 @@
       ciudad: ciudad.toUpperCase(),
       mensaje: document.getElementById('f-mensaje').value.trim()
     };
-    if (k) { payload.publicKey = k; }
+    if (publicKey) { payload.publicKey = publicKey; }
 
     if (typeof STATETTY_CONFIG === 'undefined' || !STATETTY_CONFIG.WS_API_BASE) {
       errorEl.textContent = 'Error de configuración. Intentalo de nuevo más tarde.';

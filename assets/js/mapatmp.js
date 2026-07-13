@@ -22,7 +22,7 @@ var checkOverlayIcon = L.divIcon({
 });
 
 function openWsRedirect(serverUrl, waUrl) {
-  fetch(serverUrl, {headers: {"ngrok-skip-browser-warning": "1"}}).catch(function(e) { console.log("openWsRedirect", e); });
+  fetch(serverUrl).catch(function(e) { console.log("openWsRedirect", e); });
   window.open(waUrl, "_blank");
 }
 

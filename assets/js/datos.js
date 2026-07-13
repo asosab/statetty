@@ -5,7 +5,7 @@ async function fetchFinderResult(publicKey) {
   if (!publicKey) return null;
   try {
     var url = STATETTY_CONFIG.WS_API_BASE + 'statetty/finderresult?publicKey=' + encodeURIComponent(publicKey);
-    var res = await fetch(url, { headers: { 'ngrok-skip-browser-warning': '1' } });
+    var res = await fetch(url);
     var data = await res.json();
     return data;
   } catch (e) {

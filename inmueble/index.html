@@ -419,8 +419,7 @@
         var opts = {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
-            'ngrok-skip-browser-warning': '1'
+            'Content-Type': 'application/json'
           },
           body: JSON.stringify({
             inmueble_id: propertyId,
@@ -489,5 +488,7 @@
     });
   })();
   </script>
+
+  <script src="/assets/js/user.js"></script>
 </body>
 </html>

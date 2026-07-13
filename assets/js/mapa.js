@@ -22,7 +22,7 @@ var checkOverlayIcon = L.divIcon({
 });
 
 function openWsRedirect(serverUrl, waUrl) {
-  fetch(serverUrl, {headers: {"ngrok-skip-browser-warning": "1"}}).catch(function(e) { console.log("openWsRedirect", e); });
+  fetch(serverUrl).catch(function(e) { console.log("openWsRedirect", e); });
   window.open(waUrl, "_blank");
 }
 
@@ -819,8 +819,6 @@ $(document).ready(function () {
   }
 
   var urlParams = new URLSearchParams(window.location.search);
-  let id = urlParams.get('id');
-  let key = urlParams.get('key');
   let pProm = Math.round(urlParams.get('p'));
   let userid = urlParams.get('u');
   window.na = urlParams.get('na');
@@ -829,13 +827,21 @@ $(document).ready(function () {
   window.M2T = urlParams.get('M2T');
   window.M2T = normalizarM2TDesdeURI();
 
-  var publicKey = urlParams.get('k');
+  function waitForKey() {
+    if (window.publicKey !== undefined) return;
+    return new Promise(function(r) {
+      document.addEventListener('statetty:key-ready', function(){ r(); }, {once: true});
+    });
+  }
 
   async function init() {
     $('#loading-indicator').show();
 
-    if (publicKey) {
-      var response = await fetchFinderResult(publicKey);
+    await waitForKey();
+    var pk = window.publicKey;
+
+    if (pk) {
+      var response = await fetchFinderResult(pk);
       if (response && Array.isArray(response.result) && response.result.length > 0) {
         var parsed = parseFinderResult(response);
         var locs = parsed.locations;
@@ -884,130 +890,13 @@ $(document).ready(function () {
       mostrarModalError();
       return;
     }
-
-    // Fallback: Google Sheets
-    if (!id || !key) { throw new Error("ID o clave no proporcionados en la URL"); }
-
-    var valores = 'Sheet1!A2:Y';
-    var url = 'https://sheets.googleapis.com/v4/spreadsheets/' + id + '/values/' + valores + '?key=' + key;
-
-    $.getJSON(url, function (data) {
-      $('#loading-indicator').hide();
-
-      const columnas = [
-        "Titulo","lat","lng","dir","URL","des","ambientes","dormitorios","baños","m2construccion",
-        "m2terreno","nombre","precioM2","broker","foto","precio","agentName","agentPhone","fechaIngreso",
-        "tiempoOfertado","tipoInmueble","tipoNegocio","anoc","_id", "micros"
-      ];
-
-      window.columnasConfig = {
-        "foto":           true,
-        "Titulo":         true,
-        "dormitorios":    true,
-        "baños":          true,
-        "m2construccion": true,
-        "m2terreno":      true,
-        "lat":            false,
-        "lng":            false,
-        "dir":            false,
-        "URL":            false,
-        "des":            false,
-        "ambientes":      false,
-        "nombre":         false,
-        "precioM2":       false,
-        "precioM2C":      false,
-        "precioM2T":      false,
-        "broker":         false,
-        "precio":         false,
-        "agentName":      false,
-        "agentPhone":     false,
-        "fechaIngreso":   false,
-        "tiempoOfertado": false,
-        "tipoInmueble":   false,
-        "tipoNegocio":    false,
-        "anoc":           false,
-        "_id":            false,
-        "micros":         false,
-      };
-
-      $(data.values).each(function () {
-        let location = {};
-        columnas.forEach((col, i) => location[col] = this[i] || "");
-
-        location.lat            = parseFloat(location.lat);
-        location.lng            = parseFloat(location.lng);
-        location.precio         = parseInt(location.precio) || 0;
-        location.precioM2       = parseInt(location.precioM2) || 0;
-        location.uid            = normalizeURL(location.URL);
-        location.m2terreno      = parseInt(location.m2terreno) || 0;
-        location.m2construccion = parseInt(location.m2construccion) || 0;
-        location.tiempoOfertado = parseInt(location.tiempoOfertado) || 0;
-        location.micros         = location.micros || '';
-
-        location.precioM2C = (location.precio > 0 && location.m2construccion > 0)? location.precio / location.m2construccion: 0;
-        delete location.precioM2;
-
-        location.precioM2T = (location.precio > 0 && location.m2terreno > 0)? location.precio / location.m2terreno: 0;
-
-        let rawDesc = location.des || "";
-        rawDesc = rawDesc
-          .replace(/Ø[=<>][ÜÝÐ°Í]/g, " ")
-          .replace(/[•·•`´¨^~¬]+/g, " ")
-          .replace(/[“”"']/g, "'")
-          .replace(/[`´¨]/g, "")
-          .replace(/[\u0000-\u001F\u007F-\u009F]/g, " ")
-          .replace(/[^\x20-\x7EÀ-ÿ\n\r]/g, " ")
-          .replace(/\s{2,}/g, " ")
-          .replace(/(\r\n|\r|\n){2,}/g, "\n")
-          .replace(/\n\s+/g, "\n")
-          .replace(/\s+\n/g, "\n")
-          .trim();
-
-        rawDesc = rawDesc
-          .replace(/\+591\d{8}/g, "[...]")
-          .replace(/591\d{8}/g, "[...]")
-          .replace(/\b\d{8}\b/g, "[...]")
-          .replace(/\d{2,4}[-\s]\d{2,4}[-\s]\d{2,4}/g, "[...]")
-          .replace(/\(\d{3,4}\)\s?\d{5,8}/g, "[...]")
-          .replace(/00\s?591\d{8}/g, "[...]")
-          .replace(/wa\.me\/\d+/gi, "[...]")
-          .replace(/whatsapp\.com\/\d+/gi, "[...]");
-
-        const chrMax = 300;
-        const faltan = rawDesc.length > chrMax ? rawDesc.length - chrMax : 0;
-        const frase = faltan > 0 ? `... (y ${faltan} caracteres más)` : "";
-        location.des = rawDesc.length > chrMax ? rawDesc.substring(0, chrMax) + frase : rawDesc;
-
-        location.brand = getBrand({ dato: location });
-        locations.push(location);
-
-      });
-
-      var lat = urlParams.get('lat');
-      var lng = urlParams.get('lng');
-      var radius = urlParams.get('r');
-      if (!lat || !lng || !radius) {
-        let latSum = 0, lngSum = 0;
-        locations.forEach(loc => { latSum += loc.lat; lngSum += loc.lng; });
-        lat = latSum / locations.length;
-        lng = latSum / locations.length;
-        let maxDistance = 0;
-        locations.forEach(loc => {
-          const distance = calculateDH(lat, lng, loc.lat, loc.lng);
-          if (distance > maxDistance) { maxDistance = distance; }
-        });
-        radius = maxDistance * 1000;
-      }
-      if (isNaN(pProm) || pProm == 0) { pProm = calcularPromedio(locations, 'precio'); }
-
-      renderMap(locations, lat, lng, radius, pProm);
-    });
+    $('#loading-indicator').hide();
   }
 
   init().catch(function(e) {
     console.error('Error al cargar datos del mapa', e);
     $('#loading-indicator').hide();
-    if (publicKey) mostrarModalError();
+    if (window.publicKey) mostrarModalError();
   });
 
   // búsqueda

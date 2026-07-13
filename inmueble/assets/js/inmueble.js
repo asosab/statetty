@@ -86,7 +86,7 @@
       }
       var url = base + 'statetty/inmueble/' + encodeURIComponent(id);
       console.log('STATETTY: fetching', url);
-      var opts = { headers: { 'ngrok-skip-browser-warning': '1' } };
+      var opts = {};
       if (typeof AbortController !== 'undefined') {
         var controller = new AbortController();
         var timeout = setTimeout(function () { controller.abort(); }, 20000);
@@ -531,7 +531,7 @@
       var url = base + 'statetty/getInmSim?' + params.toString();
       console.log('STATETTY: fetching', url);
 
-      var opts = { headers: { 'ngrok-skip-browser-warning': '1' } };
+      var opts = {};
       var controller, timeout;
       if (typeof AbortController !== 'undefined') {
         controller = new AbortController();

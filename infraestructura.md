@@ -9,23 +9,33 @@ statetty.com (frontend estático)
   │  → Jekyll build → GitHub Pages      │
   │  → Dominio: statetty.com (CNAME)    │
   │  → DNS: Cloudflare (proxy gris)     │
-  └──────────────┬──────────────────────┘
-                 │ fetch HTTPS
-                 ▼
-api.statetty.com (backend API)
-  ┌──────────────────────────────────────┐
-  │  Cloudflare Tunnel (cloudflared)     │
-  │  → Proxy naranja (HTTPS → tunnel)    │
-  │  → Localhost:3030 (HTTP)             │
-  │  → Node.js + Express                 │
-  │  → MongoDB local                     │
-  │  → VPS Contabo (Ubuntu)             │
-  └──────────────────────────────────────┘
+  └──────┬──────────────┬───────────────┘
+         │              │
+         │ fetch HTTPS  │ /inmueble/:_id
+         ▼              ▼
+api.statetty.com    statetty.com/inmueble/:_id
+(backend API)       (página de detalle)
+  ┌──────────────────────┐  ┌──────────────────────────────┐
+  │ Cloudflare Tunnel    │  │ Cloudflare Route Worker      │
+  │ (cloudflared)        │  │ (solo enruta, sin caché)     │
+  │ → Proxy naranja      │  │ → mismo tunnel               │
+  │ → HTTPS → tunnel     │  │ → localhost:3030             │
+  └─────────┬────────────┘  └──────────────┬───────────────┘
+            ▼                              ▼
+       localhost:3030 (HTTP)           nodelab
+  ┌──────────────────────────┐  ┌──────────────────────────────┐
+  │ Node.js + Express        │  │ → ¿HTML cacheado?            │
+  │ → MongoDB local          │  │     sí  → sirve estático     │
+  │ → VPS Contabo (Ubuntu)  │  │     no  → renderiza EJS      │
+  └──────────────────────────┘  │          → cachea en disco   │
+                                │          → entrega HTML      │
+                                └──────────────────────────────┘
 ```
 
 | Componente       | Alojamiento              | Tecnología              | URL                          |
 | ---------------- | ------------------------ | ----------------------- | ---------------------------- |
 | Sitio web        | GitHub Pages             | Jekyll (Ruby) + HTML/JS | https://statetty.com         |
+| Ruta `/inmueble/`| Contabo VPS (via tunnel) | nodelab (Express + EJS, caché en disco) | `statetty.com/inmueble/:_id` |
 | API              | Contabo VPS (Ubuntu)    | Node.js + Express       | https://api.statetty.com     |
 | Base de datos    | Contabo VPS (local)     | MongoDB                 | mongodb://localhost:3030     |
 | Proxy/Túnel      | Cloudflare               | cloudflared tunnel      | HTTPS → localhost:3030       |
@@ -164,6 +174,7 @@ assets/
 ├── js/
 │   ├── main.js                   # Animación header, smooth scroll
 │   ├── config.js                 # Config global (STATETTY_CONFIG.WS_API_BASE)
+│   ├── user.js                   # Persistencia cross-subdominio de publicKey (?k=)
 │   ├── datos.js                  # Datos auxiliares
 │   ├── mapa.js                   # Mapa Leaflet (inmuebles) ~946 ln
 │   ├── mapatmp.js                # Variante experimental de mapa
@@ -295,6 +306,7 @@ Base URL: `https://api.statetty.com/api/statetty`
 | `/finderresult`     | GET    | Resultados de búsqueda de inmuebles  |
 | `/inmueble`         | GET    | Detalle de un inmueble               |
 | `/inmobiliarias`    | GET    | Datos de agencias inmobiliarias      |
+| `/getuser`          | GET    | Verifica publicKey, devuelve datos del agente y vigencia |
 | `/registro`         | POST   | Registro de usuarios                 |
 | `/contacto`         | POST   | Formulario de contacto               |
 | (y otros según módulo) |     |                                      |
@@ -314,6 +326,17 @@ ingress:
 ```
 
 Servicio: `cloudflared` (systemd, inicio automático)
+
+### 3.5 CORS
+
+`api.statetty.com` debe responder con los siguientes headers para que el frontend (`statetty.com`) pueda leer respuestas autenticadas vía cookie `stt_pk`:
+
+```
+Access-Control-Allow-Origin: https://statetty.com
+Access-Control-Allow-Credentials: true
+```
+
+Esto aplica a todos los endpoints que consume el frontend (`getuser`, `/finderresult`, `/inmueble`, `/registro`, etc.) cuando incluyen `credentials:'include'` en el fetch.
 
 ---
 
@@ -337,7 +360,16 @@ El dominio `statetty.com` usa nameservers de Cloudflare (migrados desde Namechea
 - Los registros de GitHub Pages (`@`, `www`) están en **DNS only** (gris) para que Cloudflare no intercepte el tráfico estático.
 - El registro `api` está en **Proxied** (naranja) para que Cloudflare enrute el tráfico al tunnel.
 
-### 4.3 Flujo de red
+### 4.3 Route Worker (ruta `/inmueble/*`)
+
+Configurado en el dashboard de Cloudflare (no en DNS ni en el repo):
+
+- **Patrón**: `statetty.com/inmueble/*`
+- **Acción**: enrutar al tunnel `statetty-api` → `localhost:3030` → nodelab
+- **Caché de edge**: no (Cloudflare solo enruta; nodelab gestiona su propio caché en disco)
+- **Propósito**: visibilizar páginas renderizadas por `inmueble.ejs` bajo `statetty.com/inmueble/:_id` sin cambiar el host visible
+
+### 4.4 Flujo de red
 
 ```
 Usuario
@@ -347,6 +379,16 @@ Usuario
   │   DNS → Cloudflare (gris, pasa directo)                    │
   │   → GitHub Pages (185.199.108.153)                         │
   │   → Sirve HTML/JS/CSS estático                             │
+  │                                                            │
+  ├── https://statetty.com/inmueble/:_id ──────────────────────┤
+  │                                                            │
+  │   DNS → Cloudflare (naranja, intercepta)                   │
+  │   → Route Worker (solo enruta, sin caché)                  │
+  │   → mismo tunnel                                           │
+  │   → localhost:3030                                         │
+  │   → nodelab                                                │
+  │      ├── ¿HTML cacheado? → sirve estático                  │
+  │      └── cache miss → renderiza EJS → cachea → entrega    │
   │                                                            │
   ├── fetch a https://api.statetty.com/api/statetty/...        │
   │                                                            │
@@ -411,3 +453,28 @@ Usuario
 | Google Forms                | Formulario de registro (iframe)                |
 | Disqus                      | Comentarios del blog                           |
 | Ekvilibro Lab (Netlify)     | Proxy de imágenes para PDF                     |
+
+---
+
+## 8. Cookie compartida entre subdominios (`stt_pk`)
+
+Cookie utilizada para persistir la `publicKey` (parámetro `?k=`) entre `statetty.com` y `api.statetty.com`, aprovechando que ambos comparten el dominio raíz `.statetty.com`.
+
+| Atributo       | Valor                        |
+| -------------- | ---------------------------- |
+| Nombre         | `stt_pk`                     |
+| Domain         | `.statetty.com`              |
+| Path           | `/`                          |
+| Secure         | `true` (solo HTTPS)          |
+| SameSite       | `Lax`                        |
+| HttpOnly       | `false` (legible/escribible por JS en frontend) |
+| Max-Age        | Según vigencia del plan      |
+
+**Flujo:**
+1. `user.js` detecta `?k=` en la URL, valida contra `GET /api/statetty/getuser?publicKey=<key>`, si es válida escribe la cookie.
+2. En visitas posteriores sin `?k=`, `user.js` lee `stt_pk` de la cookie y revalida contra `getuser`.
+3. `api.statetty.com` consume la cookie como medio de autenticación/identificación del agente.
+4. El middleware `resolvePublicKey` en nodelab lee la cookie o `req.query.k` para resolver la identidad del agente.
+
+**Escritura:** `user.js` (frontend, todas las páginas de `statetty.com`)
+**Lectura:** `user.js` (frontend) + `resolvePublicKey` (nodelab, server-side)

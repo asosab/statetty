@@ -1203,14 +1203,18 @@
       cacheDOM();
       bindEvents();
       populatePaises();
-      addPhotoRow(); // fila inicial vacía, con el mismo formato (handle + thumbnail) que el resto
+      addPhotoRow();
       DOM.loading.classList.remove('hidden');
-      var k = getParam(); K = k;
-      if (!k) {
-        showStatus('unauthorized', 'Llave no encontrada', 'No se recibió la llave de acceso. Asegurate de usar el enlace completo desde Telegram.');
-        return;
-      }
-      verifyUser(k);
+      document.addEventListener('statetty:key-ready', function(e){
+        K = e.detail.key;
+        USER = e.detail.usuario;
+        if (K && USER) {
+          showForm(USER);
+        } else {
+          DOM.loading.classList.add('hidden');
+          showStatus('unauthorized', 'Acceso restringido', 'Esta página solo está disponible para agentes registrados. Pedí el enlace desde @statettybot en Telegram para acceder con tu llave personal.');
+        }
+      });
     }
 
     function cacheDOM() {
@@ -1314,55 +1318,8 @@
       if (label) DOM.btnText.textContent = label;
     }
 
-    function getParam() {
-      return new URLSearchParams(window.location.search).get('k') || null;
-    }
-
     function getEditId() {
       return new URLSearchParams(window.location.search).get('_id') || null;
-    }
-
-    function verifyUser(k) {
-      try {
-        var base = window.STATETTY_CONFIG ? STATETTY_CONFIG.WS_API_BASE : '';
-        if (!base) {
-          showStatus('error', 'Error de configuración', 'No se pudo determinar el endpoint del servidor.');
-          return;
-        }
-        var url = base + 'statetty/getuser?publicKey=' + encodeURIComponent(k);
-        fetch(url, {
-          headers: { 'ngrok-skip-browser-warning': '1' }
-        })
-        .then(function (r) {
-          return r.json().then(function (body) { return { status: r.status, ok: r.ok, body: body }; });
-        })
-        .then(function (res) {
-          if (!res.ok || !res.body) {
-            var errMsg = (res.body && res.body.error) || '';
-            if (errMsg === 'publicKey inválida') {
-              showStatus('unauthorized', 'Llave no válida', 'Parece que tu llave de acceso no es válida. Generá una nueva desde Statetty en Telegram.');
-            } else if (errMsg === 'publicKey vencida') {
-              showStatus('unauthorized', 'Llave expirada', 'Parece que tu llave de acceso expiró. Andá a Statetty en Telegram y solicitá una nueva.');
-            } else {
-              showStatus('unauthorized', 'Acceso no autorizado', 'Algo salió mal. Si el problema persiste, contactanos desde la comunidad en https://t.me/Statetty');
-            }
-            return;
-          }
-          USER = res.body.data || res.body;
-          showForm(USER);
-        })
-        .catch(function (err) {
-          console.warn('STATETTY: verifyUser error', err);
-          if (err.name === 'AbortError') {
-            showStatus('error', 'Tiempo de espera agotado', 'El servidor no respondió a tiempo.');
-          } else {
-            showStatus('error', 'Error del servidor', err.message || 'No se pudo verificar tu acceso.');
-          }
-        });
-      } catch (err) {
-        console.warn('STATETTY: sync error', err);
-        showStatus('error', 'Error inesperado', err.message);
-      }
     }
 
     function showForm(user) {
@@ -1420,9 +1377,7 @@
     function loadInmueble(id) {
       var base = STATETTY_CONFIG.WS_API_BASE;
       setSubmitLoading(true, 'Cargando datos…');
-      fetch(base + 'statetty/inmueble?_id=' + encodeURIComponent(id), {
-        headers: { 'ngrok-skip-browser-warning': '1' }
-      })
+      fetch(base + 'statetty/inmueble?_id=' + encodeURIComponent(id))
       .then(function (r) { return r.json(); })
       .then(function (data) {
         if (!data.data) return;
@@ -1553,7 +1508,7 @@
           return;
         }
         var url = base + 'statetty/ginlius?_id=' + encodeURIComponent(USER._id) + '&publicKey=' + encodeURIComponent(K);
-        fetch(url, { headers: { 'ngrok-skip-browser-warning': '1' } })
+        fetch(url)
           .then(function (r) {
             return r.json().then(function (body) { return { status: r.status, ok: r.ok, body: body }; });
           })
@@ -2128,7 +2083,7 @@
     }
 
     function uploadSelectedFile(file) {
-      var k = getParam();
+      var k = K || window.publicKey;
       if (!k) {
         DOM.photoUploadStat.textContent = 'Error: no hay clave de acceso';
         DOM.photoUploadStat.style.color = '#e74c3c';
@@ -2364,7 +2319,7 @@
       var method = payload._id ? 'PUT' : 'POST';
       fetch(base + 'statetty/setinmueble', {
         method: method,
-        headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': '1' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       })
       .then(function (r) { return r.json(); })
@@ -2484,5 +2439,7 @@
     }
   })();
   </script>
+
+  <script src="/assets/js/user.js"></script>
 </body>
 </html>

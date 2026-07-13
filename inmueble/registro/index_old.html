@@ -1312,9 +1312,7 @@
           return;
         }
         var url = base + 'statetty/getuser?publicKey=' + encodeURIComponent(k);
-        fetch(url, {
-          headers: { 'ngrok-skip-browser-warning': '1' }
-        })
+        fetch(url)
         .then(function (r) {
           return r.json().then(function (body) { return { status: r.status, ok: r.ok, body: body }; });
         })
@@ -1403,8 +1401,7 @@
       var base = STATETTY_CONFIG.WS_API_BASE;
       setSubmitLoading(true, 'Cargando datos…');
       fetch(base + 'statetty/inmueble?_id=' + encodeURIComponent(id), {
-        headers: { 'ngrok-skip-browser-warning': '1' }
-      })
+        }
       .then(function (r) { return r.json(); })
       .then(function (data) {
         if (!data.data) return;
@@ -1524,7 +1521,7 @@
           return;
         }
         var url = base + 'statetty/ginlius?_id=' + encodeURIComponent(USER._id) + '&publicKey=' + encodeURIComponent(K);
-        fetch(url, { headers: { 'ngrok-skip-browser-warning': '1' } })
+        fetch(url)
           .then(function (r) {
             return r.json().then(function (body) { return { status: r.status, ok: r.ok, body: body }; });
           })
@@ -2322,7 +2319,7 @@
       var method = payload._id ? 'PUT' : 'POST';
       fetch(base + 'statetty/setinmueble', {
         method: method,
-        headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': '1' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       })
       .then(function (r) { return r.json(); })
