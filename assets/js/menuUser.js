@@ -12,13 +12,6 @@
  *   3. Si no hay usuario (no logueado / error), no toca nada: el botón
  *      original ("Subí tu propiedad", etc.) queda como está.
  *
- * Por qué solo elementos "visibles":
- *   Algunas páginas (ver inmueble.ejs) tienen más de un elemento con la
- *   clase ".btn-nav-cta" — por ejemplo un <span id="header-greeting"
- *   style="display:none">. Si reemplazáramos todos por igual, ese span
- *   oculto se volvería visible y aparecería un segundo menú duplicado.
- *   Por eso solo se reemplazan los que están realmente visibles en pantalla.
- *
  * Personalización por página:
  *   - Selector del/los botón(es) a reemplazar: window.STT_MENU_USER_SELECTOR
  *     (por defecto ".btn-nav-cta").
@@ -165,7 +158,7 @@
     var reemplazados = 0;
 
     candidatos.forEach(function (cta) {
-      if (!isVisible(cta)) return; // no tocar botones/spans ocultos
+      //if (!isVisible(cta)) return; // no tocar botones/spans ocultos
       var menu = buildUserMenu(usuario);
       cta.replaceWith(menu);
       reemplazados++;
