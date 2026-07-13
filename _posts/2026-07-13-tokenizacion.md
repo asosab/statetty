@@ -7,7 +7,7 @@ comments: true
 description: "Qué es la tokenización inmobiliaria, cómo está regulada país por país en Suramérica, y qué necesita Bolivia para sumarse a esta revolución. Explicado sin jerga técnica."
 tags: [tokenizacion, blockchain, inversion, bolivia, peru, suramerica, proptech, activos digitales, regulacion, real estate]
 published: true
-image: "tokenizacion.png"
+image: "tokenizacion.jpg"
 ---
 
 ¿Sin tiempo para leer? Escucha el artículo en [Statetty Podcast](https://open.spotify.com/episode/0PrsYJ2P9ZWxYf82SvXjo6)
