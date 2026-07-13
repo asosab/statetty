@@ -624,7 +624,7 @@ $(document).ready(function () {
     "nexoi":  "Nexo Inmobiliario",
   };
 
-  function renderMap(locs, centerLat, centerLng, circleRadius, avgPrice) {
+  function renderMap(locs, centerLat, centerLng, circleRadius, avgPrice, na, ag) {
     locations = locs;
     map = L.map('mapid');
     initACMMapClickMarker(map);
@@ -876,8 +876,11 @@ $(document).ready(function () {
 
         if (info.userID) userid = info.userID;
 
+        var na = (info.na || '').trim() || (usuario ? ((usuario.first_name || '') + ' ' + (usuario.last_name || '')).trim() : '');
+        var ag = (info.ag || '').trim() || (usuario ? (usuario.agencia || '') : '');
+
         $('#loading-indicator').hide();
-        renderMap(locs, lat, lng, radius, pProm);
+        renderMap(locs, lat, lng, radius, pProm, na, ag);
         return;
       }
       $('#loading-indicator').hide();
