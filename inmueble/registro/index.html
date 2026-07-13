@@ -19,6 +19,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 
+  <link rel="stylesheet" href="/assets/css/inmueble.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <link rel="stylesheet" href="/assets/css/theme-1.css">
+
   <style>
     :root {
       --blue:       #17baef;
@@ -806,16 +810,35 @@
 </head>
 <body>
 
-  <!-- Header -->
-  <header class="inm-header" id="inmHeader">
-    <div class="inm-header-inner">
-      <a class="inm-header-back" href="javascript:history.back()">
-        <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
-        Volver
+  <!-- ==================== SITE HEADER ==================== -->
+  <header class="header" id="header">
+    <div class="container">
+      <a class="header-logo" href="/">
+        <img src="/assets/images/favicon/favicon.ico" alt="" width="28" height="28" onerror="this.style.display='none'">
+        Statetty
       </a>
-      <a class="inm-header-logo" href="/">Statetty</a>
+      <button class="nav-toggle" id="navToggle" aria-label="Menú"><span></span><span></span><span></span></button>
+      <nav class="header-nav" id="headerNav">
+        <a href="/#planes">Planes</a>
+        <a href="/blog/">Blog</a>
+        <a href="/#Contacto" class="btn-nav-cta">Subí tu propiedad</a>
+        <span id="header-greeting" class="btn-nav-cta" style="display:none"></span>
+      </nav>
     </div>
   </header>
+
+  <script>
+  (function() {
+    var header = document.getElementById('header');
+    window.addEventListener('scroll', function() { header.classList.toggle('scrolled', window.scrollY > 60); });
+    var toggle = document.getElementById('navToggle');
+    var nav = document.getElementById('headerNav');
+    if (toggle) {
+      toggle.addEventListener('click', function() { nav.classList.toggle('open'); });
+      nav.querySelectorAll('a').forEach(function(l) { l.addEventListener('click', function() { nav.classList.remove('open'); }); });
+    }
+  })();
+  </script>
 
   <!-- Loading state -->
   <div class="page-status" id="status-loading">
@@ -1138,13 +1161,97 @@
     </div>
   </section>
 
-  <!-- Footer -->
-  <footer class="inm-footer">
-    <div class="inm-footer-inner">
-      <p class="inm-footer-copy">&copy; <span id="inm-footer-year">2026</span> Statetty</p>
-      <a href="/">Ir al inicio</a>
+  <!-- ==================== CUSTOM FOOTER ==================== -->
+  <!-- ******FOOTER****** -->
+  <footer class="footer">
+
+  <div class="container">
+    <div class="footer-grid">
+
+      <div class="footer-brand">
+        <a href="/#inicio" class="footer-logo">
+          <img src="/assets/images/favicon/favicon.ico" alt="" width="28" height="28"
+               onerror="this.style.display='none'">
+          <span>Statetty</span>
+        </a>
+        <p>La navaja suiza del asesor inmobiliario</p>
+        <address>
+          Charcas 168, Santa Cruz de la Sierra, Bolivia<br>
+          <a href="tel:+59178447518">+591 78447518</a> ·
+          <a href="mailto:info@statetty.com">info@statetty.com</a>
+        </address>
+        <a href="https://wa.me/59178447518?text=Hola%20Statetty%2C%20quiero%20informaci%C3%B3n"
+           target="_blank" rel="noopener" class="footer-wa-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+            <path d="M12 0C5.373 0 0 5.373 0 12c0 2.124.554 4.118 1.528 5.849L.057 23.009a.75.75 0 00.93.928l5.224-1.459A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75A9.75 9.75 0 1121.75 12 9.761 9.761 0 0112 21.75z"/>
+          </svg>
+          Escribinos por WhatsApp
+        </a>
+      </div>
+
+      <div class="footer-col">
+        <h4>Plataforma</h4>
+        <ul>
+          <li><a href="/#funciones">Funciones</a></li>
+          <li><a href="/#planes">Planes</a></li>
+          <li><a href="/#prensa">Prensa</a></li>
+          <li><a href="/#faq">FAQ</a></li>
+          <li><a href="/#Contacto">Contacto</a></li>
+          <li><a href="https://t.me/statetty" target="_blank" rel="noopener">Comunidad Telegram</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Redes</h4>
+        <div class="footer-social">
+          <a href="https://instagram.com/statetty" target="_blank" rel="noopener"
+             class="footer-social-link" aria-label="Instagram de Statetty">
+            <i class="fab fa-instagram"></i>
+          </a>
+          <a href="https://x.com/statetty" target="_blank" rel="noopener"
+             class="footer-social-link" aria-label="X de Statetty">
+            <i class="fab fa-twitter"></i>
+          </a>
+          <a href="https://facebook.com/statetty" target="_blank" rel="noopener"
+             class="footer-social-link" aria-label="Facebook de Statetty">
+            <i class="fab fa-facebook"></i>
+          </a>
+          <a href="https://www.youtube.com/@statetty" target="_blank" rel="noopener"
+             class="footer-social-link" aria-label="YouTube de Statetty">
+            <i class="fab fa-youtube"></i>
+          </a>
+          <a href="https://open.spotify.com/show/2F2hodB96q8U1QtMBjIgl9" target="_blank" rel="noopener"
+             class="footer-social-link" aria-label="Podcast Statetty en Spotify">
+            <i class="fab fa-spotify"></i>
+          </a>
+          <a href="https://whatsapp.com/channel/0029Vb6WYM36mYPE27u1Dk1t" target="_blank" rel="noopener"
+             class="footer-social-link" aria-label="Canal de WhatsApp de Statetty">
+            <i class="fab fa-whatsapp"></i>
+          </a>
+        </div>
+        <ul>
+          <li><a href="/politica_de_privacidad.html">Política de privacidad</a></li>
+          <li><a href="/terminos_y_condiciones.html">Términos y condiciones</a></li>
+          <li><a href="/descargo_de_responsabilidad.html">Descargo de responsabilidad</a></li>
+        </ul>
+      </div>
+
     </div>
+
+    <div class="footer-bottom">
+      <p class="footer-copy">&copy; <span id="footer-year">2025</span> Statetty. Todos los derechos reservados.</p>
+      <div class="footer-legal">
+        <a href="https://t.me/statettybot" target="_blank" rel="noopener">Abrir el bot en Telegram &rarr;</a>
+      </div>
+    </div>
+  </div>
+
   </footer>
+
+  <script>
+  document.getElementById('footer-year').textContent = new Date().getFullYear();
+  </script>
 
   <!-- Map Modal -->
   <div class="map-modal" id="mapModal">
@@ -1564,7 +1671,7 @@
         badgeSpan.textContent = badgeText;
         var viewLink = document.createElement('a');
         viewLink.className = 'list-modal-view-link';
-        viewLink.href = 'https://statetty.com/inmueble/' + encodeURIComponent(item._id);
+        viewLink.href = '/inmueble/' + encodeURIComponent(item._id);
         viewLink.target = '_blank';
         viewLink.rel = 'noopener noreferrer';
         viewLink.title = 'Ver en la página';
@@ -2420,15 +2527,6 @@
       DOM.photoAddBtn.addEventListener('click', triggerSave);
       DOM.attrAddBtn.addEventListener('click', triggerSave);
 
-      window.addEventListener('scroll', function () {
-        var h = document.getElementById('inmHeader');
-        if (window.scrollY > 20) {
-          h.classList.add('scrolled');
-        } else {
-          h.classList.remove('scrolled');
-        }
-      });
-      document.getElementById('inm-footer-year').textContent = new Date().getFullYear();
     }
 
     /* ---- Bootstrap ---- */
