@@ -826,6 +826,8 @@ $(document).ready(function () {
 
   function waitForKey() {
     if (window.publicKey !== undefined) return;
+    if (window.STT && window.STT.ready) return window.STT.ready;
+    // Respaldo por si user.js aún no se ha cargado (no expone STT.ready todavía)
     return new Promise(function(r) {
       document.addEventListener('statetty:key-ready', function(){ r(); }, {once: true});
     });
