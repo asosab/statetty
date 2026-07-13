@@ -45,16 +45,8 @@
   // Selector de el/los botón(es) del header a reemplazar por el ícono.
   var CTA_SELECTOR = window.STT_MENU_USER_SELECTOR || '.btn-nav-cta';
 
-  // Avatar por defecto si el usuario no trae userIcon (silueta genérica, SVG inline).
-  var DEFAULT_ICON =
-    'data:image/svg+xml;utf8,' +
-    encodeURIComponent(
-      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40">' +
-      '<circle cx="20" cy="20" r="20" fill="#e2edf3"/>' +
-      '<circle cx="20" cy="16" r="7" fill="#a9bcc9"/>' +
-      '<path d="M6 35c1.5-8 7.5-12.5 14-12.5S32.5 27 34 35" fill="#a9bcc9"/>' +
-      '</svg>'
-    );
+  // Avatar por defecto si el usuario no trae userIcon (o si la imagen falla al cargar).
+  var DEFAULT_ICON = 'https://statetty.com/assets/images/genUsrIco.png';
 
   var STYLE_ID = 'stt-menu-user-styles';
   var READY_FLAG = 'sttMenuUserReady';

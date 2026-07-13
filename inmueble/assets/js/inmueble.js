@@ -438,10 +438,17 @@
       if (!Array.isArray(lista) || lista.length === 0) return;
       DOM.simCard.classList.remove('inm-hidden');
       DOM.simList.innerHTML = '';
-      var k = new URLSearchParams(window.location.search).get('k');
+
+      // La key ya viene resuelta y verificada por user.js (cookie / localStorage /
+      // ?k= + chequeo contra getuser), expuesta en window.STT.getKey() / window.publicKey.
+      // No la releemos de la URL: la calculamos al hacer click, para darle tiempo
+      // a user.js (que es async) a terminar de verificarla.
+      function getVerifiedKey() {
+        return (window.STT && window.STT.getKey && window.STT.getKey()) || window.publicKey || null;
+      }
+
       lista.forEach(function (item) {
-        var url = 'https://statetty.com/inmueble/' + encodeURIComponent(item._id);
-        if (k) url += '&k=' + encodeURIComponent(k);
+        var baseUrl = 'https://statetty.com/inmueble/' + encodeURIComponent(item._id);
 
         var el = document.createElement('div');
         el.className = 'inm-sim-item';
@@ -477,7 +484,10 @@
         }
 
         el.appendChild(info);
-        el.addEventListener('click', function () { window.location.href = url; });
+        el.addEventListener('click', function () {
+          var k = getVerifiedKey();
+          window.location.href = k ? (baseUrl + '&k=' + encodeURIComponent(k)) : baseUrl;
+        });
         DOM.simList.appendChild(el);
       });
     }, function () {});
