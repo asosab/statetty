@@ -22,13 +22,6 @@
       if(!k){document.dispatchEvent(new CustomEvent('statetty:key-ready',{detail:{key:null,usuario:null,error:null}}));return;}
       var base=window.STATETTY_CONFIG?STATETTY_CONFIG.WS_API_BASE:'';
 
-      // NOTA: se quitó credentials:'include'. Si el backend NO depende de una
-      // cookie de sesión para identificar al usuario (usa solo publicKey),
-      // esto convierte la request en un GET "simple" y evita el conflicto
-      // Access-Control-Allow-Origin:'*' + credentials que bloquea la respuesta.
-      // Si el backend SÍ necesita cookies de sesión, hay que volver a agregar
-      // credentials:'include' y en su lugar arreglar el CORS del servidor
-      // (Access-Control-Allow-Origin exacto + Access-Control-Allow-Credentials:true).
       var res=await fetch(base+'statetty/getuser?publicKey='+encodeURIComponent(k));
 
       console.log('[Statetty] [K] status:',res.status,res.ok);
