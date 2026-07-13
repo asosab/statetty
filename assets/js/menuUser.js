@@ -51,7 +51,9 @@
   function injectStyles() {
     if (document.getElementById(STYLE_ID)) return;
     var css =
-      '.stt-user-menu{position:relative;display:inline-flex;align-items:center;}' +
+      '.stt-user-menu{position:relative;display:inline-flex;align-items:center;gap:8px;}' +
+      '.stt-user-greeting{font-family:var(--font-body,\'Lato\',sans-serif);font-size:.92rem;' +
+      'color:#2b3a42;white-space:nowrap;}' +
       '.stt-user-trigger{background:none;border:0;padding:0;cursor:pointer;' +
       'display:inline-flex;line-height:0;border-radius:50%;' +
       'transition:box-shadow .2s ease, transform .2s ease;}' +
@@ -82,9 +84,23 @@
   // Construcción del ícono + menú desplegable
   // ------------------------------------------------------------------
 
+  function getFirstName(usuario) {
+    var nombre = usuario && (usuario.first_name || usuario.nombre || usuario.name);
+    if (!nombre) return '';
+    return String(nombre).trim().split(/\s+/)[0];
+  }
+
   function buildUserMenu(usuario) {
     var wrap = document.createElement('div');
     wrap.className = 'stt-user-menu';
+
+    var firstName = getFirstName(usuario);
+    if (firstName) {
+      var greeting = document.createElement('span');
+      greeting.className = 'stt-user-greeting';
+      greeting.textContent = '¡Hola ' + firstName + '!';
+      wrap.appendChild(greeting);
+    }
 
     var trigger = document.createElement('button');
     trigger.type = 'button';
