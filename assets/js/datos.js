@@ -2,19 +2,71 @@
 // Dependencias: STATETTY_CONFIG (config.js)
 
 async function fetchFinderResult(publicKey) {
-  if (!publicKey) return null;
-  try {
-    var url = STATETTY_CONFIG.WS_API_BASE + 'statetty/finderresult?publicKey=' + encodeURIComponent(publicKey);
-    var res = await fetch(url);
-    var data = await res.json();
-    return data;
-  } catch (e) {
-    console.warn('fetchFinderResult error', e);
+  if (!publicKey) {
+    console.warn('[fetchFinderResult] publicKey vacío o no definido, se aborta la petición.');
     return null;
   }
+
+  var url = STATETTY_CONFIG.WS_API_BASE + 'statetty/finderresult?publicKey=' + encodeURIComponent(publicKey);
+  console.log('[fetchFinderResult] Iniciando petición a:', url);
+
+  var res;
+  try {
+    res = await fetch(url);
+  } catch (e) {
+    // Error de red (CORS, sin conexión, DNS, servidor caído, etc.)
+    console.error('[fetchFinderResult] Error de red al hacer fetch:', e);
+    return null;
+  }
+
+  console.log('[fetchFinderResult] Respuesta HTTP recibida. status=', res.status, 'ok=', res.ok, 'statusText=', res.statusText);
+
+  if (!res.ok) {
+    // El servidor respondió pero con error (4xx/5xx). Intentamos leer el body para más contexto.
+    var errorBody = '';
+    try {
+      errorBody = await res.text();
+    } catch (e2) {
+      console.error('[fetchFinderResult] No se pudo leer el body del error:', e2);
+    }
+    console.error('[fetchFinderResult] La respuesta no fue OK. status=', res.status, 'body=', errorBody);
+    return null;
+  }
+
+  var rawText;
+  try {
+    rawText = await res.text();
+  } catch (e) {
+    console.error('[fetchFinderResult] Error leyendo el body de la respuesta como texto:', e);
+    return null;
+  }
+
+  var data;
+  try {
+    data = JSON.parse(rawText);
+  } catch (e) {
+    // El servidor respondió 200 pero el body no es JSON válido (típico "error silencioso")
+    console.error('[fetchFinderResult] La respuesta no es JSON válido. Body crudo (primeros 500 chars):', rawText.substring(0, 500), 'Error:', e);
+    return null;
+  }
+
+  console.log('[fetchFinderResult] JSON parseado correctamente. Claves recibidas:', Object.keys(data || {}));
+
+  if (!data || !Array.isArray(data.result)) {
+    console.warn('[fetchFinderResult] La respuesta no tiene la forma esperada (falta "result" como array). data=', data);
+  } else {
+    console.log('[fetchFinderResult] Cantidad de items en result:', data.result.length);
+  }
+
+  return data;
 }
 
 function apiItemToLocation(item) {
+  if (!item || typeof item !== 'object') {
+    console.error('[apiItemToLocation] item inválido recibido:', item);
+    item = {};
+  }
+
   var loc = {};
 
   var fieldMap = {
@@ -61,6 +113,17 @@ function apiItemToLocation(item) {
   loc.m2construccion = parseInt(loc.m2construccion) || 0;
   loc.tiempoOfertado = parseInt(loc.tiempoOfertado) || 0;
 
+  // Detección de coordenadas inválidas: causa típica de puntos "invisibles" en el mapa
+  if (isNaN(loc.lat) || isNaN(loc.lng)) {
+    console.error('[apiItemToLocation] Coordenadas inválidas (lat/lng NaN) para item _id=', loc._id, 'lat original=', item.lat, 'lng original=', item.lng);
+  } else if (loc.lat === 0 && loc.lng === 0) {
+    console.warn('[apiItemToLocation] Coordenadas (0,0) sospechosas para item _id=', loc._id);
+  }
+
+  if (loc.precio === 0 && item.precio !== undefined && item.precio !== '' && item.precio !== 0) {
+    console.warn('[apiItemToLocation] precio original no numérico, se convirtió a 0. _id=', loc._id, 'precio original=', item.precio);
+  }
+
   loc.precioM2C = (loc.precio > 0 && loc.m2construccion > 0) ? loc.precio / loc.m2construccion : 0;
   loc.precioM2T = (loc.precio > 0 && loc.m2terreno > 0) ? loc.precio / loc.m2terreno : 0;
 
@@ -95,11 +158,42 @@ function apiItemToLocation(item) {
 }
 
 function parseFinderResult(response) {
-  if (!response || !Array.isArray(response.result)) {
+  if (!response) {
+    console.error('[parseFinderResult] response es null/undefined. No se puede parsear. Esto suele ocurrir cuando fetchFinderResult() falló silenciosamente antes.');
     return { locations: [], info: null, usuario: null };
   }
+
+  if (!Array.isArray(response.result)) {
+    console.error('[parseFinderResult] response.result no es un array. Tipo real:', typeof response.result, 'Valor:', response.result, 'Claves del response:', Object.keys(response));
+    return { locations: [], info: null, usuario: null };
+  }
+
+  console.log('[parseFinderResult] Parseando', response.result.length, 'items...');
+
+  var locations = response.result.map(function (item, index) {
+    try {
+      return apiItemToLocation(item);
+    } catch (e) {
+      console.error('[parseFinderResult] Error al transformar item en índice', index, '. Item:', item, 'Error:', e);
+      return null;
+    }
+  }).filter(Boolean);
+
+  if (locations.length !== response.result.length) {
+    console.warn('[parseFinderResult] Se descartaron', response.result.length - locations.length, 'items por errores de transformación.');
+  }
+
+  if (!response.info) {
+    console.warn('[parseFinderResult] response.info no está presente.');
+  }
+  if (!response.usuario) {
+    console.warn('[parseFinderResult] response.usuario no está presente.');
+  }
+
+  console.log('[parseFinderResult] Resultado final: ', locations.length, 'ubicaciones listas para el mapa.');
+
   return {
-    locations: response.result.map(apiItemToLocation),
+    locations: locations,
     info: response.info || null,
     usuario: response.usuario || null
   };
