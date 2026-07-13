@@ -484,10 +484,7 @@
         }
 
         el.appendChild(info);
-        el.addEventListener('click', function () {
-          var k = getVerifiedKey();
-          window.location.href = k ? (baseUrl + '&k=' + encodeURIComponent(k)) : baseUrl;
-        });
+        el.addEventListener('click', function () {window.location.href = baseUrl;});
         DOM.simList.appendChild(el);
       });
     }, function () {});
