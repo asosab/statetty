@@ -827,7 +827,7 @@ $(document).ready(function () {
   function waitForKey() {
     if (window.publicKey !== undefined) return;
     if (window.STT && window.STT.ready) return window.STT.ready;
-    // Respaldo por si user.js aún no se ha cargado (no expone STT.ready todavía)
+    // Respaldo por si user.js aún no se ha cargado
     return new Promise(function(r) {
       document.addEventListener('statetty:key-ready', function(){ r(); }, {once: true});
     });
@@ -838,6 +838,7 @@ $(document).ready(function () {
 
     await waitForKey();
     var pk = window.publicKey;
+    var usuario = window.STT && window.STT.getUsuario ? window.STT.getUsuario() : null;
 
     if (pk) {
       var response = await fetchFinderResult(pk);
@@ -880,7 +881,9 @@ $(document).ready(function () {
         return;
       }
       $('#loading-indicator').hide();
-      mostrarModalError();
+      if (usuario) {
+        mostrarModalError();
+      }
       return;
     }
     $('#loading-indicator').hide();
@@ -889,7 +892,8 @@ $(document).ready(function () {
   init().catch(function(e) {
     console.error('Error al cargar datos del mapa', e);
     $('#loading-indicator').hide();
-    if (window.publicKey) mostrarModalError();
+    var usuario = window.STT && window.STT.getUsuario ? window.STT.getUsuario() : null;
+    if (usuario) mostrarModalError();
   });
 
   // búsqueda

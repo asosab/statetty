@@ -2,6 +2,13 @@
 // Dependencias: STATETTY_CONFIG (config.js)
 
 async function fetchFinderResult(publicKey) {
+  // Si no se pasó publicKey, obtenerlo de user.js tras esperar que termine
+  if (!publicKey) {
+    if (window.STT && window.STT.ready) {
+      await window.STT.ready;
+    }
+    publicKey = window.STT && window.STT.getKey ? window.STT.getKey() : null;
+  }
   if (!publicKey) {
     console.warn('[fetchFinderResult] publicKey vacío o no definido, se aborta la petición.');
     return null;
@@ -14,7 +21,6 @@ async function fetchFinderResult(publicKey) {
   try {
     res = await fetch(url);
   } catch (e) {
-    // Error de red (CORS, sin conexión, DNS, servidor caído, etc.)
     console.error('[fetchFinderResult] Error de red al hacer fetch:', e);
     return null;
   }
@@ -22,15 +28,16 @@ async function fetchFinderResult(publicKey) {
   console.log('[fetchFinderResult] Respuesta HTTP recibida. status=', res.status, 'ok=', res.ok, 'statusText=', res.statusText);
 
   if (!res.ok) {
-    // El servidor respondió pero con error (4xx/5xx). Intentamos leer el body para más contexto.
-    var errorBody = '';
     try {
-      errorBody = await res.text();
+      var errorJson = await res.json();
+      console.error('[fetchFinderResult] API error:', errorJson);
+      return errorJson;
     } catch (e2) {
-      console.error('[fetchFinderResult] No se pudo leer el body del error:', e2);
+      var text = '';
+      try { text = await res.text(); } catch (e3) {}
+      console.error('[fetchFinderResult] HTTP', res.status, text);
+      return { error: 'HTTP ' + res.status };
     }
-    console.error('[fetchFinderResult] La respuesta no fue OK. status=', res.status, 'body=', errorBody);
-    return null;
   }
 
   var rawText;
@@ -45,7 +52,6 @@ async function fetchFinderResult(publicKey) {
   try {
     data = JSON.parse(rawText);
   } catch (e) {
-    // El servidor respondió 200 pero el body no es JSON válido (típico "error silencioso")
     console.error('[fetchFinderResult] La respuesta no es JSON válido. Body crudo (primeros 500 chars):', rawText.substring(0, 500), 'Error:', e);
     return null;
   }
