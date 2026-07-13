@@ -876,8 +876,8 @@ $(document).ready(function () {
 
         if (info.userID) userid = info.userID;
 
-        var na = (info.na || '').trim() || (usuario ? ((usuario.first_name || '') + ' ' + (usuario.last_name || '')).trim() : '');
-        var ag = (info.ag || '').trim() || (usuario ? (usuario.agencia || '') : '');
+        var na = usuario ? ((usuario.first_name || '') + ' ' + (usuario.last_name || '')).trim() : '';
+        var ag = usuario ? (usuario.agencia || '') : '';
 
         $('#loading-indicator').hide();
         renderMap(locs, lat, lng, radius, pProm, na, ag);
