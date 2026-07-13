@@ -31,7 +31,55 @@ function proxify(url) {
       });
     });
 
+    // Tras aplicar lo persistido, si agente/agencia/celular siguen vacíos,
+    // se completan con los datos del usuario en sesión (user.js)
+    fillPDFAgentFieldsFromUser(getUsuarioActual());
+
   } catch (e) {console.log('initPDFFormPersistence error',e);} }
+
+/** --------------------------------------------------------------------------------------- getUsuarioActual
+ * Devuelve el usuario en sesión expuesto por user.js, si ya está disponible
+ */
+  function getUsuarioActual(){
+    try{
+      return (window.STT && typeof window.STT.getUsuario==="function") ? window.STT.getUsuario() : null;
+    }catch(e){return null;}
+  }
+
+/** --------------------------------------------------------------------------------- fillPDFAgentFieldsFromUser
+ * Rellena pdf-agent, pdf-agency y pdf-cellphone con datos del usuario en sesión
+ * (según el modelo tgUserModel.js), SOLO si el campo está vacío
+ * (no pisa lo persistido en localStorage ni lo escrito a mano).
+ */
+  function fillPDFAgentFieldsFromUser(usuario){ try {
+    if(!usuario)return;
+
+    const nombreCompleto=[usuario.first_name,usuario.last_name].filter(Boolean).join(" ").trim();
+
+    const campos=[
+      {id:"pdf-agent",    valor: nombreCompleto || usuario.username || ""},
+      {id:"pdf-agency",   valor: usuario.agencia || ""},
+      {id:"pdf-cellphone",valor: usuario.waphone || ""}
+    ];
+
+    campos.forEach(f=>{
+      const el=document.getElementById(f.id);
+      if(!el)return;
+      if(el.value && el.value.trim()!=="")return; // ya tiene valor, no se toca
+      if(!f.valor)return;
+
+      el.value=f.valor;
+      localStorage.setItem("pdf_"+f.id.replace("pdf-",""),f.valor);
+    });
+
+  } catch (e) {console.log('fillPDFAgentFieldsFromUser error',e);} }
+
+// Si user.js aún no había resuelto el fetch cuando se pintó el selector de columnas,
+// se completan los campos en cuanto llegue el evento (respetando lo ya escrito/persistido)
+document.addEventListener("statetty:key-ready",function(e){
+  const usuario=e && e.detail ? e.detail.usuario : null;
+  if(usuario) fillPDFAgentFieldsFromUser(usuario);
+});
 
 /** --------------------------------------------------------------------------------------------------- drawFooterAgente
  * Dibuja pie de página con datos desde inputs PDF
@@ -201,9 +249,6 @@ function renderColumnSelector() {
   container.style.marginTop = "10px";
   const totalInmuebles = Array.isArray(locations) ? locations.length : 0;
 
-  const params=new URLSearchParams(window.location.search);
-  const na=params.get("na")||"",ag=params.get("ag")||"",an=params.get("an")||"";
-
   container.innerHTML = `
     <div style="margin-bottom:8px;">
       <b>Mostrar en PDF:</b><br>
@@ -212,9 +257,9 @@ function renderColumnSelector() {
 
       <div style="display:grid;grid-template-columns:auto 1fr;gap:4px 8px;align-items:center;margin-top:6px;">
         <div>Título:</div><input type="text" id="pdf-title" value="Análisis comparativo de mercado">
-        <div>Agente:</div><input type="text" id="pdf-agent" value="${na}">
-        <div>Agencia:</div><input type="text" id="pdf-agency" value="${ag}">
-        <div>Celular:</div><input type="text" id="pdf-cellphone" value="${an}">
+        <div>Agente:</div><input type="text" id="pdf-agent" value="">
+        <div>Agencia:</div><input type="text" id="pdf-agency" value="">
+        <div>Celular:</div><input type="text" id="pdf-cellphone" value="">
       </div>
 
       <div id="pdf-acm-option" style="display:none;">
@@ -632,11 +677,11 @@ async function generarBrochurePDF(inmuebles, modo = "landscape", seleccionados =
 
     const tipo = $("#acm-tipo").val() || null;
 
-    // datos de agente desde URL
-    const params = new URLSearchParams(window.location.search);
-    const na=$("#pdf-agent").val()||params.get("na")||null;
-    const ag=$("#pdf-agency").val()||params.get("ag")||null;
-    const an=$("#pdf-cellphone").val()||params.get("an")||null;
+    // datos de agente: se toman de los inputs del PDF, que ya se precargan
+    // desde localStorage y/o desde el usuario en sesión (ver fillPDFAgentFieldsFromUser)
+    const na=$("#pdf-agent").val()||null;
+    const ag=$("#pdf-agency").val()||null;
+    const an=$("#pdf-cellphone").val()||null;
 
     const dorm=parseInt($("#acm-dorm").val())||null;
     const banio=parseInt($("#acm-banio").val())||null;

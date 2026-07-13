@@ -14,6 +14,8 @@
 
   window.STT=window.STT||{};
   window.STT.getKey=function(){return window.publicKey||null;};
+  window.STT.usuario=window.STT.usuario||null;
+  window.STT.getUsuario=function(){return window.STT.usuario;};
 
   function ready(fn){
     if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',fn);}
@@ -39,8 +41,8 @@
       console.log('[Statetty] [K] data recibida:',data);
       var usuario=data&&data.data?data.data:null;
 
-      if(usuario){writeCookie(COOKIE_NAME,k,usuario.expiresAt||data.expiresAt);localStorage.setItem(COOKIE_NAME,k);window.publicKey=k;}
-      else{document.cookie=COOKIE_NAME+'=; Max-Age=0; Path='+COOKIE_PATH+'; Domain='+COOKIE_DOMAIN;localStorage.removeItem(COOKIE_NAME);}
+      if(usuario){writeCookie(COOKIE_NAME,k,usuario.expiresAt||data.expiresAt);localStorage.setItem(COOKIE_NAME,k);window.publicKey=k;window.STT.usuario=usuario;}
+      else{document.cookie=COOKIE_NAME+'=; Max-Age=0; Path='+COOKIE_PATH+'; Domain='+COOKIE_DOMAIN;localStorage.removeItem(COOKIE_NAME);window.STT.usuario=null;}
       document.dispatchEvent(new CustomEvent('statetty:key-ready',{detail:{key:usuario?k:null,usuario:usuario,error:data&&data.error||null}}));
     }catch(e){console.log('[Statetty] [K] captureAndVerifyUser:',e.message);document.dispatchEvent(new CustomEvent('statetty:key-ready',{detail:{key:null,usuario:null,error:e.message||'Error de conexión'}}));}
   });
