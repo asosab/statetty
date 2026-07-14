@@ -31,6 +31,13 @@
  *   no se muestra estando ya en el mapa; lo mismo aplica para cualquier
  *   otra dirección de MENU_ITEMS si coincide con la página actual.
  *
+ * NOTA TEMPORAL (período de pruebas):
+ *   La sección "Buscar Inmuebles" (fndInm.js) solo se monta si el usuario
+ *   activo es el admin de pruebas (_id = FNDINM_TEST_ADMIN_ID, ver más
+ *   abajo). Cualquier otro usuario logueado sigue viendo el modo toolbox
+ *   normal (links sueltos) sin la sección de fndInm.js. Quitar este gate
+ *   cuando termine el período de pruebas.
+ *
  * Personalización por página:
  *   - Modo forzado: window.STT_MENU_USER_MODE = 'cta' | 'toolbox' | 'auto'
  *     (por defecto 'auto': si no encuentra ".btn-nav-cta" visible en el
@@ -73,6 +80,11 @@
 
   // Avatar por defecto si el usuario no trae userIcon (o si la imagen falla al cargar).
   var DEFAULT_ICON = 'https://statetty.com/assets/images/genUsrIco.png';
+
+  // --- TEMPORAL (período de pruebas) --------------------------------
+  // Mientras se prueba fndInm.js, solo se monta para este _id (admin).
+  // TODO: quitar este gate cuando fndInm.js salga de pruebas.
+  var FNDINM_TEST_ADMIN_ID = '665fa8d63e744b34b69880f6';
 
   var STYLE_ID = 'stt-menu-user-styles';
   var TOOLBOX_STYLE_ID = 'stt-menu-user-toolbox-styles';
@@ -295,6 +307,21 @@
     return 1;
   }
 
+  // Sección "Buscar Inmuebles" (fndInm.js), opcional: solo si ese script
+  // fue incluido en la página. Se monta SIEMPRE al final de #toolbox
+  // (después de los links sueltos de arriba), por la misma razón de los
+  // índices ":nth-child" explicada más arriba.
+  function mountFndInm(usuario) {
+    // --- TEMPORAL (período de pruebas): solo para el admin de pruebas ---
+    if (!usuario || usuario._id !== FNDINM_TEST_ADMIN_ID) return 0;
+    // ---------------------------------------------------------------
+
+    if (!window.STT_FND_INM || typeof window.STT_FND_INM.mount !== 'function') return 0;
+    var toolbox = document.getElementById(TOOLBOX_BOX_ID);
+    if (!toolbox) return 0;
+    return window.STT_FND_INM.mount(toolbox, usuario) ? 1 : 0;
+  }
+
   // ------------------------------------------------------------------
   // Inicialización
   // ------------------------------------------------------------------
@@ -322,6 +349,7 @@
 
     if (mode === 'toolbox') {
       n = addToolboxLinks();
+      mountFndInm(detail.usuario);
     } else {
       injectStyles();
       n = replaceCtas(detail.usuario);
