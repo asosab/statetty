@@ -1,18 +1,39 @@
 /**
  * fndInm.js — Statetty
  * -----------------------------------------------------------------------
- * Script GLOBAL invocado desde menuUser.js (modo toolbox, página del mapa).
+ * Script GLOBAL invocado desde menuUser.js. NO es exclusivo de la página
+ * del mapa ni del panel del engranaje: menuUser.js lo carga e invoca en
+ * TODAS las páginas donde hay un usuario logueado, porque "Buscar
+ * Inmuebles" es un ítem más del menú de usuario global (igual que "Mis
+ * inmuebles" o "Mis datos"), no una función exclusiva del mapa.
  *
  * Qué hace:
- *   Agrega al panel del engranaje (#toolbox) una sección desplegable más,
- *   con el mismo formato "acordeón" que ya usan las secciones creadas
- *   directamente en el HTML de la página y manejadas por mapa.js
- *   (.section > .section-header + .section-body, con toggle delegado en
- *   $(document).on('click', '.section-header', ...)). Como ese handler
- *   está delegado al document, la nueva sección funciona con el mismo
- *   acordeón sin tocar mapa.js.
+ *   fndInm.js solo arma el CONTENIDO (el <select> de búsquedas guardadas
+ *   + el <form> con los filtros) y lo agrega dentro de un contenedor que
+ *   le pasa menuUser.js. Es menuUser.js quien decide DÓNDE vive ese
+ *   contenedor en cada página, según el modo de integración que ya usa
+ *   para el resto de su menú:
  *
- *   La sección se llama "Buscar Inmuebles" y contiene:
+ *   - Modo TOOLBOX (solo la página del mapa, donde existe #toolbox):
+ *     el contenido se envuelve en el mismo acordeón ".section >
+ *     .section-header + .section-body" que usan las secciones propias
+ *     de mapa.js (.section-header con toggle delegado en
+ *     $(document).on('click', '.section-header', ...)). Se monta como
+ *     window.STT_FND_INM.mount(containerEl, usuario, { variant: 'toolbox' }).
+ *
+ *   - Modo CTA / dropdown (el resto de las páginas, sin #toolbox): el
+ *     contenido se monta dentro del mismo dropdown flotante que
+ *     menuUser.js despliega al tocar el ícono de usuario, arriba de los
+ *     demás links del menú (Mis inmuebles / Mis datos / Mapa), para
+ *     aprovechar mejor el espacio al desplegar. Como ahí no existe el
+ *     acordeón de mapa.js, se monta sin envoltorio de sección propia:
+ *     window.STT_FND_INM.mount(containerEl, usuario, { variant: 'standalone' }).
+ *
+ *   En ambos casos, "Buscar Inmuebles" queda SIEMPRE visible para el
+ *   usuario logueado (sujeto solo al gate temporal de pruebas que define
+ *   menuUser.js), en cualquier página del sitio.
+ *
+ *   El contenido en sí, sea cual sea la variante, es siempre el mismo:
  *     1. Un <select> llamado "slots" (id="fndInm-slots-select") para
  *        elegir búsquedas guardadas. Por ahora va vacío (solo el
  *        placeholder); la lógica de carga/población se agrega después.
@@ -25,7 +46,7 @@
  *   pasa a window.STT_FND_INM.onSearch si existe, o lo deja en consola.
  *   Eso se conecta a la API en un paso posterior.
  *
- * Toolbox interno (fieldsets):
+ * Toolbox interno (fieldsets), igual en ambas variantes:
  *   - Cada grupo de parámetros es un <fieldset> que funciona como un
  *     mini-acordeón: solo se ve su <legend>; al hacer click se expande
  *     mostrando sus campos, y al desplegar uno se contraen todos los
@@ -59,12 +80,15 @@
  *     (atributo title) y deja un console.warn avisando.
  *
  * Integración:
- *   - Se monta llamando a window.STT_FND_INM.mount(toolboxEl, usuario)
- *     desde menuUser.js, DESPUÉS de agregar los links sueltos, para no
- *     alterar los índices ":nth-child" que mapa.js usa para referenciar
- *     sus propias secciones (la nueva sección se agrega siempre al final
- *     de #toolbox).
- *   - Es idempotente: si ya existe #fndInm-section no vuelve a crearla.
+ *   - menuUser.js reserva primero el contenedor donde va a vivir
+ *     "Buscar Inmuebles" (arriba de sus propios links, en toolbox o en
+ *     el dropdown según corresponda) y recién después llama a
+ *     window.STT_FND_INM.mount(containerEl, usuario, { variant }).
+ *     fndInm.js no asume ni un id ni una posición fija: solo agrega su
+ *     contenido dentro del containerEl que recibe.
+ *   - Es idempotente: si ya existe #fndInm-section en la página no
+ *     vuelve a crearla (evita duplicados si el evento de sesión se
+ *     dispara más de una vez).
  *
  * Personalización:
  *   - window.STT_FND_INM_DEFAULTS puede sobreescribir los valores por
@@ -320,6 +344,14 @@
       '#' + SECTION_ID + ' .fndinm-note{font-size:.72rem;opacity:.65;margin-top:2px;}' +
       '#' + SECTION_ID + ' .fndinm-actions{display:flex;gap:8px;margin-top:4px;}' +
       '#' + SECTION_ID + ' .fndinm-actions button{flex:1;}' +
+      // Variante standalone (dentro del dropdown de menuUser.js): título
+      // propio no interactivo + límite de alto con scroll, porque acá no
+      // hay un acordeón exterior que la contenga (a diferencia de #toolbox).
+      '#' + SECTION_ID + '.fndinm-standalone{max-height:min(65vh,520px);' +
+      'overflow-y:auto;overflow-x:hidden;padding-bottom:8px;margin-bottom:8px;' +
+      'border-bottom:1px solid rgba(0,0,0,.1);}' +
+      '#' + SECTION_ID + ' .fndinm-standalone-title{font-weight:700;font-size:.85rem;' +
+      'opacity:.85;margin-bottom:8px;}' +
       // Tema Tippy.js propio, para que los tooltips combinen con el toolbox
       // (los popups de Tippy se insertan en document.body, por eso van
       // fuera del prefijo "#SECTION_ID").
@@ -693,42 +725,67 @@
   }
 
   // ------------------------------------------------------------------
-  // Construcción de la sección completa (.section acordeón)
+  // Construcción de la sección completa
   // ------------------------------------------------------------------
-  function buildSection(usuario) {
+  // variant 'toolbox': se monta dentro de #toolbox (página del mapa) y se
+  //   envuelve en el mismo acordeón ".section > .section-header +
+  //   .section-body" que usa mapa.js, para heredar su toggle (delegado
+  //   en document, ver cabecera del archivo).
+  // variant 'standalone': se monta dentro del dropdown del menú de
+  //   usuario (resto de páginas), donde no existe el acordeón de
+  //   mapa.js. No lleva .section-header propio (ya está dentro de un
+  //   dropdown que el propio menuUser.js abre/cierra); solo un título
+  //   no interactivo arriba del selector de slots y el formulario.
+  function buildSection(usuario, opts) {
+    var variant = (opts && opts.variant === 'standalone') ? 'standalone' : 'toolbox';
+
     var section = document.createElement('div');
     section.id = SECTION_ID;
-    section.className = 'section';
 
-    var header = document.createElement('div');
-    header.className = 'section-header';
-    header.textContent = 'Buscar Inmuebles';
+    if (variant === 'toolbox') {
+      section.className = 'section';
 
-    var body = document.createElement('div');
-    body.className = 'section-body';
-    body.appendChild(buildSlotsControl());
-    body.appendChild(buildForm(usuario));
+      var header = document.createElement('div');
+      header.className = 'section-header';
+      header.textContent = 'Buscar Inmuebles';
 
-    section.appendChild(header);
-    section.appendChild(body);
+      var body = document.createElement('div');
+      body.className = 'section-body';
+      body.appendChild(buildSlotsControl());
+      body.appendChild(buildForm(usuario));
+
+      section.appendChild(header);
+      section.appendChild(body);
+    } else {
+      section.className = 'fndinm-standalone';
+
+      var title = document.createElement('div');
+      title.className = 'fndinm-standalone-title';
+      title.textContent = 'Buscar Inmuebles';
+
+      section.appendChild(title);
+      section.appendChild(buildSlotsControl());
+      section.appendChild(buildForm(usuario));
+    }
+
     return section;
   }
 
   // ------------------------------------------------------------------
   // API pública
   // ------------------------------------------------------------------
-  function mount(toolboxEl, usuario) {
+  // mount(containerEl, usuario, opts)
+  //   - containerEl: nodo donde insertar la sección. Lo decide quien
+  //     llama (menuUser.js); fndInm.js no asume dónde vive.
+  //   - opts.variant: 'toolbox' (default) | 'standalone' (ver arriba).
+  function mount(containerEl, usuario, opts) {
     if (document.getElementById(SECTION_ID)) return false; // ya montada
-    if (!toolboxEl) toolboxEl = document.getElementById('toolbox');
-    if (!toolboxEl) return false;
+    if (!containerEl) containerEl = document.getElementById('toolbox');
+    if (!containerEl) return false;
 
     injectStyles();
-    // Se agrega SIEMPRE al final de #toolbox (después de las secciones ya
-    // existentes y de los links sueltos de menuUser.js), para no alterar
-    // los índices ":nth-child" que mapa.js usa para referenciar sus
-    // propias secciones (ver actualizarToolbox() en mapa.js).
-    var section = buildSection(usuario);
-    toolboxEl.appendChild(section);
+    var section = buildSection(usuario, opts);
+    containerEl.appendChild(section);
     initTooltips(section);
     return true;
   }

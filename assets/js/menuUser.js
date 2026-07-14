@@ -32,13 +32,16 @@
  *   otra dirección de MENU_ITEMS si coincide con la página actual.
  *
  * NOTA TEMPORAL (período de pruebas):
- *   La sección "Buscar Inmuebles" se monta vía fndInm.js, que este mismo
- *   script (menuUser.js) carga dinámicamente con un <script> insertado en
- *   runtime (no hace falta incluir fndInm.js aparte en el HTML). Por ahora
- *   esto ocurre solo si el usuario activo es el admin de pruebas
- *   (_id = FNDINM_TEST_ADMIN_ID, ver más abajo), sin importar si la página
- *   está en modo 'cta' o 'toolbox' (si no hay #toolbox en la página, no se
- *   monta nada, pero igual se evalúa el _id). Quitar este gate cuando
+ *   "Buscar Inmuebles" (fndInm.js) es un ítem más del menú de usuario
+ *   global: se monta SIEMPRE, en cualquier página, sin importar el modo
+ *   ('cta' o 'toolbox'). Este mismo script (menuUser.js) carga fndInm.js
+ *   dinámicamente con un <script> insertado en runtime (no hace falta
+ *   incluirlo aparte en el HTML). En modo 'cta' se agrega arriba de los
+ *   demás links, dentro del propio dropdown de usuario; en modo
+ *   'toolbox' (solo la página del mapa) se agrega arriba de los links
+ *   sueltos que este script ya pone en #toolbox. Por ahora esto ocurre
+ *   solo si el usuario activo es el admin de pruebas
+ *   (_id = FNDINM_TEST_ADMIN_ID, ver más abajo). Quitar este gate cuando
  *   termine el período de pruebas.
  *
  * Personalización por página:
@@ -93,8 +96,12 @@
   // NO necesita incluir un <script> aparte para fndInm.js). Se puede
   // sobreescribir la URL antes de cargar este script con
   // window.STT_FND_INM_URL = 'https://.../fndInm.js'
-  var FNDINM_SCRIPT_URL = window.STT_FND_INM_URL || 'https://statetty.com/assets/js/fndInm.js?v5';
+  var FNDINM_SCRIPT_URL = window.STT_FND_INM_URL || 'https://statetty.com/assets/js/fndInm.js?v6';
   var fndInmLoading = false;
+  // Contenedor donde vive "Buscar Inmuebles": lo crea/reserva este script
+  // (arriba de sus propios links/dropdown, ver reserveFndInmSlot() y
+  // buildUserMenu()) y fndInm.js solo agrega su contenido adentro.
+  var FNDINM_SLOT_ID = 'stt-fndinm-slot';
 
   var STYLE_ID = 'stt-menu-user-styles';
   var TOOLBOX_STYLE_ID = 'stt-menu-user-toolbox-styles';
@@ -118,6 +125,8 @@
       '.stt-user-avatar{width:38px;height:38px;border-radius:50%;object-fit:cover;' +
       'border:2px solid var(--blue,#17baef);display:block;background:#e2edf3;}' +
       '.stt-user-dropdown{position:absolute;top:calc(100% + 10px);right:0;min-width:190px;' +
+      'width:max-content;max-width:min(320px,92vw);max-height:min(75vh,560px);' +
+      'overflow-y:auto;overflow-x:hidden;' +
       'background:#fff;border-radius:var(--radius-md,12px);' +
       'box-shadow:0 10px 30px rgba(7,79,102,.18);padding:8px;z-index:1000;' +
       'opacity:0;visibility:hidden;transform:translateY(-6px);' +
@@ -129,7 +138,7 @@
       'transition:background .15s ease, color .15s ease;}' +
       '.stt-user-dropdown a:hover,.stt-user-dropdown a:focus-visible{' +
       'background:rgba(23,186,239,.1);color:var(--blue-dark,#074f66);}' +
-      '@media (max-width:768px){.stt-user-dropdown{right:auto;left:0;}}';
+      '@media (max-width:768px){.stt-user-dropdown{right:auto;left:0;width:min(320px,92vw);}}';
     var style = document.createElement('style');
     style.id = STYLE_ID;
     style.textContent = css;
@@ -197,7 +206,7 @@
   // MODO CTA: ícono circular + dropdown flotante
   // ------------------------------------------------------------------
 
-  function buildUserMenu(usuario) {
+  function buildUserMenu(usuario, includeFndInmSlot) {
     var wrap = document.createElement('div');
     wrap.className = 'stt-user-menu';
 
@@ -230,6 +239,17 @@
     var dropdown = document.createElement('div');
     dropdown.className = 'stt-user-dropdown';
     dropdown.setAttribute('role', 'menu');
+
+    // "Buscar Inmuebles" (fndInm.js) va PRIMERO, arriba de los links
+    // sueltos, para mejor aprovechamiento del espacio al desplegar. Solo
+    // se reserva en la primera instancia del menú (si ".btn-nav-cta"
+    // aparece más de una vez en la página, ej. header desktop + mobile,
+    // para no duplicar el id del contenedor).
+    if (includeFndInmSlot) {
+      var fndInmSlot = document.createElement('div');
+      fndInmSlot.id = FNDINM_SLOT_ID;
+      dropdown.appendChild(fndInmSlot);
+    }
 
     getMenuItems().forEach(function (item) {
       var a = document.createElement('a');
@@ -268,15 +288,17 @@
 
   function replaceCtas(usuario) {
     var candidatos = document.querySelectorAll(CTA_SELECTOR);
-    var reemplazados = 0;
+    var dropdowns = [];
+    var esLaPrimera = true;
 
     candidatos.forEach(function (cta) {
-      var menu = buildUserMenu(usuario);
+      var menu = buildUserMenu(usuario, esLaPrimera);
+      esLaPrimera = false;
       cta.replaceWith(menu);
-      reemplazados++;
+      dropdowns.push(menu.querySelector('.stt-user-dropdown'));
     });
 
-    return reemplazados;
+    return dropdowns;
   }
 
   // ------------------------------------------------------------------
@@ -296,6 +318,28 @@
     });
 
     return container;
+  }
+
+  // Reserva el contenedor de "Buscar Inmuebles" en #toolbox, ANTES de los
+  // links sueltos (addToolboxLinks se llama después), para que quede
+  // arriba de ellos en el panel. Se reserva de forma síncrona apenas se
+  // sabe que hay que montar fndInm.js, sin esperar a que termine de
+  // cargar ese script, así el orden en el DOM no depende de si fndInm.js
+  // ya estaba cargado o hay que traerlo por primera vez.
+  function reserveFndInmSlot() {
+    var existing = document.getElementById(FNDINM_SLOT_ID);
+    if (existing) return existing;
+
+    var toolbox = document.getElementById(TOOLBOX_BOX_ID);
+    if (!toolbox) return null;
+
+    var slot = document.createElement('div');
+    slot.id = FNDINM_SLOT_ID;
+    // Se agrega al final de lo que mapa.js ya puso (no altera sus
+    // índices ":nth-child"), pero ANTES que buildToolboxLinks(), que se
+    // llama después y por lo tanto queda debajo.
+    toolbox.appendChild(slot);
+    return slot;
   }
 
   function addToolboxLinks() {
@@ -349,23 +393,22 @@
     document.head.appendChild(script);
   }
 
-  // Sección "Buscar Inmuebles" (fndInm.js). Este llamado ocurre SIEMPRE
-  // (no depende del modo 'cta'/'toolbox' ni de que exista #toolbox en esta
-  // página en particular): se resuelve puertas adentro, cargando el script
-  // solo cuando corresponde y montando la sección solo si hay un #toolbox
-  // presente. Se monta al final de #toolbox, después de los links sueltos
-  // de arriba, por la misma razón de los índices ":nth-child" explicada
-  // más arriba.
-  function mountFndInm(usuario) {
+  // "Buscar Inmuebles" (fndInm.js) es un ítem más del menú de usuario:
+  // se monta SIEMPRE (no depende del modo 'cta'/'toolbox'), en el
+  // contenedor que ya haya sido reservado en handleKeyReady() para esta
+  // página (ver reserveFndInmSlot() y buildUserMenu()). El único gate es
+  // el temporal de pruebas (FNDINM_TEST_ADMIN_ID).
+  function mountFndInm(usuario, mode) {
     // --- TEMPORAL (período de pruebas): solo para el admin de pruebas ---
     if (!usuario || usuario._id !== FNDINM_TEST_ADMIN_ID) return;
     // ---------------------------------------------------------------
 
     loadFndInmScript(function () {
       if (!window.STT_FND_INM || typeof window.STT_FND_INM.mount !== 'function') return;
-      var toolbox = document.getElementById(TOOLBOX_BOX_ID);
-      if (!toolbox) return; // esta página no tiene panel del engranaje: nada que montar
-      window.STT_FND_INM.mount(toolbox, usuario);
+      var slot = document.getElementById(FNDINM_SLOT_ID);
+      if (!slot) return; // no se pudo reservar contenedor en esta página (raro, pero no debe romper nada)
+      var variant = mode === 'toolbox' ? 'toolbox' : 'standalone';
+      window.STT_FND_INM.mount(slot, usuario, { variant: variant });
     });
   }
 
@@ -395,16 +438,23 @@
     var n = 0;
 
     if (mode === 'toolbox') {
+      // Reservar el contenedor de "Buscar Inmuebles" primero, para que
+      // quede arriba de los links sueltos (addToolboxLinks se agrega
+      // siempre después, ver reserveFndInmSlot()).
+      reserveFndInmSlot();
       n = addToolboxLinks();
     } else {
       injectStyles();
-      n = replaceCtas(detail.usuario);
+      // El slot de "Buscar Inmuebles" ya queda reservado adentro del
+      // dropdown por buildUserMenu() (primer hijo, arriba de los demás
+      // links), como parte de replaceCtas().
+      n = replaceCtas(detail.usuario).length;
     }
 
     if (n > 0) document.body.dataset[READY_FLAG] = '1';
 
     // fndInm.js: independiente del modo (cta/toolbox); ver mountFndInm().
-    mountFndInm(detail.usuario);
+    mountFndInm(detail.usuario, mode);
   }
 
   function init() {
