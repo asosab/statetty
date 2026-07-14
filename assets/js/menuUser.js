@@ -14,18 +14,22 @@
  *        circular (usuario.userIcon) que al hacer click despliega un menú
  *        propio (dropdown flotante con estilos inyectados por este script).
  *
- *      - MODO TOOLBOX (página del mapa): en vez de crear un ícono/dropdown
- *        nuevo, agrega una sección más al panel del engranaje (#toolbox,
- *        el mismo que abre #toolbox-btn), reutilizando exactamente las
- *        clases .section / .section-header / .section-body que ya usa
- *        mapa.js para sus otras secciones (Agencias, Seleccionados, etc).
- *        Así la sección de usuario hereda el mismo look & feel y el mismo
- *        comportamiento de acordeón (mapa.js ya delega el click de
- *        ".section-header" a nivel de `document`, así que no hay que
- *        reimplementar nada de eso acá). El botón engranaje NO se
- *        reemplaza por el ícono del usuario: se mantiene tal cual.
+ *      - MODO TOOLBOX (página del mapa): NO agrega un ícono/dropdown nuevo
+ *        ni una sección propia con título ("Mi cuenta" / "¡Hola ...!").
+ *        En vez de eso, simplemente añade los ítems del menú de usuario
+ *        (MENU_ITEMS) como links sueltos al final del panel del engranaje
+ *        (#toolbox, el mismo que abre #toolbox-btn), sumándose a lo que
+ *        mapa.js ya puso ahí (Agencias, Seleccionados, etc.), sin crear
+ *        un acordeón/sección nueva ni un título propio. El botón engranaje
+ *        NO se reemplaza por el ícono del usuario: se mantiene tal cual.
  *
  *   3. Si no hay usuario (no logueado / error), no toca nada.
+ *
+ * Filtrado de ítems por página actual (aplica a AMBOS modos):
+ *   Cualquier ítem de MENU_ITEMS cuyo href apunte a la página en la que ya
+ *   estamos (mismo pathname) se omite automáticamente. Ej: el link "Mapa"
+ *   no se muestra estando ya en el mapa; lo mismo aplica para cualquier
+ *   otra dirección de MENU_ITEMS si coincide con la página actual.
  *
  * Personalización por página:
  *   - Modo forzado: window.STT_MENU_USER_MODE = 'cta' | 'toolbox' | 'auto'
@@ -37,9 +41,6 @@
  *     página necesita otros ítems puede sobreescribirlos ANTES de cargar
  *     este script con
  *     window.STT_MENU_USER_ITEMS = [ { label: '...', href: '...' }, ... ].
- *     En modo toolbox, si alguno de esos ítems apunta a la página actual
- *     (mismo pathname), se omite automáticamente (ej: el link "Mapa" no
- *     tiene sentido mostrarlo estando ya en el mapa).
  */
 (function () {
   'use strict';
@@ -66,7 +67,9 @@
   // IDs del panel del engranaje (mapa.js)
   var TOOLBOX_BOX_ID = 'toolbox';
   var TOOLBOX_BTN_ID = 'toolbox-btn';
-  var TOOLBOX_SECTION_ID = 'stt-user-toolbox-section';
+  // Ya no es una ".section" con título propio: es solo el contenedor de
+  // links que se suma al final del panel, sin acordeón ni encabezado.
+  var TOOLBOX_LINKS_ID = 'stt-user-toolbox-links';
 
   // Avatar por defecto si el usuario no trae userIcon (o si la imagen falla al cargar).
   var DEFAULT_ICON = 'https://statetty.com/assets/images/genUsrIco.png';
@@ -112,14 +115,18 @@
   }
 
   // Estilos modo TOOLBOX: mínimos y "sin opinión" (heredan color/tipografía
-  // de la página) para no romper el estilo ya definido por #toolbox.
+  // de la página) para no romper el estilo ya definido por #toolbox. Como
+  // ya no es una ".section" con header, se agrega un separador sutil para
+  // distinguirlo visualmente de las secciones que ya existen arriba.
   function injectToolboxStyles() {
     if (document.getElementById(TOOLBOX_STYLE_ID)) return;
     var css =
-      '#' + TOOLBOX_SECTION_ID + ' .section-body a{display:block;padding:8px 6px;' +
+      '#' + TOOLBOX_LINKS_ID + '{border-top:1px solid rgba(0,0,0,.08);' +
+      'margin-top:6px;padding-top:6px;}' +
+      '#' + TOOLBOX_LINKS_ID + ' a{display:block;padding:8px 6px;' +
       'color:inherit;text-decoration:none;border-radius:6px;}' +
-      '#' + TOOLBOX_SECTION_ID + ' .section-body a:hover,' +
-      '#' + TOOLBOX_SECTION_ID + ' .section-body a:focus-visible{background:rgba(0,0,0,.06);}';
+      '#' + TOOLBOX_LINKS_ID + ' a:hover,' +
+      '#' + TOOLBOX_LINKS_ID + ' a:focus-visible{background:rgba(0,0,0,.06);}';
     var style = document.createElement('style');
     style.id = TOOLBOX_STYLE_ID;
     style.textContent = css;
@@ -136,13 +143,15 @@
     return String(nombre).trim().split(/\s+/)[0];
   }
 
-  // Ítems del menú, filtrando (en modo toolbox) los que apunten a la página actual.
-  function getMenuItems(filterCurrentPage) {
-    if (!filterCurrentPage) return MENU_ITEMS;
+  // Ítems del menú, quitando siempre (en cualquier modo) los que apunten
+  // a la página en la que ya estamos (mismo origin + mismo pathname).
+  function getMenuItems() {
     return MENU_ITEMS.filter(function (item) {
       try {
         var url = new URL(item.href, window.location.href);
-        return url.pathname.replace(/\/+$/, '') !== window.location.pathname.replace(/\/+$/, '');
+        var samePathname = url.pathname.replace(/\/+$/, '') === window.location.pathname.replace(/\/+$/, '');
+        var sameOrigin = url.origin === window.location.origin;
+        return !(samePathname && sameOrigin);
       } catch (e) {
         return true;
       }
@@ -187,7 +196,7 @@
     dropdown.className = 'stt-user-dropdown';
     dropdown.setAttribute('role', 'menu');
 
-    getMenuItems(false).forEach(function (item) {
+    getMenuItems().forEach(function (item) {
       var a = document.createElement('a');
       a.href = item.href;
       a.textContent = item.label;
@@ -236,47 +245,40 @@
   }
 
   // ------------------------------------------------------------------
-  // MODO TOOLBOX: sección extra dentro del panel del engranaje
+  // MODO TOOLBOX: links sueltos al final del panel del engranaje
+  // (SIN sección propia, SIN header/título "Hola ...!" / "Mi cuenta")
   // ------------------------------------------------------------------
 
-  function buildToolboxSection(usuario) {
-    var section = document.createElement('div');
-    section.className = 'section';
-    section.id = TOOLBOX_SECTION_ID;
+  function buildToolboxLinks() {
+    var container = document.createElement('div');
+    container.id = TOOLBOX_LINKS_ID;
 
-    var header = document.createElement('div');
-    header.className = 'section-header';
-    var firstName = getFirstName(usuario);
-    header.textContent = '👤 ' + (firstName ? '¡Hola ' + firstName + '!' : 'Mi cuenta');
-
-    var body = document.createElement('div');
-    body.className = 'section-body';
-
-    getMenuItems(true).forEach(function (item) {
-      var row = document.createElement('div');
+    getMenuItems().forEach(function (item) {
       var a = document.createElement('a');
       a.href = item.href;
       a.textContent = item.label;
-      row.appendChild(a);
-      body.appendChild(row);
+      container.appendChild(a);
     });
 
-    section.appendChild(header);
-    section.appendChild(body);
-    return section;
+    return container;
   }
 
-  function addToolboxSection(usuario) {
-    if (document.getElementById(TOOLBOX_SECTION_ID)) return 1; // ya agregada
+  function addToolboxLinks() {
+    if (document.getElementById(TOOLBOX_LINKS_ID)) return 1; // ya agregados
 
     var toolbox = document.getElementById(TOOLBOX_BOX_ID);
     if (!toolbox) return 0;
 
+    var items = getMenuItems();
+    if (!items.length) return 0; // nada que mostrar (ej: todos filtrados por ser la página actual)
+
     injectToolboxStyles();
     // Se agrega al FINAL del panel a propósito: mapa.js referencia otras
     // secciones por posición (ej. ":nth-child(2)") y no queremos correr
-    // esos índices agregando algo antes.
-    toolbox.appendChild(buildToolboxSection(usuario));
+    // esos índices agregando algo antes. Al no ser una ".section" nueva,
+    // tampoco se altera el comportamiento de acordeón de las secciones
+    // que mapa.js ya define.
+    toolbox.appendChild(buildToolboxLinks());
     return 1;
   }
 
@@ -306,7 +308,7 @@
     var n = 0;
 
     if (mode === 'toolbox') {
-      n = addToolboxSection(detail.usuario);
+      n = addToolboxLinks();
     } else {
       injectStyles();
       n = replaceCtas(detail.usuario);
