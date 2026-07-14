@@ -143,13 +143,26 @@
     return String(nombre).trim().split(/\s+/)[0];
   }
 
+  // Normaliza un pathname para comparar ubicaciones de forma robusta:
+  // - quita archivos índice al final (index.html / index.htm / index.php),
+  //   ya que "/maps/find/index.html" y "/maps/find/" son la misma ubicación
+  // - quita la(s) barra(s) final(es)
+  // - ignora mayúsculas/minúsculas
+  function normalizePath(pathname) {
+    return String(pathname || '')
+      .replace(/\/index\.(html?|php)$/i, '/')
+      .replace(/\/+$/, '')
+      .toLowerCase();
+  }
+
   // Ítems del menú, quitando siempre (en cualquier modo) los que apunten
-  // a la página en la que ya estamos (mismo origin + mismo pathname).
+  // a la página en la que ya estamos (mismo origin + mismo pathname,
+  // considerando "index.html" y "/" como la misma ubicación).
   function getMenuItems() {
     return MENU_ITEMS.filter(function (item) {
       try {
         var url = new URL(item.href, window.location.href);
-        var samePathname = url.pathname.replace(/\/+$/, '') === window.location.pathname.replace(/\/+$/, '');
+        var samePathname = normalizePath(url.pathname) === normalizePath(window.location.pathname);
         var sameOrigin = url.origin === window.location.origin;
         return !(samePathname && sameOrigin);
       } catch (e) {
