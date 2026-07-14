@@ -319,6 +319,14 @@
       // página en la que se monte.
       '#' + SECTION_ID + ',#' + SECTION_ID + ' *,#' + SECTION_ID + ' *::before,' +
       '#' + SECTION_ID + ' *::after{box-sizing:border-box;}' +
+      // Color de texto propio: legend/label/summary/note NO son controles
+      // de formulario, así que SÍ heredan el "color" del body de la
+      // página. En el mapa, #toolbox ya fija un color oscuro; en el
+      // resto de las páginas el body puede ser blanco (hero/navbar), y
+      // el texto quedaba blanco sobre el fondo blanco del dropdown
+      // (invisible). Los inputs/selects/botones no se ven afectados por
+      // esto porque los navegadores no les heredan color por defecto.
+      '#' + SECTION_ID + '{color:#2b3a42;}' +
       '#' + SECTION_ID + ' .fndinm-slots{display:flex;gap:6px;align-items:center;' +
       'margin-bottom:10px;flex-wrap:wrap;}' +
       '#' + SECTION_ID + ' .fndinm-slots select{flex:1;min-width:120px;}' +
@@ -378,8 +386,21 @@
       '#' + SECTION_ID + '.fndinm-standalone{max-height:min(65vh,520px);' +
       'overflow-y:auto;overflow-x:hidden;padding-bottom:8px;margin-bottom:8px;' +
       'border-bottom:1px solid rgba(0,0,0,.1);}' +
-      '#' + SECTION_ID + ' .fndinm-standalone-title{font-weight:700;font-size:.85rem;' +
-      'opacity:.85;margin-bottom:8px;}' +
+      // Header propio y clickeable de la variante standalone: acá NO hay
+      // acordeón externo (el de mapa.js no existe fuera del mapa), así
+      // que fndInm.js tiene que resolver su propio colapsar/expandir para
+      // no ocupar todo el dropdown con el formulario siempre abierto.
+      // Empieza cerrado (ver buildSection): solo el header es visible
+      // hasta que el usuario lo toca.
+      '#' + SECTION_ID + ' .fndinm-standalone-header{display:flex;align-items:center;' +
+      'justify-content:space-between;gap:6px;cursor:pointer;user-select:none;' +
+      'padding:2px 2px 8px;}' +
+      '#' + SECTION_ID + ' .fndinm-standalone-title{font-weight:700;font-size:.85rem;opacity:.85;}' +
+      '#' + SECTION_ID + ' .fndinm-standalone-caret{font-size:.7rem;opacity:.6;' +
+      'transition:transform .15s ease;}' +
+      '#' + SECTION_ID + '.fndinm-standalone-open .fndinm-standalone-caret{transform:rotate(90deg);}' +
+      '#' + SECTION_ID + ' .fndinm-standalone-body{display:none;}' +
+      '#' + SECTION_ID + '.fndinm-standalone-open .fndinm-standalone-body{display:block;}' +
       // Tema Tippy.js propio, para que los tooltips combinen con el toolbox
       // (los popups de Tippy se insertan en document.body, por eso van
       // fuera del prefijo "#SECTION_ID").
@@ -787,13 +808,45 @@
     } else {
       section.className = 'fndinm-standalone';
 
-      var title = document.createElement('div');
+      var header = document.createElement('div');
+      header.className = 'fndinm-standalone-header';
+      header.setAttribute('role', 'button');
+      header.setAttribute('tabindex', '0');
+      header.setAttribute('aria-expanded', 'false');
+      header.setAttribute('aria-controls', SECTION_ID + '-standalone-body');
+
+      var title = document.createElement('span');
       title.className = 'fndinm-standalone-title';
       title.textContent = 'Buscar Inmuebles';
 
-      section.appendChild(title);
-      section.appendChild(buildSlotsControl());
-      section.appendChild(buildForm(usuario));
+      var caret = document.createElement('span');
+      caret.className = 'fndinm-standalone-caret';
+      caret.textContent = '▸';
+
+      header.appendChild(title);
+      header.appendChild(caret);
+
+      var body = document.createElement('div');
+      body.className = 'fndinm-standalone-body';
+      body.id = SECTION_ID + '-standalone-body';
+      body.appendChild(buildSlotsControl());
+      body.appendChild(buildForm(usuario));
+
+      // Colapsado por defecto: en modo standalone no hay acordeón externo
+      // (el de mapa.js no existe fuera del mapa) que lo mantenga cerrado
+      // hasta que el usuario lo pida, así que fndInm.js resuelve esto
+      // por su cuenta con un simple toggle de clase.
+      function toggle() {
+        var isOpen = section.classList.toggle('fndinm-standalone-open');
+        header.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      }
+      header.addEventListener('click', toggle);
+      header.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
+      });
+
+      section.appendChild(header);
+      section.appendChild(body);
     }
 
     return section;
