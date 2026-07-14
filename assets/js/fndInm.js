@@ -67,17 +67,21 @@
  * Dependencias (tooltips):
  *   - Los tooltips usan Tippy.js (https://atomiks.github.io/tippyjs/),
  *     liviano (~10kb) y con soporte táctil de fábrica (en mobile se
- *     muestran con un tap y se cierran al tocar fuera). Hay que cargarlo
- *     ANTES de que este script llame a mount(), agregando en el <head>
- *     o antes de </body> del HTML de la página:
+ *     muestran con un tap y se cierran al tocar fuera).
+ *
+ *   - Tippy.js es una dependencia GLOBAL de la app (no exclusiva de
+ *     fndInm.js): se carga una sola vez, en el <head> de cada página
+ *     (junto con jQuery/etc.), NO en el footer y NO desde este script.
+ *     Agregar en el <head>:
  *
  *       <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/dist/tippy.css">
  *       <script src="https://unpkg.com/@popperjs/core@2"></script>
  *       <script src="https://unpkg.com/tippy.js@6"></script>
  *
- *   - Si por algún motivo Tippy.js no está disponible, fndInm.js no
- *     rompe: hace fallback automático al tooltip nativo del navegador
- *     (atributo title) y deja un console.warn avisando.
+ *   - Si por algún motivo Tippy.js no está disponible cuando corre
+ *     mount() (ej. una página que todavía no la incluyó en su <head>),
+ *     fndInm.js no rompe: hace fallback automático al tooltip nativo del
+ *     navegador (atributo title) y deja un console.warn avisando.
  *
  * Integración:
  *   - menuUser.js reserva primero el contenedor donde va a vivir
@@ -566,6 +570,12 @@
   // ------------------------------------------------------------------
   // Tooltips (Tippy.js si está cargado; si no, fallback a title nativo)
   // ------------------------------------------------------------------
+  // Tippy.js es una dependencia GLOBAL de la app (se carga una sola vez,
+  // en el <head> de cada página, junto con jQuery/etc. — no es exclusiva
+  // de fndInm.js). Por eso este script no intenta cargarla por su cuenta:
+  // solo la usa si ya está disponible en window.tippy, y si no, avisa por
+  // consola y cae al title nativo del navegador (así no rompe nada si
+  // alguna página todavía no la incluye).
   function initTooltips(rootEl) {
     var targets = rootEl.querySelectorAll('[data-tippy-content]');
     if (!targets.length) return;
@@ -582,8 +592,8 @@
     } else {
       console.warn(
         '[fndInm] Tippy.js no está cargado; los tooltips usarán el título ' +
-        'nativo del navegador como respaldo. Ver la cabecera de fndInm.js ' +
-        'para las etiquetas <link>/<script> necesarias (CDN de Tippy.js).'
+        'nativo del navegador como respaldo. Asegurate de incluir Tippy.js ' +
+        '(CSS + @popperjs/core + tippy.js) en el <head> de la página.'
       );
       targets.forEach(function (el) {
         el.title = el.getAttribute('data-tippy-content');
