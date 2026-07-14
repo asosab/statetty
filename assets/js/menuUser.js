@@ -93,7 +93,7 @@
   // NO necesita incluir un <script> aparte para fndInm.js). Se puede
   // sobreescribir la URL antes de cargar este script con
   // window.STT_FND_INM_URL = 'https://.../fndInm.js'
-  var FNDINM_SCRIPT_URL = window.STT_FND_INM_URL || 'https://statetty.com/assets/js/fndInm.js';
+  var FNDINM_SCRIPT_URL = window.STT_FND_INM_URL || 'https://statetty.com/assets/js/fndInm.js?v5';
   var fndInmLoading = false;
 
   var STYLE_ID = 'stt-menu-user-styles';
