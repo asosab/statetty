@@ -3,110 +3,110 @@ layout: default
 comments: true
 ---
 <style>
-.post {
-  max-width: 780px;
-  margin: 0 auto;
-  padding: 220px 24px 60px;
-}
-@media (max-width: 767px) {
-  .post { padding-top: 260px; }
-}
-.post-header {
-  margin-bottom: 32px;
-  border-bottom: 2px solid #e8e8e8;
-  padding-bottom: 20px;
-}
-.post-header h1 {
-  font-family: 'Montserrat', sans-serif;
-  font-size: clamp(1.6rem, 3.5vw, 2.4rem);
-  font-weight: 800;
-  color: #074f66;
-  line-height: 1.2;
-  margin: 0;
-}
-.post-header .meta {
-  font-size: .85rem;
-  color: var(--negro-texto);
-  margin-top: 8px;
-}
-.post-content { font-size: 1.05rem; line-height: 1.75; color: #333; }
-.post-content p { margin: 1.2em 0; }
-.post-content h2 { font-size: 1.6rem; margin: 1.8em 0 .5em; color: #074f66; font-weight: 700; }
-.post-content h3 { font-size: 1.25rem; margin: 1.6em 0 .4em; color: #074f66; font-weight: 700; }
-.post-content h4 { font-size: 1.05rem; margin: 1.4em 0 .3em; color: #333; font-weight: 700; }
-.post-content ul, .post-content ol { padding-left: 1.5em; margin: 1em 0; }
-.post-content li { margin-bottom: .4em; }
-.post-content blockquote {
-  border-left: 4px solid #eebf3f;
-  padding: 12px 20px;
-  margin: 1.5em 0;
-  background: #fafafa;
-  font-style: italic;
-  color: #555;
-}
-.post-content blockquote p { margin: 0; }
-.post-content img { max-width: 100%; height: auto; border-radius: 12px; margin: 1.5em 0; }
-.post-content a { color: var(--celeste-texto); text-decoration: underline; text-underline-offset: 2px; }
-.post-content a:hover { color: var(--azul-marino); }
-.post-content code {
-  background: #f4f4f4;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: .85em;
-  color: #d63384;
-}
-.post-content pre {
-  background: #1e1e2e;
-  color: #cdd6f4;
-  padding: 20px;
-  border-radius: 12px;
-  overflow-x: auto;
-  font-size: .85rem;
-  line-height: 1.6;
-  margin: 1.5em 0;
-}
-.post-content pre code { background: none; padding: 0; color: inherit; border-radius: 0; }
-.post-content hr { border: none; border-top: 1px solid #e8e8e8; margin: 2em 0; }
-.post-content strong { font-weight: 700; color: #222; }
-.post-nav {
-  margin-top: 40px;
-  padding-top: 20px;
-  border-top: 1px solid #e8e8e8;
-  display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-.post-nav a { color: var(--celeste-texto); font-weight: 600; font-size: .9rem; }
-.post-nav a:hover { color: var(--azul-marino); }
-#share-box {
-  margin: 32px 0 16px;
-  padding: 20px;
-  background: #f9f9f9;
-  border-radius: 12px;
-  text-align: center;
-}
-#share-box h3 {
-  font-family: 'Montserrat', sans-serif;
-  font-size: .85rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: .06em;
-  color: #888;
-  margin-bottom: 12px;
-}
-#share-box a {
-  display: inline-block;
-  margin: 0 6px;
-  font-size: 1.3rem;
-  color: #888;
-  transition: .2s;
-}
-#share-box a:hover { color: #17baef; }
-@media (max-width: 600px) {
-  .post { padding-left: 16px; padding-right: 16px; padding-bottom: 40px; }
-  .post-content { font-size: 1rem; }
-}
+  .post {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 220px 24px 60px;
+  }
+  @media (max-width: 767px) {
+    .post { padding-top: 260px; }
+  }
+  .post-header {
+    margin-bottom: 32px;
+    border-bottom: 2px solid #e8e8e8;
+    padding-bottom: 20px;
+  }
+  .post-header h1 {
+    font-family: 'Montserrat', sans-serif;
+    font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+    font-weight: 800;
+    color: #074f66;
+    line-height: 1.2;
+    margin: 0;
+  }
+  .post-header .meta {
+    font-size: .85rem;
+    color: var(--negro-texto);
+    margin-top: 8px;
+  }
+  .post-content { font-size: 1.05rem; line-height: 1.75; color: #333; }
+  .post-content p { margin: 1.2em 0; }
+  .post-content h2 { font-size: 1.6rem; margin: 1.8em 0 .5em; color: #074f66; font-weight: 700; }
+  .post-content h3 { font-size: 1.25rem; margin: 1.6em 0 .4em; color: #074f66; font-weight: 700; }
+  .post-content h4 { font-size: 1.05rem; margin: 1.4em 0 .3em; color: #333; font-weight: 700; }
+  .post-content ul, .post-content ol { padding-left: 1.5em; margin: 1em 0; }
+  .post-content li { margin-bottom: .4em; }
+  .post-content blockquote {
+    border-left: 4px solid #eebf3f;
+    padding: 12px 20px;
+    margin: 1.5em 0;
+    background: #fafafa;
+    font-style: italic;
+    color: #555;
+  }
+  .post-content blockquote p { margin: 0; }
+  .post-content img { max-width: 100%; height: auto; border-radius: 12px; margin: 1.5em 0; }
+  .post-content a { color: var(--celeste-texto); text-decoration: underline; text-underline-offset: 2px; }
+  .post-content a:hover { color: var(--azul-marino); }
+  .post-content code {
+    background: #f4f4f4;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: .85em;
+    color: #d63384;
+  }
+  .post-content pre {
+    background: #1e1e2e;
+    color: #cdd6f4;
+    padding: 20px;
+    border-radius: 12px;
+    overflow-x: auto;
+    font-size: .85rem;
+    line-height: 1.6;
+    margin: 1.5em 0;
+  }
+  .post-content pre code { background: none; padding: 0; color: inherit; border-radius: 0; }
+  .post-content hr { border: none; border-top: 1px solid #e8e8e8; margin: 2em 0; }
+  .post-content strong { font-weight: 700; color: #222; }
+  .post-nav {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid #e8e8e8;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .post-nav a { color: var(--celeste-texto); font-weight: 600; font-size: .9rem; }
+  .post-nav a:hover { color: var(--azul-marino); }
+  #share-box {
+    margin: 32px 0 16px;
+    padding: 20px;
+    background: #f9f9f9;
+    border-radius: 12px;
+    text-align: center;
+  }
+  #share-box h3 {
+    font-family: 'Montserrat', sans-serif;
+    font-size: .85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: #888;
+    margin-bottom: 12px;
+  }
+  #share-box a {
+    display: inline-block;
+    margin: 0 6px;
+    font-size: 1.3rem;
+    color: #888;
+    transition: .2s;
+  }
+  #share-box a:hover { color: #17baef; }
+  @media (max-width: 600px) {
+    .post { padding-left: 16px; padding-right: 16px; padding-bottom: 40px; }
+    .post-content { font-size: 1rem; }
+  }
 </style>
 
 <div class="post">
