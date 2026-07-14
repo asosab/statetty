@@ -96,7 +96,7 @@
   // NO necesita incluir un <script> aparte para fndInm.js). Se puede
   // sobreescribir la URL antes de cargar este script con
   // window.STT_FND_INM_URL = 'https://.../fndInm.js'
-  var FNDINM_SCRIPT_URL = window.STT_FND_INM_URL || 'https://statetty.com/assets/js/fndInm.js?v6';
+  var FNDINM_SCRIPT_URL = window.STT_FND_INM_URL || 'https://statetty.com/assets/js/fndInm.js?v7';
   var fndInmLoading = false;
   // Contenedor donde vive "Buscar Inmuebles": lo crea/reserva este script
   // (arriba de sus propios links/dropdown, ver reserveFndInmSlot() y
@@ -124,8 +124,17 @@
       '.stt-user-trigger:focus-visible{outline:2px solid var(--blue,#17baef);outline-offset:2px;}' +
       '.stt-user-avatar{width:38px;height:38px;border-radius:50%;object-fit:cover;' +
       'border:2px solid var(--blue,#17baef);display:block;background:#e2edf3;}' +
-      '.stt-user-dropdown{position:absolute;top:calc(100% + 10px);right:0;min-width:190px;' +
-      'width:max-content;max-width:min(320px,92vw);max-height:min(75vh,560px);' +
+      // IMPORTANTE: ancho FIJO (no "max-content"). Combinar un contenedor
+      // "max-content" con hijos "width:100%" (como los inputs/selects de
+      // fndInm.js) produce layouts inestables: el navegador calcula el
+      // ancho del contenedor ignorando los porcentajes de los hijos y
+      // recién después los resuelve contra ese ancho, dando columnas
+      // desalineadas o angostas. Con un ancho fijo, cualquier contenido
+      // interno con width:100% (incluido fndInm.js) se ve igual en
+      // cualquier página, no solo en #toolbox (que sí tiene ancho fijo
+      // propio via mapa.css).
+      '.stt-user-dropdown{position:absolute;top:calc(100% + 10px);right:0;' +
+      'width:min(320px,92vw);min-width:190px;max-height:min(75vh,560px);' +
       'overflow-y:auto;overflow-x:hidden;' +
       'background:#fff;border-radius:var(--radius-md,12px);' +
       'box-shadow:0 10px 30px rgba(7,79,102,.18);padding:8px;z-index:1000;' +

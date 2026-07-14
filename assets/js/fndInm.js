@@ -312,6 +312,13 @@
   function injectStyles() {
     if (document.getElementById(STYLE_ID)) return;
     var css =
+      // Reset propio de box-sizing: fndInm.js no debe asumir que la página
+      // host trae un "*{box-sizing:border-box}" global (el mapa sí lo
+      // tiene vía mapa.css; el resto de las páginas, no necesariamente).
+      // Sin esto, fieldsets/inputs pueden medirse distinto según la
+      // página en la que se monte.
+      '#' + SECTION_ID + ',#' + SECTION_ID + ' *,#' + SECTION_ID + ' *::before,' +
+      '#' + SECTION_ID + ' *::after{box-sizing:border-box;}' +
       '#' + SECTION_ID + ' .fndinm-slots{display:flex;gap:6px;align-items:center;' +
       'margin-bottom:10px;flex-wrap:wrap;}' +
       '#' + SECTION_ID + ' .fndinm-slots select{flex:1;min-width:120px;}' +
@@ -338,12 +345,33 @@
       '#' + SECTION_ID + ' .fndinm-row label{font-size:.8rem;opacity:.8;}' +
       '#' + SECTION_ID + ' .fndinm-row input[type="text"],' +
       '#' + SECTION_ID + ' .fndinm-row input[type="number"],' +
-      '#' + SECTION_ID + ' .fndinm-row select{padding:5px 6px;border:1px solid rgba(0,0,0,.2);' +
+      '#' + SECTION_ID + ' .fndinm-row select,' +
+      // El <select> de "Búsquedas guardadas" (.fndinm-slots) vive FUERA de
+      // cualquier .fndinm-row, así que antes quedaba afuera de este
+      // selector y no recibía padding/borde/radius: se veía con el estilo
+      // nativo "pelado" del navegador. Se agrega explícitamente acá.
+      '#' + SECTION_ID + ' .fndinm-slots select{padding:5px 6px;border:1px solid rgba(0,0,0,.2);' +
       'border-radius:6px;font-size:.85rem;width:100%;box-sizing:border-box;}' +
       '#' + SECTION_ID + ' .fndinm-row-inline{flex-direction:row;align-items:center;gap:6px;}' +
       '#' + SECTION_ID + ' .fndinm-note{font-size:.72rem;opacity:.65;margin-top:2px;}' +
       '#' + SECTION_ID + ' .fndinm-actions{display:flex;gap:8px;margin-top:4px;}' +
-      '#' + SECTION_ID + ' .fndinm-actions button{flex:1;}' +
+      // Antes los botones no tenían NINGÚN estilo propio (ni fondo, ni
+      // borde, ni color, ni padding) más que "flex:1": dependían por
+      // completo de que la página host ya tuviera un estilo global para
+      // <button>, cosa que solo pasa en la página del mapa. Se agrega acá
+      // un estilo base autocontenido para que se vean bien en cualquier
+      // página, con var(--blue)/var(--blue-dark) como mejora progresiva
+      // si la página los define (igual que hace menuUser.js) y un color
+      // de respaldo fijo si no.
+      '#' + SECTION_ID + ' .fndinm-actions button{flex:1;padding:9px 10px;' +
+      'border:1px solid rgba(0,0,0,.15);border-radius:6px;font-size:.85rem;' +
+      'cursor:pointer;background:#f4f6f7;color:inherit;' +
+      'transition:background .15s ease,border-color .15s ease;}' +
+      '#' + SECTION_ID + ' .fndinm-actions button:hover{background:rgba(0,0,0,.08);}' +
+      '#' + SECTION_ID + ' #fndInm-btn-buscar{background:var(--blue,#17baef);' +
+      'border-color:var(--blue,#17baef);color:#fff;}' +
+      '#' + SECTION_ID + ' #fndInm-btn-buscar:hover{background:var(--blue-dark,#0f95bd);' +
+      'border-color:var(--blue-dark,#0f95bd);}' +
       // Variante standalone (dentro del dropdown de menuUser.js): título
       // propio no interactivo + límite de alto con scroll, porque acá no
       // hay un acordeón exterior que la contenga (a diferencia de #toolbox).
