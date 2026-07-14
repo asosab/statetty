@@ -754,10 +754,14 @@ $(document).ready(function () {
       });
     });
 
-    // accordion
+    // accordion (toggle: un segundo click sobre la misma sección la cierra)
     $(document).on('click', '.section-header', function () {
+      var $section = $(this).parent();
+      var yaActiva = $section.hasClass('active');
       $('.section').removeClass('active');
-      $(this).parent().addClass('active');
+      if (!yaActiva) {
+        $section.addClass('active');
+      }
     });
 
     // agencias únicas
