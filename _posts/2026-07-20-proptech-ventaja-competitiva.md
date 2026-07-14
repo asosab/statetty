@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "PropTech en Latinoamérica: qué es, hasta dónde llega y dónde está Bolivia en el mapa"
-date: 2026-05-20
+date: 2026-07-20
 categories: tecnologia, mercado
 comments: true
 description: "Qué es el PropTech, qué áreas del real estate transforma, dónde se ubica Bolivia frente al resto de Sudamérica y qué lugar ocupa América Latina en la evolución tecnológica mundial. Con Statetty como ejemplo concreto de digitalización aplicada."
@@ -9,6 +9,8 @@ tags: [proptech, digitalizacion, inteligencia artificial, automatizacion, bolivi
 published: true
 image: "proptech-latam.png"
 ---
+
+¿Sin tiempo para leer? Escucha el artículo en [Statetty Podcast](https://open.spotify.com/episode/34VgumeBnOq1M5avshyeLM)
 
 ## Qué es el PropTech
 
