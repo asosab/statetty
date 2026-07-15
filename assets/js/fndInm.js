@@ -1101,7 +1101,7 @@
       header.style.display = 'flex';
       header.style.alignItems = 'center';
       header.style.gap = '6px';
-      var headerTitle = document.createTextNode('Buscar Inmuebles');
+      var headerTitle = document.createTextNode('🔎 Buscar Inmuebles');
       var saveStatus = document.createElement('span');
       saveStatus.id = 'fndInm-save-status';
       header.appendChild(headerTitle);
@@ -1126,7 +1126,7 @@
 
       var title = document.createElement('span');
       title.className = 'fndinm-standalone-title';
-      title.textContent = 'Buscar Inmuebles';
+      title.textContent = '🔎 Buscar Inmuebles';
 
       var saveStatus = document.createElement('span');
       saveStatus.id = 'fndInm-save-status';

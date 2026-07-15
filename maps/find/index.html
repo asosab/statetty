@@ -51,23 +51,23 @@ published:          true
   <div id="toolbox">
     <!-- Bloque 1: Buscar + Estadísticas -->
     <div class="section">
-      <div class="section-header">🔍 Buscar & 📊 Estadísticas</div>
-      <div class="section-body">
-        <div class="search-container">
-          <span>🔍</span>
-          <div style="position: relative; flex: 1;">
-            <input type="text" id="search-input" placeholder="Buscar..." style="width: 98%;">
-            <span id="search-count" style="position:absolute; right:0; top:50%; transform:translateY(-50%); font-size:12px; color:#555; pointer-events:none; display:none;"></span>
+      <div class="section-header">📊 Estadísticas & 🔍 Buscar</div>
+        <div class="section-body">
+          <div class="search-container">
+            <span>🔍</span>
+            <div style="position: relative; flex: 1;">
+              <input type="text" id="search-input" placeholder="Buscar..." style="width: 98%;">
+              <span id="search-count" style="position:absolute; right:0; top:50%; transform:translateY(-50%); font-size:12px; color:#555; pointer-events:none; display:none;"></span>
+            </div>
+          </div>
+          <div id="stats-container" style="font-size: 14px; line-height: 1.4; margin-top:6px;">
+            🏙 Total inmuebles: <span id="total-inmuebles">0</span><br>
+            💲 Precio promedio: USD<span id="precio-promedio">0</span><br>
+            🏷️ Más económico: <span id="mas-barato">-</span><br>
+            💎 Más costoso: <span id="mas-caro">-</span><br>
+
           </div>
         </div>
-        <div id="stats-container" style="font-size: 14px; line-height: 1.4; margin-top:6px;">
-          🏙 Total inmuebles: <span id="total-inmuebles">0</span><br>
-          💲 Precio promedio: USD<span id="precio-promedio">0</span><br>
-          🏷️ Más económico: <span id="mas-barato">-</span><br>
-          💎 Más costoso: <span id="mas-caro">-</span><br>
-
-        </div>
-      </div>
     </div>
 
     <!-- Bloque 2: Seleccionados + PDF -->
