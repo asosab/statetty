@@ -69,6 +69,9 @@
   /* ---------- layout switch ---------- */
 
   function resetHeaders() {
+    $(TOOLBOX).children('.section').each(function () {
+      this.style.display = '';
+    });
     $(TOOLBOX).find('.section-header').each(function () {
       expandHeader(this);
       this.style.order = '';
@@ -87,6 +90,14 @@
 
     var inactives = sections.not('.active');
 
+    // Critical: .section must not create its own box, or the order/flex
+    // set below on its .section-header / .section-body children (grandchildren
+    // of #toolbox) would be ignored — only direct children of a flex
+    // container participate in flex layout.
+    sections.each(function () {
+      this.style.display = 'contents';
+    });
+
     inactives.each(function (idx) {
       var h = this.querySelector('.section-header');
       if (!h) return;
@@ -103,7 +114,10 @@
 
     sections.each(function () {
       var b = this.querySelector('.section-body');
-      if (b) b.style.order = '1000';
+      if (b) {
+        b.style.order = '1000';
+        b.style.flex = '0 0 100%';
+      }
     });
 
     return true;
@@ -130,11 +144,11 @@
       var ok = applyFlex();
       if (ok) {
         $TOOLBOX.addClass('stt-icons-mode');
-        $TOOLBOX.css('display', 'flex');
+        $TOOLBOX.css({ display: 'flex', flexWrap: 'wrap' });
       } else {
         $TOOLBOX.removeClass('stt-icons-mode');
         resetHeaders();
-        $TOOLBOX.css('display', 'block');
+        $TOOLBOX.css({ display: 'block', flexWrap: '' });
         cleanOlddisplay();
       }
     } finally {
