@@ -455,6 +455,7 @@
       '#' + SECTION_ID + ' #fndInm-save-status{margin-left:auto;font-size:.78rem;display:flex;align-items:center;gap:4px;flex-shrink:0;}' +
       '#' + SECTION_ID + ' .fndinm-spinner{width:14px;height:14px;border:2px solid #ddd;border-top-color:#17baef;border-radius:50%;animation:fndinm-spin .6s linear infinite;display:inline-block;}' +
       '@keyframes fndinm-spin{to{transform:rotate(360deg)}}' +
+      '@keyframes fndinm-search-spin{to{transform:rotate(360deg)}}' +
       '#' + SECTION_ID + ' .fndinm-save-status.fndinm-success{color:#28a745;}' +
       '#' + SECTION_ID + ' .fndinm-save-status.fndinm-error{color:#dc3545;}' +
       // Tema Tippy.js propio, para que los tooltips combinen con el toolbox
@@ -979,13 +980,49 @@
     form.appendChild(actions);
 
     form.addEventListener('submit', function (e) {
-      e.preventDefault(); // el AJAX real se conecta después
+      e.preventDefault();
       var params = getParams();
-      if (window.STT_FND_INM && typeof window.STT_FND_INM.onSearch === 'function') {
-        window.STT_FND_INM.onSearch(params);
-      } else {
-        console.log('[fndInm] TODO: conectar AJAX a buscarInmuebles con params:', params);
+      var pk = window.STT && window.STT.getKey && window.STT.getKey();
+      if (!pk) {
+        showSaveStatus('error', 'Debes iniciar sesión para buscar.');
+        return;
       }
+
+      var overlay = document.createElement('div');
+      overlay.id = 'fndInm-search-overlay';
+      overlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.6);z-index:99999;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:16px;cursor:wait;';
+
+      var spinner = document.createElement('div');
+      spinner.style.cssText = 'width:48px;height:48px;border:4px solid rgba(255,255,255,0.3);border-top-color:#17baef;border-radius:50%;animation:fndinm-search-spin .8s linear infinite;';
+
+      var msg = document.createElement('div');
+      msg.style.cssText = 'color:#fff;font-size:1.1rem;font-family:sans-serif;text-align:center;';
+      msg.textContent = 'Realizando búsqueda, un momento por favor';
+
+      overlay.appendChild(spinner);
+      overlay.appendChild(msg);
+      document.body.appendChild(overlay);
+
+      params.publicKey = pk;
+
+      var base = window.STATETTY_CONFIG ? STATETTY_CONFIG.WS_API_BASE : '';
+      fetch(base + 'statetty/buscarInmueble', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(params)
+      }).then(function (r) { return r.json(); }).then(function (res) {
+        overlay.remove();
+        if (res.ok) {
+          window.location.href = 'https://statetty.com/maps/find';
+        } else if (res.error === 'publicKey_requerida' || res.error === 'publicKey_invalida' || res.error === 'publicKey_vencida') {
+          showSaveStatus('error', 'Tu sesión ha expirado. Recarga la página e intenta de nuevo.');
+        } else {
+          showSaveStatus('error', res.error === 'error_en_busqueda' ? 'Error al realizar la búsqueda. Intenta de nuevo.' : res.error || 'Error inesperado.');
+        }
+      }).catch(function () {
+        overlay.remove();
+        showSaveStatus('error', 'Error de conexión. Verifica tu conexión e intenta de nuevo.');
+      });
     });
 
     return form;
