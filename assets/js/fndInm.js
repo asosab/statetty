@@ -406,6 +406,10 @@
       'border-radius:6px;font-size:.85rem;width:100%;box-sizing:border-box;}' +
       '#' + SECTION_ID + ' .fndinm-row-inline{flex-direction:row;align-items:center;gap:6px;}' +
       '#' + SECTION_ID + ' .fndinm-note{font-size:.72rem;opacity:.65;margin-top:2px;}' +
+      '#' + SECTION_ID + ' .fndinm-latlng-wrapper{display:flex;flex-direction:row;align-items:center;gap:4px;}' +
+      '#' + SECTION_ID + ' .fndinm-latlng-wrapper input{flex:1;}' +
+      '#' + SECTION_ID + ' .fndinm-latlng-search{cursor:pointer;font-size:1rem;padding:0 4px;user-select:none;}' +
+      '#' + SECTION_ID + ' .fndinm-latlng-search:hover{opacity:.7;}' +
       '#' + SECTION_ID + ' .fndinm-actions{display:flex;gap:8px;margin-top:4px;}' +
       // Antes los botones no tenían NINGÚN estilo propio (ni fondo, ni
       // borde, ni color, ni padding) más que "flex:1": dependían por
@@ -546,8 +550,34 @@
       }
 
       row.appendChild(acmPointerDiv);
+      var combinedWrapper = document.createElement('div');
+      combinedWrapper.className = 'fndinm-latlng-wrapper';
+
+      var searchBtn = document.createElement('span');
+      searchBtn.className = 'fndinm-latlng-search';
+      searchBtn.textContent = '\ud83d\udd0d';
+      searchBtn.setAttribute('data-tippy-content', 'Mover puntero ACM a estas coordenadas');
+      searchBtn.addEventListener('click', function () {
+        var parsed = parseLatLng(combined.value);
+        if (!parsed) return;
+        window.__acmCoords = { lat: parsed.lat, lng: parsed.lng };
+        if (window.__acmMarker && window.map) {
+          window.__acmMarker.setLatLng([parsed.lat, parsed.lng]);
+          window.map.panTo([parsed.lat, parsed.lng]);
+        } else if (window.map) {
+          window.map.fire('click', { latlng: L.latLng(parsed.lat, parsed.lng) });
+          window.map.panTo([parsed.lat, parsed.lng]);
+        }
+        if (window.STT_FND_INM && typeof window.STT_FND_INM.refreshACMPointer === 'function') {
+          window.STT_FND_INM.refreshACMPointer();
+        }
+      });
+
+      combinedWrapper.appendChild(combined);
+      combinedWrapper.appendChild(searchBtn);
+
       row.appendChild(llLabel);
-      row.appendChild(combined);
+      row.appendChild(combinedWrapper);
       row.appendChild(hiddenLat);
       row.appendChild(hiddenLng);
 
