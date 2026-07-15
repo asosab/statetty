@@ -29,6 +29,10 @@
 
       if(window.__acmMarker){map.removeLayer(window.__acmMarker);}
       window.__acmMarker=L.marker([lat,lng],{icon:icon,interactive:false}).addTo(map);
+
+      if(window.STT_FND_INM && typeof window.STT_FND_INM.refreshACMPointer==='function'){
+        window.STT_FND_INM.refreshACMPointer();
+      }
     });
 
   } catch (e) {console.log('initACMMapClickMarker error',e);} }

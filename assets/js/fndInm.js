@@ -448,6 +448,9 @@
       '#' + SECTION_ID + '.fndinm-standalone-open .fndinm-standalone-caret{transform:rotate(90deg);}' +
       '#' + SECTION_ID + ' .fndinm-standalone-body{display:none;}' +
       '#' + SECTION_ID + '.fndinm-standalone-open .fndinm-standalone-body{display:block;}' +
+      '#' + SECTION_ID + ' #fndInm-acm-pointer{font-size:.8rem;margin-bottom:4px;display:flex;align-items:center;gap:6px;}' +
+      '#' + SECTION_ID + ' #fndInm-acm-usar-btn{padding:2px 8px;border:1px solid rgba(0,0,0,.15);border-radius:4px;cursor:pointer;background:#f4f6f7;font-size:.78rem;}' +
+      '#' + SECTION_ID + ' #fndInm-acm-usar-btn:hover{background:rgba(0,0,0,.08);}' +
       // Tema Tippy.js propio, para que los tooltips combinen con el toolbox
       // (los popups de Tippy se insertan en document.body, por eso van
       // fuera del prefijo "#SECTION_ID").
@@ -511,6 +514,36 @@
       llLabel.setAttribute('for', inputId);
       llLabel.textContent = field.label;
 
+      // --- Indicador de coordenadas del pointer ACM ---
+      var acmPointerDiv = document.createElement('div');
+      acmPointerDiv.id = 'fndInm-acm-pointer';
+      acmPointerDiv.style.display = 'none';
+
+      var acmIcon = document.createTextNode('\ud83d\udccd ACM: ');
+      acmPointerDiv.appendChild(acmIcon);
+
+      var acmCoordSpan = document.createElement('span');
+      acmCoordSpan.id = 'fndInm-acm-coord-text';
+      acmPointerDiv.appendChild(acmCoordSpan);
+
+      var acmUsarBtn = document.createElement('button');
+      acmUsarBtn.id = 'fndInm-acm-usar-btn';
+      acmUsarBtn.type = 'button';
+      acmUsarBtn.textContent = 'Usar';
+      acmUsarBtn.addEventListener('click', function () {
+        if (window.__acmCoords) {
+          combined.value = window.__acmCoords.lat + ', ' + window.__acmCoords.lng;
+          combined.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      });
+      acmPointerDiv.appendChild(acmUsarBtn);
+
+      if (window.__acmCoords && window.__acmCoords.lat !== undefined && window.__acmCoords.lng !== undefined) {
+        acmCoordSpan.textContent = window.__acmCoords.lat + ', ' + window.__acmCoords.lng;
+        acmPointerDiv.style.display = '';
+      }
+
+      row.appendChild(acmPointerDiv);
       row.appendChild(llLabel);
       row.appendChild(combined);
       row.appendChild(hiddenLat);
@@ -964,5 +997,16 @@
   window.STT_FND_INM = window.STT_FND_INM || {};
   window.STT_FND_INM.mount = mount;
   window.STT_FND_INM.getParams = getParams;
+  window.STT_FND_INM.refreshACMPointer = function () {
+    var el = document.getElementById('fndInm-acm-coord-text');
+    var div = document.getElementById('fndInm-acm-pointer');
+    if (!el || !div) return;
+    if (window.__acmCoords && window.__acmCoords.lat !== undefined && window.__acmCoords.lng !== undefined) {
+      el.textContent = window.__acmCoords.lat + ', ' + window.__acmCoords.lng;
+      div.style.display = '';
+    } else {
+      div.style.display = 'none';
+    }
+  };
   // window.STT_FND_INM.onSearch se define desde afuera cuando se conecte el AJAX real.
 })();
