@@ -45,6 +45,13 @@ published:          true
     }
     .section-body { display: none; padding: 5px; }
     .section.active .section-body { display: block; }
+
+    /* --- menuIcons.js: icon-row flex mode --- */
+    #toolbox.stt-icons-mode { display: flex; flex-wrap: wrap; align-items: flex-start; }
+    #toolbox.stt-icons-mode > .section { display: contents; }
+    #toolbox.stt-icons-mode .section-header { cursor: pointer; font-weight: bold; padding: 5px; background: #f0f0f0; }
+    .stt-icon-only { display: inline; }
+    .stt-icon-full-text { display: none; } /* fallback; JS sets inline style */
   </style>
 
   <div id="toolbox-btn">⚙</div>
@@ -142,5 +149,6 @@ published:          true
   <script src="../../assets/js/acm.js"></script>
   <script src="../../assets/js/datos.js"></script>
   <script src="../../assets/js/mapa.js"></script>
+  <script src="../../assets/js/menuIcons.js"></script>
 
 
