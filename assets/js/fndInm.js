@@ -297,6 +297,49 @@
     return str.length > max ? str.slice(0, max) + '…' : str;
   }
 
+  // ------------------------------------------------------------------
+  // Helpers para poblar el <select> de búsquedas guardadas
+  // ------------------------------------------------------------------
+  function formatPriceForLabel(val) {
+    if (val === undefined || val === null || val === '') return '';
+    var n = Number(val);
+    if (isNaN(n)) return String(val);
+    if (n >= 1000000) return Math.round(n / 1000000) + 'MM';
+    if (n >= 1000) return Math.round(n / 1000) + 'K';
+    return String(n);
+  }
+
+  function buildSlotLabel(param) {
+    if (param.nombre && String(param.nombre).trim()) return String(param.nombre).trim();
+    var parts = [];
+    if (param.lat !== undefined && param.lng !== undefined) {
+      var latN = Number(param.lat), lngN = Number(param.lng);
+      if (!isNaN(latN) && !isNaN(lngN)) parts.push(latN.toFixed(2) + ',' + lngN.toFixed(2));
+    }
+    var pMin = formatPriceForLabel(param.pMin);
+    var pMax = formatPriceForLabel(param.pMax);
+    var priceStr = '';
+    if (pMin || pMax) priceStr = (pMin || '') + ' - ' + (pMax || '');
+    if (priceStr) parts.push(priceStr);
+    return parts.join(' | ');
+  }
+
+  function populateSlots(selectEl, usuario) {
+    while (selectEl.options.length > 1) selectEl.remove(1);
+    var busquedas = usuario && usuario.busquedas;
+    if (!Array.isArray(busquedas)) return;
+    busquedas.forEach(function (jsonStr) {
+      if (!jsonStr || jsonStr === '{}') return;
+      try {
+        var param = JSON.parse(jsonStr);
+        var opt = document.createElement('option');
+        opt.value = jsonStr;
+        opt.textContent = buildSlotLabel(param);
+        selectEl.appendChild(opt);
+      } catch (e) {}
+    });
+  }
+
   // Acepta "lat, lng", "lat lng" o "lat;lng"
   function parseLatLng(str) {
     if (!str) return null;
@@ -547,7 +590,7 @@
   // ------------------------------------------------------------------
   // Construcción del <select> de slots (vacío por ahora)
   // ------------------------------------------------------------------
-  function buildSlotsControl() {
+  function buildSlotsControl(usuario) {
     var wrap = document.createElement('div');
     wrap.className = 'fndinm-slots';
 
@@ -560,8 +603,44 @@
     placeholder.value = '';
     placeholder.textContent = 'Búsquedas guardadas…';
     select.appendChild(placeholder);
-    // TODO: popular este <select> con las búsquedas guardadas del usuario
-    // (ajax) y disparar el llenado del formulario al elegir una opción.
+
+    populateSlots(select, usuario);
+
+    select.addEventListener('change', function () {
+      var jsonStr = this.value;
+      if (!jsonStr) return;
+      var form = document.getElementById(FORM_ID);
+      if (!form) return;
+      var param;
+      try { param = JSON.parse(jsonStr); } catch (e) { return; }
+      if (!param || typeof param !== 'object') return;
+
+      var combined = document.getElementById('fndInm-latlng');
+      if (combined && param.lat !== undefined && param.lng !== undefined) {
+        var latN = Number(param.lat), lngN = Number(param.lng);
+        if (!isNaN(latN) && !isNaN(lngN)) {
+          combined.value = latN + ', ' + lngN;
+          combined.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      }
+
+      GROUPS.forEach(function (group) {
+        group.fields.forEach(function (field) {
+          if (field.type === 'latlng') return;
+          var el = form.elements[field.name];
+          if (!el) return;
+          var val = param[field.name];
+          if (val === undefined || val === null) return;
+          if (field.type === 'checkbox') {
+            el.checked = !!val;
+          } else {
+            el.value = val;
+          }
+        });
+      });
+
+      if (form._fieldsetRefs) refreshLegends(form, form._fieldsetRefs);
+    });
 
     wrap.appendChild(select);
     return wrap;
@@ -710,6 +789,7 @@
 
     // Estado inicial de las leyendas (según valores por defecto/overrides)
     refreshLegends(form, fieldsetRefs);
+    form._fieldsetRefs = fieldsetRefs;
 
     var actions = document.createElement('div');
     actions.className = 'fndinm-actions';
@@ -810,7 +890,7 @@
 
       var body = document.createElement('div');
       body.className = 'section-body';
-      body.appendChild(buildSlotsControl());
+      body.appendChild(buildSlotsControl(usuario));
       body.appendChild(buildForm(usuario));
 
       section.appendChild(header);
@@ -839,7 +919,7 @@
       var body = document.createElement('div');
       body.className = 'fndinm-standalone-body';
       body.id = SECTION_ID + '-standalone-body';
-      body.appendChild(buildSlotsControl());
+      body.appendChild(buildSlotsControl(usuario));
       body.appendChild(buildForm(usuario));
 
       // Colapsado por defecto: en modo standalone no hay acordeón externo
