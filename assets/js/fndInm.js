@@ -874,7 +874,7 @@
     function attachSaveListeners(root) {
       var els = root.querySelectorAll('input, select, textarea');
       Array.prototype.forEach.call(els, function (el) {
-        if (el.type === 'hidden' || el.type === 'button' || el.type === 'submit' || el.type === 'reset') return;
+        if (el.type === 'hidden' || el.type === 'button' || el.type === 'submit' || el.type === 'reset' || el.id === 'fndInm-slots-select') return;
         if (el.id === 'fndInm-latlng') {
           el.addEventListener('input', function () {
             var parsed = parseLatLng(el.value);
