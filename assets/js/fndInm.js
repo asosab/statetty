@@ -328,12 +328,13 @@
     while (selectEl.options.length > 1) selectEl.remove(1);
     var busquedas = usuario && usuario.busquedas;
     if (!Array.isArray(busquedas)) return;
-    busquedas.forEach(function (jsonStr) {
+    busquedas.forEach(function (jsonStr, idx) {
       if (!jsonStr || jsonStr === '{}') return;
       try {
         var param = JSON.parse(jsonStr);
         var opt = document.createElement('option');
         opt.value = jsonStr;
+        opt.setAttribute('data-index', idx);
         opt.textContent = buildSlotLabel(param);
         selectEl.appendChild(opt);
       } catch (e) {}
@@ -341,6 +342,30 @@
   }
 
   // Acepta "lat, lng", "lat lng" o "lat;lng"
+  // ------------------------------------------------------------------
+  // Status indicator helpers
+  // ------------------------------------------------------------------
+  var _saveTimer = null;
+
+  function showSaveStatus(state, msg) {
+    var el = document.getElementById('fndInm-save-status');
+    if (!el) return;
+    el.className = 'fndinm-save-status';
+    if (state === 'saving') {
+      el.innerHTML = '<span class="fndinm-spinner"></span>';
+    } else if (state === 'success') {
+      el.innerHTML = '\u2705 ' + (msg || 'Cambio realizado');
+      el.classList.add('fndinm-success');
+      clearTimeout(el._hideTimer);
+      el._hideTimer = setTimeout(function () { el.innerHTML = ''; }, 5000);
+    } else if (state === 'error') {
+      el.innerHTML = '\u274c ' + (msg || 'Error al actualizar');
+      el.classList.add('fndinm-error');
+      clearTimeout(el._hideTimer);
+      el._hideTimer = setTimeout(function () { el.innerHTML = ''; }, 5000);
+    }
+  }
+
   function parseLatLng(str) {
     if (!str) return null;
     var parts = String(str).split(/[,;]+|\s+/).map(function (s) { return s.trim(); })
@@ -451,6 +476,11 @@
       '#' + SECTION_ID + ' #fndInm-acm-pointer{font-size:.8rem;margin-bottom:4px;display:flex;align-items:center;gap:6px;}' +
       '#' + SECTION_ID + ' #fndInm-acm-usar-btn{padding:2px 8px;border:1px solid rgba(0,0,0,.15);border-radius:4px;cursor:pointer;background:#f4f6f7;font-size:.78rem;}' +
       '#' + SECTION_ID + ' #fndInm-acm-usar-btn:hover{background:rgba(0,0,0,.08);}' +
+      '#' + SECTION_ID + ' #fndInm-save-status{margin-left:auto;font-size:.78rem;display:flex;align-items:center;gap:4px;flex-shrink:0;}' +
+      '#' + SECTION_ID + ' .fndinm-spinner{width:14px;height:14px;border:2px solid #ddd;border-top-color:#17baef;border-radius:50%;animation:fndinm-spin .6s linear infinite;display:inline-block;}' +
+      '@keyframes fndinm-spin{to{transform:rotate(360deg)}}' +
+      '#' + SECTION_ID + ' .fndinm-save-status.fndinm-success{color:#28a745;}' +
+      '#' + SECTION_ID + ' .fndinm-save-status.fndinm-error{color:#dc3545;}' +
       // Tema Tippy.js propio, para que los tooltips combinen con el toolbox
       // (los popups de Tippy se insertan en document.body, por eso van
       // fuera del prefijo "#SECTION_ID").
@@ -810,6 +840,64 @@
     // Recalcular leyendas ante cualquier cambio en el formulario
     form.addEventListener('input', function () { refreshLegends(form, fieldsetRefs); });
     form.addEventListener('change', function () { refreshLegends(form, fieldsetRefs); });
+
+    // --- Auto-save debounced por campo editado ---
+    var _pendingField = null;
+
+    function enqueueSave(fieldName, rawValue) {
+      _pendingField = { name: fieldName, value: rawValue };
+      clearTimeout(_saveTimer);
+      _saveTimer = setTimeout(function () {
+        if (!_pendingField) return;
+        var pk = window.STT && window.STT.getKey && window.STT.getKey();
+        if (!pk) return;
+        var sel = document.getElementById('fndInm-slots-select');
+        var opt = sel && sel.options[sel.selectedIndex];
+        var idx = opt ? parseInt(opt.getAttribute('data-index'), 10) : 0;
+        var data = {};
+        data[_pendingField.name] = _pendingField.value;
+        showSaveStatus('saving');
+        var base = window.STATETTY_CONFIG ? STATETTY_CONFIG.WS_API_BASE : '';
+        fetch(base + 'statetty/updtUsrBusqueda', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ publicKey: pk, i: idx, data: data })
+        }).then(function (r) { return r.json(); }).then(function (res) {
+          showSaveStatus(res.ok ? 'success' : 'error', res.ok ? 'Cambio realizado' : 'Error al actualizar');
+        }).catch(function () {
+          showSaveStatus('error', 'Error al actualizar');
+        });
+        _pendingField = null;
+      }, 1500);
+    }
+
+    // Adjuntar listeners de auto-save a cada campo del form
+    function attachSaveListeners(root) {
+      var els = root.querySelectorAll('input, select, textarea');
+      Array.prototype.forEach.call(els, function (el) {
+        if (el.type === 'hidden' || el.type === 'button' || el.type === 'submit' || el.type === 'reset') return;
+        if (el.id === 'fndInm-latlng') {
+          el.addEventListener('input', function () {
+            var parsed = parseLatLng(el.value);
+            if (parsed) enqueueSave('lat', parsed.lat);
+            if (parsed) enqueueSave('lng', parsed.lng);
+          });
+        } else if (el.type === 'checkbox') {
+          el.addEventListener('change', function () { enqueueSave(el.name, el.checked); });
+        } else {
+          el.addEventListener('input', function () {
+            var v = el.value;
+            enqueueSave(el.name, v === '' ? null : v);
+          });
+          el.addEventListener('change', function () {
+            var v = el.value;
+            enqueueSave(el.name, v === '' ? null : v);
+          });
+        }
+      });
+    }
+    attachSaveListeners(form);
+
     form.addEventListener('reset', function () {
       // Esperar a que el navegador aplique el reset nativo antes de
       // resincronizar el input combinado lat/lng y las leyendas.
@@ -919,7 +1007,14 @@
 
       var header = document.createElement('div');
       header.className = 'section-header';
-      header.textContent = 'Buscar Inmuebles';
+      header.style.display = 'flex';
+      header.style.alignItems = 'center';
+      header.style.gap = '6px';
+      var headerTitle = document.createTextNode('Buscar Inmuebles');
+      var saveStatus = document.createElement('span');
+      saveStatus.id = 'fndInm-save-status';
+      header.appendChild(headerTitle);
+      header.appendChild(saveStatus);
 
       var body = document.createElement('div');
       body.className = 'section-body';
@@ -942,11 +1037,15 @@
       title.className = 'fndinm-standalone-title';
       title.textContent = 'Buscar Inmuebles';
 
+      var saveStatus = document.createElement('span');
+      saveStatus.id = 'fndInm-save-status';
+
       var caret = document.createElement('span');
       caret.className = 'fndinm-standalone-caret';
       caret.textContent = '▸';
 
       header.appendChild(title);
+      header.appendChild(saveStatus);
       header.appendChild(caret);
 
       var body = document.createElement('div');
