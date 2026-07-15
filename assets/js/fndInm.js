@@ -842,32 +842,31 @@
     form.addEventListener('change', function () { refreshLegends(form, fieldsetRefs); });
 
     // --- Auto-save debounced por campo editado ---
-    var _pendingField = null;
+    var _pendingData = null;
 
-    function enqueueSave(fieldName, rawValue) {
-      _pendingField = { name: fieldName, value: rawValue };
+    function enqueueSave(fieldData) {
+      if (!_pendingData) _pendingData = {};
+      Object.assign(_pendingData, fieldData);
       clearTimeout(_saveTimer);
       _saveTimer = setTimeout(function () {
-        if (!_pendingField) return;
+        if (!_pendingData) return;
         var pk = window.STT && window.STT.getKey && window.STT.getKey();
         if (!pk) return;
         var sel = document.getElementById('fndInm-slots-select');
         var opt = sel && sel.options[sel.selectedIndex];
         var idx = opt ? parseInt(opt.getAttribute('data-index'), 10) : 0;
-        var data = {};
-        data[_pendingField.name] = _pendingField.value;
         showSaveStatus('saving');
         var base = window.STATETTY_CONFIG ? STATETTY_CONFIG.WS_API_BASE : '';
         fetch(base + 'statetty/updtUsrBusqueda', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ publicKey: pk, i: idx, data: data })
+          body: JSON.stringify({ publicKey: pk, i: idx, data: _pendingData })
         }).then(function (r) { return r.json(); }).then(function (res) {
           showSaveStatus(res.ok ? 'success' : 'error', res.ok ? 'Cambio realizado' : 'Error al actualizar');
         }).catch(function () {
           showSaveStatus('error', 'Error al actualizar');
         });
-        _pendingField = null;
+        _pendingData = null;
       }, 1500);
     }
 
@@ -879,19 +878,18 @@
         if (el.id === 'fndInm-latlng') {
           el.addEventListener('input', function () {
             var parsed = parseLatLng(el.value);
-            if (parsed) enqueueSave('lat', parsed.lat);
-            if (parsed) enqueueSave('lng', parsed.lng);
+            if (parsed) enqueueSave({ lat: parsed.lat, lng: parsed.lng });
           });
         } else if (el.type === 'checkbox') {
-          el.addEventListener('change', function () { enqueueSave(el.name, el.checked); });
+          var chk = {};
+          chk[el.name] = el.checked;
+          el.addEventListener('change', function () { chk[el.name] = el.checked; enqueueSave(chk); });
         } else {
           el.addEventListener('input', function () {
-            var v = el.value;
-            enqueueSave(el.name, v === '' ? null : v);
+            var o = {}; o[el.name] = el.value === '' ? null : el.value; enqueueSave(o);
           });
           el.addEventListener('change', function () {
-            var v = el.value;
-            enqueueSave(el.name, v === '' ? null : v);
+            var o = {}; o[el.name] = el.value === '' ? null : el.value; enqueueSave(o);
           });
         }
       });
