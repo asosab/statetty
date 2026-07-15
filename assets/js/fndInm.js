@@ -660,9 +660,7 @@
       }
 
       var nombreEl = form.elements['nombre'];
-      if (nombreEl && param.nombre !== undefined && param.nombre !== null) {
-        nombreEl.value = param.nombre;
-      }
+      if (nombreEl) nombreEl.value = param.nombre !== undefined && param.nombre !== null ? param.nombre : '';
 
       GROUPS.forEach(function (group) {
         group.fields.forEach(function (field) {
