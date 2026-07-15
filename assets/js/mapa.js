@@ -499,6 +499,35 @@ function updateButtonsState() {
   if (selCount > 0 && $removeAll.length) $removeAll.prop('disabled', false);
 }
 
+if (!window.columnasConfig) {
+  window.columnasConfig = {
+    "foto":           true,
+    "Titulo":         true,
+    "precio":         true,
+    "dormitorios":    true,
+    "baños":          true,
+    "m2construccion": true,
+    "m2terreno":      true,
+    "lat":            false,
+    "lng":            false,
+    "dir":            false,
+    "URL":            false,
+    "des":            false,
+    "ambientes":      false,
+    "nombre":         false,
+    "precioM2C":      false,
+    "precioM2T":      false,
+    "broker":         false,
+    "agentName":      false,
+    "agentPhone":     false,
+    "fechaIngreso":   false,
+    "tiempoOfertado": false,
+    "tipoInmueble":   false,
+    "tipoNegocio":    false,
+    "anoc":           false,
+  };
+}
+
 function actualizarToolbox() {
   $("#sel-box").remove();
   seleccionados.sort((a, b) => (parseFloat(a.precio) || 0) - (parseFloat(b.precio) || 0));
@@ -523,6 +552,10 @@ function actualizarToolbox() {
 
     ensureRenderColumnSelector();
     initPDFFormPersistence();
+    if (typeof fillPDFAgentFieldsFromUser === 'function') {
+      var userData = window.STT && window.STT.getUsuario && window.STT.getUsuario();
+      if (userData) fillPDFAgentFieldsFromUser(userData);
+    }
 
     const chkAll = $("#pdf-show-all").prop("checked");
     const selCount = seleccionados.length;

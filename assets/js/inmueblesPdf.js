@@ -55,8 +55,10 @@ function proxify(url) {
     if(!usuario)return;
 
     const nombreCompleto=[usuario.first_name,usuario.last_name].filter(Boolean).join(" ").trim();
+    var titulo = usuario.nombre || "";
 
     const campos=[
+      {id:"pdf-title",    valor: titulo},
       {id:"pdf-agent",    valor: nombreCompleto || usuario.username || ""},
       {id:"pdf-agency",   valor: usuario.agencia || ""},
       {id:"pdf-cellphone",valor: usuario.waphone || ""}
@@ -256,7 +258,7 @@ function renderColumnSelector() {
       <br>
 
       <div style="display:grid;grid-template-columns:auto 1fr;gap:4px 8px;align-items:center;margin-top:6px;">
-        <div>Título:</div><input type="text" id="pdf-title" value="Análisis comparativo de mercado">
+        <div>Título:</div><input type="text" id="pdf-title" value="">
         <div>Agente:</div><input type="text" id="pdf-agent" value="">
         <div>Agencia:</div><input type="text" id="pdf-agency" value="">
         <div>Celular:</div><input type="text" id="pdf-cellphone" value="">
