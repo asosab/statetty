@@ -233,24 +233,7 @@
         return parts.join(', ');
       }
     },
-    {
-      legend: 'Filtrar por ID',
-      tooltip: 'Restringe la búsqueda a una agencia, agente o inmueble específico.',
-      fields: [
-        { name: 'agenciaID', type: 'text', label: 'ID de agencia', tooltip: 'Solo muestra inmuebles publicados por esta agencia.' },
-        { name: 'agenteID', type: 'text', label: 'ID de agente', tooltip: 'Solo muestra inmuebles publicados por este agente.' },
-        { name: 'inmuebleID', type: 'text', label: 'ID de inmueble', tooltip: 'Busca directamente un inmueble puntual por su ID.' }
-      ],
-      summary: function (form) {
-        var map = [['agenciaID', 'agencia'], ['agenteID', 'agente'], ['inmuebleID', 'inmueble']];
-        var parts = [];
-        map.forEach(function (pair) {
-          var v = getVal(form, pair[0]);
-          if (v !== '') parts.push(pair[1] + ': ' + v);
-        });
-        return parts.join(', ');
-      }
-    },
+
     {
       legend: 'Términos de texto',
       tooltip: 'Filtra según palabras que deben o no aparecer en la descripción del inmueble.',
@@ -265,17 +248,6 @@
         if (wl !== '') parts.push('+' + truncate(wl, 18));
         if (bl !== '') parts.push('-' + truncate(bl, 18));
         return parts.join(', ');
-      }
-    },
-    {
-      legend: 'Otros',
-      tooltip: 'Parámetros adicionales.',
-      fields: [
-        { name: 'ciudad', type: 'text', label: 'Ciudad', tooltip: 'Nombre de la ciudad. Definido en la API pero aún no se usa para filtrar (solo se usa el centro lat/lng).', note: 'Definido en la API pero aún no usado en la búsqueda (solo se usa el centro lat/lng).' }
-      ],
-      summary: function (form) {
-        var v = getVal(form, 'ciudad');
-        return v !== '' ? v : '';
       }
     }
   ];
@@ -687,6 +659,11 @@
         }
       }
 
+      var nombreEl = form.elements['nombre'];
+      if (nombreEl && param.nombre !== undefined && param.nombre !== null) {
+        nombreEl.value = param.nombre;
+      }
+
       GROUPS.forEach(function (group) {
         group.fields.forEach(function (field) {
           if (field.type === 'latlng') return;
@@ -788,6 +765,24 @@
     userIdInput.value = (usuario && (usuario._id || usuario.userID)) || '';
     form.appendChild(userIdInput);
 
+    var nombreRow = document.createElement('div');
+    nombreRow.className = 'fndinm-row';
+
+    var nombreLabel = document.createElement('label');
+    nombreLabel.setAttribute('for', 'fndInm-nombre');
+    nombreLabel.textContent = 'Nombre de la búsqueda';
+
+    var nombreInput = document.createElement('input');
+    nombreInput.type = 'text';
+    nombreInput.id = 'fndInm-nombre';
+    nombreInput.name = 'nombre';
+    nombreInput.placeholder = 'Ej: Casas en Santa Cruz';
+    nombreInput.setAttribute('data-tippy-content', 'Un nombre para identificar esta búsqueda. Si se deja vacío, se genera automáticamente desde los filtros.');
+
+    nombreRow.appendChild(nombreLabel);
+    nombreRow.appendChild(nombreInput);
+    form.appendChild(nombreRow);
+
     var fieldsetRefs = [];
 
     GROUPS.forEach(function (group) {
@@ -855,18 +850,44 @@
         var sel = document.getElementById('fndInm-slots-select');
         var opt = sel && sel.options[sel.selectedIndex];
         var idx = opt ? parseInt(opt.getAttribute('data-index'), 10) : 0;
+        var savedData = _pendingData;
+        _pendingData = null;
         showSaveStatus('saving');
         var base = window.STATETTY_CONFIG ? STATETTY_CONFIG.WS_API_BASE : '';
         fetch(base + 'statetty/updtUsrBusqueda', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ publicKey: pk, i: idx, data: _pendingData })
+          body: JSON.stringify({ publicKey: pk, i: idx, data: savedData })
         }).then(function (r) { return r.json(); }).then(function (res) {
           showSaveStatus(res.ok ? 'success' : 'error', res.ok ? 'Cambio realizado' : 'Error al actualizar');
+          if (res.ok) {
+            var usuario = window.STT && window.STT.getUsuario && window.STT.getUsuario();
+            if (usuario && Array.isArray(usuario.busquedas) && idx >= 0 && idx < usuario.busquedas.length) {
+              try {
+                var current = JSON.parse(usuario.busquedas[idx]);
+                Object.assign(current, savedData);
+                usuario.busquedas[idx] = JSON.stringify(current);
+              } catch (_) {}
+            }
+            var sel_ = document.getElementById('fndInm-slots-select');
+            if (sel_) {
+              for (var i_ = 0; i_ < sel_.options.length; i_++) {
+                var opt_ = sel_.options[i_];
+                if (parseInt(opt_.getAttribute('data-index'), 10) === idx) {
+                  try {
+                    var param_ = JSON.parse(opt_.value);
+                    Object.assign(param_, savedData);
+                    opt_.value = JSON.stringify(param_);
+                    opt_.textContent = buildSlotLabel(param_);
+                  } catch (_) {}
+                  break;
+                }
+              }
+            }
+          }
         }).catch(function () {
           showSaveStatus('error', 'Error al actualizar');
         });
-        _pendingData = null;
       }, 1500);
     }
 
@@ -954,7 +975,7 @@
       'm2c', 'm2t', 'm2clt', 'm2cgt', 'm2tlt', 'm2tgt', 'anoc'];
     // lat/lng siguen siendo dos campos independientes a nivel de datos;
     // solo la presentación/edición está unificada en un input "latlng".
-    var textFields = ['lat', 'lng', 'userID', 'agenciaID', 'agenteID', 'inmuebleID',
+    var textFields = ['nombre', 'lat', 'lng', 'userID', 'agenciaID', 'agenteID', 'inmuebleID',
       'whiteList', 'blackList', 'ciudad'];
     var boolFields = ['seeSell', 'seeRent'];
 
