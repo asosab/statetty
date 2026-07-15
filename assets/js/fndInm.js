@@ -1013,7 +1013,14 @@
       }).then(function (r) { return r.json(); }).then(function (res) {
         overlay.remove();
         if (res.ok) {
-          window.location.href = 'https://statetty.com/maps/find';
+          if (res.truncated) {
+            showSaveStatus('success', 'Mostrando ' + res.displayedResults + ' de ' + res.totalResults + ' resultados.');
+            setTimeout(function () {
+              window.location.href = 'https://statetty.com/maps/find';
+            }, 3000);
+          } else {
+            window.location.href = 'https://statetty.com/maps/find';
+          }
         } else if (res.error === 'publicKey_requerida' || res.error === 'publicKey_invalida' || res.error === 'publicKey_vencida') {
           showSaveStatus('error', 'Tu sesión ha expirado. Recarga la página e intenta de nuevo.');
         } else {
