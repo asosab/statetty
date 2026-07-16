@@ -1006,7 +1006,7 @@
     }
 
     function pollSearchReady(base, pk, searchTs, overlay) {
-      var attempts = 0, maxAttempts = 60;
+      var attempts = 0, maxAttempts = 30;
       function check() {
         attempts++;
         fetch(base + 'statetty/buscarInmueble/status?publicKey=' + encodeURIComponent(pk) + '&searchTs=' + searchTs)
@@ -1016,17 +1016,17 @@
               overlay.remove();
               window.location.href = 'https://statetty.com/maps/find';
             } else if (attempts < maxAttempts) {
-              setTimeout(check, 2000);
+              setTimeout(check, 4000);
             } else {
               overlay.remove();
               showSaveStatus('error', 'La búsqueda está tardando más de lo esperado. Intenta de nuevo.');
             }
           }).catch(function () {
-            if (attempts < maxAttempts) { setTimeout(check, 2000); }
+            if (attempts < maxAttempts) { setTimeout(check, 4000); }
             else { overlay.remove(); showSaveStatus('error', 'Error al verificar el estado de la búsqueda.'); }
           });
       }
-      setTimeout(check, 2000);
+      setTimeout(check, 4000);
     }
 
     form.addEventListener('submit', function (e) {
