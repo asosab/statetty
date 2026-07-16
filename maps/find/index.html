@@ -17,8 +17,10 @@ published:          true
       cursor: pointer; z-index: 1000; font-size: 18px;
     }
     #toolbox {
-      position: absolute; top: 60px; right: 10px;
-      background: white; border: 1px solid #ccc;
+      position: absolute; top: 0; right: 0;
+      height: 100vh; max-height: 100vh;
+      overflow-y: auto;
+      background: white; border: 1px solid #ccc; border-top: 0; border-right: 0;
       padding: 10px; display: none; z-index: 1000;
       min-width: 220px;
     }
