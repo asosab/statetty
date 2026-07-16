@@ -286,15 +286,20 @@
     var busquedas = usuario && usuario.busquedas;
     if (!Array.isArray(busquedas)) return;
     busquedas.forEach(function (jsonStr, idx) {
-      if (!jsonStr || jsonStr === '{}') return;
-      try {
-        var param = JSON.parse(jsonStr);
-        var opt = document.createElement('option');
-        opt.value = jsonStr;
-        opt.setAttribute('data-index', idx);
-        opt.textContent = buildSlotLabel(param);
-        selectEl.appendChild(opt);
-      } catch (e) {}
+      var opt = document.createElement('option');
+      opt.value = jsonStr || '{}';
+      opt.setAttribute('data-index', idx);
+      if (!jsonStr || jsonStr === '{}') {
+        opt.textContent = '--- Vacío ---';
+      } else {
+        try {
+          var param = JSON.parse(jsonStr);
+          opt.textContent = buildSlotLabel(param);
+        } catch (e) {
+          opt.textContent = '--- Vacío ---';
+        }
+      }
+      selectEl.appendChild(opt);
     });
   }
 
