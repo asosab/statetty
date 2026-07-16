@@ -428,6 +428,13 @@
       'border-color:var(--blue,#17baef);color:#fff;}' +
       '#' + SECTION_ID + ' #fndInm-btn-buscar:hover{background:var(--blue-dark,#0f95bd);' +
       'border-color:var(--blue-dark,#0f95bd);}' +
+      // Espacio invisible después de los botones Buscar/Limpiar: cuando el
+      // formulario desplegado llena todo el alto de #toolbox (que ahora
+      // ocupa 100vh, ver index.html), los botones quedaban pegados al
+      // borde inferior real del panel al scrollear hasta el final. Este
+      // div vacío se agrega en buildForm() justo después de "actions" y
+      // viaja con el contenido (no depende del padding del contenedor).
+      '#' + SECTION_ID + ' .fndinm-bottom-spacer{height:28px;flex-shrink:0;}' +
       // Variante standalone (dentro del dropdown de menuUser.js): título
       // propio no interactivo + límite de alto con scroll, porque acá no
       // hay un acordeón exterior que la contenga (a diferencia de #toolbox).
@@ -978,6 +985,11 @@
     actions.appendChild(btnBuscar);
     actions.appendChild(btnReset);
     form.appendChild(actions);
+
+    var bottomSpacer = document.createElement('div');
+    bottomSpacer.className = 'fndinm-bottom-spacer';
+    bottomSpacer.setAttribute('aria-hidden', 'true');
+    form.appendChild(bottomSpacer);
 
     form.addEventListener('submit', function (e) {
       e.preventDefault();
