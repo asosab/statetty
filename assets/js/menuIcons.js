@@ -1,198 +1,87 @@
+/**
+ * menuIcons.js — Statetty
+ * -----------------------------------------------------------------------
+ * Script EXCLUSIVO de /maps/find/index.html. No modifica mapa.js,
+ * fndInm.js ni menuUser.js: solo observa el estado de #toolbox y ajusta
+ * una clase CSS en base a eso.
+ *
+ * Comportamiento:
+ *   - mapa.js ya maneja el acordeón de #toolbox: al hacer click en un
+ *     .section-header, agrega/quita la clase .active en su .section
+ *     padre (un solo .section activo a la vez). Esa lógica NO se toca.
+ *   - Este script solo detecta si hay o no un .section.active dentro de
+ *     #toolbox y, según eso, agrega/quita la clase "stt-toolbox-solo" en
+ *     #toolbox. El CSS inyectado más abajo usa esa clase para ocultar
+ *     (display:none) todas las .section que NO estén activas, dejando
+ *     todo el espacio del panel para la sección abierta. Al cerrarla
+ *     (ningún .section queda .active), la clase se quita y todas las
+ *     secciones vuelven a mostrarse tal como estaban.
+ *   - Cubre también la 5ta sección ("🔎 Buscar Inmuebles") que fndInm.js
+ *     agrega dentro de #toolbox de forma asíncrona (minutos después de
+ *     cargada la página, solo para usuarios logueados): el
+ *     MutationObserver está armado con subtree:true sobre #toolbox desde
+ *     el inicio, así que sigue funcionando aunque esa sección aparezca
+ *     recién más tarde.
+ *   - No reordena ni mueve nodos del DOM: todo el efecto es vía CSS
+ *     (display:none), por lo que selectores posicionales que ya usa
+ *     mapa.js (ej. "#toolbox .section:nth-child(2) .section-body") no se
+ *     ven afectados.
+ */
 (function () {
   'use strict';
 
-  var TOOLBOX = document.getElementById('toolbox');
-  if (!TOOLBOX) return;
+  var TOOLBOX_ID = 'toolbox';
+  var SOLO_CLASS = 'stt-toolbox-solo';
+  var STYLE_ID = 'stt-menu-icons-styles';
 
-  var $TOOLBOX = $(TOOLBOX);
-  var headerCache = {};
-  var _updating = false;
-
-  /* ---------- helpers ---------- */
-
-  function hdrId(el) {
-    if (!el.dataset.sttId)
-      el.dataset.sttId = 'h' + (Date.now() + Math.random()).toString(36);
-    return el.dataset.sttId;
+  // ------------------------------------------------------------------
+  // Estilos: se inyectan una sola vez. Si se prefiere mantenerlos en el
+  // <style> de index.html en vez de acá, se puede borrar esta función y
+  // su llamada, y agregar el mismo CSS directamente en el HTML.
+  // ------------------------------------------------------------------
+  function injectStyles() {
+    if (document.getElementById(STYLE_ID)) return;
+    var css =
+      '#' + TOOLBOX_ID + '.' + SOLO_CLASS + ' .section:not(.active){display:none;}' +
+      '#' + TOOLBOX_ID + '.' + SOLO_CLASS + ' > #stt-user-toolbox-links{display:none;}';
+    var style = document.createElement('style');
+    style.id = STYLE_ID;
+    style.textContent = css;
+    document.head.appendChild(style);
   }
 
-  function cache(header) {
-    var id = hdrId(header);
-    if (!headerCache[id]) headerCache[id] = {};
-    return headerCache[id];
+  // ------------------------------------------------------------------
+  // Recalcula si debe estar presente la clase "modo solo" en #toolbox.
+  // ------------------------------------------------------------------
+  function recomputeSoloMode(toolbox) {
+    var hayActiva = !!toolbox.querySelector('.section.active');
+    toolbox.classList.toggle(SOLO_CLASS, hayActiva);
   }
 
-  function iconOf(header) {
-    var c = cache(header);
-    if (c.icon !== undefined) return c.icon;
-    var text = header.textContent || '';
-    c.icon = text.trim().split(/\s+/)[0] || '';
-    return c.icon;
-  }
+  // ------------------------------------------------------------------
+  // Inicialización
+  // ------------------------------------------------------------------
+  function init() {
+    var toolbox = document.getElementById(TOOLBOX_ID);
+    if (!toolbox) return; // página sin #toolbox: no hay nada que hacer
 
-  /* ---------- collapse / expand ---------- */
+    injectStyles();
+    recomputeSoloMode(toolbox); // por si alguna sección ya estuviera activa al cargar
 
-  function collapseHeader(header) {
-    if (header.dataset.sttState === 'collapsed') return;
-
-    var icon = iconOf(header);
-    var iconSpan = document.createElement('span');
-    iconSpan.className = 'stt-icon-only';
-    iconSpan.textContent = icon;
-
-    var fullWrap = document.createElement('span');
-    fullWrap.className = 'stt-icon-full-text';
-    fullWrap.style.display = 'none';
-
-    while (header.firstChild) fullWrap.appendChild(header.firstChild);
-
-    header.appendChild(iconSpan);
-    header.appendChild(fullWrap);
-    header.dataset.sttState = 'collapsed';
-  }
-
-  function expandHeader(header) {
-    if (header.dataset.sttState !== 'collapsed') return;
-
-    var fullWrap = header.querySelector('.stt-icon-full-text');
-    if (fullWrap) {
-      while (fullWrap.firstChild) header.appendChild(fullWrap.firstChild);
-      header.removeChild(fullWrap);
-    }
-
-    var iconSpan = header.querySelector('.stt-icon-only');
-    if (iconSpan) header.removeChild(iconSpan);
-
-    header.dataset.sttState = 'expanded';
-  }
-
-  /* ---------- layout switch ---------- */
-
-  function resetHeaders() {
-    $(TOOLBOX).children('.section').each(function () {
-      this.style.display = '';
+    var observer = new MutationObserver(function () {
+      recomputeSoloMode(toolbox);
     });
-    $(TOOLBOX).find('.section-header').each(function () {
-      expandHeader(this);
-      this.style.order = '';
-      this.style.flex = '';
-    });
-    $(TOOLBOX).find('.section-body').each(function () {
-      this.style.order = '';
-      this.style.flex = '';
+
+    observer.observe(toolbox, {
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['class']
     });
   }
 
-  function applyFlex() {
-    var sections = $(TOOLBOX).children('.section');
-    var active = sections.filter('.active');
-    if (active.length !== 1) return false;
-
-    var inactives = sections.not('.active');
-
-    // Critical: .section must not create its own box, or the order/flex
-    // set below on its .section-header / .section-body children (grandchildren
-    // of #toolbox) would be ignored — only direct children of a flex
-    // container participate in flex layout.
-    sections.each(function () {
-      this.style.display = 'contents';
-    });
-
-    inactives.each(function (idx) {
-      var h = this.querySelector('.section-header');
-      if (!h) return;
-      collapseHeader(h);
-      h.style.order = idx;
-    });
-
-    var ah = active[0].querySelector('.section-header');
-    if (ah) {
-      expandHeader(ah);
-      ah.style.order = '500';
-      ah.style.flex = '0 0 100%';
-    }
-
-    sections.each(function () {
-      var b = this.querySelector('.section-body');
-      if (b) {
-        b.style.order = '1000';
-        b.style.flex = '0 0 100%';
-      }
-    });
-
-    return true;
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
   }
-
-  function cleanOlddisplay() {
-    try {
-      var k = TOOLBOX[jQuery.expando];
-      if (k && $.cache && $.cache[k] && 'olddisplay' in $.cache[k])
-        delete $.cache[k].olddisplay;
-    } catch (e) { /* ignore */ }
-  }
-
-  function actualizarEstiloHeaders() {
-    if (_updating) return;
-    _updating = true;
-    try {
-      if (!$('#toolbox').is(':visible')) {
-        $TOOLBOX.removeClass('stt-icons-mode');
-        resetHeaders();
-        return;
-      }
-
-      var ok = applyFlex();
-      if (ok) {
-        $TOOLBOX.addClass('stt-icons-mode');
-        $TOOLBOX.css({ display: 'flex', flexWrap: 'wrap' });
-      } else {
-        $TOOLBOX.removeClass('stt-icons-mode');
-        resetHeaders();
-        $TOOLBOX.css({ display: 'block', flexWrap: '' });
-        cleanOlddisplay();
-      }
-    } finally {
-      _updating = false;
-    }
-  }
-
-  /* ---------- init ---------- */
-
-  // Prime cache for existing headers
-  $(TOOLBOX).find('.section-header').each(function () { iconOf(this); });
-
-  // Click: runs after mapa.js because menuIcons.js loads later
-  $(document).on('click', '.section-header', actualizarEstiloHeaders);
-
-  // Observe new sections & class changes on .section
-  var obs = new MutationObserver(function (mutations) {
-    var relevant = false;
-    for (var i = 0; i < mutations.length; i++) {
-      var m = mutations[i];
-      if (m.type === 'childList') { relevant = true; break; }
-      if (m.type === 'attributes' && m.attributeName === 'class') {
-        if (m.target === TOOLBOX || m.target.classList.contains('section')) {
-          relevant = true; break;
-        }
-      }
-      if (m.type === 'attributes' && m.attributeName === 'style' && m.target === TOOLBOX) {
-        relevant = true; break;
-      }
-    }
-    if (!relevant) return;
-
-    // Cache any new header that just appeared
-    $(TOOLBOX).find('.section-header').each(function () { iconOf(this); });
-    actualizarEstiloHeaders();
-  });
-
-  obs.observe(TOOLBOX, {
-    childList: true,
-    subtree: true,
-    attributes: true,
-    attributeFilter: ['class', 'style']
-  });
-
-  // Initial application
-  actualizarEstiloHeaders();
 })();
