@@ -918,7 +918,7 @@ $(document).ready(function () {
         });
 
         var info = parsed.info || {};
-        autoSelectSlot(info);
+        try { autoSelectSlot(info); } catch (e) { console.warn('[autoSelectSlot]', e); }
         var lat = parseFloat(info.lat) || parseFloat(urlParams.get('lat'));
         var lng = parseFloat(info.lng) || parseFloat(urlParams.get('lng'));
         var radius;
@@ -951,7 +951,7 @@ $(document).ready(function () {
         return;
       }
       $('#loading-indicator').hide();
-      if (usuario) {
+      if (usuario && response && response.error) {
         mostrarModalError();
       }
       return;
