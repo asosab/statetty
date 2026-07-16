@@ -71,6 +71,8 @@
         { label: 'Mapa', href: 'https://statetty.com/maps/find/' }
       ];
 
+  var LOGOUT_LABEL = 'Cerrar sesión';
+
   // Selector de el/los botón(es) del header a reemplazar por el ícono (modo cta).
   var CTA_SELECTOR = window.STT_MENU_USER_SELECTOR || '.btn-nav-cta';
 
@@ -147,6 +149,11 @@
       'transition:background .15s ease, color .15s ease;}' +
       '.stt-user-dropdown a:hover,.stt-user-dropdown a:focus-visible{' +
       'background:rgba(23,186,239,.1);color:var(--blue-dark,#074f66);}' +
+      '.stt-user-dropdown-sep{height:1px;background:rgba(0,0,0,.08);margin:4px 0;}' +
+      '.stt-user-logout{display:block;width:100%;padding:10px 12px;border:0;border-radius:var(--radius-sm,6px);' +
+      'font-size:.92rem;font-family:var(--font-body,\'Lato\',sans-serif);color:#999;text-decoration:none;text-align:left;' +
+      'background:none;cursor:pointer;white-space:nowrap;transition:background .15s ease,color .15s ease;}' +
+      '.stt-user-logout:hover,.stt-user-logout:focus-visible{background:rgba(0,0,0,.04);color:#666;}' +
       '@media (max-width:768px){.stt-user-dropdown{right:auto;left:0;width:min(320px,92vw);}}';
     var style = document.createElement('style');
     style.id = STYLE_ID;
@@ -166,11 +173,52 @@
       '#' + TOOLBOX_LINKS_ID + ' a{display:block;padding:8px 6px;' +
       'color:inherit;text-decoration:none;border-radius:6px;}' +
       '#' + TOOLBOX_LINKS_ID + ' a:hover,' +
-      '#' + TOOLBOX_LINKS_ID + ' a:focus-visible{background:rgba(0,0,0,.06);}';
+      '#' + TOOLBOX_LINKS_ID + ' a:focus-visible{background:rgba(0,0,0,.06);}' +
+      '#' + TOOLBOX_LINKS_ID + ' .stt-user-toolbox-sep{height:1px;background:rgba(0,0,0,.08);margin:4px 0;}' +
+      '#' + TOOLBOX_LINKS_ID + ' .stt-user-logout{width:100%;padding:8px 6px;border:0;' +
+      'font-family:inherit;font-size:inherit;color:#999;background:none;cursor:pointer;text-align:left;' +
+      'border-radius:6px;}' +
+      '#' + TOOLBOX_LINKS_ID + ' .stt-user-logout:hover,' +
+      '#' + TOOLBOX_LINKS_ID + ' .stt-user-logout:focus-visible{background:rgba(0,0,0,.06);color:#666;}';
     var style = document.createElement('style');
     style.id = TOOLBOX_STYLE_ID;
     style.textContent = css;
     document.head.appendChild(style);
+  }
+
+  // ------------------------------------------------------------------
+  // Cerrar sesión
+  // ------------------------------------------------------------------
+
+  function clearSession() {
+    document.cookie = 'stt_pk=; Max-Age=0; Path=/; Domain=.statetty.com; Secure';
+    localStorage.removeItem('stt_pk');
+    window.publicKey = null;
+    if (window.STT) window.STT.usuario = null;
+    window.location.href = '/';
+  }
+
+  function handleLogout(e) {
+    e.preventDefault();
+    var key = window.STT && window.STT.getKey();
+    if (!key) { clearSession(); return; }
+    var base = window.STATETTY_CONFIG ? STATETTY_CONFIG.WS_API_BASE : '';
+    fetch(base + 'statetty/changePublicKey', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ publicKey: key })
+    }).then(function (res) {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    }).then(function (data) {
+      if (data && data.ok === true) {
+        clearSession();
+      } else {
+        alert('No se pudo cerrar sesión. Intenta de nuevo.');
+      }
+    }).catch(function () {
+      alert('No se pudo cerrar sesión. Intenta de nuevo.');
+    });
   }
 
   // ------------------------------------------------------------------
@@ -268,6 +316,17 @@
       dropdown.appendChild(a);
     });
 
+    var sep = document.createElement('div');
+    sep.className = 'stt-user-dropdown-sep';
+    dropdown.appendChild(sep);
+
+    var logoutBtn = document.createElement('button');
+    logoutBtn.type = 'button';
+    logoutBtn.className = 'stt-user-logout';
+    logoutBtn.textContent = LOGOUT_LABEL;
+    logoutBtn.addEventListener('click', handleLogout);
+    dropdown.appendChild(logoutBtn);
+
     wrap.appendChild(trigger);
     wrap.appendChild(dropdown);
 
@@ -325,6 +384,17 @@
       a.textContent = item.label;
       container.appendChild(a);
     });
+
+    var sep = document.createElement('div');
+    sep.className = 'stt-user-toolbox-sep';
+    container.appendChild(sep);
+
+    var logoutBtn = document.createElement('button');
+    logoutBtn.type = 'button';
+    logoutBtn.className = 'stt-user-logout';
+    logoutBtn.textContent = LOGOUT_LABEL;
+    logoutBtn.addEventListener('click', handleLogout);
+    container.appendChild(logoutBtn);
 
     return container;
   }
