@@ -176,18 +176,11 @@
             { value: '0', label: 'Solo inactivos' }
           ]
         },
-        { name: 'seeSell', type: 'checkbox', label: 'Incluir vendidas', def: true, tooltip: 'Si está marcado, incluye en los resultados inmuebles ya vendidos.' },
-        { name: 'seeRent', type: 'checkbox', label: 'Incluir alquiladas', def: true, tooltip: 'Si está marcado, incluye en los resultados inmuebles ya alquilados.' }
       ],
       summary: function (form) {
         var activos = getVal(form, 'activos');
         var labelMap = { '': 'Todos', '1': 'Activos', '0': 'Inactivos' };
-        var parts = [labelMap.hasOwnProperty(activos) ? labelMap[activos] : 'Todos'];
-        var extra = [];
-        if (getChecked(form, 'seeSell')) extra.push('vendidas');
-        if (getChecked(form, 'seeRent')) extra.push('alquiladas');
-        if (extra.length) parts.push('+ ' + extra.join('/'));
-        return parts.join(' ');
+        return labelMap.hasOwnProperty(activos) ? labelMap[activos] : 'Todos';
       }
     },
     {
@@ -1061,7 +1054,7 @@
     // solo la presentación/edición está unificada en un input "latlng".
     var textFields = ['nombre', 'lat', 'lng', 'userID', 'agenciaID', 'agenteID', 'inmuebleID',
       'whiteList', 'blackList', 'ciudad'];
-    var boolFields = ['seeSell', 'seeRent'];
+    var boolFields = [];
 
     textFields.forEach(function (name) {
       var el = form.elements[name];
