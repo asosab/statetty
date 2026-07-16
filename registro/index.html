@@ -548,6 +548,14 @@ tags: [registro, formulario, Statetty, real state, inmuebles]
       if (sr) sr.checked = true;
     }
     if (el('f-agencia') && user.agencia) el('f-agencia').value = user.agencia;
+    if (user.nivel_experiencia) {
+      var ne = form.querySelector('input[name="nivel_experiencia"][value="' + user.nivel_experiencia.toLowerCase() + '"]');
+      if (ne) ne.checked = true;
+    }
+    if (user.nivel_tecnologia) {
+      var nt = form.querySelector('input[name="nivel_tecnologia"][value="' + user.nivel_tecnologia.toLowerCase() + '"]');
+      if (nt) nt.checked = true;
+    }
 
     // Normalizar país (capitalizar) y cargar ciudades
     if (user.pais) {
