@@ -991,10 +991,18 @@
     btnBuscar.setAttribute('data-tippy-content', 'Ejecuta la búsqueda de inmuebles con los filtros configurados arriba.');
 
     var btnReset = document.createElement('button');
-    btnReset.type = 'reset';
+    btnReset.type = 'button';
     btnReset.id = 'fndInm-btn-reset';
     btnReset.textContent = '↺ Limpiar';
     btnReset.setAttribute('data-tippy-content', 'Restablece todos los filtros a sus valores por defecto.');
+    btnReset.addEventListener('click', function () {
+      if (confirm('¿Seguro deseas vaciar este filtro? No se podrá recuperar lo borrado.')) {
+        form.reset();
+        var combined = document.getElementById('fndInm-latlng');
+        if (combined) combined.dispatchEvent(new Event('input', { bubbles: true }));
+        refreshLegends(form, fieldsetRefs);
+      }
+    });
 
     actions.appendChild(btnBuscar);
     actions.appendChild(btnReset);
