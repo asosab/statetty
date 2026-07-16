@@ -566,6 +566,28 @@ tags: [registro, formulario, Statetty, real state, inmuebles]
       }
     }
 
+    // ── Auto-completar desde agente si faltan datos ──
+    var wa = user.waphone;
+    var faltaAgencia = !user.agencia;
+    var faltaIcono = !user.usrIconURL;
+    if (publicKey && wa && (faltaAgencia || faltaIcono)) {
+      var base = (typeof STATETTY_CONFIG !== 'undefined' && STATETTY_CONFIG.WS_API_BASE) || 'https://statetty.com/api/';
+      fetch(base + 'statetty/getAgntByPhone?cel=' + encodeURIComponent(wa) + '&publicKey=' + encodeURIComponent(publicKey))
+        .then(function(r) { return r.json(); })
+        .then(function(res) {
+          if (!res.ok || !res.data) return;
+          var ag = res.data;
+          if (faltaAgencia && (ag.agenciaActivaNombre || ag.agencias?.[0]?.nombre)) {
+            el('f-agencia').value = ag.agenciaActivaNombre || ag.agencias[0].nombre;
+          }
+          if (faltaIcono && ag.foto) {
+            el('f-usricon').value = ag.foto;
+            actualizarIconoUsuario(ag.foto);
+          }
+        })
+        .catch(function() {});
+    }
+
     // Saludo en el header
     var greetingEl = document.getElementById('header-greeting');
 
