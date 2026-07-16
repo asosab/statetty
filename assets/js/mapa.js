@@ -870,6 +870,35 @@ $(document).ready(function () {
     });
   }
 
+  function autoSelectSlot(searchParams) {
+    var select = document.getElementById('fndInm-slots-select');
+    if (!select || !searchParams) return;
+
+    var best = null, bestScore = -1;
+    for (var i = 1; i < select.options.length; i++) {
+      var opt = select.options[i];
+      if (!opt.value) continue;
+      var slot;
+      try { slot = JSON.parse(opt.value); } catch (e) { continue; }
+      if (!slot || typeof slot !== 'object') continue;
+
+      var score = 0;
+      if (searchParams.lat !== undefined && slot.lat !== undefined && Math.abs(Number(searchParams.lat) - Number(slot.lat)) <= 0.001) score += 3;
+      if (searchParams.lng !== undefined && slot.lng !== undefined && Math.abs(Number(searchParams.lng) - Number(slot.lng)) <= 0.001) score += 3;
+      if (String(searchParams.dist) === String(slot.dist)) score += 2;
+      if (String(searchParams.pMin) === String(slot.pMin)) score += 1;
+      if (String(searchParams.pMax) === String(slot.pMax)) score += 1;
+      if (String(searchParams.antiguedad) === String(slot.antiguedad)) score += 1;
+
+      if (score > bestScore) { bestScore = score; best = opt; }
+    }
+
+    if (best && bestScore >= 6) {
+      best.selected = true;
+      best.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+  }
+
   async function init() {
     $('#loading-indicator').show();
 
@@ -889,6 +918,7 @@ $(document).ready(function () {
         });
 
         var info = parsed.info || {};
+        autoSelectSlot(info);
         var lat = parseFloat(info.lat) || parseFloat(urlParams.get('lat'));
         var lng = parseFloat(info.lng) || parseFloat(urlParams.get('lng'));
         var radius;
