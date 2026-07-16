@@ -164,8 +164,8 @@
       }
     },
     {
-      legend: 'Estado',
-      tooltip: 'Filtra por estado de la publicación y si se incluyen operaciones ya concretadas.',
+      legend: 'Características',
+      tooltip: 'Filtra por características físicas mínimas del inmueble.',
       fields: [
         {
           name: 'activos', type: 'select', label: 'Estado del inmueble', def: '1',
@@ -176,25 +176,17 @@
             { value: '0', label: 'Solo inactivos' }
           ]
         },
-      ],
-      summary: function (form) {
-        var activos = getVal(form, 'activos');
-        var labelMap = { '': 'Todos', '1': 'Activos', '0': 'Inactivos' };
-        return labelMap.hasOwnProperty(activos) ? labelMap[activos] : 'Todos';
-      }
-    },
-    {
-      legend: 'Características mínimas',
-      tooltip: 'Filtra por características físicas mínimas del inmueble.',
-      fields: [
         { name: 'hab', type: 'number', label: 'Dormitorios (mín.)', min: '0', tooltip: 'Solo muestra inmuebles con al menos esta cantidad de dormitorios.' },
         { name: 'banos', type: 'number', label: 'Baños (mín.)', min: '0', tooltip: 'Solo muestra inmuebles con al menos esta cantidad de baños.' },
         { name: 'amb', type: 'number', label: 'Ambientes (mín.)', min: '0', tooltip: 'Solo muestra inmuebles con al menos esta cantidad de ambientes.' },
         { name: 'anoc', type: 'number', label: 'Año de construcción (mín.)', min: '0', tooltip: 'Solo muestra inmuebles construidos en o después de este año.' }
       ],
       summary: function (form) {
-        var map = [['hab', 'dorm'], ['banos', 'baños'], ['amb', 'amb'], ['anoc', 'año≥']];
         var parts = [];
+        var activos = getVal(form, 'activos');
+        var labelMap = { '': 'Todos', '1': 'Activos', '0': 'Inactivos' };
+        if (labelMap.hasOwnProperty(activos)) parts.push(labelMap[activos]);
+        var map = [['hab', 'dorm'], ['banos', 'baños'], ['amb', 'amb'], ['anoc', 'año≥']];
         map.forEach(function (pair) {
           var v = getVal(form, pair[0]);
           if (v !== '') parts.push('≥' + v + ' ' + pair[1]);
