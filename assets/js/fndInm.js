@@ -991,6 +991,44 @@
     bottomSpacer.setAttribute('aria-hidden', 'true');
     form.appendChild(bottomSpacer);
 
+    function buildSearchOverlay() {
+      var overlay = document.createElement('div');
+      overlay.id = 'fndInm-search-overlay';
+      overlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.6);z-index:99999;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:16px;cursor:wait;';
+      var spinner = document.createElement('div');
+      spinner.style.cssText = 'width:48px;height:48px;border:4px solid rgba(255,255,255,0.3);border-top-color:#17baef;border-radius:50%;animation:fndinm-search-spin .8s linear infinite;';
+      var msg = document.createElement('div');
+      msg.style.cssText = 'color:#fff;font-size:1.1rem;font-family:sans-serif;text-align:center;';
+      msg.textContent = 'Realizando búsqueda, un momento por favor';
+      overlay.appendChild(spinner);
+      overlay.appendChild(msg);
+      return overlay;
+    }
+
+    function pollSearchReady(base, pk, searchTs, overlay) {
+      var attempts = 0, maxAttempts = 60;
+      function check() {
+        attempts++;
+        fetch(base + 'statetty/buscarInmueble/status?publicKey=' + encodeURIComponent(pk) + '&searchTs=' + searchTs)
+          .then(function (r) { return r.json(); })
+          .then(function (res) {
+            if (res.ready) {
+              overlay.remove();
+              window.location.href = 'https://statetty.com/maps/find';
+            } else if (attempts < maxAttempts) {
+              setTimeout(check, 2000);
+            } else {
+              overlay.remove();
+              showSaveStatus('error', 'La búsqueda está tardando más de lo esperado. Intenta de nuevo.');
+            }
+          }).catch(function () {
+            if (attempts < maxAttempts) { setTimeout(check, 2000); }
+            else { overlay.remove(); showSaveStatus('error', 'Error al verificar el estado de la búsqueda.'); }
+          });
+      }
+      setTimeout(check, 2000);
+    }
+
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       var params = getParams();
@@ -1000,19 +1038,7 @@
         return;
       }
 
-      var overlay = document.createElement('div');
-      overlay.id = 'fndInm-search-overlay';
-      overlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.6);z-index:99999;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:16px;cursor:wait;';
-
-      var spinner = document.createElement('div');
-      spinner.style.cssText = 'width:48px;height:48px;border:4px solid rgba(255,255,255,0.3);border-top-color:#17baef;border-radius:50%;animation:fndinm-search-spin .8s linear infinite;';
-
-      var msg = document.createElement('div');
-      msg.style.cssText = 'color:#fff;font-size:1.1rem;font-family:sans-serif;text-align:center;';
-      msg.textContent = 'Realizando búsqueda, un momento por favor';
-
-      overlay.appendChild(spinner);
-      overlay.appendChild(msg);
+      var overlay = buildSearchOverlay();
       document.body.appendChild(overlay);
 
       params.publicKey = pk;
@@ -1023,21 +1049,12 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(params)
       }).then(function (r) { return r.json(); }).then(function (res) {
-        overlay.remove();
-        if (res.ok) {
-          if (res.truncated) {
-            showSaveStatus('success', 'Mostrando ' + res.displayedResults + ' de ' + res.totalResults + ' resultados.');
-            setTimeout(function () {
-              window.location.href = 'https://statetty.com/maps/find';
-            }, 3000);
-          } else {
-            window.location.href = 'https://statetty.com/maps/find';
-          }
-        } else if (res.error === 'publicKey_requerida' || res.error === 'publicKey_invalida' || res.error === 'publicKey_vencida') {
-          showSaveStatus('error', 'Tu sesión ha expirado. Recarga la página e intenta de nuevo.');
-        } else {
-          showSaveStatus('error', res.error === 'error_en_busqueda' ? 'Error al realizar la búsqueda. Intenta de nuevo.' : res.error || 'Error inesperado.');
+        if (!res.ok || !res.searchTs) {
+          overlay.remove();
+          showSaveStatus('error', 'Error al iniciar la búsqueda.');
+          return;
         }
+        pollSearchReady(base, pk, res.searchTs, overlay);
       }).catch(function () {
         overlay.remove();
         showSaveStatus('error', 'Error de conexión. Verifica tu conexión e intenta de nuevo.');
