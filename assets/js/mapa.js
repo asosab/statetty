@@ -883,6 +883,7 @@ $(document).ready(function () {
       if (!slot || typeof slot !== 'object') continue;
 
       var score = 0;
+      if (searchParams.nombre && slot.nombre && String(searchParams.nombre).trim().toLowerCase() === String(slot.nombre).trim().toLowerCase()) score += 6;
       if (searchParams.lat !== undefined && slot.lat !== undefined && Math.abs(Number(searchParams.lat) - Number(slot.lat)) <= 0.001) score += 3;
       if (searchParams.lng !== undefined && slot.lng !== undefined && Math.abs(Number(searchParams.lng) - Number(slot.lng)) <= 0.001) score += 3;
       if (String(searchParams.dist) === String(slot.dist)) score += 2;
