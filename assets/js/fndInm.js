@@ -699,11 +699,18 @@
           var el = form.elements[field.name];
           if (!el) return;
           var val = param[field.name];
-          if (val === undefined || val === null) return;
-          if (field.type === 'checkbox') {
-            el.checked = !!val;
+          if (val === undefined || val === null) {
+            if (field.type === 'checkbox') {
+              el.checked = false;
+            } else {
+              el.value = '';
+            }
           } else {
-            el.value = val;
+            if (field.type === 'checkbox') {
+              el.checked = !!val;
+            } else {
+              el.value = val;
+            }
           }
         });
       });
