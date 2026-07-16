@@ -906,56 +906,69 @@ $(document).ready(function () {
     var pk = window.publicKey;
     var usuario = window.STT && window.STT.getUsuario ? window.STT.getUsuario() : null;
 
-    if (pk) {
-      var response = await fetchFinderResult(pk);
-      if (response && Array.isArray(response.result) && response.result.length > 0) {
-        var parsed = parseFinderResult(response);
-        var locs = parsed.locations;
-
-        locs.forEach(function(loc) {
-          loc.uid = normalizeURL(loc.URL);
-          loc.brand = getBrand({ dato: loc });
-        });
-
-        var info = parsed.info || {};
-        try { autoSelectSlot(info); } catch (e) { console.warn('[autoSelectSlot]', e); }
-        var lat = parseFloat(info.lat) || parseFloat(urlParams.get('lat'));
-        var lng = parseFloat(info.lng) || parseFloat(urlParams.get('lng'));
-        var radius;
-        if (info.dist !== undefined) radius = info.dist * 1000;
-        else if (urlParams.get('r')) radius = parseFloat(urlParams.get('r'));
-        else radius = null;
-        var pProm = Math.round(info.precioProm) || Math.round(urlParams.get('p')) || 0;
-
-        if (!lat || !lng || !radius) {
-          var latSum = 0, lngSum = 0;
-          locs.forEach(function(loc) { latSum += loc.lat; lngSum += loc.lng; });
-          lat = latSum / locs.length;
-          lng = lngSum / locs.length;
-          var maxDistance = 0;
-          locs.forEach(function(loc) {
-            var d = calculateDH(lat, lng, loc.lat, loc.lng);
-            if (d > maxDistance) maxDistance = d;
-          });
-          radius = maxDistance * 1000;
-        }
-        if (isNaN(pProm) || pProm == 0) pProm = calcularPromedio(locs, 'precio');
-
-        if (info.userID) userid = info.userID;
-
-        var na = usuario ? ((usuario.first_name || '') + ' ' + (usuario.last_name || '')).trim() : '';
-        var ag = usuario ? (usuario.agencia || '') : '';
-
-        $('#loading-indicator').hide();
-        renderMap(locs, lat, lng, radius, pProm, na, ag);
-        return;
-      }
+    if (!pk) {
       $('#loading-indicator').hide();
-      if (usuario && response && response.error) {
-        mostrarModalError();
-      }
       return;
     }
+
+    var response = await fetchFinderResult(pk);
+
+    if (!response || response.error) {
+      $('#loading-indicator').hide();
+      if (usuario) mostrarModalError();
+      return;
+    }
+
+    var locs = [];
+    if (Array.isArray(response.result) && response.result.length > 0) {
+      var parsed = parseFinderResult(response);
+      locs = parsed.locations;
+      locs.forEach(function(loc) {
+        loc.uid = normalizeURL(loc.URL);
+        loc.brand = getBrand({ dato: loc });
+      });
+    }
+
+    var info = response.info || {};
+    try { autoSelectSlot(info); } catch (e) { console.warn('[autoSelectSlot]', e); }
+
+    var lat = parseFloat(info.lat) || (locs.length ? null : parseFloat(urlParams.get('lat')));
+    var lng = parseFloat(info.lng) || (locs.length ? null : parseFloat(urlParams.get('lng')));
+    var radius;
+    if (info.dist !== undefined) radius = info.dist * 1000;
+    else if (urlParams.get('r')) radius = parseFloat(urlParams.get('r'));
+    else if (locs.length) radius = null;
+
+    if ((!lat || !lng) && locs.length) {
+      var latSum = 0, lngSum = 0;
+      locs.forEach(function(loc) { latSum += loc.lat; lngSum += loc.lng; });
+      lat = latSum / locs.length;
+      lng = lngSum / locs.length;
+    }
+    if (!radius && locs.length) {
+      var maxDistance = 0;
+      locs.forEach(function(loc) {
+        var d = calculateDH(lat, lng, loc.lat, loc.lng);
+        if (d > maxDistance) maxDistance = d;
+      });
+      radius = maxDistance * 1000;
+    }
+
+    if (!lat || !lng || !radius) {
+      $('#loading-indicator').hide();
+      return;
+    }
+
+    var pProm = Math.round(info.precioProm) || (locs.length ? Math.round(urlParams.get('p')) : 0) || 0;
+    if (isNaN(pProm) || pProm == 0) pProm = locs.length ? calcularPromedio(locs, 'precio') : 0;
+
+    if (info.userID) userid = info.userID;
+
+    var na = usuario ? ((usuario.first_name || '') + ' ' + (usuario.last_name || '')).trim() : '';
+    var ag = usuario ? (usuario.agencia || '') : '';
+
+    $('#loading-indicator').hide();
+    renderMap(locs, lat, lng, radius, pProm, na, ag);
     $('#loading-indicator').hide();
   }
 
