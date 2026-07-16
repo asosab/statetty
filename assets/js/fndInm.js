@@ -168,10 +168,10 @@
       tooltip: 'Filtra por estado de la publicación y si se incluyen operaciones ya concretadas.',
       fields: [
         {
-          name: 'activos', type: 'select', label: 'Estado del inmueble', def: '1',
+          name: 'activos', type: 'select', label: 'Estado del inmueble', def: '2',
           tooltip: 'Filtra por estado del inmueble: todos, solo activos o solo inactivos.',
           options: [
-            { value: '', label: 'Todos' },
+            { value: '2', label: 'Todos' },
             { value: '1', label: 'Solo activos' },
             { value: '0', label: 'Solo inactivos' }
           ]
