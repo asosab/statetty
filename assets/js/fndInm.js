@@ -168,7 +168,7 @@
       tooltip: 'Filtra por estado de la publicación y si se incluyen operaciones ya concretadas.',
       fields: [
         {
-          name: 'activos', type: 'select', label: 'Estado del inmueble', def: '2',
+          name: 'activos', type: 'select', label: 'Estado del inmueble', def: '1',
           tooltip: 'Filtra por estado del inmueble: todos, solo activos o solo inactivos.',
           options: [
             { value: '2', label: 'Todos' },
@@ -604,7 +604,7 @@
         o.textContent = opt.label;
         input.appendChild(o);
       });
-      if (field.def !== undefined) input.value = field.def;
+      if (field.def !== undefined) { input.value = field.def; input.dataset.def = field.def; }
     } else if (field.type === 'checkbox') {
       input = document.createElement('input');
       input.type = 'checkbox';
@@ -702,12 +702,26 @@
           if (val === undefined || val === null) {
             if (field.type === 'checkbox') {
               el.checked = false;
+            } else if (el.tagName === 'SELECT' && el.dataset.def !== undefined) {
+              el.value = el.dataset.def;
             } else {
               el.value = '';
             }
           } else {
             if (field.type === 'checkbox') {
               el.checked = !!val;
+            } else if (el.tagName === 'SELECT') {
+              var matched = false;
+              for (var i = 0; i < el.options.length; i++) {
+                if (String(el.options[i].value) === String(val)) {
+                  el.value = val;
+                  matched = true;
+                  break;
+                }
+              }
+              if (!matched && el.dataset.def !== undefined) {
+                el.value = el.dataset.def;
+              }
             } else {
               el.value = val;
             }
