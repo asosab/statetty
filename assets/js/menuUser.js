@@ -89,11 +89,6 @@
   // Avatar por defecto si el usuario no trae userIcon (o si la imagen falla al cargar).
   var DEFAULT_ICON = 'https://statetty.com/assets/images/genUsrIco.png';
 
-  // --- TEMPORAL (período de pruebas) --------------------------------
-  // Mientras se prueba fndInm.js, solo se monta para este _id (admin).
-  // TODO: quitar este gate cuando fndInm.js salga de pruebas.
-  var FNDINM_TEST_ADMIN_ID = '665fa8d63e744b34b69880f6';
-
   // menuUser.js es quien usa fndInm.js, así que es quien lo carga (la página
   // NO necesita incluir un <script> aparte para fndInm.js). Se puede
   // sobreescribir la URL antes de cargar este script con
@@ -475,12 +470,9 @@
   // "Buscar Inmuebles" (fndInm.js) es un ítem más del menú de usuario:
   // se monta SIEMPRE (no depende del modo 'cta'/'toolbox'), en el
   // contenedor que ya haya sido reservado en handleKeyReady() para esta
-  // página (ver reserveFndInmSlot() y buildUserMenu()). El único gate es
-  // el temporal de pruebas (FNDINM_TEST_ADMIN_ID).
+  // página (ver reserveFndInmSlot() y buildUserMenu()).
   function mountFndInm(usuario, mode) {
-    // --- TEMPORAL (período de pruebas): solo para el admin de pruebas ---
-    if (!usuario || usuario._id !== FNDINM_TEST_ADMIN_ID) return;
-    // ---------------------------------------------------------------
+    if (!usuario) return;
 
     loadFndInmScript(function () {
       if (!window.STT_FND_INM || typeof window.STT_FND_INM.mount !== 'function') return;
