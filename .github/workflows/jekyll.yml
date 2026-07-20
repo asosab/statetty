@@ -4,6 +4,11 @@ on:
   push:
     branches: [main]
 
+  workflow_dispatch:
+
+  schedule:
+    - cron: '55 10 * * 1'
+
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
