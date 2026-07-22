@@ -76,7 +76,8 @@ function apiItemToLocation(item) {
   var loc = {};
 
   var fieldMap = {
-    nombre: 'Titulo',
+    titulo: 'Titulo',
+    nombre: 'Nombre',
     lat: 'lat',
     lng: 'lng',
     direccion: 'dir',
