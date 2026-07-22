@@ -145,4 +145,4 @@ Estos cinco videos fueron la base de investigación para este artículo. Los dej
 
 ---
 
-*¿Ya usás el ACM de Statetty y querés ir un paso más allá? [Iniciá tu prueba en @statettybot](https://statetty.com/#Contacto) y combiná tus comparables con el resto de las herramientas de precio de la plataforma.*
+*¿Querés comparables reales y herramientas de precio en un solo lugar? [Empezá con @statettybot](https://statetty.com/#Contacto) y probá el ACM de Statetty.*
