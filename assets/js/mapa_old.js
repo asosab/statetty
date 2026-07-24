@@ -39,107 +39,6 @@ function openWsRedirect(serverUrl, waUrl) {
   } catch (e) {console.log('calcularBoundsDesdeLocations error',e);} }
 
 
-/** --------------------------------------------------------------------------------------- dispersarCoordenadas
- * Revisa todos los inmuebles (por defecto, los que vienen de la base de datos en la variable
- * global `locations`) y detecta grupos de coordenadas "solapadas": inmuebles que están en la
- * misma coordenada exacta o a menos de 10 metros entre sí. Esto es necesario porque el mapa
- * usa punteros con `click`, y si dos o más quedan apilados en el mismo punto, el que queda
- * debajo del layer del otro no puede recibir clicks del usuario.
- *
- * Para cada grupo detectado:
- *  - El primer inmueble del grupo (según su orden original en el arreglo) se deja intacto,
- *    y sirve de "ancla" / centro de referencia.
- *  - El resto de los inmuebles del grupo se redistribuyen alrededor del ancla, en círculo,
- *    a una distancia de `metrosD` metros, para que cada uno tenga su propio espacio clickeable.
- *
- * La detección de solapamiento es transitiva (A solapa con B, B solapa con C => A, B y C
- * quedan en el mismo grupo), para cubrir cadenas de inmuebles muy próximos entre sí.
- *
- * Muta en el lugar las propiedades `lat`/`lng` de los objetos dispersados; no crea copias
- * ni reordena el arreglo.
- *
- * @param {number} [metrosD=15] - Distancia en metros a la que se dispersan los inmuebles solapados
- * @param {Array} [locs=locations] - Arreglo de inmuebles a procesar (por defecto, el arreglo global `locations`)
- * @returns {Array} El mismo arreglo recibido, con las coordenadas ya dispersadas donde correspondía
- */
-function dispersarCoordenadas(metrosD = 15, locs = locations) { try {
-  const UMBRAL_SOLAPE_M = 10; // metros: por debajo de esto se considera "misma posición"
-  if (!Array.isArray(locs) || locs.length < 2) return locs;
-
-  const n = locs.length;
-
-  // --- Union-Find para agrupar transitivamente los inmuebles cercanos entre sí ---
-  const padre = Array.from({ length: n }, (_, i) => i);
-  function encontrar(x) {
-    while (padre[x] !== x) { padre[x] = padre[padre[x]]; x = padre[x]; }
-    return x;
-  }
-  function unir(a, b) {
-    const ra = encontrar(a), rb = encontrar(b);
-    if (ra !== rb) padre[ra] = rb;
-  }
-
-  // Distancia en metros entre dos inmuebles, reutilizando la fórmula Haversine ya existente (calculateDH, en km)
-  function distMetros(a, b) {
-    if (!a || !b || typeof a.lat !== 'number' || typeof a.lng !== 'number' ||
-        typeof b.lat !== 'number' || typeof b.lng !== 'number' ||
-        isNaN(a.lat) || isNaN(a.lng) || isNaN(b.lat) || isNaN(b.lng)) return Infinity;
-    return calculateDH(a.lat, a.lng, b.lat, b.lng) * 1000;
-  }
-
-  for (let i = 0; i < n; i++) {
-    for (let j = i + 1; j < n; j++) {
-      if (distMetros(locs[i], locs[j]) < UMBRAL_SOLAPE_M) unir(i, j);
-    }
-  }
-
-  // Agrupar índices por raíz del union-find, preservando el orden original dentro de cada grupo
-  const grupos = new Map();
-  for (let i = 0; i < n; i++) {
-    const raiz = encontrar(i);
-    if (!grupos.has(raiz)) grupos.set(raiz, []);
-    grupos.get(raiz).push(i);
-  }
-
-  // Conversión de metros a grados de latitud/longitud
-  const METROS_POR_GRADO_LAT = 111320;
-  function metrosADegLat(m) { return m / METROS_POR_GRADO_LAT; }
-  function metrosADegLng(m, latRef) {
-    const metrosPorGradoLng = METROS_POR_GRADO_LAT * Math.cos(latRef * Math.PI / 180);
-    if (Math.abs(metrosPorGradoLng) < 1e-6) return 0; // evita división por ~0 cerca de los polos
-    return m / metrosPorGradoLng;
-  }
-
-  let gruposConSolape = 0, totalDispersados = 0;
-
-  grupos.forEach((indices) => {
-    if (indices.length < 2) return; // sin solapamiento, no se toca
-
-    gruposConSolape++;
-
-    // El primero (según orden original) queda como ancla / centro de referencia
-    const ancla = locs[indices[0]];
-    const resto = indices.slice(1);
-
-    resto.forEach((idx, k) => {
-      const angulo = (2 * Math.PI * k) / resto.length;
-      const dLat = metrosADegLat(metrosD) * Math.cos(angulo);
-      const dLng = metrosADegLng(metrosD, ancla.lat) * Math.sin(angulo);
-
-      locs[idx].lat = ancla.lat + dLat;
-      locs[idx].lng = ancla.lng + dLng;
-      totalDispersados++;
-    });
-  });
-
-  if (gruposConSolape > 0) {
-    console.log(`dispersarCoordenadas: ${gruposConSolape} grupo(s) con coordenadas solapadas, ${totalDispersados} inmueble(s) dispersado(s) a ${metrosD}m`);
-  }
-
-  return locs;
-} catch (e) { console.log('dispersarCoordenadas error', e); return locs; } }
-
-
 // -------------------------------
 // Persistencia en localStorage
 // -------------------------------
@@ -760,9 +659,6 @@ $(document).ready(function () {
 
   function renderMap(locs, centerLat, centerLng, circleRadius, avgPrice, na, ag) {
     locations = locs;
-    // Dispersar inmuebles con coordenadas solapadas ANTES de crear los markers,
-    // para que ningún puntero quede tapado (y por ende sin poder recibir clicks).
-    dispersarCoordenadas();
     map = L.map('mapid');
     initACMMapClickMarker(map);
 
