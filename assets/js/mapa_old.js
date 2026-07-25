@@ -733,6 +733,62 @@ function mostrarModalError() {
   });
 }
 
+function mostrarAvisoSinResultados() {
+  if (document.getElementById('modal-sinresultados-overlay')) return; // evitar duplicados
+
+  var overlay = document.createElement('div');
+  overlay.id = 'modal-sinresultados-overlay';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:99999;display:flex;justify-content:center;align-items:center;';
+
+  var box = document.createElement('div');
+  box.style.cssText = 'background:#fff;border-radius:12px;padding:32px;max-width:420px;margin:20px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.3);font-family:sans-serif;';
+
+  box.innerHTML =
+    '<div style="font-size:48px;margin-bottom:12px;">🔍</div>' +
+    '<p style="font-size:18px;color:#333;margin:0 0 16px;line-height:1.5;">' +
+    'No encontramos inmuebles para mostrar en el mapa. Prueba ejecutar una nueva búsqueda desde Telegram con otros criterios.' +
+    '</p>' +
+    '<a id="modal-sinresultados-link" href="https://t.me/statettybot" target="_blank" rel="noopener" ' +
+    'style="display:inline-block;background:#2563eb;color:#fff;border-radius:8px;padding:10px 24px;font-size:16px;text-decoration:none;">' +
+    'Ir a @statettybot' +
+    '</a>';
+
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+
+  overlay.addEventListener('click', function (e) {
+    if (e.target === overlay) overlay.remove();
+  });
+}
+
+function mostrarAvisoSinSesion() {
+  if (document.getElementById('modal-sinsesion-overlay')) return; // evitar duplicados
+
+  var overlay = document.createElement('div');
+  overlay.id = 'modal-sinsesion-overlay';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:99999;display:flex;justify-content:center;align-items:center;';
+
+  var box = document.createElement('div');
+  box.style.cssText = 'background:#fff;border-radius:12px;padding:32px;max-width:420px;margin:20px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.3);font-family:sans-serif;';
+
+  box.innerHTML =
+    '<div style="font-size:48px;margin-bottom:12px;">⚠️</div>' +
+    '<p style="font-size:18px;color:#333;margin:0 0 16px;line-height:1.5;">' +
+    'Debes entrar en tu cuenta de Telegram y ejecutar una nueva búsqueda, u obtener un nuevo link de sesión de usuario.' +
+    '</p>' +
+    '<a id="modal-sinsesion-link" href="https://t.me/statettybot" target="_blank" rel="noopener" ' +
+    'style="display:inline-block;background:#2563eb;color:#fff;border-radius:8px;padding:10px 24px;font-size:16px;text-decoration:none;">' +
+    'Ir a @statettybot' +
+    '</a>';
+
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+
+  overlay.addEventListener('click', function (e) {
+    if (e.target === overlay) overlay.remove();
+  });
+}
+
 $(document).ready(function () {
   $('#toolbox-btn').on('click', function () {
     $('#toolbox').toggle();
@@ -1013,6 +1069,7 @@ $(document).ready(function () {
 
     if (!pk) {
       $('#loading-indicator').hide();
+      mostrarAvisoSinSesion();
       return;
     }
 
@@ -1021,6 +1078,7 @@ $(document).ready(function () {
     if (!response || response.error) {
       $('#loading-indicator').hide();
       if (usuario) mostrarModalError();
+      else mostrarAvisoSinSesion();
       return;
     }
 
@@ -1061,6 +1119,7 @@ $(document).ready(function () {
 
     if (!lat || !lng || !radius) {
       $('#loading-indicator').hide();
+      mostrarAvisoSinResultados();
       return;
     }
 
@@ -1082,6 +1141,7 @@ $(document).ready(function () {
     $('#loading-indicator').hide();
     var usuario = window.STT && window.STT.getUsuario ? window.STT.getUsuario() : null;
     if (usuario) mostrarModalError();
+    else mostrarAvisoSinSesion();
   });
 
   // búsqueda

@@ -21,6 +21,14 @@ var checkOverlayIcon = L.divIcon({
   iconAnchor: [1, 60] // ✔️ sobre la mitad superior del marker
 });
 
+// Capa "nuevo": borde verde transparente que se superpone sobre el pointer_{inmobiliaria}.png
+// cuando el inmueble tiene una antigüedad (createdAt) de una semana o menos.
+// Usa el mismo tamaño/anclaje que los pointer_{inmobiliaria}.png para quedar perfectamente alineado.
+var nuevoOverlayIcon = new L.Icon({
+  iconUrl: '../../assets/images/pointers/pointer_nuevo.png',
+  iconSize: [40, 60], iconAnchor: [20, 60], popupAnchor: [1, -54]
+});
+
 function openWsRedirect(serverUrl, waUrl) {
   fetch(serverUrl).catch(function(e) { console.log("openWsRedirect", e); });
   window.open(waUrl, "_blank");
@@ -236,6 +244,23 @@ function formatNumber(num) {
   return new Intl.NumberFormat("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(num);
 }
 
+/**
+ * Determina si un inmueble es "nuevo": su campo createdAt tiene una antigüedad
+ * igual o menor a una semana (7 días) respecto al momento actual.
+ * @param {Object} dato - Objeto inmueble (debe tener la propiedad createdAt)
+ * @returns {boolean}
+ */
+function esInmuebleNuevo(dato) {
+  try {
+    if (!dato || !dato.createdAt) return false;
+    var fechaCreacion = new Date(dato.createdAt);
+    if (isNaN(fechaCreacion.getTime())) return false;
+    var UNA_SEMANA_MS = 7 * 24 * 60 * 60 * 1000;
+    var antiguedadMs = Date.now() - fechaCreacion.getTime();
+    return antiguedadMs >= 0 && antiguedadMs <= UNA_SEMANA_MS;
+  } catch (e) { console.log('esInmuebleNuevo error', e); return false; }
+}
+
 function calcularPromedio(datos, prop) {
   if (!Array.isArray(datos) || datos.length === 0) return 0;
   const datosFiltrados = datos.filter(item => item && typeof item[prop] === 'number' && item[prop] >= 0);
@@ -382,10 +407,12 @@ function handleAgencyToggle(ag, checked) {
     // sincronizar marcador en el mapa
     if (checked) {
       map.addLayer(m.marker);
+      if (m.nuevoOverlay) map.addLayer(m.nuevoOverlay);
       // reactivar checkbox en popup si existe (no lo marcamos seleccionado)
       $(`.chk-sel[data-id='${m.dato.uid}']`).prop('disabled', false);
     } else {
       map.removeLayer(m.marker);
+      if (m.nuevoOverlay) map.removeLayer(m.nuevoOverlay);
       // quitar de seleccionados si estaba
       if (seleccionados.some(s => s.uid === m.dato.uid)) {
         // eliminar overlay
@@ -849,6 +876,16 @@ $(document).ready(function () {
 
       var marker = L.marker([dato.lat, dato.lng], { icon }); if (brand !== "ic") {marker.addTo(map);}
 
+      // Si el inmueble es "nuevo" (createdAt <= 1 semana), se agrega la capa
+      // pointer_nuevo.png justo encima del pointer, en las mismas coordenadas.
+      // Se crea con interactive:false para no bloquear el click/popup del marker principal,
+      // y se agrega/quita al mapa siguiendo la misma visibilidad que el marker (según brand/agencia).
+      var nuevoOverlay = null;
+      if (esInmuebleNuevo(dato)) {
+        nuevoOverlay = L.marker([dato.lat, dato.lng], { icon: nuevoOverlayIcon, interactive: false });
+        if (brand !== "ic") { nuevoOverlay.addTo(map); }
+      }
+
       const nombreAgente = (dato.agentName || '').trim();
       const limpio = nombreAgente
         ? nombreAgente
@@ -920,7 +957,7 @@ $(document).ready(function () {
         `<br><label><input type="checkbox" class="chk-sel" data-id="${dato.uid}"> Seleccionar</label>`;
 
       marker.bindPopup(popupContent);
-      markers.push({ marker, iconOriginal: icon, dato, overlay: null });
+      markers.push({ marker, iconOriginal: icon, dato, overlay: null, nuevoOverlay });
 
       marker.on("popupopen", function () {
         let chk = $(`.chk-sel[data-id='${dato.uid}']`);
@@ -1089,6 +1126,12 @@ $(document).ready(function () {
       locs.forEach(function(loc) {
         loc.uid = normalizeURL(loc.URL);
         loc.brand = getBrand({ dato: loc });
+        // Respaldo: si parseFinderResult no propagó createdAt, se busca en el registro
+        // crudo de response.result (por _id) para no perder el dato de antigüedad.
+        if (loc.createdAt === undefined && loc._id) {
+          var raw = response.result.find(function (r) { return r._id === loc._id; });
+          if (raw) loc.createdAt = raw.createdAt;
+        }
       });
     }
 
