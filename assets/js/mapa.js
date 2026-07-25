@@ -244,20 +244,15 @@ function formatNumber(num) {
   return new Intl.NumberFormat("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(num);
 }
 
-/**
- * Determina si un inmueble es "nuevo": su campo createdAt tiene una antigüedad
- * igual o menor a una semana (7 días) respecto al momento actual.
- * @param {Object} dato - Objeto inmueble (debe tener la propiedad createdAt)
- * @returns {boolean}
- */
-function esInmuebleNuevo(dato) {
+
+function esInmuebleNuevo(dato, diasMax = 15) {
   try {
     if (!dato || !dato.createdAt) return false;
     var fechaCreacion = new Date(dato.createdAt);
     if (isNaN(fechaCreacion.getTime())) return false;
-    var UNA_SEMANA_MS = 7 * 24 * 60 * 60 * 1000;
+    var LIMITE_MS = diasMax * 24 * 60 * 60 * 1000;
     var antiguedadMs = Date.now() - fechaCreacion.getTime();
-    return antiguedadMs >= 0 && antiguedadMs <= UNA_SEMANA_MS;
+    return antiguedadMs >= 0 && antiguedadMs <= LIMITE_MS;
   } catch (e) { console.log('esInmuebleNuevo error', e); return false; }
 }
 
