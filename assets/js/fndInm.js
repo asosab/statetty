@@ -1019,30 +1019,57 @@
       var msg = document.createElement('div');
       msg.style.cssText = 'color:#fff;font-size:1.1rem;font-family:sans-serif;text-align:center;';
       msg.textContent = 'Realizando búsqueda, un momento por favor';
+
+      var slowBox = document.createElement('div');
+      slowBox.style.cssText = 'display:none;color:#fff;font-family:sans-serif;text-align:center;max-width:320px;';
+      var slowMsg = document.createElement('div');
+      slowMsg.style.cssText = 'margin-bottom:14px;font-size:1.05rem;';
+      slowMsg.textContent = 'Eso está tomando más tiempo de lo normal, ¿deseas seguir esperando o cancelar la búsqueda?';
+      var slowActions = document.createElement('div');
+      slowActions.style.cssText = 'display:flex;gap:10px;justify-content:center;';
+      var btnWait = document.createElement('button');
+      btnWait.type = 'button';
+      btnWait.textContent = 'Seguir esperando';
+      btnWait.style.cssText = 'padding:8px 14px;border-radius:6px;border:none;background:#17baef;color:#fff;cursor:pointer;font-size:.95rem;';
+      var btnCancel = document.createElement('button');
+      btnCancel.type = 'button';
+      btnCancel.textContent = 'Cancelar búsqueda';
+      btnCancel.style.cssText = 'padding:8px 14px;border-radius:6px;border:1px solid #fff;background:transparent;color:#fff;cursor:pointer;font-size:.95rem;';
+      slowActions.appendChild(btnWait);
+      slowActions.appendChild(btnCancel);
+      slowBox.appendChild(slowMsg);
+      slowBox.appendChild(slowActions);
+
       overlay.appendChild(spinner);
       overlay.appendChild(msg);
+      overlay.appendChild(slowBox);
+
+      overlay._spinner = spinner;
+      overlay._msg = msg;
+      overlay._slowBox = slowBox;
+      overlay._btnWait = btnWait;
+      overlay._btnCancel = btnCancel;
       return overlay;
     }
 
-    function pollSearchReady(base, pk, searchTs, overlay) {
-      var attempts = 0, maxAttempts = 30;
+    // Sigue indagando cada 4s mientras no se cancele; sin límite de intentos.
+    function pollSearchReady(base, pk, searchTs, overlay, controller, isCancelled, onDone) {
       function check() {
-        attempts++;
-        fetch(base + 'statetty/buscarInmueble/status?publicKey=' + encodeURIComponent(pk) + '&searchTs=' + searchTs)
+        if (isCancelled()) return;
+        fetch(base + 'statetty/buscarInmueble/status?publicKey=' + encodeURIComponent(pk) + '&searchTs=' + searchTs, { signal: controller.signal })
           .then(function (r) { return r.json(); })
           .then(function (res) {
+            if (isCancelled()) return;
             if (res.ready) {
+              if (onDone) onDone();
               overlay.remove();
               window.location.href = 'https://statetty.com/maps/find';
-            } else if (attempts < maxAttempts) {
-              setTimeout(check, 4000);
             } else {
-              overlay.remove();
-              showSaveStatus('error', 'La búsqueda está tardando más de lo esperado. Intenta de nuevo.');
+              setTimeout(check, 4000);
             }
           }).catch(function () {
-            if (attempts < maxAttempts) { setTimeout(check, 4000); }
-            else { overlay.remove(); showSaveStatus('error', 'Error al verificar el estado de la búsqueda.'); }
+            if (isCancelled()) return;
+            setTimeout(check, 4000);
           });
       }
       setTimeout(check, 4000);
@@ -1060,21 +1087,61 @@
       var overlay = buildSearchOverlay();
       document.body.appendChild(overlay);
 
+      var controller = new AbortController();
+      var cancelled = false;
+      var slowTimer = null;
+
+      function isCancelled() { return cancelled; }
+
+      function showSlowPrompt() {
+        overlay._spinner.style.display = 'none';
+        overlay._msg.style.display = 'none';
+        overlay._slowBox.style.display = 'block';
+      }
+      function hideSlowPrompt() {
+        overlay._spinner.style.display = '';
+        overlay._msg.style.display = '';
+        overlay._slowBox.style.display = 'none';
+      }
+      function armSlowTimer() {
+        clearTimeout(slowTimer);
+        slowTimer = setTimeout(showSlowPrompt, 30000);
+      }
+      function cancelSearch() {
+        cancelled = true;
+        clearTimeout(slowTimer);
+        controller.abort();
+        overlay.remove();
+      }
+
+      overlay._btnCancel.addEventListener('click', cancelSearch);
+      overlay._btnWait.addEventListener('click', function () {
+        hideSlowPrompt();
+        armSlowTimer();
+      });
+
+      armSlowTimer();
+
       params.publicKey = pk;
 
       var base = window.STATETTY_CONFIG ? STATETTY_CONFIG.WS_API_BASE : '';
       fetch(base + 'statetty/buscarInmueble', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(params)
+        body: JSON.stringify(params),
+        signal: controller.signal
       }).then(function (r) { return r.json(); }).then(function (res) {
+        if (cancelled) return;
         if (!res.ok || !res.searchTs) {
+          clearTimeout(slowTimer);
           overlay.remove();
           showSaveStatus('error', 'Error al iniciar la búsqueda.');
           return;
         }
-        pollSearchReady(base, pk, res.searchTs, overlay);
+        pollSearchReady(base, pk, res.searchTs, overlay, controller, isCancelled, function () { clearTimeout(slowTimer); });
       }).catch(function () {
+        if (cancelled) return;
+        clearTimeout(slowTimer);
         overlay.remove();
         showSaveStatus('error', 'Error de conexión. Verifica tu conexión e intenta de nuevo.');
       });
