@@ -585,15 +585,19 @@ function ensureStatsActions() {
   if ($('#stats-actions').length === 0) {
     $('#stats-container').append(`
       <div id="stats-actions" style="margin-top:8px;">
-        <button id="btn-add-sel">Agregar a selección</button>
-        <button id="btn-remove-sel">Quitar de selección</button>
-        <button id="btn-keep-only">Mantener estos</button>
+        <button id="btn-add-sel" data-tippy-content="Agrega a la selección los inmuebles que coinciden con el texto buscado y están visibles en el mapa.">Agregar a selección</button>
+        <button id="btn-remove-sel" data-tippy-content="Quita de la selección los inmuebles que coinciden con el texto buscado y están visibles en el mapa.">Quitar de selección</button>
+        <button id="btn-keep-only" data-tippy-content="Deja en la selección solo los inmuebles que coinciden con la búsqueda actual; el resto se quita.">Mantener estos</button>
         <br>
-        <button id="btn-add-all">Agregar todos</button>
-        <button id="btn-remove-all">Quitar todos</button>
+        <button id="btn-add-all" data-tippy-content="Agrega a la selección todos los inmuebles actualmente visibles en el mapa, sin importar el texto buscado.">Agregar todos</button>
+        <button id="btn-remove-all" data-tippy-content="Quita todos los inmuebles de la selección actual (vacía la lista de seleccionados).">Quitar todos</button>
         <button id="btn-add-all-except" title="Agregar todos menos los filtrados">➕ Otros</button>
       </div>
     `);
+    // Estos botones se crean dinámicamente después de la inicialización
+    // general de tooltips del toolbox (ver $(document).ready), así que
+    // hay que engancharles Tippy acá, recién insertados en el DOM.
+    initPopupTooltips(document.getElementById('stats-actions'));
   }
 
   if (window.statsButtonsInit) return;
