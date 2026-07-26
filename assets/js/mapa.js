@@ -245,7 +245,7 @@ function formatNumber(num) {
 }
 
 
-function esInmuebleNuevo(dato, diasMax = 33) {
+function esInmuebleNuevo(dato, diasMax = 15) {
   try {
     if (!dato || !dato.createdAt) return false;
     var fechaCreacion = new Date(dato.createdAt);
