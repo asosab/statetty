@@ -954,8 +954,8 @@ $(document).ready(function () {
         `${descripcion}` +
         `${direccion}` +
         `${micros}` +
-        fotoHTML +
-        '<a href="' + url + '" target="_blank">🔗 Ver página de la fuente de los datos</a>' +
+        fotoHTML +                                     
+        '<a href="' + url + '" target="_blank">🔗 Ver fuente de datos</a>' +
         linkWA +
         `<br><label><input type="checkbox" class="chk-sel" data-id="${dato.uid}"> Seleccionar</label>`;
 
