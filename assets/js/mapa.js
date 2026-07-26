@@ -245,15 +245,135 @@ function formatNumber(num) {
 }
 
 
+// Determina la fecha real de antigüedad de un inmueble.
+// Regla: fechaIngreso (fecha_ini) prevalece sobre createdAt SOLO si existe
+// y es anterior a createdAt (es decir, el inmueble ya estaba publicado antes
+// de que nuestro sistema lo captara). Si no existe fechaIngreso, o es
+// posterior/igual a createdAt, se usa createdAt.
+function getFechaAntiguedad(dato) {
+  if (!dato) return null;
+  var fCreated = dato.createdAt ? new Date(dato.createdAt) : null;
+  if (fCreated && isNaN(fCreated.getTime())) fCreated = null;
+
+  var fIngreso = dato.fechaIngreso ? new Date(dato.fechaIngreso) : null;
+  if (fIngreso && isNaN(fIngreso.getTime())) fIngreso = null;
+
+  if (fIngreso && (!fCreated || fIngreso.getTime() < fCreated.getTime())) {
+    return fIngreso;
+  }
+  return fCreated;
+}
+
 function esInmuebleNuevo(dato, diasMax = 15) {
   try {
-    if (!dato || !dato.createdAt) return false;
-    var fechaCreacion = new Date(dato.createdAt);
-    if (isNaN(fechaCreacion.getTime())) return false;
+    var fecha = getFechaAntiguedad(dato);
+    if (!fecha) return false;
     var LIMITE_MS = diasMax * 24 * 60 * 60 * 1000;
-    var antiguedadMs = Date.now() - fechaCreacion.getTime();
+    var antiguedadMs = Date.now() - fecha.getTime();
     return antiguedadMs >= 0 && antiguedadMs <= LIMITE_MS;
   } catch (e) { console.log('esInmuebleNuevo error', e); return false; }
+}
+
+// Texto "publicado hace X días/meses/años" usando la misma fecha corregida.
+function formatAntiguedad(dato) {
+  try {
+    var fecha = getFechaAntiguedad(dato);
+    if (!fecha) return '';
+    var diffMs = Date.now() - fecha.getTime();
+    if (diffMs < 0) return '';
+    var dias = Math.floor(diffMs / (24 * 60 * 60 * 1000));
+    if (dias < 1) return 'Publicado hoy';
+    if (dias === 1) return 'Publicado hace 1 día';
+    if (dias < 30) return 'Publicado hace ' + dias + ' días';
+    var meses = Math.floor(dias / 30);
+    if (meses < 12) return 'Publicado hace ' + meses + (meses === 1 ? ' mes' : ' meses');
+    var anios = Math.floor(dias / 365);
+    return 'Publicado hace ' + anios + (anios === 1 ? ' año' : ' años');
+  } catch (e) { console.log('formatAntiguedad error', e); return ''; }
+}
+
+// Precio compacto para el encabezado del popup: 300000 -> "$300K", 1250000 -> "$1.25M"
+function formatCompactPrice(precio) {
+  var n = Number(precio) || 0;
+  if (n >= 1000000) {
+    var m = n / 1000000;
+    var mRound = Math.round(m * 100) / 100;
+    return '$' + (mRound % 1 === 0 ? mRound : mRound.toFixed(2).replace(/0+$/, '').replace(/\.$/, '')) + 'M';
+  }
+  if (n >= 1000) {
+    var k = n / 1000;
+    var kRound = Math.round(k * 10) / 10;
+    return '$' + (kRound % 1 === 0 ? kRound : kRound.toFixed(1)) + 'K';
+  }
+  return '$' + n;
+}
+
+// Emoji según el tipo de inmueble (tipoInmueble). Si no hay match, usa 🏠 genérico.
+var TIPO_INMUEBLE_EMOJI = {
+  'casa': '🏡',
+  'departamento': '🏢',
+  'terreno': '🌳',
+  'oficina': '💼',
+  'local comercial': '🏬',
+  'local': '🏬',
+  'edificio': '🏛️',
+  'quinta': '🏞️',
+  'ph': '🏘️',
+  'galpon': '🏭',
+  'galpón': '🏭'
+};
+function getTipoEmoji(tipo) {
+  if (!tipo) return '🏠';
+  var key = String(tipo).trim().toLowerCase();
+  return TIPO_INMUEBLE_EMOJI[key] || '🏠';
+}
+
+// Tema Tippy.js reutilizado del formulario de búsqueda (fndInm.js define el
+// mismo nombre de tema como 'fndinm'). Se inyecta el CSS acá también por si
+// esta página no monta el formulario de búsqueda y por lo tanto ese estilo
+// nunca se agrega al <head>.
+var MAPA_TIPPY_THEME = 'fndinm';
+function ensureTippyTheme() {
+  if (document.getElementById('mapa-tippy-theme-style')) return;
+  var css =
+    '.tippy-box[data-theme~="' + MAPA_TIPPY_THEME + '"]{background-color:#25282c;color:#fff;' +
+    'font-size:.72rem;line-height:1.35;border-radius:6px;' +
+    'box-shadow:0 2px 8px rgba(0,0,0,.25);}' +
+    '.tippy-box[data-theme~="' + MAPA_TIPPY_THEME + '"] .tippy-content{padding:6px 9px;}' +
+    '.tippy-box[data-theme~="' + MAPA_TIPPY_THEME + '"] .tippy-arrow{color:#25282c;}';
+  var style = document.createElement('style');
+  style.id = 'mapa-tippy-theme-style';
+  style.textContent = css;
+  document.head.appendChild(style);
+}
+
+// Inicializa (o reinicializa) los tooltips de Tippy dentro de un elemento del DOM.
+// Se usa en el popupopen del marker, ya que el contenido se genera dinámicamente
+// y hay que aplicar tippy() recién cuando el popup ya está insertado en el DOM.
+function initPopupTooltips(rootEl) {
+  if (!rootEl) return;
+  var allTargets = rootEl.querySelectorAll('[data-tippy-content]');
+  if (!allTargets.length) return;
+  // El popup se crea una sola vez (bindPopup) pero "popupopen" dispara en
+  // cada apertura; sin este filtro, tippy() se acumularía en instancias
+  // duplicadas sobre los mismos elementos cada vez que se reabre el popup.
+  var targets = Array.prototype.filter.call(allTargets, function (el) { return !el._tippy; });
+  if (!targets.length) return;
+  if (window.tippy) {
+    ensureTippyTheme();
+    window.tippy(targets, {
+      theme: MAPA_TIPPY_THEME,
+      placement: 'top',
+      maxWidth: 220,
+      delay: [150, 0],
+      touch: true,
+      appendTo: function () { return document.body; }
+    });
+  } else {
+    targets.forEach(function (el) {
+      el.title = el.getAttribute('data-tippy-content');
+    });
+  }
 }
 
 function calcularPromedio(datos, prop) {
@@ -935,25 +1055,48 @@ $(document).ready(function () {
         : "";
 
       var priceDiffPercent = ((dato.precio - avgPrice) / avgPrice) * 100;
-      var priceComparison = priceDiffPercent > 0
-        ? `<span style="color: red;">↑${Math.ceil(priceDiffPercent)}%</span>`
-        : `<span style="color: green;">↓${Math.ceil(Math.abs(priceDiffPercent))}%</span>`;
+      var priceArrow = priceDiffPercent > 0 ? '↑' : '↓';
+      var priceColor = priceDiffPercent > 0 ? 'red' : 'green';
+      var priceComparisonTexto = priceArrow + Math.ceil(Math.abs(priceDiffPercent)) + '%';
       let descripcion = dato.des ? `<b>Descripción:</b> ${dato.des}<br>`:'';
       let direccion = dato.dir ? `<b>Dirección:</b> ${dato.dir}<br>`:'';
-      let micros = '';
+      let listaMicros = [];
       if (dato.micros && dato.micros !== '') {
-        let listaMicros = dato.micros.split(',').map(m => m.trim()).filter(m => m !== '');
-        if (listaMicros.length > 0) {
-          let primeras10 = listaMicros.slice(0, 10).join(', ');
-          let sufijo = listaMicros.length > 10 ? '...' : '';
-          micros = `<b>Micros (${listaMicros.length}):</b> ${primeras10}${sufijo}<br>`;
-        }
+        listaMicros = dato.micros.split(',').map(m => m.trim()).filter(m => m !== '');
       }
 
-      var popupContent = "<b>" + dato.Titulo + " (" + distance + "m)</b> " + priceComparison + "<br>" +
+      // Línea compacta de detalles: 🏡 💰$300K | 📐353 | 🏗️175 | 🛏️3 | 🛁2 | 🚗3 | 📍910m | ⚖️↓10% | 🚌8
+      // Cada ítem se muestra solo si el dato viene con valor, para no romper
+      // con registros que no traen alguno de estos campos.
+      var tipoEmoji = getTipoEmoji(dato.tipoInmueble);
+      var precioCompacto = formatCompactPrice(dato.precio);
+      var detalles = [];
+      detalles.push(`<span data-tippy-content="Tipo de inmueble: ${dato.tipoInmueble || 'No especificado'}">${tipoEmoji}</span>`);
+      detalles.push(`<span data-tippy-content="Precio: USD ${formatNumber(dato.precio)}">💰${precioCompacto}</span>`);
+      if (dato.m2terreno) detalles.push(`<span data-tippy-content="Superficie de terreno: ${dato.m2terreno} m²">📐${dato.m2terreno}</span>`);
+      if (dato.m2construccion) detalles.push(`<span data-tippy-content="Superficie construida: ${dato.m2construccion} m²">🏗️${dato.m2construccion}</span>`);
+      if (dato.dormitorios) detalles.push(`<span data-tippy-content="Dormitorios: ${dato.dormitorios}">🛏️${dato.dormitorios}</span>`);
+      if (dato['baños']) detalles.push(`<span data-tippy-content="Baños: ${dato['baños']}">🛁${dato['baños']}</span>`);
+      if (dato.estacionamientos) detalles.push(`<span data-tippy-content="Estacionamientos: ${dato.estacionamientos}">🚗${dato.estacionamientos}</span>`);
+      detalles.push(`<span data-tippy-content="Distancia al centro del área de búsqueda">📍${distance}m</span>`);
+      detalles.push(`<span data-tippy-content="Comparación de precio respecto al promedio de los resultados de esta búsqueda"><span style="color:${priceColor}">⚖️${priceComparisonTexto}</span></span>`);
+      if (listaMicros.length) detalles.push(`<span data-tippy-content="Micros que pasan a menos de 250m del inmueble">🚌${listaMicros.length}</span>`);
+      var detallesLine = detalles.join(' | ');
+
+      var esNuevo = esInmuebleNuevo(dato);
+      var nuevoTag = esNuevo
+        ? ` <span style="color:#e63946;font-weight:bold;" data-tippy-content="Publicado hace 15 días o menos">¡Nuevo!</span>`
+        : '';
+      var antiguedadTexto = formatAntiguedad(dato);
+      var antiguedadLine = antiguedadTexto
+        ? `<div style="font-size:11px;color:#666;" data-tippy-content="Fecha de publicación estimada del inmueble">${antiguedadTexto}</div>`
+        : '';
+
+      var popupContent = "<b>" + dato.Titulo + "</b>" + nuevoTag + "<br>" +
+        detallesLine + "<br>" +
+        antiguedadLine +
         `${descripcion}` +
         `${direccion}` +
-        `${micros}` +
         fotoHTML +                                     
         '<a href="' + url + '" target="_blank">🔗 Ver fuente de datos</a>' +
         linkWA +
@@ -962,7 +1105,8 @@ $(document).ready(function () {
       marker.bindPopup(popupContent);
       markers.push({ marker, iconOriginal: icon, dato, overlay: null, nuevoOverlay });
 
-      marker.on("popupopen", function () {
+      marker.on("popupopen", function (e) {
+        initPopupTooltips(e.popup.getElement());
         let chk = $(`.chk-sel[data-id='${dato.uid}']`);
         chk.prop("checked", seleccionados.some(s => s.uid === dato.uid));
 

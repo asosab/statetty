@@ -21,6 +21,14 @@ var checkOverlayIcon = L.divIcon({
   iconAnchor: [1, 60] // ✔️ sobre la mitad superior del marker
 });
 
+// Capa "nuevo": borde verde transparente que se superpone sobre el pointer_{inmobiliaria}.png
+// cuando el inmueble tiene una antigüedad (createdAt) de una semana o menos.
+// Usa el mismo tamaño/anclaje que los pointer_{inmobiliaria}.png para quedar perfectamente alineado.
+var nuevoOverlayIcon = new L.Icon({
+  iconUrl: '../../assets/images/pointers/pointer_nuevo.png',
+  iconSize: [40, 60], iconAnchor: [20, 60], popupAnchor: [1, -54]
+});
+
 function openWsRedirect(serverUrl, waUrl) {
   fetch(serverUrl).catch(function(e) { console.log("openWsRedirect", e); });
   window.open(waUrl, "_blank");
@@ -39,7 +47,7 @@ function openWsRedirect(serverUrl, waUrl) {
   } catch (e) {console.log('calcularBoundsDesdeLocations error',e);} }
 
 
-/** --------------------------------------------------------------------------------------- dispersarCoordenadas
+/** ----------------------------------------------------------------------------------------------- dispersarCoordenadas
  * Revisa todos los inmuebles (por defecto, los que vienen de la base de datos en la variable
  * global `locations`) y detecta grupos de coordenadas "solapadas": inmuebles que están en la
  * misma coordenada exacta o a menos de 10 metros entre sí. Esto es necesario porque el mapa
@@ -62,7 +70,7 @@ function openWsRedirect(serverUrl, waUrl) {
  * @param {Array} [locs=locations] - Arreglo de inmuebles a procesar (por defecto, el arreglo global `locations`)
  * @returns {Array} El mismo arreglo recibido, con las coordenadas ya dispersadas donde correspondía
  */
-function dispersarCoordenadas(metrosD = 15, locs = locations) { try {
+function dispersarCoordenadas(metrosD = 20, locs = locations) { try {
   const UMBRAL_SOLAPE_M = 10; // metros: por debajo de esto se considera "misma posición"
   if (!Array.isArray(locs) || locs.length < 2) return locs;
 
@@ -236,6 +244,18 @@ function formatNumber(num) {
   return new Intl.NumberFormat("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(num);
 }
 
+
+function esInmuebleNuevo(dato, diasMax = 15) {
+  try {
+    if (!dato || !dato.createdAt) return false;
+    var fechaCreacion = new Date(dato.createdAt);
+    if (isNaN(fechaCreacion.getTime())) return false;
+    var LIMITE_MS = diasMax * 24 * 60 * 60 * 1000;
+    var antiguedadMs = Date.now() - fechaCreacion.getTime();
+    return antiguedadMs >= 0 && antiguedadMs <= LIMITE_MS;
+  } catch (e) { console.log('esInmuebleNuevo error', e); return false; }
+}
+
 function calcularPromedio(datos, prop) {
   if (!Array.isArray(datos) || datos.length === 0) return 0;
   const datosFiltrados = datos.filter(item => item && typeof item[prop] === 'number' && item[prop] >= 0);
@@ -382,10 +402,12 @@ function handleAgencyToggle(ag, checked) {
     // sincronizar marcador en el mapa
     if (checked) {
       map.addLayer(m.marker);
+      if (m.nuevoOverlay) map.addLayer(m.nuevoOverlay);
       // reactivar checkbox en popup si existe (no lo marcamos seleccionado)
       $(`.chk-sel[data-id='${m.dato.uid}']`).prop('disabled', false);
     } else {
       map.removeLayer(m.marker);
+      if (m.nuevoOverlay) map.removeLayer(m.nuevoOverlay);
       // quitar de seleccionados si estaba
       if (seleccionados.some(s => s.uid === m.dato.uid)) {
         // eliminar overlay
@@ -849,6 +871,16 @@ $(document).ready(function () {
 
       var marker = L.marker([dato.lat, dato.lng], { icon }); if (brand !== "ic") {marker.addTo(map);}
 
+      // Si el inmueble es "nuevo" (createdAt <= 1 semana), se agrega la capa
+      // pointer_nuevo.png justo encima del pointer, en las mismas coordenadas.
+      // Se crea con interactive:false para no bloquear el click/popup del marker principal,
+      // y se agrega/quita al mapa siguiendo la misma visibilidad que el marker (según brand/agencia).
+      var nuevoOverlay = null;
+      if (esInmuebleNuevo(dato)) {
+        nuevoOverlay = L.marker([dato.lat, dato.lng], { icon: nuevoOverlayIcon, interactive: false });
+        if (brand !== "ic") { nuevoOverlay.addTo(map); }
+      }
+
       const nombreAgente = (dato.agentName || '').trim();
       const limpio = nombreAgente
         ? nombreAgente
@@ -908,19 +940,27 @@ $(document).ready(function () {
         : `<span style="color: green;">↓${Math.ceil(Math.abs(priceDiffPercent))}%</span>`;
       let descripcion = dato.des ? `<b>Descripción:</b> ${dato.des}<br>`:'';
       let direccion = dato.dir ? `<b>Dirección:</b> ${dato.dir}<br>`:'';
-      let micros = dato.micros !=='' ? `<b>Líneas de micros:</b> ${dato.micros}<br>`:'';
+      let micros = '';
+      if (dato.micros && dato.micros !== '') {
+        let listaMicros = dato.micros.split(',').map(m => m.trim()).filter(m => m !== '');
+        if (listaMicros.length > 0) {
+          let primeras10 = listaMicros.slice(0, 10).join(', ');
+          let sufijo = listaMicros.length > 10 ? '...' : '';
+          micros = `<b>Micros (${listaMicros.length}):</b> ${primeras10}${sufijo}<br>`;
+        }
+      }
 
       var popupContent = "<b>" + dato.Titulo + " (" + distance + "m)</b> " + priceComparison + "<br>" +
         `${descripcion}` +
         `${direccion}` +
         `${micros}` +
-        fotoHTML +
-        '<a href="' + url + '" target="_blank">🔗 Ver página de la fuente de los datos</a>' +
+        fotoHTML +                                     
+        '<a href="' + url + '" target="_blank">🔗 Ver fuente de datos</a>' +
         linkWA +
         `<br><label><input type="checkbox" class="chk-sel" data-id="${dato.uid}"> Seleccionar</label>`;
 
       marker.bindPopup(popupContent);
-      markers.push({ marker, iconOriginal: icon, dato, overlay: null });
+      markers.push({ marker, iconOriginal: icon, dato, overlay: null, nuevoOverlay });
 
       marker.on("popupopen", function () {
         let chk = $(`.chk-sel[data-id='${dato.uid}']`);
@@ -1089,6 +1129,12 @@ $(document).ready(function () {
       locs.forEach(function(loc) {
         loc.uid = normalizeURL(loc.URL);
         loc.brand = getBrand({ dato: loc });
+        // Respaldo: si parseFinderResult no propagó createdAt, se busca en el registro
+        // crudo de response.result (por _id) para no perder el dato de antigüedad.
+        if (loc.createdAt === undefined && loc._id) {
+          var raw = response.result.find(function (r) { return r._id === loc._id; });
+          if (raw) loc.createdAt = raw.createdAt;
+        }
       });
     }
 

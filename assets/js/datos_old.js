@@ -95,8 +95,6 @@ function apiItemToLocation(item) {
     tOfertado: 'tiempoOfertado',
     tipoInmueble: 'tipoInmueble',
     tipoNegocio: 'tipoNegocio',
-    estacionamientos: 'estacionamientos',
-    createdAt: 'createdAt',
     _id: '_id'
   };
 
@@ -121,12 +119,6 @@ function apiItemToLocation(item) {
   loc.m2terreno = parseInt(loc.m2terreno) || 0;
   loc.m2construccion = parseInt(loc.m2construccion) || 0;
   loc.tiempoOfertado = parseInt(loc.tiempoOfertado) || 0;
-  loc.dormitorios = parseInt(loc.dormitorios) || 0;
-  loc['ba\u00f1os'] = parseInt(loc['ba\u00f1os']) || 0;
-  // "estacionamientos" suele venir null cuando el dato no está disponible;
-  // no hay forma de distinguirlo de "0 estacionamientos" con la info actual,
-  // así que 0 se interpreta como "sin dato" y no se muestra en el popup.
-  loc.estacionamientos = parseInt(loc.estacionamientos) || 0;
 
   // Detección de coordenadas inválidas: causa típica de puntos "invisibles" en el mapa
   if (isNaN(loc.lat) || isNaN(loc.lng)) {
