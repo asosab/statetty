@@ -932,6 +932,12 @@ function mostrarAvisoSinSesion() {
 }
 
 $(document).ready(function () {
+  // Tooltips del toolbox "📊 Estadísticas & 🔍 Buscar": a diferencia de los
+  // popups de los markers (que se regeneran cada apertura), estos elementos
+  // ya existen en el DOM al cargar la página, así que se inicializan una
+  // sola vez acá.
+  initPopupTooltips(document.getElementById('toolbox'));
+
   $('#toolbox-btn').on('click', function () {
     $('#toolbox').toggle();
   });
