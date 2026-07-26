@@ -47,7 +47,7 @@ function openWsRedirect(serverUrl, waUrl) {
   } catch (e) {console.log('calcularBoundsDesdeLocations error',e);} }
 
 
-/** --------------------------------------------------------------------------------------- dispersarCoordenadas
+/** ----------------------------------------------------------------        ----------------------- dispersarCoordenadas
  * Revisa todos los inmuebles (por defecto, los que vienen de la base de datos en la variable
  * global `locations`) y detecta grupos de coordenadas "solapadas": inmuebles que están en la
  * misma coordenada exacta o a menos de 10 metros entre sí. Esto es necesario porque el mapa
@@ -70,7 +70,7 @@ function openWsRedirect(serverUrl, waUrl) {
  * @param {Array} [locs=locations] - Arreglo de inmuebles a procesar (por defecto, el arreglo global `locations`)
  * @returns {Array} El mismo arreglo recibido, con las coordenadas ya dispersadas donde correspondía
  */
-function dispersarCoordenadas(metrosD = 15, locs = locations) { try {
+function dispersarCoordenadas(metrosD = 30, locs = locations) { try {
   const UMBRAL_SOLAPE_M = 10; // metros: por debajo de esto se considera "misma posición"
   if (!Array.isArray(locs) || locs.length < 2) return locs;
 
