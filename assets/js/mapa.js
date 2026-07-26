@@ -940,7 +940,15 @@ $(document).ready(function () {
         : `<span style="color: green;">↓${Math.ceil(Math.abs(priceDiffPercent))}%</span>`;
       let descripcion = dato.des ? `<b>Descripción:</b> ${dato.des}<br>`:'';
       let direccion = dato.dir ? `<b>Dirección:</b> ${dato.dir}<br>`:'';
-      let micros = dato.micros !=='' ? `<b>Líneas de micros:</b> ${dato.micros}<br>`:'';
+      let micros = '';
+      if (dato.micros && dato.micros !== '') {
+        let listaMicros = dato.micros.split(',').map(m => m.trim()).filter(m => m !== '');
+        if (listaMicros.length > 0) {
+          let primeras10 = listaMicros.slice(0, 10).join(', ');
+          let sufijo = listaMicros.length > 10 ? '...' : '';
+          micros = `<b>Micros (${listaMicros.length}):</b> ${primeras10}${sufijo}<br>`;
+        }
+      }
 
       var popupContent = "<b>" + dato.Titulo + " (" + distance + "m)</b> " + priceComparison + "<br>" +
         `${descripcion}` +
