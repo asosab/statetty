@@ -219,7 +219,7 @@ const tipoInmuebleDic = {
   }
 };
 
-function detectarTipoInmueble(loc) {
+function detectarTipoInmueble_old(loc) {
   const texto = ((loc.Titulo || "") + " " + (loc.des || "")).toLowerCase();
 
   for (const [tipo, reglas] of Object.entries(tipoInmuebleDic)) {
@@ -234,6 +234,40 @@ function detectarTipoInmueble(loc) {
   return "otro"; // si no encaja en ninguna categoría
 }
 
+function detectarTipoInmueble(loc) {
+  const tituloTexto = (loc.Titulo || "").toLowerCase();
+  const desTexto = (loc.des || "").toLowerCase();
+
+  const PESO_TITULO = 3;
+  const PESO_DESCRIPCION = 1;
+
+  let mejorTipo = "otro";
+  let mejorScore = 0;
+
+  for (const [tipo, reglas] of Object.entries(tipoInmuebleDic)) {
+    let score = 0;
+
+    reglas.incluye.forEach(word => {
+      if (tituloTexto.includes(word)) score += PESO_TITULO;
+      else if (desTexto.includes(word)) score += PESO_DESCRIPCION;
+    });
+
+    if (score === 0) continue; // sin coincidencias para este tipo
+
+    const excluidoEnTitulo = reglas.excluye.some(word => tituloTexto.includes(word));
+    const excluidoEnDescripcion = reglas.excluye.some(word => desTexto.includes(word));
+
+    if (excluidoEnTitulo) continue; // contradicción fuerte en el título → descarta
+    if (excluidoEnDescripcion) score -= PESO_DESCRIPCION; // contradicción débil → resta
+
+    if (score > mejorScore) {
+      mejorScore = score;
+      mejorTipo = tipo;
+    }
+  }
+
+  return mejorTipo;
+}
 
 /** ---------------------------------------------------------------------------------------------------- initACMTools
  * Inicializa herramientas ACM y eventos asociados
