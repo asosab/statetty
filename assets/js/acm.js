@@ -69,8 +69,22 @@
       const avgPrecio=seleccionados.length?calcularPromedio(seleccionados,"precio"):0;
       $("#acm-prom-precio").text(`Promedio de precios: USD ${formatNumber(avgPrecio)} [${seleccionados.length}]`);
 
-      const valoresM2t=terrenos.filter(t=>t.precio>0&&t.m2terreno>20&&t.m2terreno<20000).map(t=>t.precio/t.m2terreno);
-      let promM2t=mediaPonderada(valoresM2t,15);
+      // --- USD/m² de terrenos, ajustado por tamaño (economías de escala) ---
+      const modeloTerreno = regresionPotencialTerrenos(terrenos);
+      const m2tActual = parseFloat($("#acm-m2t").val()) || 0;
+      let promM2t = 0;
+      let terrenoAjustadoPorTamano = false;
+
+      if (modeloTerreno && m2tActual > 0) {
+        promM2t = usdM2TerrenoSegunTamano(modeloTerreno, m2tActual);
+        terrenoAjustadoPorTamano = true;
+      } else {
+        // Respaldo: sin modelo confiable (menos de 4 terrenos comparables) o
+        // todavía no se ingresó el tamaño del terreno a estimar -> promedio
+        // plano de USD/m², igual que antes.
+        const valoresM2t=terrenos.filter(t=>t.precio>0&&t.m2terreno>20&&t.m2terreno<20000).map(t=>t.precio/t.m2terreno);
+        promM2t=mediaPonderada(valoresM2t,15);
+      }
       if(promM2t<=0&&window.M2T){const m2tManual=parseInt(window.M2T);if(!isNaN(m2tManual)&&m2tManual>0)promM2t=m2tManual;}
       if(terrenos.length===0&&window.ACM_INFO&&window.ACM_INFO.promM2T){const m2tInfo=parseFloat(window.ACM_INFO.promM2T);if(!isNaN(m2tInfo)&&m2tInfo>0)promM2t=m2tInfo;}
 
@@ -93,8 +107,21 @@
       const valC=promM2c;
       const valD=promM2d;
 
+      let tipTerreno;
+      if (terrenoAjustadoPorTamano) {
+        tipTerreno = `Ajustado por tamaño: para un terreno de ${formatNumber(m2tActual)} m², usando una regresión sobre ${modeloTerreno.n} terrenos comparables (exponente ${modeloTerreno.b.toFixed(2)}; ${modeloTerreno.b < 1 ? "a menor tamaño, mayor USD/m²" : "el USD/m² sube con el tamaño en esta muestra"}).`
+          + ((m2tActual < modeloTerreno.m2min * 0.5 || m2tActual > modeloTerreno.m2max * 2)
+            ? ` Atención: ${formatNumber(m2tActual)} m² está bastante fuera del rango de los comparables (${formatNumber(modeloTerreno.m2min)}-${formatNumber(modeloTerreno.m2max)} m²), el valor es una extrapolación.`
+            : ``);
+      } else if (modeloTerreno) {
+        tipTerreno = `Promedio simple (todavía sin ajustar por tamaño): ingresá los m² de terreno (arriba) para ver el USD/m² ajustado según ese tamaño.`;
+      } else {
+        tipTerreno = `Promedio simple de USD/m² de los terrenos seleccionados. Se necesitan al menos 4 terrenos comparables con datos válidos para ajustar por tamaño (hay ${terrenos.length}).`;
+      }
+
       $("#acm-prom-m2t").html(
-        `<input type="number" step="0.01" value="${valT>0?valT.toFixed(2):""}" data-tippy-content="Valor en dólares del metro cuadrado de terreno; también se usa para calcular el valor de casas." style="max-width:12ch;"> `+
+        `<input type="number" step="0.01" value="${valT>0?valT.toFixed(2):""}" data-tippy-content="${tipTerreno}" style="max-width:12ch;"> `+
+        (terrenoAjustadoPorTamano ? `<span data-tippy-content="${tipTerreno}">📐</span> ` : ``) +
         `<input id="acm-ajuste-t" type="number" value="${ajT}" style="max-width:5ch;" data-tippy-content="% de descuento aplicado a terrenos cuando se activa 'V. Rápida'.">`
       );
 
@@ -185,6 +212,69 @@ function restaurarEstadoACM() {
     } catch (e) {console.log("Error mediaPonderada:", e);}
   }
 
+/** ------------------------------------------------------------------------------------------ regresionPotencialTerrenos
+ * Ajusta el USD/m² de terrenos según su tamaño (economías de escala: los
+ * terrenos chicos valen más por m² que los grandes). Usa una regresión
+ * potencial precio = a·m²^b sobre los terrenos seleccionados (log-log OLS).
+ * Devuelve null si no hay al menos 4 terrenos con datos válidos: con menos
+ * datos el ajuste por tamaño no es confiable y se debe usar el promedio
+ * plano de respaldo (comportamiento anterior).
+ */
+  function regresionPotencialTerrenos(terrenos) {
+    try {
+      const pares = terrenos
+        .filter(t => t.precio > 0 && t.m2terreno > 20 && t.m2terreno < 20000)
+        .map(t => ({ x: Math.log(t.m2terreno), y: Math.log(t.precio) }));
+
+      if (pares.length < 4) return null;
+
+      function ajustar(datos) {
+        const n = datos.length;
+        const mediaX = datos.reduce((s, p) => s + p.x, 0) / n;
+        const mediaY = datos.reduce((s, p) => s + p.y, 0) / n;
+        let num = 0, den = 0;
+        datos.forEach(p => { num += (p.x - mediaX) * (p.y - mediaY); den += (p.x - mediaX) * (p.x - mediaX); });
+        if (den === 0) return null; // todos los terrenos tienen el mismo tamaño: no hay variación para ajustar
+        const b = num / den;
+        const a = Math.exp(mediaY - b * mediaX);
+        return { a, b, n };
+      }
+
+      let modelo = ajustar(pares);
+      if (!modelo) return null;
+
+      // Segunda pasada: descarta outliers fuertes (posibles errores de carga)
+      // y reajusta, solo si sigue quedando suficiente información.
+      if (pares.length > 5) {
+        const residuos = pares.map(p => p.y - (Math.log(modelo.a) + modelo.b * p.x));
+        const mediaR = residuos.reduce((s, r) => s + r, 0) / residuos.length;
+        const desv = Math.sqrt(residuos.reduce((s, r) => s + (r - mediaR) * (r - mediaR), 0) / residuos.length);
+        if (desv > 0) {
+          const limpio = pares.filter((p, i) => Math.abs(residuos[i] - mediaR) <= 2.5 * desv);
+          if (limpio.length >= 4 && limpio.length < pares.length) {
+            const modelo2 = ajustar(limpio);
+            if (modelo2) modelo = modelo2;
+          }
+        }
+      }
+
+      if (!isFinite(modelo.a) || !isFinite(modelo.b) || modelo.a <= 0) return null;
+
+      const m2s = pares.map(p => Math.exp(p.x));
+      modelo.m2min = Math.min(...m2s);
+      modelo.m2max = Math.max(...m2s);
+
+      return modelo; // { a, b, n, m2min, m2max }
+
+    } catch (e) { console.log("Error regresionPotencialTerrenos:", e); return null; }
+  }
+
+/** USD/m² estimado para un terreno de "m2" metros según el modelo potencial (precio = a·m²^b). */
+  function usdM2TerrenoSegunTamano(modelo, m2) {
+    if (!modelo || !(m2 > 0)) return 0;
+    return (modelo.a * Math.pow(m2, modelo.b)) / m2; // = a · m2^(b-1)
+  }
+
 /** ------------------------------------------------------------------------------------------------ promedioPrecioM2
  * Calcula el promedio de precio por m² para una lista de inmuebles
  */
@@ -224,23 +314,42 @@ const tipoInmuebleDic = {
   }
 };
 
-function detectarTipoInmueble_old(loc) {
-  const texto = ((loc.Titulo || "") + " " + (loc.des || "")).toLowerCase();
+function detectarTipoInmueble(loc) {
+  const tituloTexto = (loc.Titulo || "").toLowerCase();
+  const desTexto = (loc.des || "").toLowerCase();
+
+  const PESO_TITULO = 3;
+  const PESO_DESCRIPCION = 1;
+
+  let mejorTipo = "otro";
+  let mejorScore = 0;
 
   for (const [tipo, reglas] of Object.entries(tipoInmuebleDic)) {
-    if (reglas.incluye.some(word => texto.includes(word))) {
-      if (reglas.excluye.length && reglas.excluye.some(word => texto.includes(word))) {
-        continue; // contradicción → no clasificar en este tipo
-      }
-      return tipo; // encontrado
+    let score = 0;
+
+    reglas.incluye.forEach(word => {
+      if (tituloTexto.includes(word)) score += PESO_TITULO;
+      else if (desTexto.includes(word)) score += PESO_DESCRIPCION;
+    });
+
+    if (score === 0) continue; // sin coincidencias para este tipo
+
+    const excluidoEnTitulo = reglas.excluye.some(word => tituloTexto.includes(word));
+    const excluidoEnDescripcion = reglas.excluye.some(word => desTexto.includes(word));
+
+    if (excluidoEnTitulo) continue; // contradicción fuerte en el título → descarta
+    if (excluidoEnDescripcion) score -= PESO_DESCRIPCION; // contradicción débil → resta
+
+    if (score > mejorScore) {
+      mejorScore = score;
+      mejorTipo = tipo;
     }
   }
 
-  return "otro"; // si no encaja en ninguna categoría
+  return mejorTipo;
 }
 
-
-function detectarTipoInmueble(loc) {
+function detectarTipoInmueble_old(loc) {
   const tituloTexto = (loc.Titulo || "").toLowerCase();
   const desTexto = (loc.des || "").toLowerCase();
 
@@ -287,7 +396,13 @@ function detectarTipoInmueble(loc) {
       initACMFormPersistence();
 
       $('#acm-container').on('input', '#acm-prom-m2t input,#acm-prom-m2c-construccion input,#acm-prom-m2d input', function(){calcularEstimado();});
-      $('#acm-container').on('input', '#acm-m2t,#acm-m2c', function(){calcularEstimado();});
+      $('#acm-container').on('input', '#acm-m2t', function(){
+        // El USD/m² de terrenos depende del tamaño ingresado (regresión por
+        // economías de escala), así que hay que recalcular todo el bloque,
+        // no solo el estimado final.
+        if ($("#acm-tipo").val()==="terreno") { actualizarACM(); } else { calcularEstimado(); }
+      });
+      $('#acm-container').on('input', '#acm-m2c', function(){calcularEstimado();});
 
       $('#acm-container').on('change','#acm-tipo',function(){
         const tipo=$(this).val();
@@ -296,7 +411,7 @@ function detectarTipoInmueble(loc) {
         else{$("#acm-m2t-wrap").show();$("#acm-m2c-wrap").show();}
         toggleDormBanioRow(tipo);
         setPromDormBanio();
-        calcularEstimado();
+        actualizarACM();
       });
 
       $('#acm-container').on('change', '#acm-venta-rapida', function(){actualizarACM();});
