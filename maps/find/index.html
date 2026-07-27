@@ -45,6 +45,17 @@ published:          true
     .section { border-top: 1px solid #ddd; }
     .section-header {
       cursor: pointer; font-weight: bold; padding: 5px; background: #f0f0f0;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .section-header::after {
+      content: "▸";
+      margin-left: 8px;
+      font-size: 12px;
+      color: #666;
+      flex-shrink: 0;
+    }
+    .section.active > .section-header::after {
+      content: "▾";
     }
     .section-body { display: none; padding: 5px; }
     .section.active .section-body { display: block; }
