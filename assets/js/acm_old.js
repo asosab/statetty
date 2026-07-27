@@ -72,7 +72,6 @@
       const valoresM2t=terrenos.filter(t=>t.precio>0&&t.m2terreno>20&&t.m2terreno<20000).map(t=>t.precio/t.m2terreno);
       let promM2t=mediaPonderada(valoresM2t,15);
       if(promM2t<=0&&window.M2T){const m2tManual=parseInt(window.M2T);if(!isNaN(m2tManual)&&m2tManual>0)promM2t=m2tManual;}
-      if(terrenos.length===0&&window.ACM_INFO&&window.ACM_INFO.promM2T){const m2tInfo=parseFloat(window.ACM_INFO.promM2T);if(!isNaN(m2tInfo)&&m2tInfo>0)promM2t=m2tInfo;}
 
       const valoresM2c=casas.map(c=>{
         if(c.m2construccion>0&&c.precio>0)return c.precio/c.m2construccion;
@@ -235,7 +234,6 @@ function detectarTipoInmueble_old(loc) {
   return "otro"; // si no encaja en ninguna categoría
 }
 
-
 function detectarTipoInmueble(loc) {
   const tituloTexto = (loc.Titulo || "").toLowerCase();
   const desTexto = (loc.des || "").toLowerCase();
@@ -270,7 +268,6 @@ function detectarTipoInmueble(loc) {
 
   return mejorTipo;
 }
-
 
 /** ---------------------------------------------------------------------------------------------------- initACMTools
  * Inicializa herramientas ACM y eventos asociados

@@ -1293,6 +1293,7 @@ $(document).ready(function () {
     }
 
     var info = response.info || {};
+    window.ACM_INFO = info;
     try { autoSelectSlot(info); } catch (e) { console.warn('[autoSelectSlot]', e); }
 
     var lat = parseFloat(info.lat) || (locs.length ? null : parseFloat(urlParams.get('lat')));
