@@ -1,0 +1,25 @@
+name: Jekyll Rebuild
+
+on:
+  schedule:
+    # Runs every Monday at 5 AM La Paz time (UTC-4) = 9 UTC
+    - cron: '0 9 * * 1'
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Trigger rebuild
+        run: |
+          echo "Triggering Jekyll rebuild on $(date)"
+          
+      - name: Create empty commit to force rebuild
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git commit --allow-empty -m "Automatic Jekyll rebuild - $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+          git push
