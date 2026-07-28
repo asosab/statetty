@@ -88,13 +88,9 @@
       if(promM2t<=0&&window.M2T){const m2tManual=parseInt(window.M2T);if(!isNaN(m2tManual)&&m2tManual>0)promM2t=m2tManual;}
       if(terrenos.length===0&&window.ACM_INFO&&window.ACM_INFO.promM2T){const m2tInfo=parseFloat(window.ACM_INFO.promM2T);if(!isNaN(m2tInfo)&&m2tInfo>0)promM2t=m2tInfo;}
 
-      const valoresM2c=casas.map(c=>{
-        if(c.m2construccion>0&&c.precio>0)return c.precio/c.m2construccion;
-        if(c.m2terreno>0&&c.precio>0)return c.precio/c.m2terreno;
-        return null;
-      }).filter(v=>v!==null);
-
-      const promM2c=mediaPonderada(valoresM2c,15);
+      const resultadoCasas = calcularValorConstruccionCasas(casas, modeloTerreno, promM2t);
+      const promM2c = mediaPonderada(resultadoCasas.valores, 15);
+      const casaNeta = resultadoCasas.metodo === "neto";
 
       const valoresM2d=deptos.filter(d=>d.precio>0&&d.m2construccion>0).map(d=>d.precio/d.m2construccion);
       const promM2d=mediaPonderada(valoresM2d,15);
@@ -119,6 +115,15 @@
         tipTerreno = `Promedio simple de USD/m² de los terrenos seleccionados. Se necesitan al menos 4 terrenos comparables con datos válidos para ajustar por tamaño (hay ${terrenos.length}).`;
       }
 
+      let tipCasa;
+      if (casaNeta) {
+        tipCasa = `Valor de construcción aislado: a cada casa comparable se le restó su valor de terreno estimado (${formatNumber(promM2t)} USD/m² × m² de terreno de esa casa) y solo el resto se dividió por m² construidos. Así el USD/m² de construcción no queda mezclado con el de terreno, que ya se suma aparte al calcular el estimado.`
+          + (resultadoCasas.descartadas>0 ? ` Se descartaron ${resultadoCasas.descartadas} casa(s) donde el terreno estimado superaba el precio total (dato inconsistente o fuera del rango de los comparables).` : ``)
+          + (resultadoCasas.sinTerreno>0 ? ` ${resultadoCasas.sinTerreno} casa(s) sin m² de terreno cargado no se usaron en este promedio.` : ``);
+      } else {
+        tipCasa = `Sin terrenos seleccionados ni valor de referencia: no se pudo aislar el terreno, así que este valor es precio total / m² construidos (incluye terreno mezclado). Seleccioná algún terreno de la zona para que el cálculo sea más preciso.`;
+      }
+
       $("#acm-prom-m2t").html(
         `<input type="number" step="0.01" value="${valT>0?valT.toFixed(2):""}" data-tippy-content="${tipTerreno}" style="max-width:12ch;"> `+
         (terrenoAjustadoPorTamano ? `<span data-tippy-content="${tipTerreno}">📐</span> ` : ``) +
@@ -126,7 +131,8 @@
       );
 
       $("#acm-prom-m2c-construccion").html(
-        `<input type="number" step="0.01" value="${valC>0?valC.toFixed(2):""}" data-tippy-content="Valor en dólares del metro cuadrado de construcción para casas; se usa junto con el valor de USD/m² de terrenos." style="max-width:12ch;"> `+
+        `<input type="number" step="0.01" value="${valC>0?valC.toFixed(2):""}" data-tippy-content="${tipCasa}" style="max-width:12ch;"> `+
+        `<span data-tippy-content="${tipCasa}">${casaNeta ? "🧮" : "⚠️"}</span> `+
         `<input id="acm-ajuste-c" type="number" value="${ajC}" style="max-width:5ch;" data-tippy-content="% de descuento aplicado a casas cuando se activa 'V. Rápida'.">`
       );
 
@@ -135,13 +141,29 @@
         `<input id="acm-ajuste-d" type="number" value="${ajD}" style="max-width:5ch;" data-tippy-content="% de descuento aplicado a departamentos cuando se activa 'V. Rápida'.">`
       );
 
-      // Estos inputs se recrean cada vez que se recalcula el ACM (por eso no
-      // pueden inicializarse una sola vez como el resto del panel).
+      $("#acm-count-t").text(terrenos.length?`[${terrenos.length}]`:"[-]");
+
+      const descartesCasa = resultadoCasas.descartadas + resultadoCasas.sinTerreno;
+      $("#acm-count-c").text(casas.length?`[${resultadoCasas.valores.length}${descartesCasa>0?"/"+casas.length:""}]`:"[-]")
+        .attr("data-tippy-content", descartesCasa>0
+          ? `${resultadoCasas.valores.length} de ${casas.length} casas seleccionadas se usaron para el USD/m² de construcción (${descartesCasa} descartada(s), ver detalle en "¿Cómo se calcula?").`
+          : `Cantidad de casas seleccionadas usadas para este promedio.`);
+
+      $("#acm-count-d").text(deptos.length?`[${deptos.length}]`:"[-]");
+
+      // Estos inputs/atributos se recrean cada vez que se recalcula el ACM
+      // (por eso no pueden inicializarse una sola vez como el resto del
+      // panel); se hace al final para que tome el data-tippy-content ya
+      // actualizado de #acm-count-c.
       if (typeof initPopupTooltips === "function") { initPopupTooltips(document.getElementById("acm-container")); }
 
-      $("#acm-count-t").text(terrenos.length?`[${terrenos.length}]`:"[-]");
-      $("#acm-count-c").text(casas.length?`[${casas.length}]`:"[-]");
-      $("#acm-count-d").text(deptos.length?`[${deptos.length}]`:"[-]");
+      // Metadata para el modal explicativo (se abre bajo demanda desde el botón "¿Cómo se calcula?")
+      window.__acmMeta = {
+        terrenos: { n: terrenos.length, ajustadoPorTamano: terrenoAjustadoPorTamano, modelo: modeloTerreno, promM2t: promM2t, m2tActual: m2tActual },
+        casas: { total: casas.length, usadas: resultadoCasas.valores.length, descartadas: resultadoCasas.descartadas, sinTerreno: resultadoCasas.sinTerreno, metodo: resultadoCasas.metodo, promM2c: promM2c },
+        deptos: { n: deptos.length, promM2d: promM2d },
+        totalSeleccionados: seleccionados.length
+      };
 
       const precios=seleccionados.map(s=>s.precio||0).filter(p=>p>0);
       if(precios.length>0){
@@ -273,6 +295,74 @@ function restaurarEstadoACM() {
   function usdM2TerrenoSegunTamano(modelo, m2) {
     if (!modelo || !(m2 > 0)) return 0;
     return (modelo.a * Math.pow(m2, modelo.b)) / m2; // = a · m2^(b-1)
+  }
+
+/** ---------------------------------------------------------------------------------- calcularValorConstruccionCasas
+ * Para casas, el precio de venta incluye terreno + construcción. Antes se
+ * calculaba USD/m² de construcción como precio/m2construccion directo, lo
+ * que mezclaba ambos valores y hacía que calcularEstimado() sumara el
+ * terreno dos veces (una explícita, otra escondida en ese promedio).
+ *
+ * Esta función aísla el valor de construcción: a cada casa comparable se le
+ * resta el valor de terreno estimado (usando el modelo de terrenos ya
+ * calculado, ajustado por el tamaño del lote de esa casa si hay modelo, o el
+ * promedio plano si no) y solo el remanente se divide por m2construccion.
+ *
+ * @param {Array} casas - casas seleccionadas
+ * @param {Object|null} modeloTerreno - modelo de regresión potencial de terrenos (o null)
+ * @param {Number} promM2tPlano - USD/m² de terreno de respaldo (promedio simple)
+ * @returns {Object} { valores, metodo, descartadas, sinTerreno }
+ *   metodo: "neto" (se pudo restar terreno) | "legado" (no hay ninguna
+ *   referencia de terreno disponible, se usa precio total / m2construccion
+ *   como antes, marcado como baja confianza) | "sin-datos"
+ */
+  function calcularValorConstruccionCasas(casas, modeloTerreno, promM2tPlano) {
+    const resultado = { valores: [], descartadas: 0, sinTerreno: 0, metodo: "sin-datos" };
+    try {
+      if (!Array.isArray(casas)) return resultado;
+
+      const hayReferenciaTerreno = !!modeloTerreno || promM2tPlano > 0;
+
+      casas.forEach(c => {
+        const tieneAmbos = c.m2terreno > 0 && c.m2construccion > 0 && c.precio > 0;
+
+        if (!tieneAmbos) {
+          // Sin m2terreno no hay forma de aislar cuánto del precio corresponde
+          // a construcción. Antes se usaba precio/m2terreno como comodín para
+          // estos casos, pero eso no mide construcción sino otra cosa
+          // distinta; se descarta del pool y se cuenta aparte para que quede
+          // visible en la UI (no desaparece silenciosamente).
+          if (c.m2construccion > 0 && c.precio > 0 && !(c.m2terreno > 0)) resultado.sinTerreno++;
+          return;
+        }
+
+        if (hayReferenciaTerreno) {
+          const usdM2tEstim = modeloTerreno
+            ? usdM2TerrenoSegunTamano(modeloTerreno, c.m2terreno)
+            : promM2tPlano;
+          const valorTerrenoEstim = c.m2terreno * usdM2tEstim;
+          const valorConstruccion = c.precio - valorTerrenoEstim;
+
+          // Si el terreno estimado "se come" todo el precio (o más), el dato
+          // es inconsistente (carga errónea) o el modelo de terreno está
+          // extrapolando muy lejos de su rango: se descarta en vez de guardar
+          // un USD/m² de construcción negativo o absurdo.
+          if (valorConstruccion <= 0) { resultado.descartadas++; return; }
+
+          resultado.valores.push(valorConstruccion / c.m2construccion);
+        } else {
+          // No hay ningún terreno seleccionado ni referencia manual: no hay
+          // forma de aislar construcción. Se mantiene el comportamiento
+          // legado (precio total / m2 construidos) para no dejar el campo
+          // vacío, pero se marca como baja confianza en la UI.
+          resultado.valores.push(c.precio / c.m2construccion);
+        }
+      });
+
+      resultado.metodo = hayReferenciaTerreno ? "neto" : "legado";
+      return resultado;
+
+    } catch (e) { console.log("Error calcularValorConstruccionCasas:", e); return resultado; }
   }
 
 /** ------------------------------------------------------------------------------------------------ promedioPrecioM2
@@ -416,6 +506,7 @@ function detectarTipoInmueble_old(loc) {
 
       $('#acm-container').on('change', '#acm-venta-rapida', function(){actualizarACM();});
       $('#acm-container').on('input', '#acm-ajuste-t,#acm-ajuste-c,#acm-ajuste-d', function(){actualizarACM();});
+      $('#acm-container').on('click', '#acm-info-btn', function(){mostrarModalExplicacionACM();});
 
       actualizarACM();
 
@@ -482,6 +573,7 @@ function detectarTipoInmueble_old(loc) {
 
           <div style="margin-top:6px;">
             <b data-tippy-content="Promedio de USD por metro cuadrado, calculado sobre los inmuebles seleccionados de cada tipo.">Promedio USD/m²</b>
+            <button type="button" id="acm-info-btn" style="margin-left:8px;background:none;border:1px solid #ccc;border-radius:10px;padding:1px 8px;font-size:12px;cursor:pointer;color:#2563eb;" data-tippy-content="Ver cómo se calculan estos valores paso a paso.">ℹ️ ¿Cómo se calcula?</button>
             <label style="margin-left:12px;" data-tippy-content="Aplica el % de ajuste de cada tipo (columna derecha) para simular una venta rápida a precio más bajo.">
               <input type="checkbox" id="acm-venta-rapida"> V. Rápida
             </label>
@@ -654,6 +746,112 @@ function calcularTiempoOfertado(tipo, m2Terreno, m2Construccion, precioEstimado)
   return Math.round(tiempos.reduce((s, v) => s + v, 0) / tiempos.length);
 }
 
+
+/** ------------------------------------------------------------------------------------------ mostrarModalExplicacionACM
+ * Ventana flotante con la explicación completa de cómo se calcula el ACM.
+ * Se usa cuando la explicación no entra en los tooltips de la barra lateral.
+ * El contenido se arma en base a window.__acmMeta, que actualizarACM() deja
+ * actualizado en cada recálculo, para que lo que se explica coincida
+ * siempre con los números que el usuario está viendo en ese momento.
+ */
+  function mostrarModalExplicacionACM() {
+    try {
+      if (document.getElementById('modal-acm-info-overlay')) return; // evitar duplicados
+
+      const meta = window.__acmMeta || null;
+
+      const overlay = document.createElement('div');
+      overlay.id = 'modal-acm-info-overlay';
+      overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:99999;display:flex;justify-content:center;align-items:center;';
+
+      const box = document.createElement('div');
+      box.style.cssText = 'background:#fff;border-radius:12px;padding:24px 28px;max-width:560px;width:90%;max-height:80vh;overflow-y:auto;margin:20px;box-shadow:0 8px 32px rgba(0,0,0,0.3);font-family:sans-serif;color:#333;line-height:1.5;font-size:14px;';
+
+      // --- Bloque dinámico de terrenos ---
+      let seccionTerreno;
+      if (!meta || meta.terrenos.n === 0) {
+        seccionTerreno = `Todavía no hay terrenos seleccionados en este ACM, así que no hay una base propia para valorizar m² de terreno.`;
+      } else if (meta.terrenos.ajustadoPorTamano) {
+        seccionTerreno = `Se usaron <b>${meta.terrenos.n} terrenos</b> seleccionados por vos. Como el precio por m² no es igual en un lote chico que en uno grande (economía de escala), se ajustó con una regresión potencial `
+          + `<code>precio = a · m²^${meta.terrenos.modelo.b.toFixed(2)}</code> sobre esos comparables, y el USD/m² mostrado corresponde al tamaño de terreno que cargaste (${formatNumber(meta.terrenos.m2tActual)} m²).`;
+      } else {
+        seccionTerreno = `Se usaron <b>${meta.terrenos.n} terrenos</b> seleccionados por vos, pero se necesitan al menos 4 comparables válidos para ajustar por tamaño de forma confiable. Por ahora se usa un promedio simple de USD/m² (se descartan automáticamente los valores muy alejados de la mediana).`;
+      }
+
+      // --- Bloque dinámico de casas ---
+      let seccionCasa;
+      if (!meta || meta.casas.total === 0) {
+        seccionCasa = `Todavía no hay casas seleccionadas en este ACM.`;
+      } else if (meta.casas.metodo === "neto") {
+        seccionCasa = `Se seleccionaron <b>${meta.casas.total} casas</b>. Como el precio de una casa incluye terreno + construcción, a cada una se le restó el valor de <i>su propio terreno</i> (m² de terreno de esa casa × USD/m² de terreno de arriba) y solo lo que sobra se dividió por los m² construidos. `
+          + `Así el USD/m² de construcción (${formatNumber(meta.casas.promM2c)}) queda limpio, sin terreno mezclado.`
+          + (meta.casas.usadas < meta.casas.total
+              ? ` De esas ${meta.casas.total}, se usaron <b>${meta.casas.usadas}</b> para este promedio` +
+                ((meta.casas.descartadas>0 || meta.casas.sinTerreno>0)
+                  ? `: ${meta.casas.descartadas>0?`${meta.casas.descartadas} porque el terreno estimado superaba el precio total (dato posiblemente mal cargado, o terreno fuera del rango de los comparables)`:``}`
+                    + (meta.casas.descartadas>0 && meta.casas.sinTerreno>0 ? ` y ` : ``)
+                    + `${meta.casas.sinTerreno>0?`${meta.casas.sinTerreno} porque no tenían m² de terreno cargado`:``}.`
+                  : `.`)
+              : ` Se usaron las ${meta.casas.total} casas.`);
+      } else {
+        seccionCasa = `Se seleccionaron <b>${meta.casas.total} casas</b>, pero no hay ningún terreno de referencia (ni seleccionado, ni un valor cargado manualmente), así que no se pudo separar terreno de construcción. El valor mostrado es precio total / m² construidos ⚠️, que sobreestima la construcción porque todavía incluye el terreno. Seleccioná al menos un terreno de la zona para que esto se corrija automáticamente.`;
+      }
+
+      // --- Bloque dinámico de deptos ---
+      const seccionDepto = (!meta || meta.deptos.n === 0)
+        ? `Todavía no hay departamentos seleccionados en este ACM.`
+        : `Se usaron <b>${meta.deptos.n} departamentos</b>. Como no tienen un componente de terreno propio que aislar, el USD/m² se calcula directo: precio / m² construidos, con el mismo filtro de valores atípicos.`;
+
+      box.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+          <h3 style="margin:0 0 4px;font-size:17px;">📊 ¿Cómo se calcula el ACM?</h3>
+          <span id="modal-acm-info-close" style="cursor:pointer;font-size:20px;line-height:1;color:#999;padding:2px 4px;">✕</span>
+        </div>
+
+        <p style="margin:8px 0;">
+          Todo este cálculo se arma <b>en base a los inmuebles que vos seleccionaste</b> en el mapa para este ACM
+          (no es un promedio general de mercado): la calidad del estimado depende directamente de qué tan buenos
+          comparables hayas elegido.
+        </p>
+
+        <p style="margin:14px 0 4px;"><b>🏞️ Terrenos</b></p>
+        <p style="margin:0;">${seccionTerreno}</p>
+
+        <p style="margin:14px 0 4px;"><b>🏠 Casas</b></p>
+        <p style="margin:0;">${seccionCasa}</p>
+        <p style="margin:8px 0 0;background:#f5f7fa;border-radius:8px;padding:8px 10px;font-size:13px;">
+          <b>Antes</b>, el USD/m² de construcción de las casas se calculaba como precio total / m² construidos,
+          sin restar el terreno. Eso hacía que el terreno se contara <b>dos veces</b> en el estimado final:
+          una vez como m²terreno × USD/m²terreno, y otra vez escondido dentro del USD/m² de "construcción".
+          Ahora se resta primero, así el estimado de una casa queda como:<br>
+          <code>Estimado = (m² terreno × USD/m² terreno) + (m² construcción × USD/m² construcción neto)</code>
+        </p>
+
+        <p style="margin:14px 0 4px;"><b>🏢 Departamentos</b></p>
+        <p style="margin:0;">${seccionDepto}</p>
+
+        <p style="margin:14px 0 4px;"><b>✏️ Podés ajustar todo a mano</b></p>
+        <p style="margin:0;">
+          Cada valor de USD/m² (terreno, casa, depto) es un input editable: si conocés mejor el mercado de esa zona,
+          podés pisar el número calculado y el estimado se recalcula al instante. El % que aparece al lado de cada
+          uno es el descuento que se aplica solo si activás "V. Rápida", para simular una venta más rápida a menor precio.
+        </p>
+
+        <p style="margin:14px 0 0;font-size:12px;color:#888;">
+          Íconos: 📐 terreno ajustado por tamaño · 🧮 construcción de casas neta de terreno · ⚠️ valor sin poder aislar terreno (baja confianza).
+        </p>
+      `;
+
+      overlay.appendChild(box);
+      document.body.appendChild(overlay);
+
+      if (typeof initPopupTooltips === "function") { initPopupTooltips(box); }
+
+      document.getElementById('modal-acm-info-close').addEventListener('click', function(){ overlay.remove(); });
+      overlay.addEventListener('click', function (e) { if (e.target === overlay) overlay.remove(); });
+
+    } catch (e) { console.log('mostrarModalExplicacionACM error', e); }
+  }
 
 // Extrae el valor numérico de los <input> dentro de los spans de ACM
 function extraerValorPromedio(selector) {
