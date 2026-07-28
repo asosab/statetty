@@ -903,6 +903,7 @@ function calcularTiempoOfertado(tipo, m2Terreno, m2Construccion, precioEstimado)
       if (document.getElementById('modal-acm-info-overlay')) return; // evitar duplicados
 
       const meta = window.__acmMeta || null;
+      const tipo = $("#acm-tipo").val() || "departamento";
 
       const overlay = document.createElement('div');
       overlay.id = 'modal-acm-info-overlay';
@@ -911,98 +912,121 @@ function calcularTiempoOfertado(tipo, m2Terreno, m2Construccion, precioEstimado)
       const box = document.createElement('div');
       box.style.cssText = 'background:#fff;border-radius:12px;padding:24px 28px;max-width:560px;width:90%;max-height:80vh;overflow-y:auto;margin:20px;box-shadow:0 8px 32px rgba(0,0,0,0.3);font-family:sans-serif;color:#333;line-height:1.5;font-size:14px;';
 
-      // --- Bloque dinámico de terrenos ---
-      let seccionTerreno;
-      if (!meta || meta.terrenos.n === 0) {
-        seccionTerreno = `Todavía no hay terrenos seleccionados en este ACM, así que no hay una base propia para valorizar m² de terreno.`;
-      } else if (meta.terrenos.ajustadoPorTamano) {
-        seccionTerreno = `Se usaron <b>${meta.terrenos.n} terrenos</b> seleccionados por vos. Como el precio por m² no es igual en un lote chico que en uno grande (economía de escala), se ajustó con una regresión potencial `
-          + `<code>precio = a · m²^${meta.terrenos.modelo.b.toFixed(2)}</code> sobre esos comparables, y el USD/m² mostrado corresponde al tamaño de terreno que cargaste (${formatNumber(meta.terrenos.m2tActual)} m²).`;
-      } else {
-        seccionTerreno = `Se usaron <b>${meta.terrenos.n} terrenos</b> seleccionados por vos, pero se necesitan al menos 4 comparables válidos para ajustar por tamaño de forma confiable. Por ahora se usa un promedio simple de USD/m² (se descartan automáticamente los valores muy alejados de la mediana).`;
-      }
+      const tipoLabel = { terreno:"Terreno", casa:"Casa", departamento:"Departamento / Oficina / Local" };
+      const iconos = []; // se completa según lo que realmente aparece en el bloque mostrado
+      let bloqueTipo = "";
 
-      // --- Bloque dinámico de casas ---
-      let seccionCasa;
-      if (!meta || meta.casas.total === 0) {
-        seccionCasa = `Todavía no hay casas seleccionadas en este ACM.`;
-      } else if (meta.casas.metodo === "neto") {
-        seccionCasa = `Se seleccionaron <b>${meta.casas.total} casas</b>. Como el precio de una casa incluye terreno + construcción, a cada una se le restó el valor de <i>su propio terreno</i> (m² de terreno de esa casa × USD/m² de terreno de arriba) y solo lo que sobra se dividió por los m² construidos. `
-          + `Así el USD/m² de construcción (${formatNumber(meta.casas.promM2c)}) queda limpio, sin terreno mezclado.`
-          + (meta.casas.usadas < meta.casas.total
-              ? ` De esas ${meta.casas.total}, se usaron <b>${meta.casas.usadas}</b> para este promedio` +
-                ((meta.casas.descartadas>0 || meta.casas.sinTerreno>0)
-                  ? `: ${meta.casas.descartadas>0?`${meta.casas.descartadas} porque el terreno estimado superaba el precio total (dato posiblemente mal cargado, o terreno fuera del rango de los comparables)`:``}`
-                    + (meta.casas.descartadas>0 && meta.casas.sinTerreno>0 ? ` y ` : ``)
-                    + `${meta.casas.sinTerreno>0?`${meta.casas.sinTerreno} porque no tenían m² de terreno cargado`:``}.`
-                  : `.`)
-              : ` Se usaron las ${meta.casas.total} casas.`);
-      } else {
-        seccionCasa = `Se seleccionaron <b>${meta.casas.total} casas</b>, pero no hay ningún terreno de referencia (ni seleccionado, ni un valor cargado manualmente), así que no se pudo separar terreno de construcción. El valor mostrado es precio total / m² construidos ⚠️, que sobreestima la construcción porque todavía incluye el terreno. Seleccioná al menos un terreno de la zona para que esto se corrija automáticamente.`;
-      }
+      // ------------------------------------------------------------- TERRENO
+      if (tipo === "terreno") {
+        let seccionTerreno;
+        if (!meta || meta.terrenos.n === 0) {
+          seccionTerreno = `Todavía no seleccionaste terrenos en el mapa para este ACM, así que no hay base para calcular un USD/m².`;
+        } else if (meta.terrenos.ajustadoPorTamano) {
+          seccionTerreno = `Se toman los <b>${meta.terrenos.n} terrenos</b> que seleccionaste como comparables. Como el precio por m² varía según el tamaño del lote (economía de escala), se ajusta con una regresión potencial `
+            + `<code>precio = a · m²^${meta.terrenos.modelo.b.toFixed(2)}</code> calculada sobre esos comparables. El USD/m² que ves arriba corresponde al tamaño que cargaste (${formatNumber(meta.terrenos.m2tActual)} m²).`;
+          iconos.push('📐 ajustado por tamaño (regresión sobre los comparables)');
+        } else {
+          seccionTerreno = `Se toman los <b>${meta.terrenos.n} terrenos</b> que seleccionaste. Con menos de 4 comparables no se puede ajustar por tamaño de forma confiable, así que se usa un promedio simple de USD/m² (descartando automáticamente los valores muy alejados de la mediana).`;
+        }
+        bloqueTipo = `
+          <p style="margin:14px 0 4px;"><b>🏞️ USD/m² de terreno</b></p>
+          <p style="margin:0;">${seccionTerreno}</p>
+          <p style="margin:8px 0 0;">El estimado final se calcula como:<br><code>Estimado = m² de terreno × USD/m² de terreno</code></p>
+        `;
 
-      // --- Bloque dinámico de deptos/oficinas/comercial ---
-      const subtipoLabelModal = { todos:"departamentos, oficinas y locales/tiendas", departamento:"departamentos", oficina:"oficinas", comercial:"locales/tiendas" };
-      let seccionDepto;
-      if (!meta || meta.construccion.total === 0) {
-        seccionDepto = `Todavía no hay departamentos, oficinas ni locales seleccionados en este ACM.`;
+      // ------------------------------------------------------------- CASA
+      } else if (tipo === "casa") {
+        let seccionTerreno;
+        if (!meta || meta.terrenos.n === 0) {
+          seccionTerreno = `Todavía no hay terrenos seleccionados en el mapa, así que no hay un USD/m² de terreno propio de la zona.`;
+        } else if (meta.terrenos.ajustadoPorTamano) {
+          seccionTerreno = `Se toman los <b>${meta.terrenos.n} terrenos</b> seleccionados y se ajusta el USD/m² con una regresión potencial según el tamaño (<code>precio = a · m²^${meta.terrenos.modelo.b.toFixed(2)}</code>), para el tamaño de terreno que cargaste (${formatNumber(meta.terrenos.m2tActual)} m²).`;
+          iconos.push('📐 ajustado por tamaño (regresión sobre los comparables)');
+        } else {
+          seccionTerreno = `Se toman los <b>${meta.terrenos.n} terrenos</b> seleccionados y se usa un promedio simple de USD/m² (hacen falta al menos 4 para ajustar por tamaño).`;
+        }
+
+        let seccionCasa;
+        if (!meta || meta.casas.total === 0) {
+          seccionCasa = `Todavía no seleccionaste casas en el mapa para este ACM.`;
+        } else if (meta.casas.metodo === "neto") {
+          seccionCasa = `Se toman las <b>${meta.casas.total} casas</b> seleccionadas. El precio de una casa incluye terreno + construcción, así que a cada una se le resta el valor de <i>su propio terreno</i> (m² de terreno de esa casa × USD/m² de terreno) y solo lo que queda se divide por los m² construidos. Así el USD/m² de construcción (${formatNumber(meta.casas.promM2c)}) no queda mezclado con el valor del terreno.`
+            + (meta.casas.usadas < meta.casas.total
+                ? ` De esas ${meta.casas.total}, se usan <b>${meta.casas.usadas}</b> para este promedio` +
+                  ((meta.casas.descartadas>0 || meta.casas.sinTerreno>0)
+                    ? `: ${meta.casas.descartadas>0?`${meta.casas.descartadas} porque el terreno estimado superaba el precio total`:``}`
+                      + (meta.casas.descartadas>0 && meta.casas.sinTerreno>0 ? ` y ` : ``)
+                      + `${meta.casas.sinTerreno>0?`${meta.casas.sinTerreno} porque no tenían m² de terreno cargado`:``}.`
+                    : `.`)
+                : ` Se usan las ${meta.casas.total} casas.`);
+          iconos.push('🧮 construcción de casas neta de terreno');
+        } else {
+          seccionCasa = `Se seleccionaron <b>${meta.casas.total} casas</b>, pero no hay ningún terreno de referencia (ni seleccionado, ni cargado a mano), así que no se puede separar terreno de construcción. El valor mostrado es precio total / m² construidos, lo que sobreestima la construcción porque el terreno queda incluido. Seleccioná al menos un terreno de la zona para corregirlo.`;
+          iconos.push('⚠️ valor de baja confianza (terreno sin aislar)');
+        }
+
+        bloqueTipo = `
+          <p style="margin:14px 0 4px;"><b>🏞️ USD/m² de terreno</b></p>
+          <p style="margin:0;">${seccionTerreno}</p>
+
+          <p style="margin:14px 0 4px;"><b>🏠 USD/m² de construcción</b></p>
+          <p style="margin:0;">${seccionCasa}</p>
+
+          <p style="margin:8px 0 0;">El estimado final de una casa combina ambos valores:<br>
+          <code>Estimado = (m² terreno × USD/m² terreno) + (m² construcción × USD/m² construcción)</code></p>
+        `;
+
+      // ------------------------------------------------------------- DEPARTAMENTO / OFICINA / COMERCIAL
       } else {
-        const rc = meta.construccion.resultado;
-        const p = meta.construccion.porSubtipo;
-        seccionDepto = `Se seleccionaron <b>${meta.construccion.total} inmuebles sin terreno propio</b> (${p.departamento} departamento(s), ${p.oficina} oficina(s), ${p.comercial} comercial(es), y el resto sin subtipo detectado). `
-          + `Oficina, local y departamento no valen lo mismo por m², así que arriba podés elegir un <b>subtipo específico</b>: si hay al menos 1 comparable de ese subtipo, se usa ese grupo (y si hay ≥4, se ajusta por tamaño); si no hay ninguno, se cae automáticamente al promedio combinado de los tres. `
-          + `Ahora mismo está en <b>"${subtipoLabelModal[meta.construccion.subtipoElegido]}"</b>`
-          + (rc.mezclado && meta.construccion.subtipoElegido!=="todos"
-              ? `, pero como no había comparables propios de ese subtipo, se muestra el combinado (${rc.n}).`
-              : `, usando ${rc.n} comparables${rc.ajustadoPorTamano?` con ajuste por tamaño`:``}.`);
+        const subtipoLabelModal = { todos:"departamentos, oficinas y locales/tiendas", departamento:"departamentos", oficina:"oficinas", comercial:"locales/tiendas" };
+        let seccionDepto;
+        if (!meta || meta.construccion.total === 0) {
+          seccionDepto = `Todavía no seleccionaste departamentos, oficinas ni locales en el mapa para este ACM.`;
+        } else {
+          const rc = meta.construccion.resultado;
+          const p = meta.construccion.porSubtipo;
+          seccionDepto = `Se toman los <b>${meta.construccion.total} inmuebles</b> seleccionados sin terreno propio (${p.departamento} departamento(s), ${p.oficina} oficina(s), ${p.comercial} comercial(es), y el resto sin subtipo detectado). `
+            + `Como oficina, local y departamento no valen lo mismo por m², arriba podés elegir un <b>subtipo específico</b>: si hay al menos 1 comparable de ese subtipo se usa ese grupo (y con ≥4 se ajusta por tamaño); si no hay ninguno, se usa el promedio combinado de los tres. `
+            + `Ahora está en <b>"${subtipoLabelModal[meta.construccion.subtipoElegido]}"</b>`
+            + (rc.mezclado && meta.construccion.subtipoElegido!=="todos"
+                ? `, pero como no hay comparables propios de ese subtipo, se muestra el combinado (${rc.n}).`
+                : `, usando ${rc.n} comparables${rc.ajustadoPorTamano?` con ajuste por tamaño`:``}.`);
+          if (rc.ajustadoPorTamano) iconos.push('📐 ajustado por tamaño (regresión sobre los comparables)');
+          if (rc.mezclado && meta.construccion.subtipoElegido!=="todos") iconos.push('⚠️ sin comparables propios del subtipo elegido, se muestra el combinado');
+        }
+        bloqueTipo = `
+          <p style="margin:14px 0 4px;"><b>🏢 USD/m² de construcción</b></p>
+          <p style="margin:0;">${seccionDepto}</p>
+          <p style="margin:8px 0 0;">Este tipo de inmueble no tiene terreno propio que restar, así que el estimado final es directo:<br>
+          <code>Estimado = m² construidos × USD/m² de construcción</code></p>
+        `;
       }
 
       box.innerHTML = `
         <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-          <h3 style="margin:0 0 4px;font-size:17px;">📊 ¿Cómo se calcula el ACM?</h3>
+          <h3 style="margin:0 0 4px;font-size:17px;">📊 ¿Cómo se calcula el ACM — ${tipoLabel[tipo]}?</h3>
           <span id="modal-acm-info-close" style="cursor:pointer;font-size:20px;line-height:1;color:#999;padding:2px 4px;">✕</span>
         </div>
 
         <p style="margin:8px 0;">
-          Todo este cálculo se arma <b>en base a los inmuebles que vos seleccionaste</b> en el mapa para este ACM
+          El cálculo se arma <b>en base a los inmuebles que vos seleccionaste</b> en el mapa para este ACM
           (no es un promedio general de mercado): la calidad del estimado depende directamente de qué tan buenos
           comparables hayas elegido.
         </p>
 
-        <p style="margin:14px 0 4px;"><b>🏞️ Terrenos</b></p>
-        <p style="margin:0;">${seccionTerreno}</p>
-
-        <p style="margin:14px 0 4px;"><b>🏠 Casas</b></p>
-        <p style="margin:0;">${seccionCasa}</p>
-        <p style="margin:8px 0 0;background:#f5f7fa;border-radius:8px;padding:8px 10px;font-size:13px;">
-          <b>Antes</b>, el USD/m² de construcción de las casas se calculaba como precio total / m² construidos,
-          sin restar el terreno. Eso hacía que el terreno se contara <b>dos veces</b> en el estimado final:
-          una vez como m²terreno × USD/m²terreno, y otra vez escondido dentro del USD/m² de "construcción".
-          Ahora se resta primero, así el estimado de una casa queda como:<br>
-          <code>Estimado = (m² terreno × USD/m² terreno) + (m² construcción × USD/m² construcción neto)</code>
-        </p>
-
-        <p style="margin:14px 0 4px;"><b>🏢 Departamentos, oficinas y locales</b></p>
-        <p style="margin:0;">${seccionDepto}</p>
-        <p style="margin:8px 0 0;background:#f5f7fa;border-radius:8px;padding:8px 10px;font-size:13px;">
-          Estos inmuebles no tienen terreno propio que restar, así que su USD/m² sale directo de precio / m² construidos.
-          La mejora acá no es el terreno sino <b>no mezclar subtipos distintos</b> (una oficina y un local no valen lo
-          mismo por m² que un departamento) y, cuando hay datos suficientes, <b>ajustar por tamaño</b> igual que en
-          terrenos: una oficina chica suele valer más por m² que un piso entero grande.
-        </p>
+        ${bloqueTipo}
 
         <p style="margin:14px 0 4px;"><b>✏️ Podés ajustar todo a mano</b></p>
         <p style="margin:0;">
-          Cada valor de USD/m² (terreno, casa, depto/oficina/local) es un input editable: si conocés mejor el mercado
-          de esa zona, podés pisar el número calculado y el estimado se recalcula al instante. El % que aparece al
-          lado de cada uno es el descuento que se aplica solo si activás "V. Rápida", para simular una venta más
-          rápida a menor precio.
+          Cada valor de USD/m² es un input editable: si conocés mejor el mercado de la zona, podés pisar el número
+          calculado y el estimado se recalcula al instante. El % que aparece al lado es el descuento que se aplica
+          solo si activás "V. Rápida", para simular una venta más rápida a menor precio.
         </p>
 
+        ${iconos.length ? `
         <p style="margin:14px 0 0;font-size:12px;color:#888;">
-          Íconos: 📐 ajustado por tamaño (regresión sobre los comparables) · 🧮 construcción de casas neta de terreno ·
-          ⚠️ valor de baja confianza (terreno sin aislar en casas, o subtipo sin comparables propios en deptos/oficinas/locales).
-        </p>
+          Íconos: ${iconos.join(' · ')}.
+        </p>` : ``}
       `;
 
       overlay.appendChild(box);
