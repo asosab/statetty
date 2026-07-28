@@ -64,7 +64,23 @@
 
       const terrenos=seleccionados.filter(s=>detectarTipoInmueble(s)==="terreno"&&s.m2terreno>0);
       const casas=seleccionados.filter(s=>detectarTipoInmueble(s)==="casa"&&(s.m2terreno>0||s.m2construccion>0));
-      const deptos=seleccionados.filter(s=>detectarTipoInmueble(s)==="departamento"&&s.m2construccion>0);
+
+      // Pool de "construcción sin terreno": departamentos, oficinas,
+      // comercial/tiendas, y cualquier "otro" que estructuralmente no tenga
+      // terreno propio (para no perder comparables por vocabulario que el
+      // diccionario todavía no cubre, ej. "consultorio", "showroom" mal escrito).
+      const construidos=seleccionados.filter(s=>{
+        if(!(s.m2construccion>0))return false;
+        const t=detectarTipoInmueble(s);
+        if(t==="departamento"||t==="oficina"||t==="comercial")return true;
+        if(t==="otro"&&!(s.m2terreno>0))return true;
+        return false;
+      });
+      const subtiposConstruccion={
+        departamento: construidos.filter(s=>detectarTipoInmueble(s)==="departamento"),
+        oficina:      construidos.filter(s=>detectarTipoInmueble(s)==="oficina"),
+        comercial:    construidos.filter(s=>detectarTipoInmueble(s)==="comercial")
+      };
 
       const avgPrecio=seleccionados.length?calcularPromedio(seleccionados,"precio"):0;
       $("#acm-prom-precio").text(`Promedio de precios: USD ${formatNumber(avgPrecio)} [${seleccionados.length}]`);
@@ -92,8 +108,10 @@
       const promM2c = mediaPonderada(resultadoCasas.valores, 15);
       const casaNeta = resultadoCasas.metodo === "neto";
 
-      const valoresM2d=deptos.filter(d=>d.precio>0&&d.m2construccion>0).map(d=>d.precio/d.m2construccion);
-      const promM2d=mediaPonderada(valoresM2d,15);
+      const subtipoElegido = $("#acm-subtipo-construido").val() || "todos";
+      const m2cActualDepto = parseFloat($("#acm-m2c").val()) || 0;
+      const resultadoConstruido = calcularUsdM2Construccion(construidos, subtiposConstruccion, subtipoElegido, m2cActualDepto);
+      const promM2d = resultadoConstruido.valor;
 
       const ajT=parseFloat($("#acm-ajuste-t").val())||15;
       const ajC=parseFloat($("#acm-ajuste-c").val())||7;
@@ -136,9 +154,27 @@
         `<input id="acm-ajuste-c" type="number" value="${ajC}" style="max-width:5ch;" data-tippy-content="% de descuento aplicado a casas cuando se activa 'V. Rápida'.">`
       );
 
+      const subtipoLabel = { todos:"departamentos, oficinas y locales/tiendas", departamento:"departamentos", oficina:"oficinas", comercial:"locales/tiendas" };
+
+      let tipDepto;
+      if (resultadoConstruido.ajustadoPorTamano) {
+        tipDepto = `Ajustado por tamaño: para ${formatNumber(m2cActualDepto)} m² construidos, usando una regresión sobre ${resultadoConstruido.modelo.n} comparables de ${subtipoLabel[resultadoConstruido.subtipoUsado]} (exponente ${resultadoConstruido.modelo.b.toFixed(2)}).`
+          + (resultadoConstruido.mezclado && subtipoElegido!=="todos" ? ` No había suficientes comparables de "${subtipoLabel[subtipoElegido]}" seleccionados, así que se usó el pool combinado.` : ``);
+      } else if (resultadoConstruido.mezclado && subtipoElegido!=="todos") {
+        tipDepto = `No hay comparables de "${subtipoLabel[subtipoElegido]}" seleccionados suficientes (hace falta al menos 1, y ≥4 para ajustar por tamaño). Se usó el promedio combinado de ${subtipoLabel.todos} (${construidos.length} inmuebles). Elegí "Todos" si preferís ver siempre el combinado.`;
+      } else if (subtipoElegido==="todos") {
+        tipDepto = `Promedio combinado de ${subtipoLabel.todos} seleccionados (${construidos.length}). Elegí un subtipo específico arriba (Depto/Oficina/Comercial) si querés un valor propio de ese tipo de inmueble.`;
+      } else {
+        tipDepto = `Promedio simple de ${subtipoLabel[subtipoElegido]} seleccionados (${resultadoConstruido.n}). Se necesitan al menos 4 comparables de ese subtipo para ajustar por tamaño.`;
+      }
+
+      const iconoDepto = resultadoConstruido.ajustadoPorTamano ? "📐"
+        : (resultadoConstruido.mezclado && subtipoElegido!=="todos" ? "⚠️" : "");
+
       $("#acm-prom-m2d").html(
-        `<input type="number" step="0.01" value="${valD>0?valD.toFixed(2):""}" data-tippy-content="Valor en dólares del metro cuadrado de construcción para departamentos, tiendas o similares." style="max-width:12ch;"> `+
-        `<input id="acm-ajuste-d" type="number" value="${ajD}" style="max-width:5ch;" data-tippy-content="% de descuento aplicado a departamentos cuando se activa 'V. Rápida'.">`
+        `<input type="number" step="0.01" value="${valD>0?valD.toFixed(2):""}" data-tippy-content="${tipDepto}" style="max-width:12ch;"> `+
+        (iconoDepto ? `<span data-tippy-content="${tipDepto}">${iconoDepto}</span> ` : ``) +
+        `<input id="acm-ajuste-d" type="number" value="${ajD}" style="max-width:5ch;" data-tippy-content="% de descuento aplicado a departamentos/oficinas/locales cuando se activa 'V. Rápida'.">`
       );
 
       $("#acm-count-t").text(terrenos.length?`[${terrenos.length}]`:"[-]");
@@ -149,19 +185,22 @@
           ? `${resultadoCasas.valores.length} de ${casas.length} casas seleccionadas se usaron para el USD/m² de construcción (${descartesCasa} descartada(s), ver detalle en "¿Cómo se calcula?").`
           : `Cantidad de casas seleccionadas usadas para este promedio.`);
 
-      $("#acm-count-d").text(deptos.length?`[${deptos.length}]`:"[-]");
+      $("#acm-count-d").text(construidos.length?`[${resultadoConstruido.n}]`:"[-]")
+        .attr("data-tippy-content", (resultadoConstruido.mezclado && subtipoElegido!=="todos")
+          ? `Se muestra el pool combinado (${construidos.length}) porque no había suficientes comparables de "${subtipoLabel[subtipoElegido]}".`
+          : `Cantidad de departamentos/oficinas/locales seleccionados usados para este promedio.`);
 
       // Estos inputs/atributos se recrean cada vez que se recalcula el ACM
       // (por eso no pueden inicializarse una sola vez como el resto del
       // panel); se hace al final para que tome el data-tippy-content ya
-      // actualizado de #acm-count-c.
+      // actualizado de #acm-count-c y #acm-count-d.
       if (typeof initPopupTooltips === "function") { initPopupTooltips(document.getElementById("acm-container")); }
 
       // Metadata para el modal explicativo (se abre bajo demanda desde el botón "¿Cómo se calcula?")
       window.__acmMeta = {
         terrenos: { n: terrenos.length, ajustadoPorTamano: terrenoAjustadoPorTamano, modelo: modeloTerreno, promM2t: promM2t, m2tActual: m2tActual },
         casas: { total: casas.length, usadas: resultadoCasas.valores.length, descartadas: resultadoCasas.descartadas, sinTerreno: resultadoCasas.sinTerreno, metodo: resultadoCasas.metodo, promM2c: promM2c },
-        deptos: { n: deptos.length, promM2d: promM2d },
+        construccion: { total: construidos.length, porSubtipo: { departamento: subtiposConstruccion.departamento.length, oficina: subtiposConstruccion.oficina.length, comercial: subtiposConstruccion.comercial.length }, subtipoElegido: subtipoElegido, resultado: resultadoConstruido },
         totalSeleccionados: seleccionados.length
       };
 
@@ -234,19 +273,28 @@ function restaurarEstadoACM() {
     } catch (e) {console.log("Error mediaPonderada:", e);}
   }
 
-/** ------------------------------------------------------------------------------------------ regresionPotencialTerrenos
- * Ajusta el USD/m² de terrenos según su tamaño (economías de escala: los
- * terrenos chicos valen más por m² que los grandes). Usa una regresión
- * potencial precio = a·m²^b sobre los terrenos seleccionados (log-log OLS).
- * Devuelve null si no hay al menos 4 terrenos con datos válidos: con menos
+/** ------------------------------------------------------------------------------------------------ regresionPotencialM2
+ * Ajusta el USD/m² de un conjunto de inmuebles según su tamaño (economías de
+ * escala: las unidades chicas suelen valer más por m² que las grandes,
+ * aunque en algunos segmentos puede ser al revés). Usa una regresión
+ * potencial precio = a·m²^b sobre los items (log-log OLS). Genérica: sirve
+ * tanto para terrenos (campoM2="m2terreno") como para departamentos,
+ * oficinas o locales (campoM2="m2construccion").
+ * Devuelve null si no hay al menos 4 items con datos válidos: con menos
  * datos el ajuste por tamaño no es confiable y se debe usar el promedio
- * plano de respaldo (comportamiento anterior).
+ * plano de respaldo.
+ * @param {Array} items
+ * @param {String} campoM2 - "m2terreno" | "m2construccion"
+ * @param {Object} [opts] - { m2min, m2max } límites razonables para filtrar outliers de carga
  */
-  function regresionPotencialTerrenos(terrenos) {
+  function regresionPotencialM2(items, campoM2, opts) {
+    opts = opts || {};
+    const m2Min = opts.m2min != null ? opts.m2min : 10;
+    const m2Max = opts.m2max != null ? opts.m2max : 20000;
     try {
-      const pares = terrenos
-        .filter(t => t.precio > 0 && t.m2terreno > 20 && t.m2terreno < 20000)
-        .map(t => ({ x: Math.log(t.m2terreno), y: Math.log(t.precio) }));
+      const pares = (items || [])
+        .filter(it => it.precio > 0 && it[campoM2] > m2Min && it[campoM2] < m2Max)
+        .map(it => ({ x: Math.log(it[campoM2]), y: Math.log(it.precio) }));
 
       if (pares.length < 4) return null;
 
@@ -256,7 +304,7 @@ function restaurarEstadoACM() {
         const mediaY = datos.reduce((s, p) => s + p.y, 0) / n;
         let num = 0, den = 0;
         datos.forEach(p => { num += (p.x - mediaX) * (p.y - mediaY); den += (p.x - mediaX) * (p.x - mediaX); });
-        if (den === 0) return null; // todos los terrenos tienen el mismo tamaño: no hay variación para ajustar
+        if (den === 0) return null; // todos los items tienen el mismo tamaño: no hay variación para ajustar
         const b = num / den;
         const a = Math.exp(mediaY - b * mediaX);
         return { a, b, n };
@@ -288,13 +336,26 @@ function restaurarEstadoACM() {
 
       return modelo; // { a, b, n, m2min, m2max }
 
-    } catch (e) { console.log("Error regresionPotencialTerrenos:", e); return null; }
+    } catch (e) { console.log("Error regresionPotencialM2:", e); return null; }
   }
 
-/** USD/m² estimado para un terreno de "m2" metros según el modelo potencial (precio = a·m²^b). */
-  function usdM2TerrenoSegunTamano(modelo, m2) {
+/** USD/m² estimado para "m2" metros según el modelo potencial (precio = a·m²^b). */
+  function usdM2SegunTamano(modelo, m2) {
     if (!modelo || !(m2 > 0)) return 0;
     return (modelo.a * Math.pow(m2, modelo.b)) / m2; // = a · m2^(b-1)
+  }
+
+/** ------------------------------------------------------------------------------------------ regresionPotencialTerrenos
+ * Wrapper específico de terrenos sobre regresionPotencialM2, para no tener
+ * que tocar el resto del código que ya llama a esta función por nombre.
+ */
+  function regresionPotencialTerrenos(terrenos) {
+    return regresionPotencialM2(terrenos, "m2terreno", { m2min: 20, m2max: 20000 });
+  }
+
+/** Wrapper específico de terrenos sobre usdM2SegunTamano. */
+  function usdM2TerrenoSegunTamano(modelo, m2) {
+    return usdM2SegunTamano(modelo, m2);
   }
 
 /** ---------------------------------------------------------------------------------- calcularValorConstruccionCasas
@@ -365,6 +426,54 @@ function restaurarEstadoACM() {
     } catch (e) { console.log("Error calcularValorConstruccionCasas:", e); return resultado; }
   }
 
+/** --------------------------------------------------------------------------------------- calcularUsdM2Construccion
+ * USD/m² para inmuebles "sin terreno propio" (departamento, oficina,
+ * comercial/tienda y cualquier otro que estructuralmente no tenga terreno).
+ * Oficina y tienda no valen lo mismo por m² que un departamento residencial,
+ * así que si el usuario eligió un subtipo específico se intenta resolver
+ * con ese subtipo antes de caer al pool combinado:
+ *
+ *   1) ≥4 comparables del subtipo exacto -> regresión potencial por tamaño
+ *   2) 1-3 comparables del subtipo exacto -> promedio plano de ese subtipo
+ *   3) 0 comparables del subtipo exacto (o subtipo "todos") -> promedio
+ *      plano del pool combinado (departamento+oficina+comercial+otros),
+ *      marcado como "mezclado" para que la UI lo deje claro
+ *
+ * @param {Array} construidos - pool combinado (todos los subtipos)
+ * @param {Object} subtiposMap - { departamento:[...], oficina:[...], comercial:[...] }
+ * @param {String} subtipoElegido - "todos" | "departamento" | "oficina" | "comercial"
+ * @param {Number} m2cActual - m² construidos del inmueble a estimar (para el ajuste por tamaño)
+ */
+  function calcularUsdM2Construccion(construidos, subtiposMap, subtipoElegido, m2cActual) {
+    const resultado = { valor: 0, n: 0, nTotal: (construidos||[]).length, subtipoUsado: "todos", ajustadoPorTamano: false, modelo: null, mezclado: true };
+    try {
+      const candidatos = (subtipoElegido && subtipoElegido !== "todos" && subtiposMap[subtipoElegido])
+        ? subtiposMap[subtipoElegido]
+        : [];
+
+      const esSubtipoExacto = candidatos.length > 0;
+      const pool = esSubtipoExacto ? candidatos : (construidos || []);
+
+      const modelo = regresionPotencialM2(pool, "m2construccion", { m2min: 10, m2max: 20000 });
+
+      if (modelo && m2cActual > 0) {
+        resultado.valor = usdM2SegunTamano(modelo, m2cActual);
+        resultado.ajustadoPorTamano = true;
+        resultado.modelo = modelo;
+      } else {
+        const valores = pool.filter(d => d.precio > 0 && d.m2construccion > 0).map(d => d.precio / d.m2construccion);
+        resultado.valor = mediaPonderada(valores, 15);
+      }
+
+      resultado.n = pool.length;
+      resultado.subtipoUsado = esSubtipoExacto ? subtipoElegido : "todos";
+      resultado.mezclado = !esSubtipoExacto; // true = se usó el pool combinado, no el subtipo pedido específicamente
+
+      return resultado;
+
+    } catch (e) { console.log("Error calcularUsdM2Construccion:", e); return resultado; }
+  }
+
 /** ------------------------------------------------------------------------------------------------ promedioPrecioM2
  * Calcula el promedio de precio por m² para una lista de inmuebles
  */
@@ -392,7 +501,15 @@ function restaurarEstadoACM() {
 const tipoInmuebleDic = {
   departamento: {
     incluye: ["departamento", "dpto", "edificio", "apartamento", "flat", "mono" ],
+    excluye: ["oficina", "coworking", "local comercial", "tienda", "galpón", "galpon"]
+  },
+  oficina: {
+    incluye: ["oficina", "oficinas", "coworking", "consultorio"],
     excluye: []
+  },
+  comercial: {
+    incluye: ["tienda", "local comercial", "local", "galpón", "galpon", "depósito", "deposito", "bodega", "showroom"],
+    excluye: ["departamento", "dpto", "apartamento"] // "local" solo dentro de un depto (ej. "en la localidad") no debería clasificar
   },
   casa: {
     incluye: ["casa", "chalet", "quinta"],
@@ -500,9 +617,14 @@ function detectarTipoInmueble_old(loc) {
         else if(tipo==="departamento"){$("#acm-m2t-wrap").hide();$("#acm-m2c-wrap").show();}
         else{$("#acm-m2t-wrap").show();$("#acm-m2c-wrap").show();}
         toggleDormBanioRow(tipo);
+        toggleSubtipoRow(tipo);
         setPromDormBanio();
         actualizarACM();
       });
+
+      // El subtipo (Depto/Oficina/Comercial) cambia qué pool de comparables
+      // se usa, así que recalcula todo el bloque, no solo el estimado.
+      $('#acm-container').on('change', '#acm-subtipo-construido', function(){actualizarACM();});
 
       $('#acm-container').on('change', '#acm-venta-rapida', function(){actualizarACM();});
       $('#acm-container').on('input', '#acm-ajuste-t,#acm-ajuste-c,#acm-ajuste-d', function(){actualizarACM();});
@@ -515,8 +637,19 @@ function detectarTipoInmueble_old(loc) {
       else if(tipo==="departamento"){$("#acm-m2t-wrap").hide();$("#acm-m2c-wrap").show();}
       else{$("#acm-m2t-wrap").show();$("#acm-m2c-wrap").show();}
       toggleDormBanioRow(tipo);
+      toggleSubtipoRow(tipo);
 
     } catch (e) {console.log("Error initACMTools:", e);}
+  }
+
+/** ------------------------------------------------------------------------------------------------- toggleSubtipoRow
+ * Muestra/oculta la fila de Subtipo (Depto/Oficina/Comercial): solo aplica
+ * cuando el tipo elegido es "departamento" (la categoría "sin terreno").
+ */
+  function toggleSubtipoRow(tipo){
+    try {
+      $("#acm-subtipo-row").css("display", tipo==="departamento" ? "contents" : "none");
+    } catch (e) {console.log('toggleSubtipoRow error',e);}
   }
 
 /** ----------------------------------------------------------------------------------------------- toggleDormBanioRow
@@ -538,6 +671,7 @@ function detectarTipoInmueble_old(loc) {
   function initACMFormPersistence(){ try {
     const map=[
       {id:"acm-tipo",key:"acm_tipo",evt:"change"},
+      {id:"acm-subtipo-construido",key:"acm_subtipo_construido",evt:"change"},
       {id:"acm-m2t",key:"acm_m2t"},
       {id:"acm-m2c",key:"acm_m2c"},
       {id:"acm-dorm",key:"acm_dorm"},
@@ -590,18 +724,18 @@ function detectarTipoInmueble_old(loc) {
             <div></div>
             <div id="acm-count-c" data-tippy-content="Cantidad de casas seleccionadas usadas para este promedio.">[-]</div>
 
-            <div data-tippy-content="Promedio USD/m² de construcción de departamentos, calculado con los departamentos seleccionados. El segundo campo es el % de descuento para venta rápida.">Deptos.:</div>
+            <div data-tippy-content="Promedio USD/m² de construcción de departamentos, oficinas y locales/tiendas (inmuebles sin terreno propio). El segundo campo es el % de descuento para venta rápida.">Deptos/Ofic/Local:</div>
             <div id="acm-prom-m2d"></div>
             <div></div>
-            <div id="acm-count-d" data-tippy-content="Cantidad de departamentos seleccionados usados para este promedio.">[-]</div>
+            <div id="acm-count-d" data-tippy-content="Cantidad de departamentos/oficinas/locales seleccionados usados para este promedio.">[-]</div>
           </div>
 
         </div>
 
         <div style="display:grid;grid-template-columns:auto auto auto auto;gap:4px 8px;align-items:center;">
           <div data-tippy-content="Tipo de inmueble a estimar: define qué promedios USD/m² se usan y qué campos aplican.">Tipo:</div>
-          <select id="acm-tipo" data-tippy-content="Elegí el tipo de inmueble a estimar (departamento, casa o terreno).">
-            <option value="departamento">Depto</option>
+          <select id="acm-tipo" data-tippy-content="Elegí el tipo de inmueble a estimar (departamento/oficina/local, casa o terreno).">
+            <option value="departamento">Depto/Ofic/Local</option>
             <option value="casa">Casa</option>
             <option value="terreno">Terreno</option>
           </select>
@@ -612,6 +746,16 @@ function detectarTipoInmueble_old(loc) {
 
           <div id="acm-m2c-wrap" data-tippy-content="Superficie construida (m²) del inmueble a estimar.">
             m² C.: <input type="number" id="acm-m2c" style="max-width:10ch;">
+          </div>
+
+          <div id="acm-subtipo-row" style="display:contents;">
+            <div style="grid-column:1;" data-tippy-content="Subtipo dentro de 'sin terreno': si elegís uno específico, se usa el promedio USD/m² propio de ese subtipo (si hay suficientes comparables); si no, cae automáticamente al combinado.">Subtipo:</div>
+            <select id="acm-subtipo-construido" style="grid-column:2;" data-tippy-content="Departamento, oficina y local/tienda valen distinto por m² construido, aunque los tres sean 'sin terreno'.">
+              <option value="todos">Todos (mezclado)</option>
+              <option value="departamento">Departamento</option>
+              <option value="oficina">Oficina</option>
+              <option value="comercial">Comercial/Tienda</option>
+            </select>
           </div>
 
           <div id="acm-dormbanio-row" style="display:contents;">
@@ -797,10 +941,21 @@ function calcularTiempoOfertado(tipo, m2Terreno, m2Construccion, precioEstimado)
         seccionCasa = `Se seleccionaron <b>${meta.casas.total} casas</b>, pero no hay ningún terreno de referencia (ni seleccionado, ni un valor cargado manualmente), así que no se pudo separar terreno de construcción. El valor mostrado es precio total / m² construidos ⚠️, que sobreestima la construcción porque todavía incluye el terreno. Seleccioná al menos un terreno de la zona para que esto se corrija automáticamente.`;
       }
 
-      // --- Bloque dinámico de deptos ---
-      const seccionDepto = (!meta || meta.deptos.n === 0)
-        ? `Todavía no hay departamentos seleccionados en este ACM.`
-        : `Se usaron <b>${meta.deptos.n} departamentos</b>. Como no tienen un componente de terreno propio que aislar, el USD/m² se calcula directo: precio / m² construidos, con el mismo filtro de valores atípicos.`;
+      // --- Bloque dinámico de deptos/oficinas/comercial ---
+      const subtipoLabelModal = { todos:"departamentos, oficinas y locales/tiendas", departamento:"departamentos", oficina:"oficinas", comercial:"locales/tiendas" };
+      let seccionDepto;
+      if (!meta || meta.construccion.total === 0) {
+        seccionDepto = `Todavía no hay departamentos, oficinas ni locales seleccionados en este ACM.`;
+      } else {
+        const rc = meta.construccion.resultado;
+        const p = meta.construccion.porSubtipo;
+        seccionDepto = `Se seleccionaron <b>${meta.construccion.total} inmuebles sin terreno propio</b> (${p.departamento} departamento(s), ${p.oficina} oficina(s), ${p.comercial} comercial(es), y el resto sin subtipo detectado). `
+          + `Oficina, local y departamento no valen lo mismo por m², así que arriba podés elegir un <b>subtipo específico</b>: si hay al menos 1 comparable de ese subtipo, se usa ese grupo (y si hay ≥4, se ajusta por tamaño); si no hay ninguno, se cae automáticamente al promedio combinado de los tres. `
+          + `Ahora mismo está en <b>"${subtipoLabelModal[meta.construccion.subtipoElegido]}"</b>`
+          + (rc.mezclado && meta.construccion.subtipoElegido!=="todos"
+              ? `, pero como no había comparables propios de ese subtipo, se muestra el combinado (${rc.n}).`
+              : `, usando ${rc.n} comparables${rc.ajustadoPorTamano?` con ajuste por tamaño`:``}.`);
+      }
 
       box.innerHTML = `
         <div style="display:flex;justify-content:space-between;align-items:flex-start;">
@@ -827,18 +982,26 @@ function calcularTiempoOfertado(tipo, m2Terreno, m2Construccion, precioEstimado)
           <code>Estimado = (m² terreno × USD/m² terreno) + (m² construcción × USD/m² construcción neto)</code>
         </p>
 
-        <p style="margin:14px 0 4px;"><b>🏢 Departamentos</b></p>
+        <p style="margin:14px 0 4px;"><b>🏢 Departamentos, oficinas y locales</b></p>
         <p style="margin:0;">${seccionDepto}</p>
+        <p style="margin:8px 0 0;background:#f5f7fa;border-radius:8px;padding:8px 10px;font-size:13px;">
+          Estos inmuebles no tienen terreno propio que restar, así que su USD/m² sale directo de precio / m² construidos.
+          La mejora acá no es el terreno sino <b>no mezclar subtipos distintos</b> (una oficina y un local no valen lo
+          mismo por m² que un departamento) y, cuando hay datos suficientes, <b>ajustar por tamaño</b> igual que en
+          terrenos: una oficina chica suele valer más por m² que un piso entero grande.
+        </p>
 
         <p style="margin:14px 0 4px;"><b>✏️ Podés ajustar todo a mano</b></p>
         <p style="margin:0;">
-          Cada valor de USD/m² (terreno, casa, depto) es un input editable: si conocés mejor el mercado de esa zona,
-          podés pisar el número calculado y el estimado se recalcula al instante. El % que aparece al lado de cada
-          uno es el descuento que se aplica solo si activás "V. Rápida", para simular una venta más rápida a menor precio.
+          Cada valor de USD/m² (terreno, casa, depto/oficina/local) es un input editable: si conocés mejor el mercado
+          de esa zona, podés pisar el número calculado y el estimado se recalcula al instante. El % que aparece al
+          lado de cada uno es el descuento que se aplica solo si activás "V. Rápida", para simular una venta más
+          rápida a menor precio.
         </p>
 
         <p style="margin:14px 0 0;font-size:12px;color:#888;">
-          Íconos: 📐 terreno ajustado por tamaño · 🧮 construcción de casas neta de terreno · ⚠️ valor sin poder aislar terreno (baja confianza).
+          Íconos: 📐 ajustado por tamaño (regresión sobre los comparables) · 🧮 construcción de casas neta de terreno ·
+          ⚠️ valor de baja confianza (terreno sin aislar en casas, o subtipo sin comparables propios en deptos/oficinas/locales).
         </p>
       `;
 
