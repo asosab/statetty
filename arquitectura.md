@@ -4,7 +4,7 @@
 
 **Statetty** es una plataforma tecnológica para agentes inmobiliarios con presencia en:
 
-- **statetty.com** — sitio web corporativo (landing page, mapas interactivos, talleres)
+- **statetty.com** — sitio web corporativo (landing page, mapas interactivos, blog)
 - **@statettybot** — bot de Telegram (producto principal: búsqueda de inmuebles, monitoreo de WhatsApp, alertas)
 - Redes sociales: X, Facebook, Instagram, YouTube, TikTok
 
@@ -37,7 +37,6 @@ graph TD
     A[ _config.yml ] --> B[ default.html ]
     A --> C[ landing.html ]
     A --> D[ map.html ]
-    A --> E[ taller.html ]
 
     B --> F[ page.html ]
     B --> G[ registro.html ]
@@ -50,8 +49,6 @@ graph TD
     D --> L[ /maps/find/ ]
     D --> M[ /maps/findb/ ]
     D --> N[ /maps/inmobiliarias/ ]
-
-    E --> O[ /talleres/ ]
 
     F --> P[ _posts/*.md ]
 
@@ -132,14 +129,12 @@ statetty.com/
 │   ├── default.html         #   Base
 │   ├── landing.html         #   Landing page
 │   ├── map.html             #   Mapas Leaflet
-│   ├── taller.html          #   Talleres
-│   ├── post.html            #   Blog posts
 │   ├── page.html            #   Páginas genéricas
 │   ├── iframe.html          #   Iframe embebido
 │   ├── grafica.html         #   Gráficas
 │   ├── defaultp.html        #   Variante default
 │   └── ...
-├── _includes/               # 32 fragmentos reutilizables
+├── _includes/               # 33 fragmentos reutilizables
 │   ├── head.html            #   <head> con CSS/JS
 │   ├── header.html          #   Navegación
 │   ├── footer.html          #   Pie + scripts
@@ -181,7 +176,6 @@ statetty.com/
 │   ├── find/                # Mapa de resultados de búsqueda
 │   ├── findb/               # Mapa alternativo
 │   └── inmobiliarias/       # Mapa de agencias
-├── talleres/                # Páginas de talleres (markdown)
 ├── tags/                    # Página de etiquetas
 ├── graficas/                # Contenido markdown de gráficas
 ├── data/                    # Datos JSON

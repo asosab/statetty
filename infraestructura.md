@@ -120,14 +120,12 @@ GitHub Actions (`.github/workflows/jekyll.yml`):
 | `defaultp.html` | Variante de default                        |
 | `landing.html`  | Layout para landing page (secciones)       |
 | `page.html`     | Páginas de contenido genérico              |
-| `post.html`     | Artículos de blog                          |
 | `blog.html`     | Índice del blog                            |
 | `map.html`      | Mapas Leaflet                              |
 | `iframe.html`   | Páginas embebidas en iframe                |
 | `grafica.html`  | Páginas con gráficas                       |
-| `taller.html`   | Páginas de talleres                        |
 
-### 2.6 `_includes/` — Fragmentos reutilizables (35 archivos)
+### 2.6 `_includes/` — Fragmentos reutilizables (33 archivos)
 
 | Archivo               | Propósito                                  |
 | --------------------- | ------------------------------------------ |
@@ -138,7 +136,6 @@ GitHub Actions (`.github/workflows/jekyll.yml`):
 | `header.html`         | Barra de navegación principal              |
 | `headerb.html`        | Variante de navegación                     |
 | `headerp.html`        | Variante de navegación                     |
-| `headert.html`        | Variante de navegación                     |
 | `headG.html`          | Head para gráficas                         |
 | `headMaps.html`       | Head para mapas                            |
 | `inicio.html`         | Hero section con CTA                       |
@@ -160,8 +157,6 @@ GitHub Actions (`.github/workflows/jekyll.yml`):
 | `problema.html`       | Sección "El problema"                      |
 | `recursos.html`       | Recursos y enlaces útiles                  |
 | `prensa.html`         | Kit de prensa                              |
-| `talleres.html`       | Grid de talleres                           |
-| `talleres.md`         | Contenido markdown de talleres             |
 | `pronuntiation.html`  | Pronunciación de "Statetty"               |
 | `scriptSend.html`     | Script de envío de formulario              |
 | `fbButtonCode.html`   | Botón de Facebook                          |
@@ -246,7 +241,6 @@ assets/
 | `inmueble/`             | Página de propiedad individual + registro        |
 | `inmueble/registro/`    | Formulario de registro de inmueble               |
 | `registro/`             | Registro de usuarios                             |
-| `talleres/`             | Páginas de talleres (markdown)                   |
 | `blog/`                 | Índice del blog                                  |
 | `tags/`                 | Página de etiquetas                              |
 | `graficas/`             | Contenido de gráficas                            |
