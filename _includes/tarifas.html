@@ -156,6 +156,30 @@
     color: var(--text-strong);
   }
 
+  #planes .precio-tabla tr.plan-row {
+    cursor: pointer;
+    transition: var(--transition);
+  }
+
+  #planes .precio-tabla tr.plan-row:hover td {
+    color: var(--brand-dim);
+  }
+
+  #planes .precio-tabla tr.plan-row td:first-child::before {
+    content: '○ ';
+    color: var(--muted-2);
+  }
+
+  #planes .precio-tabla tr.plan-row.selected td {
+    color: var(--brand-dim);
+    font-weight: 700;
+  }
+
+  #planes .precio-tabla tr.plan-row.selected td:first-child::before {
+    content: '● ';
+    color: var(--brand-dim);
+  }
+
   #planes .precio-moneda {
     font-size: .75rem;
     color: var(--muted);
@@ -244,8 +268,7 @@
       <button class="calc-cta-btn" id="calc-cta-btn" onclick="tarifasIrAlFormulario()">
         <span id="calc-cta-txt">Quiero este plan</span>
       </button>
-      <a href="https://wa.me/59178447518?text=Hola%2C%20quiero%20consultar%20sobre%20mi%20plan"
-         target="_blank" rel="noopener" class="btn-ghost">
+      <a href="#" id="calc-wa-link" onclick="tarifasAbrirWhatsApp(event)" target="_blank" rel="noopener" class="btn-ghost">
         Consultar por WhatsApp →
       </a>
     </div>
@@ -271,6 +294,7 @@ var TARIFAS_PRECIOS = {
 };
 
 var TARIFAS_PAIS = 'bolivia';
+var TARIFAS_DURACION = 90;
 var TARIFAS_PLAN_MSG = '';
 
 /* ============================================================
@@ -286,13 +310,44 @@ function tarifasRenderPrecios() {
   html += '<div class="precio-desc">Para el agente independiente</div>';
   html += '<table class="precio-tabla"><thead><tr><th>Duraci\u00f3n</th><th style="text-align:right">Total</th></tr></thead><tbody>';
   for (var d = 0; d < duraciones.length; d++) {
-    html += '<tr><td>' + duraciones[d] + ' d\u00edas</td><td>' + p.moneda + ' ' + p.individual[duraciones[d]].toLocaleString() + '</td></tr>';
+    var dur = duraciones[d];
+    var sel = dur === TARIFAS_DURACION ? ' selected' : '';
+    html += '<tr class="plan-row' + sel + '" data-duracion="' + dur + '" onclick="tarifasSetDuracion(' + dur + ')">' +
+      '<td>' + dur + ' d\u00edas</td><td>' + p.moneda + ' ' + p.individual[dur].toLocaleString() + '</td></tr>';
   }
   html += '</tbody></table></div>';
 
   grid.innerHTML = html;
 
-  TARIFAS_PLAN_MSG = 'Estoy interesado en el plan individual de Statetty.';
+  tarifasActualizarPlanMsg();
+}
+
+/* ============================================================
+   Selección de duración
+   ============================================================ */
+function tarifasSetDuracion(dias) {
+  TARIFAS_DURACION = dias;
+  var filas = document.querySelectorAll('#planes .plan-row');
+  for (var i = 0; i < filas.length; i++) {
+    filas[i].classList.toggle('selected', parseInt(filas[i].getAttribute('data-duracion')) === dias);
+  }
+  tarifasActualizarPlanMsg();
+}
+
+/* ============================================================
+   Mensaje y texto de CTA según el plan seleccionado
+   ============================================================ */
+function tarifasActualizarPlanMsg() {
+  var p = TARIFAS_PRECIOS[TARIFAS_PAIS];
+  var precio = p.individual[TARIFAS_DURACION];
+
+  TARIFAS_PLAN_MSG = 'Estoy interesado en el plan individual de ' + TARIFAS_DURACION + ' d\u00edas (' +
+    p.moneda + ' ' + precio.toLocaleString() + ').';
+
+  var ctaTxt = document.getElementById('calc-cta-txt');
+  if (ctaTxt) {
+    ctaTxt.textContent = 'Quiero el plan de ' + TARIFAS_DURACION + ' d\u00edas \u2014 ' + p.moneda + ' ' + precio.toLocaleString();
+  }
 }
 
 /* ============================================================
@@ -314,6 +369,14 @@ function tarifasSetPais(btn) {
   }
 
   tarifasRenderPrecios();
+}
+
+/* ============================================================
+   Abrir WhatsApp con el plan seleccionado
+   ============================================================ */
+function tarifasAbrirWhatsApp(evt) {
+  evt.preventDefault();
+  window.open('https://wa.me/59178447518?text=' + encodeURIComponent(TARIFAS_PLAN_MSG), '_blank');
 }
 
 /* ============================================================
