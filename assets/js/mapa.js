@@ -460,8 +460,7 @@ function getBrand(input) {
      ) {return 'elfaro';}
 
   // ---------------------------------------------------------------------------------------------------- Marcas grandes
-  else if (url.includes("c21.com"))               {return 'C21';}
-  else if (url.includes("century21"))             {return 'C21';}
+  else if (url.includes("c21.com") || url.includes("century21"))               {return 'C21';}
   else if (url.includes("remax"))                 {return 'remax';}
   else if (url.includes("bieninmuebles"))         {return 'bieni';}
   else if (url.includes("dueodeinmueble"))        {return 'IDI';}
@@ -473,7 +472,7 @@ function getBrand(input) {
   else if (url.includes("santa-cruz.estate"))     {return 'sce';}
   else if (url.includes("laencontre.com"))        {return 'laenc';}
   else if (url.includes("nexoinmobiliario.pe"))   {return 'nexoi';}
-  else if (url.includes("bolivia.kw.com") || url.includes("kwbolivia.com")) {return 'kw';}
+  else if (url.includes("kw.com") || url.includes("kwbolivia.com")) {return 'kw';}
 
   else {return 'statetty';}
 }
