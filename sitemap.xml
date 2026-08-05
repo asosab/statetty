@@ -4,17 +4,32 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     {% for post in site.posts %}
     <url>
-        <loc>{{site.url}}{{ post.url | remove: 'index.html' }}</loc>
+        <loc>{{ site.url }}{{ post.url | remove: 'index.html' }}</loc>
+        <lastmod>{{ post.date | date_to_xmlschema }}</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
     </url>
     {% endfor %}
 
     {% for page in site.pages %}
-        {% if page.layout != nil %}
-            {% if page.layout != 'feed' %}
+        {% assign clean = page.url | remove: 'index.html' %}
+        {% assign skip = false %}
+        {% if clean == '/404/' or clean == '/404.html' %}{% assign skip = true %}{% endif %}
+        {% if clean contains '/maps/find/index_old' %}{% assign skip = true %}{% endif %}
+        {% if clean contains '/maps/findb/' %}{% assign skip = true %}{% endif %}
+        {% if clean contains '/graficas/palabras-requerimiento-whatsapp' %}{% assign skip = true %}{% endif %}
+        {% if clean == '/tags/' %}{% assign skip = true %}{% endif %}
+        {% if page.layout != nil and page.layout != 'feed' and skip == false %}
     <url>
-        <loc>{{site.url}}{{ page.url | remove: 'index.html' }}</loc>
+        <loc>{{ site.url }}{{ clean }}</loc>
+        {% if clean == '/' %}
+        <changefreq>weekly</changefreq>
+        <priority>1.0</priority>
+        {% else %}
+        <changefreq>monthly</changefreq>
+        <priority>0.5</priority>
+        {% endif %}
     </url>
-            {% endif %}
         {% endif %}
     {% endfor %}
 </urlset>
