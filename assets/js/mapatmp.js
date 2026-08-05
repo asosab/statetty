@@ -229,6 +229,7 @@ function getBrand(input) {
   else if (url.includes("sin-intermediarios")) {return 'si';}
   else if (url.includes("capitalcorp")) {return 'capital';}
   else if (url.includes("santa-cruz.estate")) {return 'sce';}
+  else if (url.includes("bolivia.kw.com") || url.includes("kwbolivia.com")) {return 'kw';}
   else {return 'statetty';}
 }
 
@@ -591,6 +592,7 @@ $(document).ready(function () {
     "si":     "Sin Intermediarios",
     "capital":"Capital Corporación",
     "sce":    "Santa Cruz Estate",
+    "kw":     "Keller Williams",
   };
 
   var urlParams = new URLSearchParams(window.location.search);

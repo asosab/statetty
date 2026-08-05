@@ -473,6 +473,7 @@ function getBrand(input) {
   else if (url.includes("santa-cruz.estate"))     {return 'sce';}
   else if (url.includes("laencontre.com"))        {return 'laenc';}
   else if (url.includes("nexoinmobiliario.pe"))   {return 'nexoi';}
+  else if (url.includes("bolivia.kw.com") || url.includes("kwbolivia.com")) {return 'kw';}
 
   else {return 'statetty';}
 }
@@ -964,6 +965,7 @@ $(document).ready(function () {
     "sce":    "Santa Cruz Estate",
     "laenc":  "La encontré",
     "nexoi":  "Nexo Inmobiliario",
+    "kw":     "Keller Williams",
   };
 
   function renderMap(locs, centerLat, centerLng, circleRadius, avgPrice, na, ag) {

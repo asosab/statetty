@@ -294,6 +294,7 @@ $(document).ready(function () {
       else if ((fullUrl || '').includes("uno.com"))           brand = 'uno';
       else if ((fullUrl || '').includes("infocasas.com"))     brand = 'ic';
       else if ((fullUrl || '').includes("santa-cruz.estate")) brand = 'sce';
+      else if ((fullUrl || '').includes("bolivia.kw.com"))     brand = 'kw';
       else brand = 'statetty';
 
       var icon = new L.Icon({
