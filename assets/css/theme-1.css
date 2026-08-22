@@ -971,9 +971,10 @@ a:hover { color: var(--blue-dark); }
 .footer-social-link:hover { background: var(--yellow); border-color: var(--yellow); color: var(--blue-dark); }
 .footer-bottom { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,.10); }
 .footer-copy { font-size: .8rem; color: rgba(255,255,255,.45); margin: 0; }
-.footer-legal { display: flex; gap: 16px; flex-wrap: wrap; }
+.footer-legal { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
 .footer-legal a { font-size: .8rem; color: rgba(255,255,255,.45); }
 .footer-legal a:hover { color: var(--yellow); }
+.footer-credit { font-size: .8rem; color: rgba(255,255,255,.45); }
 
 /* ============================================================
    RESPONSIVE
