@@ -123,25 +123,6 @@ window.Buddy = window.Buddy || {};
     return String(origin || '').trim().toLowerCase().replace(/\/+$/, '');
   }
 
-  // ¿La URL de una config registrada corresponde al sitio actual? Coincide por
-  // origin exacto o por mismo hostname (p. ej. https://statetty.com/foo).
-  function isCurrentSite(url) {
-    var origin = currentSiteUrl();
-    if (!origin) return false;
-    if (!url) return false;
-    var a = String(url).trim().toLowerCase().replace(/\/+$/, '');
-    if (a === origin) return true;
-    var originHost = hostOf(origin);
-    var urlHost = hostOf(a);
-    return !!originHost && originHost === urlHost;
-  }
-
-  function hostOf(url) {
-    var m = String(url || '').match(/^[a-z][a-z0-9+.-]*:\/\/([^/?#]+)/i);
-    var host = m ? m[1] : String(url || '').split('/')[0];
-    return host ? host.split(':')[0].replace(/^www\./, '').toLowerCase() : '';
-  }
-
   function configureApi() {
     var telemetry = getTelemetry();
     if (!telemetry || typeof telemetry.configureApi !== 'function') {
@@ -243,6 +224,33 @@ window.Buddy = window.Buddy || {};
 
   function deleteConfig(url) {
     return request('deleteConfig', { method: 'DELETE', data: { url: url } });
+  }
+
+  // Resuelve la config del SITIO ACTUAL (dominio/origin) automáticamente:
+  //  - usa window.location.origin como URL objetivo;
+  //  - si ya existe, la carga;
+  //  - si no existe, la CREA de inmediato (activo:true + siteId del app) usando
+  //    la plantilla que devuelve el backend para URLs nuevas (superusuario).
+  function getCurrentSiteConfig() {
+    var url = currentSiteUrl();
+    if (!url) return Promise.reject(new Error('No se pudo determinar el dominio del sitio actual.'));
+
+    return getConfig(url).then(function (cfg) {
+      if (cfg && cfg._id) return cfg; // ya registrada
+      // Nueva: crear desde la plantilla que devuelve get (template, _id:null).
+      var siteId = getSiteId() || (cfg && cfg.siteId) || '';
+      return saveConfig({
+        url: url,
+        siteId: siteId,
+        activo: true,
+        character: (cfg && cfg.character) || { defaultCharacter: 'alejito', fallbackCharacter: 'alejito' },
+        google: (cfg && cfg.google) || { email: '', timezone: 'America/La_Paz', calendarId: '' },
+        override: {}
+      }).then(function (saved) {
+        state.currentConfig = saved || cfg || { url: url, siteId: siteId, activo: true };
+        return state.currentConfig;
+      });
+    });
   }
 
   function modulesList(configId) {
@@ -375,46 +383,6 @@ window.Buddy = window.Buddy || {};
 
   // --- Render principal -----------------------------------------------------
 
-  function renderConfigSelect() {
-    var origin = currentSiteUrl();
-    var html = '<div class="buddy-config-toolbox__row">' +
-      '<select class="buddy-config-toolbox__input" data-config-select>';
-
-    if (state.currentConfig && !state.configs.some(function (c) { return (c._id || c.url) === (state.currentConfig._id || state.currentConfig.url); })) {
-      html += '<option value="' + escapeHtml(state.currentConfig.url) + '" selected>' + escapeHtml(state.currentConfig.url + ' (nueva)') + '</option>';
-    }
-
-    // Opción para crear/editar la config del sitio actual. Si ya existe una
-    // registrada para este sitio, no se agrega esta entrada (se autoselecciona
-    // la existente más abajo).
-    var exactSite = state.configs.some(function (c) { return isCurrentSite(c.url); });
-
-    html += '<option value="' + escapeHtml(origin) + '"' + (exactSite ? '' : ' selected') + '>' +
-      escapeHtml(CONFIG.labels.newSite || 'Nueva configuración de página') +
-      (origin ? ' (' + escapeHtml(origin) + ')' : '') +
-      '</option>';
-
-    state.configs.forEach(function (c) {
-      var url = c.url || '';
-      var selected = state.currentConfig && state.currentConfig.url === url ? ' selected' : '';
-      // Si el sitio actual ya está registrado, preseleccionamos su config.
-      if (!selected && isCurrentSite(url)) {
-        selected = ' selected';
-      }
-      html += '<option value="' + escapeHtml(url) + '"' + selected + '>' + escapeHtml(url) + '</option>';
-    });
-
-    html += '</select>' +
-      '<button type="button" class="buddy-config-toolbox__button buddy-config-toolbox__button--secondary" data-config-load>' +
-        escapeHtml(CONFIG.labels.load || 'Cargar') +
-      '</button>' +
-      '<button type="button" class="buddy-config-toolbox__button buddy-config-toolbox__button--primary" data-config-create>' +
-        escapeHtml(CONFIG.labels.create || 'Crear') +
-      '</button>' +
-      '</div>';
-    return html;
-  }
-
   function renderPageConfigForm() {
     if (!state.currentConfig) {
       return '<div class="buddy-config-toolbox__empty">' +
@@ -432,7 +400,7 @@ window.Buddy = window.Buddy || {};
       '<div class="buddy-config-toolbox__section">' +
         '<h3 class="buddy-config-toolbox__section-title">' + escapeHtml(CONFIG.labels.global || 'Configuración de página') + '</h3>' +
         '<div class="buddy-cfg-field" data-field-key="url"><label>URL</label>' +
-          '<input type="text" value="' + escapeHtml(c.url || '') + '" data-cfg-url required></div>' +
+          '<input type="text" value="' + escapeHtml(c.url || '') + '" data-cfg-url readonly required></div>' +
         '<div class="buddy-cfg-field" data-field-key="siteId"><label>SiteId</label>' +
           '<input type="text" value="' + escapeHtml(c.siteId || '') + '" data-cfg-site-id></div>' +
         '<div class="buddy-cfg-field"><label>Activo</label>' +
@@ -527,7 +495,6 @@ window.Buddy = window.Buddy || {};
     if (!content) return;
 
     content.innerHTML =
-      renderConfigSelect() +
       '<div data-config-message class="buddy-config-toolbox__message" aria-live="polite"></div>' +
       renderPageConfigForm() +
       (state.currentConfig && state.currentConfig._id
@@ -539,27 +506,6 @@ window.Buddy = window.Buddy || {};
   }
 
   function bindEvents(content) {
-    content.querySelector('[data-config-load]').addEventListener('click', function () {
-      var select = content.querySelector('[data-config-select]');
-      var url = select ? select.value : '';
-      if (!url) { setMessage('Elegí una configuración para cargar.', true); return; }
-      getConfig(url)
-        .then(function () { render(); })
-        .catch(function (e) { setMessage(e && e.data && e.data.error || e.message || 'No se pudo cargar.', true); });
-    });
-
-    content.querySelector('[data-config-create]').addEventListener('click', function () {
-      var select = content.querySelector('[data-config-select]');
-      var url = select ? select.value : '';
-      // Si no se eligió nada (sin configs registradas), usamos el dominio del
-      // sitio actual como URL por defecto.
-      if (!url) url = currentSiteUrl();
-      if (!url) { setMessage('Escribí una URL nueva o elegí una existente.', true); return; }
-      getConfig(url)
-        .then(function () { render(); })
-        .catch(function (e) { setMessage(e && e.data && e.data.error || e.message || 'No se pudo crear.', true); });
-    });
-
     var saveBtn = content.querySelector('[data-cfg-save]');
     if (saveBtn) saveBtn.addEventListener('click', function () { savePageConfig(); });
 
@@ -715,7 +661,7 @@ window.Buddy = window.Buddy || {};
       return Promise.reject(new Error(CONFIG.labels.noAccess || 'No tenés permisos para administrar la configuración.'));
     }
 
-    return listConfigs().then(function () {
+    return getCurrentSiteConfig().then(function () {
       render();
       return loadModules().then(function () {
         var modal = createModal();
@@ -723,7 +669,7 @@ window.Buddy = window.Buddy || {};
         state.open = true;
       });
     }).catch(function (e) {
-      setMessage(e && e.data && e.data.error || e.message || 'No se pudieron cargar las configuraciones.', true);
+      setMessage(e && e.data && e.data.error || e.message || 'No se pudo cargar la configuración del sitio.', true);
       render();
       var modal = createModal();
       modal.hidden = false;
