@@ -210,6 +210,9 @@ window.Buddy = window.Buddy || {};
   function fetchCatalog() {
     var telemetry = getTelemetry();
     if (telemetry && typeof telemetry.request === 'function') {
+      // Registrar el servicio 'config' antes del request (igual que request()),
+      // si no telemetry lanza "API no configurada" porque 'config' no está en apis.
+      configureApi();
       return telemetry.request(CONFIG.apiService || 'config',
         (CONFIG.endpoints && CONFIG.endpoints.modulesMeta) || '/api/buddy/configs/modules/meta',
         { method: 'GET', cache: 'no-store' });
