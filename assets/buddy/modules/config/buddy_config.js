@@ -111,6 +111,37 @@ window.Buddy = window.Buddy || {};
     return { app: { siteId: getSiteId() } };
   }
 
+  // URL por defecto para crear/relacionar la config del sitio actual: el
+  // origin del documento (p. ej. https://statetty.com), en minúsculas tal como
+  // el backend normaliza las URLs.
+  function currentSiteUrl() {
+    var origin = null;
+    try {
+      origin = window.location.origin;
+    } catch (_) { /* sin window.location (smoke) */ }
+    origin = origin || (window.location && window.location.protocol ? window.location.protocol + '//' + window.location.host : '');
+    return String(origin || '').trim().toLowerCase().replace(/\/+$/, '');
+  }
+
+  // ¿La URL de una config registrada corresponde al sitio actual? Coincide por
+  // origin exacto o por mismo hostname (p. ej. https://statetty.com/foo).
+  function isCurrentSite(url) {
+    var origin = currentSiteUrl();
+    if (!origin) return false;
+    if (!url) return false;
+    var a = String(url).trim().toLowerCase().replace(/\/+$/, '');
+    if (a === origin) return true;
+    var originHost = hostOf(origin);
+    var urlHost = hostOf(a);
+    return !!originHost && originHost === urlHost;
+  }
+
+  function hostOf(url) {
+    var m = String(url || '').match(/^[a-z][a-z0-9+.-]*:\/\/([^/?#]+)/i);
+    var host = m ? m[1] : String(url || '').split('/')[0];
+    return host ? host.split(':')[0].replace(/^www\./, '').toLowerCase() : '';
+  }
+
   function configureApi() {
     var telemetry = getTelemetry();
     if (!telemetry || typeof telemetry.configureApi !== 'function') {
@@ -342,6 +373,7 @@ window.Buddy = window.Buddy || {};
   // --- Render principal -----------------------------------------------------
 
   function renderConfigSelect() {
+    var origin = currentSiteUrl();
     var html = '<div class="buddy-config-toolbox__row">' +
       '<select class="buddy-config-toolbox__input" data-config-select>';
 
@@ -349,11 +381,23 @@ window.Buddy = window.Buddy || {};
       html += '<option value="' + escapeHtml(state.currentConfig.url) + '" selected>' + escapeHtml(state.currentConfig.url + ' (nueva)') + '</option>';
     }
 
-    html += '<option value="">' + escapeHtml(CONFIG.labels.newSite || 'Nueva configuración de página') + '</option>';
+    // Opción para crear/editar la config del sitio actual. Si ya existe una
+    // registrada para este sitio, no se agrega esta entrada (se autoselecciona
+    // la existente más abajo).
+    var exactSite = state.configs.some(function (c) { return isCurrentSite(c.url); });
+
+    html += '<option value="' + escapeHtml(origin) + '"' + (exactSite ? '' : ' selected') + '>' +
+      escapeHtml(CONFIG.labels.newSite || 'Nueva configuración de página') +
+      (origin ? ' (' + escapeHtml(origin) + ')' : '') +
+      '</option>';
 
     state.configs.forEach(function (c) {
       var url = c.url || '';
       var selected = state.currentConfig && state.currentConfig.url === url ? ' selected' : '';
+      // Si el sitio actual ya está registrado, preseleccionamos su config.
+      if (!selected && isCurrentSite(url)) {
+        selected = ' selected';
+      }
       html += '<option value="' + escapeHtml(url) + '"' + selected + '>' + escapeHtml(url) + '</option>';
     });
 
@@ -504,6 +548,9 @@ window.Buddy = window.Buddy || {};
     content.querySelector('[data-config-create]').addEventListener('click', function () {
       var select = content.querySelector('[data-config-select]');
       var url = select ? select.value : '';
+      // Si no se eligió nada (sin configs registradas), usamos el dominio del
+      // sitio actual como URL por defecto.
+      if (!url) url = currentSiteUrl();
       if (!url) { setMessage('Escribí una URL nueva o elegí una existente.', true); return; }
       getConfig(url)
         .then(function () { render(); })
