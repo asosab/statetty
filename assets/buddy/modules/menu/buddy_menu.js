@@ -71,6 +71,17 @@ window.Buddy = window.Buddy || {};
     return window[name] || {};
   }
 
+  // Resuelve la API de runtime de un módulo. La mayoría vive en
+  // window.Buddy.<moduleId>, pero el módulo `config` (toolbox) la expone como
+  // window.Buddy.configToolbox (window.Buddy.config está reservado a la config
+  // general de la app). Sin este mapeo, la acción del toolbox era un no-op.
+  function getModuleApi(moduleId) {
+    if (String(moduleId).toLowerCase() === 'config') {
+      return (window.Buddy && window.Buddy.configToolbox) || null;
+    }
+    return (window.Buddy && window.Buddy[moduleId]) || null;
+  }
+
   // -------------------------------------------------------------------
   // Tipo de usuario actual
   // -------------------------------------------------------------------
@@ -222,7 +233,7 @@ window.Buddy = window.Buddy || {};
   // Ejecutar la acción de un ítem de menú.
   // -------------------------------------------------------------------
   function runAction(item) {
-    var api = window.Buddy && window.Buddy[item.moduleId];
+    var api = getModuleApi(item.moduleId);
     if (!api || !item.action) return;
 
     var fn = api[item.action];
