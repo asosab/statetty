@@ -1,0 +1,24 @@
+{
+  "module": "user",
+  "name": "Datos de usuario",
+  "description": "Perfil universal de usuario Buddy y su completitud.",
+  "fields": [
+    { "key": "enabled", "label": "Activo", "type": "boolean", "default": true },
+    { "key": "apiBaseUrl", "label": "URL base de API", "type": "string", "default": "https://api.statetty.com" },
+    { "key": "apiService", "label": "Servicio API", "type": "string", "default": "user" },
+    { "key": "endpoints", "label": "Endpoints", "type": "object", "default": {}, "fields": [
+      { "key": "current", "label": "Actual", "type": "string", "default": "/api/buddy/user" },
+      { "key": "update", "label": "Actualizar", "type": "string", "default": "/api/buddy/user" },
+      { "key": "uploadPhoto", "label": "Subir foto", "type": "string", "default": "/api/buddy/user/photo" }
+    ] },
+    { "key": "requiredProfileFields", "label": "Campos obligatorios", "type": "string", "default": "name,phone" },
+    { "key": "menu", "label": "Elementos de menú", "type": "array", "default": [], "items": { "type": "object", "fields": [
+      { "key": "id", "label": "ID", "type": "string", "default": "" },
+      { "key": "label", "label": "Texto", "type": "string", "default": "" },
+      { "key": "icon", "label": "Ícono", "type": "string", "default": "" },
+      { "key": "roles", "label": "Roles", "type": "string", "default": "auth" },
+      { "key": "enabled", "label": "Visible", "type": "boolean", "default": true },
+      { "key": "action", "label": "Acción", "type": "string", "default": "" }
+    ] } }
+  ]
+}

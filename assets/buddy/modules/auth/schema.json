@@ -1,0 +1,12 @@
+{
+  "module": "auth",
+  "name": "Autenticación",
+  "description": "Autenticación por enlace de correo (JWT access + refresh, sin cookies).",
+  "fields": [
+    { "key": "enabled", "label": "Activo", "type": "boolean", "default": true },
+    { "key": "apiBaseUrl", "label": "URL base de API", "type": "string", "default": "https://api.statetty.com" },
+    { "key": "apiService", "label": "Servicio API", "type": "string", "default": "auth" },
+    { "key": "verificationParameter", "label": "Parámetro de verificación", "type": "string", "default": "auth" },
+    { "key": "requestTimeoutMs", "label": "Timeout (ms)", "type": "number", "default": 15000 }
+  ]
+}

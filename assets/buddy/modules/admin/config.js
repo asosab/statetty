@@ -27,5 +27,20 @@ window.BuddyAdminConfig = Object.assign({
     send: 'enviar',
     cancel: 'cancelar',
     close: 'Cerrar'
-  }
+  },
+
+  /*
+   * Elementos de menú que este módulo ofrece al módulo `menu`.
+   * Ver contrato en modules/menu/buddy_menu.js.
+   */
+  menu: [
+    {
+      id: 'siteAdmin',
+      label: 'Administrador del sitio',
+      icon: '🛡️',
+      roles: 'admin,superadmin',
+      enabled: true,
+      action: 'open'
+    }
+  ]
 }, window.BuddyAdminConfig || {});

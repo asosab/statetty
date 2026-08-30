@@ -1,0 +1,14 @@
+{
+  "module": "chat",
+  "name": "Chat",
+  "description": "Caja de chat de comandos para interactuar con Buddy.",
+  "fields": [
+    { "key": "enabled", "label": "Activo", "type": "boolean", "default": true },
+    { "key": "keyboardKey", "label": "Tecla de acceso", "type": "string", "default": "t" },
+    { "key": "urlParameter", "label": "Parámetro de URL", "type": "string", "default": "chat" },
+    { "key": "sendWithEnter", "label": "Enviar con Enter", "type": "boolean", "default": true },
+    { "key": "placeholder", "label": "Placeholder", "type": "string", "default": "Escribe un comando…" },
+    { "key": "buttonText", "label": "Texto del botón", "type": "string", "default": "Enviar" },
+    { "key": "checkboxText", "label": "Texto del checkbox", "type": "string", "default": "Enviar con Enter" }
+  ]
+}

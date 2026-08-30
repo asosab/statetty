@@ -1,0 +1,21 @@
+{
+  "module": "archerySchool",
+  "name": "Escuela de arquería",
+  "description": "Gestión de estudiantes, atributos, medidas y equipamiento de la escuela.",
+  "fields": [
+    { "key": "enabled", "label": "Activo", "type": "boolean", "default": true },
+    { "key": "siteId", "label": "SiteId", "type": "string", "default": "" },
+    { "key": "schoolName", "label": "Nombre de la escuela", "type": "string", "default": "" },
+    { "key": "schoolOwnerCompany", "label": "Empresa propietaria", "type": "string", "default": "arbatarchery.com" },
+    { "key": "apiBaseUrl", "label": "URL base de API", "type": "string", "default": "https://api.statetty.com" },
+    { "key": "apiService", "label": "Servicio API", "type": "string", "default": "archerySchool" },
+    { "key": "menu", "label": "Elementos de menú", "type": "array", "default": [], "items": { "type": "object", "fields": [
+      { "key": "id", "label": "ID", "type": "string", "default": "" },
+      { "key": "label", "label": "Texto", "type": "string", "default": "" },
+      { "key": "icon", "label": "Ícono", "type": "string", "default": "" },
+      { "key": "roles", "label": "Roles", "type": "string", "default": "auth" },
+      { "key": "enabled", "label": "Visible", "type": "boolean", "default": true },
+      { "key": "action", "label": "Acción", "type": "string", "default": "" }
+    ] } }
+  ]
+}

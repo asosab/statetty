@@ -66,5 +66,20 @@ window.BuddyDashboardConfig = Object.assign({
     active: 'Activos',
     engaged: 'Comprometidos',
     conversions: 'Conversiones'
-  }
+  },
+
+  /*
+   * Elementos de menú que este módulo ofrece al módulo `menu`.
+   * Ver contrato en modules/menu/buddy_menu.js.
+   */
+  menu: [
+    {
+      id: 'dashboard',
+      label: 'Dashboard',
+      icon: '📊',
+      roles: 'admin,superadmin',
+      enabled: true,
+      action: 'open'
+    }
+  ]
 }, window.BuddyDashboardConfig || {});

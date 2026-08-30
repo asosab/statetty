@@ -1,0 +1,22 @@
+{
+  "module": "admin",
+  "name": "Administradores",
+  "description": "Gestión de administradores del sitio y su rol.",
+  "fields": [
+    { "key": "enabled", "label": "Activo", "type": "boolean", "default": true },
+    { "key": "apiBaseUrl", "label": "URL base de API", "type": "string", "default": "https://api.statetty.com" },
+    { "key": "apiService", "label": "Servicio API", "type": "string", "default": "admin" },
+    { "key": "endpoints", "label": "Endpoints", "type": "object", "default": {}, "fields": [
+      { "key": "get", "label": "Obtener", "type": "string", "default": "/api/buddy/admins/get" },
+      { "key": "post", "label": "Crear/Actualizar", "type": "string", "default": "/api/buddy/admins/post" }
+    ] },
+    { "key": "menu", "label": "Elementos de menú", "type": "array", "default": [], "items": { "type": "object", "fields": [
+      { "key": "id", "label": "ID", "type": "string", "default": "" },
+      { "key": "label", "label": "Texto", "type": "string", "default": "" },
+      { "key": "icon", "label": "Ícono", "type": "string", "default": "" },
+      { "key": "roles", "label": "Roles", "type": "string", "default": "admin" },
+      { "key": "enabled", "label": "Visible", "type": "boolean", "default": true },
+      { "key": "action", "label": "Acción", "type": "string", "default": "" }
+    ] } }
+  ]
+}

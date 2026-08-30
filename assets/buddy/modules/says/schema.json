@@ -1,0 +1,22 @@
+{
+  "module": "says",
+  "name": "Diálogos",
+  "description": "Globos de diálogo y fuentes automáticas de mensajes (incluye agenda de citas vía Google).",
+  "fields": [
+    { "key": "enabled", "label": "Activo", "type": "boolean", "default": true },
+    { "key": "display", "label": "Globo", "type": "object", "default": {}, "fields": [
+      { "key": "baseMs", "label": "Base (ms)", "type": "number", "default": 2800 },
+      { "key": "minMs", "label": "Mínimo (ms)", "type": "number", "default": 2800 },
+      { "key": "maxMs", "label": "Máximo (ms)", "type": "number", "default": 9000 },
+      { "key": "charsPerSecond", "label": "Caracteres por segundo", "type": "number", "default": 10 },
+      { "key": "extraMs", "label": "Extra (ms)", "type": "number", "default": 500 }
+    ] },
+    { "key": "google", "label": "Cuenta de Google (agenda)", "type": "object", "default": {}, "fields": [
+      { "key": "calendarId", "label": "Calendario", "type": "string", "default": "" },
+      { "key": "timezone", "label": "Zona horaria", "type": "string", "default": "America/La_Paz" },
+      { "key": "apiKey", "label": "API Key Google", "type": "secret", "default": "" },
+      { "key": "horizonteDias", "label": "Horizonte (días)", "type": "number", "default": 31 },
+      { "key": "capacidadPorTurno", "label": "Capacidad por turno", "type": "number", "default": 8 }
+    ] }
+  ]
+}

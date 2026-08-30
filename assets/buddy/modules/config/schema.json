@@ -1,0 +1,30 @@
+{
+  "module": "config",
+  "name": "Configuración de Buddy",
+  "description": "Toolbox del superusuario para editar la configuración centralizada de Buddy por página y sus módulos.",
+  "fields": [
+    { "key": "enabled", "label": "Activo", "type": "boolean", "default": true },
+    { "key": "apiBaseUrl", "label": "URL base de API", "type": "string", "default": "https://api.statetty.com" },
+    { "key": "apiService", "label": "Servicio API", "type": "string", "default": "config" },
+    { "key": "superuserEmail", "label": "Email superusuario", "type": "string", "default": "asosab@gmail.com" },
+    { "key": "endpoints", "label": "Endpoints", "type": "object", "default": {}, "fields": [
+      { "key": "modulesMeta", "label": "Metadatos de módulos", "type": "string", "default": "/api/buddy/configs/modules/meta" },
+      { "key": "listConfigs", "label": "Listar configs", "type": "string", "default": "/api/buddy/configs/list" },
+      { "key": "getConfig", "label": "Obtener config", "type": "string", "default": "/api/buddy/configs/get" },
+      { "key": "saveConfig", "label": "Guardar config", "type": "string", "default": "/api/buddy/configs/save" },
+      { "key": "deleteConfig", "label": "Eliminar config", "type": "string", "default": "/api/buddy/configs/delete" },
+      { "key": "listModules", "label": "Listar módulos", "type": "string", "default": "/api/buddy/modules/list" },
+      { "key": "getModule", "label": "Obtener módulo", "type": "string", "default": "/api/buddy/modules/get" },
+      { "key": "saveModule", "label": "Guardar módulo", "type": "string", "default": "/api/buddy/modules/save" },
+      { "key": "deleteModule", "label": "Eliminar módulo", "type": "string", "default": "/api/buddy/modules/delete" }
+    ] },
+    { "key": "menu", "label": "Elementos de menú", "type": "array", "default": [], "items": { "type": "object", "fields": [
+      { "key": "id", "label": "ID", "type": "string", "default": "" },
+      { "key": "label", "label": "Texto", "type": "string", "default": "" },
+      { "key": "icon", "label": "Ícono", "type": "string", "default": "" },
+      { "key": "roles", "label": "Roles", "type": "string", "default": "superadmin" },
+      { "key": "enabled", "label": "Visible", "type": "boolean", "default": true },
+      { "key": "action", "label": "Acción", "type": "string", "default": "" }
+    ] } }
+  ]
+}

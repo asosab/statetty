@@ -1,0 +1,30 @@
+{
+  "module": "dashboard",
+  "name": "Dashboard",
+  "description": "Panel ejecutivo de métricas por sitio.",
+  "fields": [
+    { "key": "enabled", "label": "Activo", "type": "boolean", "default": true },
+    { "key": "apiBaseUrl", "label": "URL base de API", "type": "string", "default": "https://api.statetty.com" },
+    { "key": "apiService", "label": "Servicio API", "type": "string", "default": "dashboard" },
+    { "key": "period", "label": "Período", "type": "object", "default": {}, "fields": [
+      { "key": "days", "label": "Días", "type": "number", "default": 30 }
+    ] },
+    { "key": "view", "label": "Vista", "type": "object", "default": {}, "fields": [
+      { "key": "defaultView", "label": "Vista por defecto", "type": "string", "default": "admin" },
+      { "key": "selector", "label": "Selector", "type": "string", "default": "[data-buddy-dashboard]" }
+    ] },
+    { "key": "cache", "label": "Caché", "type": "object", "default": {}, "fields": [
+      { "key": "enabled", "label": "Activo", "type": "boolean", "default": true },
+      { "key": "storageKey", "label": "Clave de almacenamiento", "type": "string", "default": "buddy.dashboard.daily.v1" },
+      { "key": "ttlDays", "label": "TTL (días)", "type": "number", "default": 1 }
+    ] },
+    { "key": "menu", "label": "Elementos de menú", "type": "array", "default": [], "items": { "type": "object", "fields": [
+      { "key": "id", "label": "ID", "type": "string", "default": "" },
+      { "key": "label", "label": "Texto", "type": "string", "default": "" },
+      { "key": "icon", "label": "Ícono", "type": "string", "default": "" },
+      { "key": "roles", "label": "Roles", "type": "string", "default": "admin" },
+      { "key": "enabled", "label": "Visible", "type": "boolean", "default": true },
+      { "key": "action", "label": "Acción", "type": "string", "default": "" }
+    ] } }
+  ]
+}

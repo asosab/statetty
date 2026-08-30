@@ -1,0 +1,10 @@
+{
+  "module": "character",
+  "name": "Personaje",
+  "description": "Personaje que invoca esta página y fallback.",
+  "fields": [
+    { "key": "enabled", "label": "Activo", "type": "boolean", "default": true },
+    { "key": "defaultCharacter", "label": "Personaje por defecto", "type": "select", "default": "alejito", "options": ["alejito", "raulito"] },
+    { "key": "fallbackCharacter", "label": "Personaje de respaldo", "type": "select", "default": "alejito", "options": ["alejito", "raulito"] }
+  ]
+}

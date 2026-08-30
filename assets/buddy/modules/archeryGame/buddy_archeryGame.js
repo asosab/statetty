@@ -122,6 +122,15 @@
     var pageTargetBlurSyncRunning = false;
     var pageTargetLastScoreSumAt = 0;
     var pageTargetAnimationToken = 0;
+
+    // v1.6: ciclo de aparición/desvanecimiento de la diana gráfica propia
+    // del módulo (targetEl: fallback de página, diana de personaje o diana
+    // por defecto). Es el equivalente de pageTarget* pero para una imagen
+    // que no tiene "lugar original" en la página — su estado de reposo es
+    // simplemente oculta. Se muestra recién cuando arranca una andanada
+    // (enterAimState) y se desvanece tras unos minutos sin jugar.
+    var targetFallbackVisible = false;
+    var targetFallbackFadeTimer = null;
   
     var activePointerId = null;
     var startX = 0;
@@ -669,6 +678,104 @@ function markPageTargetScoreSum() {
     schedulePageTargetRestore();
   }
 
+  // -------------------------------------------------------------------
+  // v1.6: ciclo de vida de la diana gráfica propia del módulo (targetEl).
+  // Aplica a los mismos casos donde updateTargetVisibility() usaría
+  // targetEl como la diana visible: fallback de página, diana de
+  // personaje y diana por defecto del módulo. La diana DOM de página
+  // real (resolution.source === 'page') se maneja aparte, arriba.
+  // -------------------------------------------------------------------
+function targetFallbackFadeConfig() {
+    var target = CONFIG.target || {};
+    return target.fallbackFade || {};
+  }
+
+function targetFallbackFadeOutMs() {
+    var ms = Number(targetFallbackFadeConfig().afterMs);
+    return isFinite(ms) && ms >= 0 ? ms : 120000; // 2 minutos sin jugar, por defecto
+  }
+
+function targetFallbackTransitionMs() {
+    var ms = Number(targetFallbackFadeConfig().transitionMs);
+    return isFinite(ms) && ms >= 0 ? ms : 400;
+  }
+
+function cancelTargetFallbackFadeTimer() {
+    if (targetFallbackFadeTimer) {
+      clearTimeout(targetFallbackFadeTimer);
+      targetFallbackFadeTimer = null;
+    }
+  }
+
+  // Usa targetEl como diana visible en este momento (no es la diana DOM
+  // de página real).
+function usesTargetFallback() {
+    var resolution = getTargetResolution();
+    return !!(resolution && resolution.element === targetEl);
+  }
+
+function hideTargetFallbackImmediate() {
+    cancelTargetFallbackFadeTimer();
+    targetFallbackVisible = false;
+    if (!targetEl) return;
+    targetEl.style.transition = 'none';
+    targetEl.style.opacity = '0';
+    targetEl.style.display = 'none';
+  }
+
+function showTargetFallback() {
+    if (!targetEl || !usesTargetFallback()) return;
+    cancelTargetFallbackFadeTimer();
+    if (targetFallbackVisible) return;
+    targetFallbackVisible = true;
+
+    var duration = targetFallbackTransitionMs();
+    targetEl.style.transition = 'none';
+    targetEl.style.display = 'block';
+    targetEl.style.opacity = '0';
+    targetEl.offsetWidth;
+    targetEl.style.transition = duration > 0 ? ('opacity ' + duration + 'ms ease') : 'none';
+    requestAnimationFrame(function () {
+      if (!targetFallbackVisible) return;
+      targetEl.style.opacity = '1';
+    });
+  }
+
+function fadeOutTargetFallback() {
+    if (!targetEl || !targetFallbackVisible) return;
+    targetFallbackVisible = false;
+    var duration = targetFallbackTransitionMs();
+
+    if (duration <= 0) {
+      targetEl.style.opacity = '0';
+      targetEl.style.display = 'none';
+      return;
+    }
+
+    targetEl.style.transition = 'opacity ' + duration + 'ms ease';
+    targetEl.style.opacity = '0';
+    setTimeout(function () {
+      // Si algo la volvió a mostrar mientras se desvanecía, no la tapamos.
+      if (targetFallbackVisible) return;
+      targetEl.style.display = 'none';
+    }, duration + 30);
+  }
+
+  // Reinicia la cuenta regresiva de inactividad tras completar una
+  // andanada — mismo momento en que markPageTargetScoreSum() lo hace
+  // para la diana DOM de página.
+function scheduleTargetFallbackFadeOut() {
+    cancelTargetFallbackFadeTimer();
+    if (!targetFallbackVisible) return;
+
+    var wait = targetFallbackFadeOutMs();
+    targetFallbackFadeTimer = setTimeout(function () {
+      targetFallbackFadeTimer = null;
+      if (state === 'aiming') return; // se reprograma al terminar de apuntar
+      fadeOutTargetFallback();
+    }, wait);
+  }
+
 function preparePageTargetForAiming() {
     var resolution = getTargetResolution();
     var target = resolution && resolution.source === 'page' ? resolution.element : null;
@@ -738,21 +845,24 @@ function updateTargetVisibility() {
 
     var resolution = getTargetResolution();
     if (!resolution) {
-      targetEl.style.display = 'none';
+      hideTargetFallbackImmediate();
       return;
     }
 
     if (resolution.element !== targetEl) {
-      targetEl.style.display = 'none';
+      // El target real es un elemento de página (logo); nuestra <img> de
+      // respaldo no participa en absoluto.
+      hideTargetFallbackImmediate();
       return;
     }
 
-    targetEl.style.display = 'block';
     if (resolution.asset && resolution.asset.archivo && targetEl.getAttribute('src') !== resolution.asset.archivo) {
       targetEl.src = resolution.asset.archivo;
     }
     targetEl.style.left = resolution.marginPx + 'px';
     targetEl.style.top = resolution.marginPx + 'px';
+    // No se toca display/opacity acá: eso lo maneja el ciclo de vida de la
+    // andanada — ver showTargetFallback() / fadeOutTargetFallback().
   }
 
 function computeScore(x, y, rect) {
@@ -1912,7 +2022,7 @@ function hideCharacter() {
     state = 'hidden';
 
     if (miraEl) { miraEl.style.display = 'none'; miraEl.style.visibility = 'hidden'; }
-    if (targetEl) targetEl.style.display = 'none';
+    hideTargetFallbackImmediate();
     setDebug('');
   }
 
@@ -2031,12 +2141,18 @@ function enterAimState() {
 
     // Cada entrada a aiming revalida la diana DOM de página. Si su tamaño o
     // posición ya no coinciden con la configuración, se corrigen con una
-    // transición progresiva; las dianas de personaje/módulo no se tocan.
+    // transición progresiva; las dianas de personaje/módulo no se tocan acá.
     preparePageTargetForAiming();
 
     // Mientras se apunta no debe correr el retorno de un minuto: el tiempo
     // de inactividad se reanuda cuando termina esta interacción.
     cancelPageTargetRestoreTimer();
+
+    // v1.6: si la diana visible es la gráfica propia del módulo (no un
+    // elemento de página), este es el momento en que arranca la andanada
+    // y debe aparecer — se queda visible mientras se sigue jugando.
+    showTargetFallback();
+    cancelTargetFallbackFadeTimer();
 
     // Desde este instante Buddy está ocupado: ningún mensaje automático de
     // Says puede aparecer mientras se apunta. Si había un mensaje de Says
@@ -2553,6 +2669,7 @@ function resolve(outcome, reasonLabel, failBubbleText) {
           startArrowCooldown();
           narrateAndanadaTotal(batchScoreSum);
           markPageTargetScoreSum();
+          scheduleTargetFallbackFadeOut();
           sendAndanadaTelemetry(andanada);
 
           // Si la andanada alcanza el umbral de 55 puntos, actualizamos

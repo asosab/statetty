@@ -1,0 +1,8 @@
+{
+  "module": "wa_listener",
+  "name": "Escucha WhatsApp",
+  "description": "Detecta y registra eventos de click en enlaces de WhatsApp.",
+  "fields": [
+    { "key": "enabled", "label": "Activo", "type": "boolean", "default": true }
+  ]
+}

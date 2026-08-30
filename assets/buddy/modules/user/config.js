@@ -39,5 +39,19 @@ window.BuddyUserConfig = Object.assign({
     { value: 'es', label: 'Español' },
     { value: 'en', label: 'English' },
     { value: 'pt', label: 'Português' }
+  ],
+  /*
+   * Elementos de menú que este módulo ofrece al módulo `menu`.
+   * Ver contrato en modules/menu/buddy_menu.js.
+   */
+  menu: [
+    {
+      id: 'myData',
+      label: 'Mis datos',
+      icon: '👤',
+      roles: 'auth,admin,superadmin',
+      enabled: true,
+      action: 'renderProfile'
+    }
   ]
 }, window.BuddyUserConfig || {});

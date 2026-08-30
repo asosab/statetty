@@ -1,0 +1,12 @@
+{
+  "module": "telemetry",
+  "name": "Telemetría",
+  "description": "Comunicación central con las APIs de Buddy (los módulos no llaman fetch directo).",
+  "fields": [
+    { "key": "enabled", "label": "Activo", "type": "boolean", "default": true },
+    { "key": "apiBaseUrls", "label": "URLs base de API", "type": "object", "default": {}, "fields": [
+      { "key": "buddy", "label": "Base Buddy", "type": "string", "default": "https://api.statetty.com" }
+    ] },
+    { "key": "apiUrl", "label": "URL telemetría", "type": "string", "default": "https://api.statetty.com/api/buddy/telemetry" }
+  ]
+}

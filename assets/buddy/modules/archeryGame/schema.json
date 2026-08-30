@@ -1,0 +1,35 @@
+{
+  "module": "archeryGame",
+  "name": "Juego de arquería",
+  "description": "Minijuego de puntería de Buddy (mecánica, handicaps y premios).",
+  "fields": [
+    { "key": "enabled", "label": "Activo", "type": "boolean", "default": true },
+    { "key": "debug", "label": "Modo debug", "type": "boolean", "default": false },
+    { "key": "fireWindowMs", "label": "Ventana de disparo (ms)", "type": "number", "default": 8000 },
+    { "key": "aimSensitivity", "label": "Sensibilidad de la mira", "type": "number", "default": 4 },
+    { "key": "arrowLimit", "label": "Límite de flechas", "type": "object", "default": {}, "fields": [
+      { "key": "countBeforeCooldown", "label": "Flechas antes del cooldown", "type": "number", "default": 6 },
+      { "key": "cooldownMs", "label": "Cooldown (ms)", "type": "number", "default": 10000 }
+    ] },
+    { "key": "heartbeat", "label": "Latido de la mira", "type": "object", "default": {}, "fields": [
+      { "key": "enabled", "label": "Activo", "type": "boolean", "default": true },
+      { "key": "restAmplitudePx", "label": "Amplitud reposo (px)", "type": "number", "default": 1.5 },
+      { "key": "maxAmplitudePx", "label": "Amplitud máxima (px)", "type": "number", "default": 14 }
+    ] },
+    { "key": "fatigue", "label": "Cansancio muscular", "type": "object", "default": {}, "fields": [
+      { "key": "enabled", "label": "Activo", "type": "boolean", "default": true },
+      { "key": "startAfterArrow", "label": "Comienza después de (flechas)", "type": "number", "default": 6 }
+    ] },
+    { "key": "andanada", "label": "Tanda y premio", "type": "object", "default": {}, "fields": [
+      { "key": "lowScorePoseThreshold", "label": "Umbral de puntaje bajo", "type": "number", "default": 36 },
+      { "key": "promo", "label": "Promoción", "type": "object", "default": {}, "fields": [
+        { "key": "enabled", "label": "Activo", "type": "boolean", "default": true },
+        { "key": "whatsappNumber", "label": "Número WhatsApp", "type": "string", "default": "" }
+      ] }
+    ] },
+    { "key": "testTrigger", "label": "Gatillo de prueba", "type": "object", "default": {}, "fields": [
+      { "key": "clicksToTrigger", "label": "Clicks", "type": "number", "default": 3 },
+      { "key": "windowMs", "label": "Ventana (ms)", "type": "number", "default": 500 }
+    ] }
+  ]
+}

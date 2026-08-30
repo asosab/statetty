@@ -1,0 +1,10 @@
+{
+  "module": "menu",
+  "name": "Menú de usuario",
+  "description": "Menú de usuario integrado en la barra del chat: trigger de autenticación (login) o avatar circular, con dropdown de elementos declarados por los módulos activos.",
+  "fields": [
+    { "key": "enabled", "label": "Activo", "type": "boolean", "default": true },
+    { "key": "anonLabel", "label": "Etiqueta del botón sin usuario", "type": "string", "default": "login" },
+    { "key": "logoutLabel", "label": "Etiqueta de cerrar sesión", "type": "string", "default": "Cerrar sesión" }
+  ]
+}

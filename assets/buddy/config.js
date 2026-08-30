@@ -16,8 +16,11 @@ window.BuddyConfig = Object.assign({
     'auth',
     'admin',
     'dashboard',
+    'config',
     'says',
     'chat',
+    'menu',
+    'archerySchool',
     'archeryGame'
   ]
 }, window.BuddyConfig || {});
