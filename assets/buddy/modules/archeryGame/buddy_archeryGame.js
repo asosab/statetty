@@ -55,6 +55,7 @@
 
       window.buddy_says(textoTop10(resultado), {
         html: true,
+        wide: true,
         emocion: 'sereno'
       });
 
@@ -83,10 +84,12 @@
   }
 
   function textoTop10(top10) {
-    var texto = 'Los mejores puntajes con flechas virtuales:<br><br>';
+    var base = 'text-align:left;font:500 10px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;';
+    var texto = '<div style="' + base + '">' +
+      '<strong style="display:block;margin-bottom:6px;font-weight:700;">Los mejores puntajes con flechas virtuales:</strong>';
 
     if (!Array.isArray(top10) || top10.length === 0) {
-      return texto + 'Todavía no hay puntajes registrados.';
+      return texto + '<span>Todavía no hay puntajes registrados.</span></div>';
     }
 
     return texto + top10.map(function (item, index) {
@@ -96,9 +99,11 @@
       var puntosTexto = Number.isFinite(puntos) ? String(puntos) : '0';
       var tiempoTexto = Number.isFinite(tiempo) ? tiempo.toFixed(3) : '—';
 
-      return '<strong>' + (index + 1) + '. ' + escapeHtml(nombre) + '</strong> — ' +
-        puntosTexto + ' puntos — ' + tiempoTexto + ' segundos';
-    }).join('<br>');
+      return '<div style="display:flex;justify-content:space-between;gap:10px;padding:3px 0;">' +
+        '<span style="flex:1 1 auto;min-width:0;word-break:break-word;"><strong>' + (index + 1) + '.</strong> ' + escapeHtml(nombre) + '</span>' +
+        '<span style="flex:0 0 auto;white-space:nowrap;">' + puntosTexto + ' pts · ' + tiempoTexto + ' s</span>' +
+        '</div>';
+    }).join('') + '</div>';
   }
 
   // ---------------------------------------------------------------------

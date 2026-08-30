@@ -675,5 +675,20 @@ window.BuddyArcheryGameConfig = window.BuddyArcheryGameConfig || {
   
       // Panel de depuración visible mientras se prueba el prototipo. Poner en
       // false (o borrar el bloque marcado como DEBUG) para producción.,
-      debug: false
+      debug: false,
+
+      /*
+       * Elementos de menú que este módulo ofrece al módulo `menu`.
+       * Ver contrato en modules/menu/buddy_menu.js.
+       */
+      menu: [
+        {
+          id: 'top10',
+          label: 'Top 10',
+          icon: '🏆',
+          roles: 'auth,admin,superadmin',
+          enabled: true,
+          action: 'top10Mostrar'
+        }
+      ]
     };

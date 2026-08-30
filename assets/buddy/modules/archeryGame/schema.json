@@ -30,6 +30,14 @@
     { "key": "testTrigger", "label": "Gatillo de prueba", "type": "object", "default": {}, "fields": [
       { "key": "clicksToTrigger", "label": "Clicks", "type": "number", "default": 3 },
       { "key": "windowMs", "label": "Ventana (ms)", "type": "number", "default": 500 }
-    ] }
+    ] },
+    { "key": "menu", "label": "Elementos de menú", "type": "array", "default": [], "items": { "type": "object", "fields": [
+      { "key": "id", "label": "ID", "type": "string", "default": "" },
+      { "key": "label", "label": "Texto", "type": "string", "default": "" },
+      { "key": "icon", "label": "Ícono", "type": "string", "default": "" },
+      { "key": "roles", "label": "Roles", "type": "string", "default": "admin" },
+      { "key": "enabled", "label": "Visible", "type": "boolean", "default": true },
+      { "key": "action", "label": "Acción", "type": "string", "default": "" }
+    ] } }
   ]
 }
