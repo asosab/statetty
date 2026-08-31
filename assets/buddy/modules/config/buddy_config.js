@@ -35,6 +35,18 @@ window.Buddy = window.Buddy || {};
     return '';
   })();
 
+  // Base absoluta de los assets de Buddy (https://statetty.com/assets/buddy/).
+  // Buddy puede cargarse y ejecutarse en dominios ajenos, así que los assets
+  // (schemas incluidos) deben resolverse contra ESTE host, NO contra el origin
+  // de la página embebedora. Se prioriza el valor que expone buddy.js y, si no
+  // está disponible, se deriva de MODULE_BASE (…/modules/config/ -> …/).
+  var ASSET_BASE = (function () {
+    var exposed = window.Buddy && window.Buddy.assetBase;
+    if (exposed) return exposed.charAt(exposed.length - 1) === '/' ? exposed : exposed + '/';
+    var idx = MODULE_BASE.indexOf('/modules/');
+    return idx !== -1 ? MODULE_BASE.slice(0, idx + 1) : 'https://statetty.com/assets/buddy/';
+  })();
+
   var state = {
     initialized: false,
     open: false,
@@ -269,16 +281,19 @@ window.Buddy = window.Buddy || {};
 
   // --- Carga de schema.json de un módulo -----------------------------------
 
-  // URL del schema.json de un módulo. Si el catálogo todavía no lo resolvió
-  // (o no lo trae), deriva la ruta por convención: cada módulo vive en
-  // `modules/<moduleId>/schema.json`. Antes se caía al schema del propio
-  // módulo `config` ("Configuración de Buddy"), lo que rompía el editor de
-  // cualquier módulo ausente temporalmente del catálogo.
+  // URL del schema.json de un módulo, SIEMPRE contra la base de assets remota
+  // (statetty.com), aunque Buddy corra en otro dominio. Si el catálogo trae un
+  // `schemaUrl` relativo (/assets/buddy/...), se antepone el host de ASSET_BASE;
+  // si el módulo no está en el catálogo, se deriva por convención
+  // `modules/<moduleId>/schema.json`. Antes se resolvía contra el origin de la
+  // página (`window.location.origin`), lo que rompía el editor en dominios
+  // ajenos, y se caía al schema del propio módulo `config` cuando el módulo
+  // ausente del catálogo.
   function resolveSchemaUrl(moduleId) {
     var meta = (state.catalog || []).filter(function (m) { return m.id === moduleId; })[0];
     if (meta && meta.schemaUrl) return schemaUrlToAbsolute(meta.schemaUrl);
-    try { return new URL('../' + moduleId + '/schema.json', MODULE_BASE).href; }
-    catch (_) { return MODULE_BASE + moduleId + '/schema.json'; }
+    try { return new URL('modules/' + moduleId + '/schema.json', ASSET_BASE).href; }
+    catch (_) { return ASSET_BASE + 'modules/' + moduleId + '/schema.json'; }
   }
 
   function loadSchema(moduleId) {
@@ -288,9 +303,17 @@ window.Buddy = window.Buddy || {};
     });
   }
 
+  // Convierte un schemaUrl (absoluto, o relativo a la raíz del host
+  // /assets/buddy/...) a una URL absoluta contra el host de los assets de
+  // Buddy, no contra el origin de la página embebedora.
   function schemaUrlToAbsolute(url) {
-    try { return new URL(url, window.location.origin).href; }
-    catch (_) { return url; }
+    if (/^https?:\/\//i.test(url)) return url;
+    try { return new URL(url, new URL(ASSET_BASE).origin).href; }
+    catch (_) {
+      var clean = String(url);
+      if (clean.charAt(0) === '/') clean = clean.slice(1);
+      return ASSET_BASE + clean;
+    }
   }
 
   // --- Carga dinámica del view (renderizador de formularios) ---------------
