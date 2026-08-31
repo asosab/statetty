@@ -112,6 +112,34 @@ window.Buddy = window.Buddy || {};
   // Módulos que se asumen activos ante un sistema nuevo sin config en BD.
   var DEFAULT_RUNTIME_MODULES = ['chat', 'auth', 'says', 'admin'];
 
+  // Orden de carga REQUERIDO de los módulos (por dependencias reales), NO
+  // alfabético ni dependiente del `order` que venga de BD (que hoy es 100 para
+  // todos, por lo que los módulos salen en orden alfabético y rompen las
+  // dependencias: p.ej. archeryGame necesita window.buddy_says, que define
+  // says, y "a..." < "s..."). getConfiguredModules() reordena de forma estable
+  // según este índice: los módulos presentes se colocan en esta secuencia; los
+  // que no estén listados van al final conservando su orden relativo.
+  //
+  // Notas de dependencia:
+  //   - telemetry debe cargar antes que wa_listener y que cualquier módulo que
+  //     publique eventos (cliente HTTP único, ver buddy.js init).
+  //   - says debe cargar antes que archeryGame/archerySchool (window.buddy_says).
+  //   - character se excluye del loop (se carga por separado), pero se documenta.
+  var MODULE_LOAD_ORDER = [
+    'telemetry',
+    'wa_listener',
+    'says',
+    'character',
+    'auth',
+    'user',
+    'admin',
+    'config',
+    'chat',
+    'menu',
+    'archerySchool',
+    'archeryGame'
+  ];
+
   // Host de la API de Buddy para el fetch público de runtime config.
   var BUDDY_API_BASE = (function () {
     if (window.BUDDY_API_BASE) return String(window.BUDDY_API_BASE).replace(/\/+$/, '');
@@ -1009,11 +1037,38 @@ window.Buddy = window.Buddy || {};
      * "archerySchool" en "archeryschool" y rompía tanto la ruta como el
      * nombre de la configuración global en servidores case-sensitive.
      */
+    // Reordena de forma estable según MODULE_LOAD_ORDER para respetar las
+    // dependencias reales entre módulos (ver el comentario de esa constante),
+    // en lugar de depender del orden alfabético que devuelve BD (order=100).
+    base = orderModulesByDependency(base);
+
     return base.filter(function (item) {
       return item &&
         item.toLowerCase() !== 'character';
     }).filter(function (item, index, array) {
       return array.indexOf(item) === index;
+    });
+  }
+
+  // Reordena el listado de módulos según MODULE_LOAD_ORDER (orden estable):
+  // cada módulo presente se coloca siguiendo la secuencia requerida; los que
+  // no estén en la secuencia se apilan al final conservando su orden relativo.
+  function orderModulesByDependency(list) {
+    var indexOfModule = {};
+    MODULE_LOAD_ORDER.forEach(function (moduleId, idx) {
+      indexOfModule[String(moduleId).toLowerCase()] = idx;
+    });
+
+    return (list || []).slice().sort(function (a, b) {
+      var ia = indexOfModule[String(a).toLowerCase()];
+      var ib = indexOfModule[String(b).toLowerCase()];
+      // Ambos en la secuencia: orden por posición requerida.
+      if (ia != null && ib != null) return ia - ib;
+      // Sólo uno en la secuencia: el de la secuencia va primero.
+      if (ia != null) return -1;
+      if (ib != null) return 1;
+      // Ninguno en la secuencia: mantener orden relativo (sort estable).
+      return 0;
     });
   }
 
