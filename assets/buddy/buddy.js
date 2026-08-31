@@ -101,6 +101,25 @@ window.Buddy = window.Buddy || {};
   var readyPromise = null;
 
   // -------------------------------------------------------------------
+  // Config de runtime desde el backend (BD).
+  // Se rellenan en initialize() vía fetchRuntimeConfig(). Si el sitio aún no
+  // tiene config/BD (sistema nuevo), estos quedan vacíos y se aplica el
+  // fallback de seguridad: asumir chat, auth, says y admin activos.
+  // -------------------------------------------------------------------
+  var runtimeConfig = null;   // BuddyConfig activa del sitio (sin secretos)
+  var runtimeModules = [];    // BuddyModules activos del sitio
+
+  // Módulos que se asumen activos ante un sistema nuevo sin config en BD.
+  var DEFAULT_RUNTIME_MODULES = ['chat', 'auth', 'says', 'admin'];
+
+  // Host de la API de Buddy para el fetch público de runtime config.
+  var BUDDY_API_BASE = (function () {
+    if (window.BUDDY_API_BASE) return String(window.BUDDY_API_BASE).replace(/\/+$/, '');
+    return 'https://api.statetty.com';
+  })();
+
+
+  // -------------------------------------------------------------------
   // Política común de ocupado (Fase 10).
   // Cada módulo puede registrar un proveedor propio; Buddy combina todos
   // los proveedores con el estado de visibilidad del documento/ventana.
@@ -806,9 +825,175 @@ window.Buddy = window.Buddy || {};
     return Promise.resolve();
   }
 
+  // -------------------------------------------------------------------
+  // Carga de la config de runtime desde el backend (BD).
+  // Nunca rompe el arranque: ante cualquier fallo resuelve a vacío para que
+  // se aplique el fallback de seguridad (defaults) en getConfiguredModules.
+  // -------------------------------------------------------------------
+  function runtimeConfigUrl() {
+    var url = '';
+    try {
+      url = (window.location && window.location.origin) ? window.location.origin : '';
+    } catch (err) { /* sin origin */ }
+    var siteId = (window.BuddyConfig && window.BuddyConfig.app && window.BuddyConfig.app.siteId) ?
+      String(window.BuddyConfig.app.siteId).trim().toLowerCase() : '';
+    var params = new URLSearchParams();
+    if (url) params.set('url', url);
+    if (siteId) params.set('siteId', siteId);
+    var qs = params.toString();
+    return BUDDY_API_BASE + '/api/buddy/runtime/config' + (qs ? '?' + qs : '');
+  }
+
+  function fetchRuntimeConfig() {
+    runtimeConfig = null;
+    runtimeModules = [];
+
+    var target;
+    try {
+      target = runtimeConfigUrl();
+    } catch (err) {
+      debugLog('runtime config: no se pudo armar la URL', err);
+      return Promise.resolve();
+    }
+
+    debugLog('runtime config: consultando', sanitizeRuntimeUrl(target));
+    return fetch(target, { method: 'GET', cache: 'no-store', credentials: 'omit' })
+      .then(function (response) {
+        if (!response.ok) {
+          debugLog('runtime config: HTTP ' + response.status);
+          return null;
+        }
+        return response.json();
+      })
+      .then(function (data) {
+        if (data && data.ok === true) {
+          runtimeConfig = data.config || null;
+          runtimeModules = Array.isArray(data.modules) ? data.modules : [];
+          debugLog('runtime config: recibida', { config: !!runtimeConfig, modules: runtimeModules.length });
+        } else {
+          debugLog('runtime config: respuesta sin ok', data || null);
+        }
+      })
+      .catch(function (error) {
+        // Fallback silencioso: el runtime debe arrancar aunque el backend falle.
+        debugLog('runtime config: error (se usan defaults)', error);
+      });
+  }
+
+  function sanitizeRuntimeUrl(url) {
+    try {
+      var parsed = new URL(url);
+      ['auth', 'token'].forEach(function (k) { if (parsed.searchParams.has(k)) parsed.searchParams.set(k, '***'); });
+      return parsed.href;
+    } catch (err) {
+      return String(url || '');
+    }
+  }
+
+  // Merge profundo: `source` (BD) gana sobre `target` (estático); los valores
+  // no presentes en `source` se heredan de `target`. Los arrays de `source`
+  // reemplazan por completo al de `target` (evita índices huérfanos), salvo
+  // mergeModuleArray() cuando el array es de objetos con `id` (p.ej. sources).
+  function deepMerge(target, source) {
+    if (source === undefined || source === null) return target === undefined ? target : target;
+    if (Array.isArray(source)) {
+      // Reemplazo por completo a menos que ambos sean arrays de ítems con `id`.
+      if (Array.isArray(target) && source.length && target.length &&
+          typeof source[0] === 'object' && typeof target[0] === 'object' &&
+          source[0].id !== undefined && target[0].id !== undefined) {
+        return mergeByIdArray(target, source);
+      }
+      return source;
+    }
+    if (typeof source === 'object' && typeof target === 'object' && target !== null) {
+      var out = Object.assign({}, target);
+      Object.keys(source).forEach(function (key) {
+        out[key] = deepMerge(target[key], source[key]);
+      });
+      return out;
+    }
+    return source;
+  }
+
+  // Fusiona arrays de objetos por `id`: los ítems de `source` (BD) casan con
+  // su correspondiente en `target` (estático) pisando sus campos; los ítems de
+  // `target` no presentes en `source` se conservan. Orden: los de `source`
+  // primero, luego los de `target` no tocados.
+  function mergeByIdArray(target, source) {
+    var sourceIds = {};
+    var merged = [];
+    source.forEach(function (s) {
+      if (!s || s.id === undefined) return;
+      sourceIds[String(s.id)] = true;
+      var t = null;
+      for (var i = 0; i < target.length; i++) {
+        if (target[i] && target[i].id !== undefined && String(target[i].id) === String(s.id)) {
+          t = target[i];
+          break;
+        }
+      }
+      merged.push(t ? deepMerge(t, s) : s);
+    });
+    (target || []).forEach(function (t) {
+      if (t && t.id !== undefined && !sourceIds[String(t.id)]) merged.push(t);
+    });
+    return merged;
+  }
+
+  // Aplica la config de BD de un módulo (si existe) sobre la estática ya
+  // cargada en window['Buddy<X>Config'], con merge profundo BD-sobre-estática.
+  function applyRuntimeModuleConfig(moduleId, configGlobal) {
+    if (!configGlobal) return configGlobal;
+    if (!Array.isArray(runtimeModules)) return configGlobal;
+
+    var found = null;
+    for (var i = 0; i < runtimeModules.length; i++) {
+      var m = runtimeModules[i];
+      if (m && String(m.module || '').trim() === String(moduleId || '').trim()) {
+        found = m;
+        break;
+      }
+    }
+    if (!found) return configGlobal;
+
+    var merged = deepMerge(configGlobal, found.config || {});
+
+    // 'enabled' de BD gobierna, aunque no venga dentro de la config del módulo.
+    if (found.enabled !== undefined) merged.enabled = found.enabled !== false;
+    if (found.condition !== undefined && typeof found.condition === 'function') {
+      merged.condition = found.condition;
+    }
+
+    var name = getModuleConfigName(moduleId);
+    window[name] = merged;
+    return window[name];
+  }
+
   function getConfiguredModules() {
-    var modules = window.BuddyConfig && Array.isArray(window.BuddyConfig.modules) ?
+    var staticModules = window.BuddyConfig && Array.isArray(window.BuddyConfig.modules) ?
       window.BuddyConfig.modules : [];
+
+    /*
+     * Base de módulos a cargar:
+     *  - Si hay config de runtime desde BD (runtimeModules no vacío), esos
+     *    módulos (en su orden) son la fuente de verdad.
+     *  - Si el sitio no tiene config en BD (sistema nuevo / endpoint falló),
+     *    fallback de seguridad: se asumen chat, auth, says y admin activos,
+     *    más los módulos ya listados en BuddyConfig.modules que no estén en
+     *    esa lista de defaults.
+     */
+    var base;
+    if (Array.isArray(runtimeModules) && runtimeModules.length) {
+      base = runtimeModules.slice().sort(function (a, b) {
+        return (a.order != null ? a.order : 100) - (b.order != null ? b.order : 100);
+      }).map(function (m) {
+        return String(m.module || '').trim();
+      });
+    } else {
+      base = DEFAULT_RUNTIME_MODULES.slice().concat(staticModules.map(function (item) {
+        return String(item || '').trim();
+      }));
+    }
 
     /*
      * El identificador del módulo es el nombre de contrato definido por el
@@ -824,12 +1009,11 @@ window.Buddy = window.Buddy || {};
      * "archerySchool" en "archeryschool" y rompía tanto la ruta como el
      * nombre de la configuración global en servidores case-sensitive.
      */
-    return modules.map(function (item) {
-      return String(item || '').trim();
-    }).filter(function (item, index, array) {
+    return base.filter(function (item) {
       return item &&
-        item.toLowerCase() !== 'character' &&
-        array.indexOf(item) === index;
+        item.toLowerCase() !== 'character';
+    }).filter(function (item, index, array) {
+      return array.indexOf(item) === index;
     });
   }
 
@@ -870,6 +1054,9 @@ window.Buddy = window.Buddy || {};
     debugLog('módulo ' + moduleId + ': cargando config');
     return loadScript(scriptUrlForModuleConfig(moduleId)).then(function () {
       var config = getModuleConfig(moduleId);
+      // Si hay config de runtime (BD), fusionarla sobre la estática para que la
+      // implementación del módulo (que se carga después) lea la versión BD.
+      config = applyRuntimeModuleConfig(moduleId, config);
       var enabled = moduleIsEnabled(moduleId);
       debugLog('módulo ' + moduleId + ': configuración evaluada', {
         enabled: enabled,
@@ -985,6 +1172,11 @@ window.Buddy = window.Buddy || {};
         debugLog('config.js cargado', window.BuddyConfig || {});
       })
       .then(function () {
+        // Config de runtime desde BD. Si el sitio no tiene config aún, queda
+        // vacío y getConfiguredModules aplica el fallback de seguridad.
+        return fetchRuntimeConfig();
+      })
+      .then(function () {
         return loadCharacterConfig();
       })
       .then(function (characterId) {
@@ -1005,6 +1197,11 @@ window.Buddy = window.Buddy || {};
         window.Buddy.modules = {
           configured: modules.slice(),
           active: [],
+          runtime: {
+            config: runtimeConfig,
+            modules: runtimeModules.slice(),
+            fromBackend: Array.isArray(runtimeModules) && runtimeModules.length > 0
+          },
           isConfigured: function (moduleId) {
             return modules.indexOf(String(moduleId || '').trim()) !== -1;
           },
