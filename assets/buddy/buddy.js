@@ -110,7 +110,8 @@ window.Buddy = window.Buddy || {};
   var runtimeModules = [];    // BuddyModules activos del sitio
 
   // Módulos que se asumen activos ante un sistema nuevo sin config en BD.
-  var DEFAULT_RUNTIME_MODULES = ['chat', 'auth', 'says', 'admin'];
+  // `menu` (menú de usuario en el chat) se incluye por defecto para sitios nuevos.
+  var DEFAULT_RUNTIME_MODULES = ['chat', 'auth', 'says', 'admin', 'menu'];
 
   // Orden de carga REQUERIDO de los módulos (por dependencias reales), NO
   // alfabético ni dependiente del `order` que venga de BD (que hoy es 100 para
