@@ -9,7 +9,7 @@
  */
 window.BuddyInformSources = window.BuddyInformSources || {};
 
-window.BuddyInformSources.consejos = [
+window.BuddyInformSources.arbat-consejos = [
   'Concéntrate en una ejecución constante, no en un resultado perfecto.',
   'Una buena postura es el punto de partida de un buen disparo.',
   'Mantén los hombros relajados y evita acumular tensión innecesaria.',

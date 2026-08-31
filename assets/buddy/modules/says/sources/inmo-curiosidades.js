@@ -9,7 +9,7 @@
  */
 window.BuddyInformSources = window.BuddyInformSources || {};
 
-window.BuddyInformSources.curiosidades = [
+window.BuddyInformSources.inmo-curiosidades = [
   "¿Sabías que agentes inmobiliarios dominicanos organizaron la bachata más grande del mundo con 489 parejas, estableciendo un Récord Guinness?",
   "¿Sabías que Ben Caballero, un agente inmobiliario de Texas, rompió su propio Récord Guinness al vender 5.801 casas en un año (2018)?",
   "¿Sabías que RE/MAX cuenta con más de 120.000 agentes inmobiliarios en más de 100 países?",

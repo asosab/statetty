@@ -25,6 +25,9 @@ window.BuddySaysConfig.display = {
 };
 
 window.BuddySaysConfig.sources = [
+  // Se listan todas las fuentes disponibles en modules/says/sources/*.js.
+  // Cada `id` debe coincidir con el nombre de archivo (sin .js). `enabled`
+  // controla si la fuente se carga. Desactiva las que no quieras usar.
   {
     id: 'inmo-iniciales',
     enabled: true,
@@ -32,10 +35,13 @@ window.BuddySaysConfig.sources = [
     primero: true, // estos mensajes se entregan antes que cualquier otra fuente
     recurrence: 2, // cuantas veces se muestra al día
     frequency: { min: 0.3, max: 0.5 } //cada cuantos minutos se entregan mensajes de esta lista
-  },  
-  //{id: 'agenda',        enabled: true, selection: 'sequential',   recurrence: 1, frequency: { min: 1, max: 2 }},
-  {id: 'inmo-consejos',      enabled: true, selection: 'shuffle',      recurrence: 2, frequency: { min: 0.3, max: 0.5 }},
-  {id: 'inmo-curiosidades',  enabled: true, selection: 'shuffle',      recurrence: 1, frequency: { min: 0.3, max: 0.5 }}
+  },
+  { id: 'inmo-consejos',      enabled: true,  selection: 'shuffle',      recurrence: 2, frequency: { min: 0.3, max: 0.5 } },
+  { id: 'inmo-curiosidades',  enabled: true,  selection: 'shuffle',      recurrence: 1, frequency: { min: 0.3, max: 0.5 } },
+  { id: 'agenda',             enabled: false, selection: 'sequential',   recurrence: 1, frequency: { min: 1, max: 2 } },
+  { id: 'arbat-iniciales',    enabled: false, selection: 'sequential',   recurrence: 1, frequency: { min: 1, max: 3 } },
+  { id: 'arbat-consejos',     enabled: false, selection: 'shuffle',      recurrence: 1, frequency: { min: 1, max: 3 } },
+  { id: 'arbat-curiosidades', enabled: false, selection: 'shuffle',      recurrence: 1, frequency: { min: 1, max: 3 } }
 ];
 
 window.BuddyAgendaConfig = Object.assign({

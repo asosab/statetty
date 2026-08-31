@@ -316,6 +316,39 @@ window.Buddy = window.Buddy || {};
     }
   }
 
+  // Config estática de un módulo (la que vive en su config.js y se utiliza
+  // como fuente de defaults). El módulo `config` (toolbox) rompe la convención
+  // de nombre público (window.BuddyConfigToolboxConfig en lugar de
+  // window.BuddyConfigConfig); se resuelve explícitamente, igual que
+  // getConfigForModule en buddy_menu.js.
+  function staticConfigForModule(moduleId) {
+    if (String(moduleId).toLowerCase() === 'config') {
+      return window.BuddyConfigToolboxConfig || {};
+    }
+    var name = 'Buddy' + moduleId.charAt(0).toUpperCase() + moduleId.slice(1)
+      .replace(/_([a-z])/g, function (_, c) { return c.toUpperCase(); }) + 'Config';
+    return window[name] || {};
+  }
+
+  // Siembra en `values` los defaults estáticos del módulo para los campos de
+  // tipo array del schema cuando el valor guardado no los trae. Así el editor
+  // muestra pre-poblados (p.ej. `sources` de says o `menu` de cada módulo) en
+  // vez de listas vacías, y el usuario los edita desde ahí.
+  function seedArrayDefaults(moduleId, schema, values) {
+    var staticConfig = staticConfigForModule(moduleId);
+    var out = values || {};
+    (schema.fields || []).forEach(function (f) {
+      if (f.type !== 'array') return;
+      var current = out[f.key];
+      if (Array.isArray(current) && current.length > 0) return;
+      var fallback = staticConfig[f.key];
+      if (Array.isArray(fallback) && fallback.length > 0) {
+        out[f.key] = fallback;
+      }
+    });
+    return out;
+  }
+
   // --- Carga dinámica del view (renderizador de formularios) ---------------
 
   var viewReady = null;
@@ -638,6 +671,9 @@ window.Buddy = window.Buddy || {};
         // actual; lo obtenemos desde loadModules (items).
         var current = (state.lastModules || []).filter(function (m) { return m.module === moduleId; })[0];
         var values = (current && current.config) ? current.config : (existingValue || {});
+        // Si hay campos tipo array sin valor guardado (p.ej. `sources`/`menu`),
+        // sembrar los defaults estáticos del config.js para pre-poblar el editor.
+        values = seedArrayDefaults(moduleId, schema, values);
 
         state.editingModule = { module: moduleId, schema: schema, values: values };
 

@@ -9,7 +9,7 @@
  */
 window.BuddyInformSources = window.BuddyInformSources || {};
 
-window.BuddyInformSources.curiosidades = [
+window.BuddyInformSources.arbat-curiosidades = [
   "¿Sabías que el arquero surcoreano Im Dong-hyun estableció en Londres 2012 un récord mundial de 699 puntos sobre 720 en la ronda clasificatoria de 72 flechas a 70 metros, pese a tener una visión muy deficiente?",
   "¿Sabías que a Im Dong-hyun se le describió internacionalmente como «legalmente ciego», pero él mismo aclaró que esa descripción era un malentendido y que podía ver el blanco, aunque de forma muy borrosa?",
   "¿Sabías que Im Dong-hyun dijo que desde la línea de tiro el blanco de 70 metros se veía como una especie de mancha borrosa de colores?",

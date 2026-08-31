@@ -9,7 +9,7 @@
  */
 window.BuddyInformSources = window.BuddyInformSources || {};
 
-window.BuddyInformSources.consejos = [
+window.BuddyInformSources.inmo-consejos = [
   "Publica contenido de valor en redes sociales (videos de la zona, consejos) en lugar de solo promocionar propiedades.",
   "Invierte en publicidad segmentada en redes (Meta Ads/Google Ads) para generar leads rápidamente ajustando presupuesto según resultados.",
   "Optimiza tu SEO local con contenido que responda preguntas frecuentes (ej. 'mejor barrio para vivir en...') para aparecer en búsquedas de Google.",

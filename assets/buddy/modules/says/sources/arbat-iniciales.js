@@ -8,7 +8,7 @@
  */
 window.BuddyInformSources = window.BuddyInformSources || {};
 
-window.BuddyInformSources.iniciales = [
+window.BuddyInformSources.arbat-iniciales = [
   {'id':'mWelcome','emocion':'sonriendo','texto':'¡Bienvenido a arbat! Yo soy Raul, tu entrenador personal en tiro con arco' },
   {'id':'infoGame','emocion':'sonriendo','texto':'Si deseas jugar, has click sobre mi y sin soltar desliza el puntero ¡Usa el logo como diana!' },
 ];

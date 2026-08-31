@@ -17,6 +17,17 @@
       { "key": "apiKey", "label": "API Key Google", "type": "secret", "default": "" },
       { "key": "horizonteDias", "label": "Horizonte (días)", "type": "number", "default": 31 },
       { "key": "capacidadPorTurno", "label": "Capacidad por turno", "type": "number", "default": 8 }
-    ] }
+    ] },
+    { "key": "sources", "label": "Fuentes de mensajes", "type": "array", "default": [], "items": { "type": "object", "fields": [
+      { "key": "id", "label": "ID (archivo .js)", "type": "string", "default": "" },
+      { "key": "enabled", "label": "Habilitada", "type": "boolean", "default": true },
+      { "key": "selection", "label": "Selección (sequential|shuffle)", "type": "string", "default": "sequential" },
+      { "key": "primero", "label": "Entregar primero", "type": "boolean", "default": false },
+      { "key": "recurrence", "label": "Repeticiones por día", "type": "number", "default": 1 },
+      { "key": "frequency", "label": "Frecuencia (minutos)", "type": "object", "default": {}, "fields": [
+        { "key": "min", "label": "Mínimo", "type": "number", "default": 0 },
+        { "key": "max", "label": "Máximo", "type": "number", "default": 0 }
+      ] }
+    ] } }
   ]
 }
