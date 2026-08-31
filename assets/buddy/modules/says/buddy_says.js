@@ -71,8 +71,8 @@ window.Buddy = window.Buddy || {};
     // pueden ajustar desde BuddySaysConfig.display.
     bubbleDuration: {
       minMs: 2800,
-      maxMs: 9000,
-      charsPerSecond: 14,
+      maxMs: 13000,
+      charsPerSecond: 8,
       extraMs: 500
     },
 
@@ -121,7 +121,7 @@ window.Buddy = window.Buddy || {};
       'background:transparent;pointer-events:none;touch-action:auto;}' +
       '.buddy-says-interaction-layer.is-blocking .buddy-says-interaction-backdrop{' +
       'pointer-events:auto;touch-action:none;}' +
-      '.buddy-says-bubble{position:fixed;max-width:230px;background:#ffffff;' +
+      '.buddy-says-bubble{position:fixed;max-width:260px;background:#ffffff;' +
       'color:#1a1a1a;font:600 14px/1.4 -apple-system,BlinkMacSystemFont,' +
       '"Segoe UI",Roboto,sans-serif;padding:10px 14px;border-radius:16px;' +
       'box-shadow:0 6px 18px rgba(0,0,0,.2);z-index:2147483001;' +
