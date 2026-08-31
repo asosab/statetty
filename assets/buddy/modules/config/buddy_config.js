@@ -269,12 +269,20 @@ window.Buddy = window.Buddy || {};
 
   // --- Carga de schema.json de un módulo -----------------------------------
 
-  function loadSchema(moduleId) {
+  // URL del schema.json de un módulo. Si el catálogo todavía no lo resolvió
+  // (o no lo trae), deriva la ruta por convención: cada módulo vive en
+  // `modules/<moduleId>/schema.json`. Antes se caía al schema del propio
+  // módulo `config` ("Configuración de Buddy"), lo que rompía el editor de
+  // cualquier módulo ausente temporalmente del catálogo.
+  function resolveSchemaUrl(moduleId) {
     var meta = (state.catalog || []).filter(function (m) { return m.id === moduleId; })[0];
-    var url = meta && meta.schemaUrl
-      ? schemaUrlToAbsolute(meta.schemaUrl)
-      : MODULE_BASE + '/schema.json';
-    return fetch(url, { cache: 'no-store' }).then(function (r) {
+    if (meta && meta.schemaUrl) return schemaUrlToAbsolute(meta.schemaUrl);
+    try { return new URL('../' + moduleId + '/schema.json', MODULE_BASE).href; }
+    catch (_) { return MODULE_BASE + moduleId + '/schema.json'; }
+  }
+
+  function loadSchema(moduleId) {
+    return fetch(resolveSchemaUrl(moduleId), { cache: 'no-store' }).then(function (r) {
       if (!r.ok) throw new Error('No se pudo cargar el schema de ' + moduleId);
       return r.json();
     });
@@ -589,7 +597,16 @@ window.Buddy = window.Buddy || {};
   function openModuleEditor(moduleId, existingValue) {
     if (!state.currentConfig || !state.currentConfig._id) return;
 
-    loadView()
+    // Si el catálogo todavía no conoce el módulo (estado stale o carga a
+    // medias), refrescarlo una vez para que names/select y schema estén al día.
+    var catalogPromise = (state.catalog || []).some(function (m) { return m.id === moduleId; })
+      ? Promise.resolve()
+      : fetchCatalog().then(function (r) {
+          state.catalog = (r && Array.isArray(r.modules)) ? r.modules : [];
+        }).catch(function () { /* se resuelve igual por convención */ });
+
+    catalogPromise
+      .then(function () { return loadView(); })
       .then(function () {
         return loadSchema(moduleId);
       })

@@ -26,7 +26,7 @@ window.BuddySaysConfig.display = {
 
 window.BuddySaysConfig.sources = [
   {
-    id: 'iniciales',
+    id: 'inmo-iniciales',
     enabled: true,
     selection: 'sequential',
     primero: true, // estos mensajes se entregan antes que cualquier otra fuente
@@ -34,8 +34,8 @@ window.BuddySaysConfig.sources = [
     frequency: { min: 0.3, max: 0.5 } //cada cuantos minutos se entregan mensajes de esta lista
   },  
   //{id: 'agenda',        enabled: true, selection: 'sequential',   recurrence: 1, frequency: { min: 1, max: 2 }},
-  {id: 'consejos',      enabled: true, selection: 'shuffle',      recurrence: 2, frequency: { min: 0.3, max: 0.5 }},
-  {id: 'curiosidades',  enabled: true, selection: 'shuffle',      recurrence: 1, frequency: { min: 0.3, max: 0.5 }}
+  {id: 'inmo-consejos',      enabled: true, selection: 'shuffle',      recurrence: 2, frequency: { min: 0.3, max: 0.5 }},
+  {id: 'inmo-curiosidades',  enabled: true, selection: 'shuffle',      recurrence: 1, frequency: { min: 0.3, max: 0.5 }}
 ];
 
 window.BuddyAgendaConfig = Object.assign({
