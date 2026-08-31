@@ -3,7 +3,7 @@
   "name": "Escuela de arquería",
   "description": "Gestión de estudiantes, atributos, medidas y equipamiento de la escuela.",
   "fields": [
-    { "key": "enabled", "label": "Activo", "type": "boolean", "default": true },
+    { "key": "enabled", "label": "Activo", "type": "boolean", "default": false },
     { "key": "siteId", "label": "SiteId", "type": "string", "default": "" },
     { "key": "schoolName", "label": "Nombre de la escuela", "type": "string", "default": "" },
     { "key": "schoolOwnerCompany", "label": "Empresa propietaria", "type": "string", "default": "arbatarchery.com" },
@@ -14,7 +14,7 @@
       { "key": "label", "label": "Texto", "type": "string", "default": "" },
       { "key": "icon", "label": "Ícono", "type": "string", "default": "" },
       { "key": "roles", "label": "Roles", "type": "string", "default": "auth" },
-      { "key": "enabled", "label": "Visible", "type": "boolean", "default": true },
+      { "key": "enabled", "label": "Visible", "type": "boolean", "default": false },
       { "key": "action", "label": "Acción", "type": "string", "default": "" }
     ] } }
   ]
