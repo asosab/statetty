@@ -8,7 +8,7 @@
  */
 window.BuddyInformSources = window.BuddyInformSources || {};
 
-window.BuddyInformSources.inmo-iniciales = [
-  {'id':'mWelcome','emocion':'sonriendo','texto':'¡Bienvenido a Statetty! Yo soy Alejandro y te acompañaré en este recorrido' },
-  //{'id':'infoGame','emocion':'sonriendo','texto':'Si deseas jugar, has click sobre mi y sin soltar desliza el puntero hacia abajo' },
+window.BuddyInformSources.buddy_iniciales = [
+  {'id':'mWelcome','emocion':'sonriendo','texto':'¡Esto es Buddy! Yo soy Alejandro y voy a contarte algunas cosas fantásticas que puedo hacer' },
+  {'id':'infoGame','emocion':'sonriendo','texto':'Si deseas verme lanzando flechas mientras tanto, puedes hacer click sobre mi y sin soltar desliza el puntero' },
 ];

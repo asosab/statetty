@@ -8,7 +8,7 @@
  */
 window.BuddyInformSources = window.BuddyInformSources || {};
 
-window.BuddyInformSources.buddy-iniciales = [
-  {'id':'mWelcome','emocion':'sonriendo','texto':'¡Esto es Buddy! Yo soy Alejandro y voy a contarte algunas cosas fantásticas que puedo hacer' },
-  {'id':'infoGame','emocion':'sonriendo','texto':'Si deseas verme lanzando flechas mientras tanto, puedes hacer click sobre mi y sin soltar desliza el puntero' },
+window.BuddyInformSources.arbat_iniciales = [
+  {'id':'mWelcome','emocion':'sonriendo','texto':'¡Bienvenido a arbat! Yo soy Raul, tu entrenador personal en tiro con arco' },
+  {'id':'infoGame','emocion':'sonriendo','texto':'Si deseas jugar, has click sobre mi y sin soltar desliza el puntero ¡Usa el logo como diana!' },
 ];
