@@ -22,6 +22,16 @@ window.Buddy = window.Buddy || {};
   // -------------------------------------------------------------------
   var entryScript = getEntryScript();
 
+  // Buddy ya no se instala físicamente en el servidor de las páginas que
+  // lo cargan: se sirve exclusivamente de forma remota desde este host.
+  // Se usa únicamente como último recurso si no fue posible autodetectar
+  // el <script> de entrada (por ejemplo, un gestor de etiquetas o un
+  // loader que inyecta el script sin dejar un <script src="...buddy.js">
+  // localizable en el DOM). El método normal y preferido sigue siendo la
+  // autodetección vía entryScript.src, o la asignación explícita de
+  // window.BUDDY_ASSET_BASE antes de cargar buddy.js.
+  var BUDDY_REMOTE_BASE_FALLBACK = 'https://statetty.com/assets/buddy/';
+
   // Cache-busting: la versión se toma del propio buddy.js que invoca la página.
   // Ejemplo: buddy.js?v=3 -> todos los .js cargados dinámicamente usan ?v=3.
   // Así no es necesario modificar este archivo en cada versión de prueba.
@@ -63,7 +73,12 @@ window.Buddy = window.Buddy || {};
       return new URL('./', entryScript.src).href;
     }
 
-    throw new Error('[BUDDY] No se pudo determinar la ubicación de buddy.js');
+    // Último recurso: no se pudo detectar el <script> de entrada. En vez
+    // de dejar a Buddy sin poder inicializarse en las páginas remotas
+    // (que ya no tienen una copia local de buddy.js), se usa la ubicación
+    // remota fija conocida.
+    console.warn('[BUDDY] No se pudo autodetectar la ubicación de buddy.js; usando fallback remoto fijo: ' + BUDDY_REMOTE_BASE_FALLBACK);
+    return BUDDY_REMOTE_BASE_FALLBACK;
   })();
 
   // Reglas de tamaño/posición del personaje en pantalla. 

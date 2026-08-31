@@ -1,7 +1,7 @@
 /**
  * Buddy Chat — configuración del módulo.
  *
- * El módulo se carga automáticamente cuando enabled=true. No depende de
+ * El módulo se carga automáticamente cuando enabled=true.
  */
 window.BuddyChatConfig = window.BuddyChatConfig || {};
 window.BuddyChatConfig = Object.assign({

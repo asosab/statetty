@@ -1,7 +1,7 @@
 /**
  * ARBAT — Buddy/modules/says/sources/agenda.js
  * ---------------------------------------------------------------------------
- * Lee la agenda pública de Google Calendar de arbat (arbat.archery@gmail.com)
+ * Lee la agenda pública de Google Calendar del correo google configurado
  * y genera, en memoria, un arreglo de mensajes (strings) para que el futuro
  * sistema de mensajería del sitio se los muestre a los visitantes.
  *
@@ -40,7 +40,7 @@
 
     // Calendario público configurado para Buddy: tanto las citas reservadas (turnos ocupados) como los
     // eventos especiales (torneos, clínicas) viven en un único calendario.
-    calendarId: "arbat.archery@gmail.com",
+    calendarId: "",
 
     // La API key NO vive en este archivo (no es secreta, pero conviene
     // poder rotarla sin tocar código versionado). Se define ANTES de cargar
