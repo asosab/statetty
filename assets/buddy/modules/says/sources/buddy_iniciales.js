@@ -10,5 +10,5 @@ window.BuddyInformSources = window.BuddyInformSources || {};
 
 window.BuddyInformSources.buddy_iniciales = [
   {'id':'mWelcome','emocion':'sonriendo','texto':'¡Esto es Buddy! Yo soy Alejandro y voy a contarte algunas cosas fantásticas que puedo hacer' },
-  {'id':'infoGame','emocion':'sonriendo','texto':'Si deseas verme lanzando flechas mientras tanto, puedes hacer click sobre mi y sin soltar desliza el puntero' },
+  {'id':'infoGame','emocion':'sonriendo','texto':'Si deseas verme lanzando flechas mientras tanto, puedes hacer click sobre mi y sin soltar desliza el puntero' }
 ];
