@@ -6,6 +6,13 @@
  * Auth se integra como una interacción contextual: cuando existe una
  * interacción pendiente, el texto del input se entrega primero al módulo que
  * la registró y no al sistema de comandos normales.
+ *
+ * Cuando el texto no coincide con ningún comando fijo ("hola", "reservas"),
+ * se delega a window.Buddy.says.procesarMensajeUsuario(texto), que lo ofrece
+ * en orden a los módulos registrados como interceptores (resolver de
+ * fórmulas, IA especializada, etc. — ver modules/says/buddy_says.js). Si
+ * ninguno lo asume, says ya muestra el mensaje predefinido de "sin
+ * respuesta"; chat no necesita saber si hubo o no un interceptor.
  */
 window.Buddy = window.Buddy || {};
 
@@ -100,7 +107,7 @@ window.Buddy = window.Buddy || {};
     input.id = 'buddy-chat-input';
     input.autocomplete = 'off';
     input.spellcheck = true;
-    input.placeholder = CONFIG.placeholder || 'Escríbele al personaje…';
+    input.placeholder = CONFIG.placeholder || 'Escribe un comando…';
     input.setAttribute('aria-label', 'Comando de Buddy');
 
     var enterLabel = document.createElement('label');
@@ -207,7 +214,7 @@ window.Buddy = window.Buddy || {};
   }
 
   function restorePlaceholder() {
-    setPlaceholder(CONFIG.placeholder || 'Escríbele al personaje…');
+    setPlaceholder(CONFIG.placeholder || 'Escribe un comando…');
   }
 
   function clearInput() {
@@ -300,6 +307,16 @@ window.Buddy = window.Buddy || {};
     if (comando === 'reservas') {
       return consultarReservasParaChat().then(function () { return true; });
     }
+
+    // Ningún comando fijo de chat coincide. Antes de darlo por perdido, se
+    // ofrece el texto a los módulos registrados en Buddy Says como
+    // interceptores (resolver de fórmulas, IA especializada, etc.). Si
+    // ninguno lo asume, procesarMensajeUsuario ya se encarga de mostrar el
+    // mensaje predefinido de "sin respuesta" — chat no necesita saberlo.
+    if (window.Buddy.says && typeof window.Buddy.says.procesarMensajeUsuario === 'function') {
+      return window.Buddy.says.procesarMensajeUsuario(limpio);
+    }
+
     return Promise.resolve(false);
   }
 

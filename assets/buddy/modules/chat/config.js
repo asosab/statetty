@@ -10,7 +10,7 @@ window.BuddyChatConfig = Object.assign({
   keyboardKey: 't',
   urlParameter: 'chat',
   sendWithEnter: true,
-  placeholder: 'Escribe un comando…',
+  placeholder: 'Escríbele al personaje…',
   buttonText: 'Enviar',
   checkboxText: 'Enviar con Enter'
 }, window.BuddyChatConfig || {});
