@@ -9,6 +9,15 @@
  * medios registrados en modules/says/sources/, selección aleatoria/secuencial,
  * persistencia diaria y variante cortés que nunca interrumpe una actividad ocupada).
  *
+ * Fase 9: registro de interceptores de mensajes de chat. Cualquier módulo
+ * (resolver de fórmulas, IA especializada, etc.) puede registrarse con
+ * window.Buddy.says.registrarInterceptor(id, handler) para intentar
+ * responder lo que la persona escribe. Quien recibe el texto del chat debe
+ * llamar a window.Buddy.says.procesarMensajeUsuario(texto) como último
+ * recurso; si ningún interceptor asume la respuesta, se muestra un mensaje
+ * predefinido (dialogues.sinRespuesta en modules/says/es/buddy_says_zen.js),
+ * elegido al azar entre varias variantes sin repetir la anterior.
+ *
  * Fuente del mecanismo: raulito.js (ensureBubbleStyles, positionBubble,
  * showSpeechBubble, hideSpeechBubble, CONFIG.bubbleGapPx/bubbleLeftShiftPx/
  * bubbleTailOffsetPx/bubbleDisplayMs). Se traslada conservando el
@@ -226,6 +235,48 @@ window.Buddy = window.Buddy || {};
   // -------------------------------------------------------------------
   function getCharacterEl() {
     return document.getElementById('buddy-character');
+  }
+
+  // -------------------------------------------------------------------
+  // Diálogos localizados propios de /says (p. ej. "sinRespuesta").
+  // El contenido vive en modules/says/<locale>/buddy_says_<estilo>.js,
+  // bajo window.BuddyTexts.says.<locale>.<estilo>.dialogues.<clave>.
+  // Mismo patrón de selección aleatoria sin repetir que archeryGame.
+  // -------------------------------------------------------------------
+  var dialogueLastIndex = {};
+
+  function getLocaleStyle() {
+    var charData = window.Buddy && typeof window.Buddy.getCharacter === 'function'
+      ? window.Buddy.getCharacter()
+      : null;
+    var perfil = charData && charData.perfil;
+    return {
+      locale: (perfil && perfil.idioma) || 'es',
+      estilo: (perfil && perfil.estilo) || 'zen'
+    };
+  }
+
+  function getDialogue(key) {
+    var ls = getLocaleStyle();
+    var data = window.BuddyTexts &&
+      window.BuddyTexts.says &&
+      window.BuddyTexts.says[ls.locale] &&
+      window.BuddyTexts.says[ls.locale][ls.estilo];
+
+    if (!data || !data.dialogues || !data.dialogues[key]) return null;
+
+    var variants = data.dialogues[key];
+    if (!Array.isArray(variants) || !variants.length) return null;
+    if (variants.length === 1) return variants[0];
+
+    var lastIndex = dialogueLastIndex[key];
+    var index;
+    do {
+      index = Math.floor(Math.random() * variants.length);
+    } while (index === lastIndex);
+
+    dialogueLastIndex[key] = index;
+    return variants[index];
   }
 
   // Posiciona el globo apuntando a datosExpresion.anclas.cabeza_superior
@@ -1422,6 +1473,97 @@ window.Buddy = window.Buddy || {};
     });
   }
 
+  // -------------------------------------------------------------------
+  // Interceptores de mensajes del chat.
+  // -------------------------------------------------------------------
+  // Cualquier módulo (resolver fórmulas, IA especializada, etc.) puede
+  // registrarse para intentar responder lo que la persona escribe en el
+  // chat, antes de que Buddy asuma que ningún módulo tiene respuesta.
+  //
+  // Contrato de un interceptor:
+  //   function interceptor(texto) -> boolean | Promise<boolean>
+  //   Debe devolver (o resolver a) `true` si asumió la respuesta y ya
+  //   mostró su propio mensaje (con buddy_says/decirSiLibre). Debe
+  //   devolver `false` si no le corresponde, para que el siguiente
+  //   interceptor lo intente.
+  //
+  // Ejemplo de registro desde otro módulo:
+  //   window.Buddy.says.registrarInterceptor('mathSolver', function (texto) {
+  //     if (!/^[\d\s+\-*/().]+$/.test(texto)) return false;
+  //     try {
+  //       var resultado = Function('"use strict";return (' + texto + ')')();
+  //       window.buddy_says('Resultado: ' + resultado, { emocion: 'sonriendo' });
+  //       return true;
+  //     } catch (e) {
+  //       return false;
+  //     }
+  //   });
+  //
+  // Quien recibe el texto del chat (hoy, modules/chat) debe llamar a
+  // window.Buddy.says.procesarMensajeUsuario(texto) como último recurso,
+  // después de sus propios comandos fijos. Esa función ya se encarga de
+  // mostrar el mensaje de "sin respuesta" si ningún interceptor asumió.
+  var interceptores = [];
+
+  function registrarInterceptor(id, handler) {
+    var nombre = String(id || '').trim();
+    if (!nombre || typeof handler !== 'function') {
+      throw new TypeError('[BUDDY SAYS] registrarInterceptor requiere un id y una función manejadora.');
+    }
+    // Reemplaza si ya existía uno con el mismo id (permite re-registrar
+    // un módulo sin duplicarlo).
+    interceptores = interceptores.filter(function (item) { return item.id !== nombre; });
+    interceptores.push({ id: nombre, handler: handler });
+    debugSource('[BUDDY SAYS] interceptor registrado:', nombre, 'total=', interceptores.length);
+  }
+
+  function quitarInterceptor(id) {
+    var nombre = String(id || '').trim();
+    interceptores = interceptores.filter(function (item) { return item.id !== nombre; });
+  }
+
+  function listarInterceptores() {
+    return interceptores.map(function (item) { return item.id; });
+  }
+
+  // Mensaje mostrado cuando ningún interceptor asumió la respuesta.
+  // El texto vive en modules/says/<locale>/buddy_says_<estilo>.js, bajo
+  // dialogues.sinRespuesta (varias variantes, elegidas al azar sin repetir
+  // la anterior). Si por algún motivo esas variantes no están disponibles,
+  // se usa el texto fijo de abajo como último respaldo.
+  function responderSinModulo() {
+    var texto = getDialogue('sinRespuesta') ||
+      'Esta versión de Buddy no tiene respuesta a lo que me escribes, pero en otros sitios resuelvo fórmulas matemáticas, doy respuesta especializada con IA y muchas cosas más';
+    buddySays(texto, { emocion: 'sereno' });
+  }
+
+  // Recorre los interceptores en el orden en que se registraron. El
+  // primero que resuelva `true` corta la cadena. Si ninguno responde,
+  // muestra el mensaje de "sin respuesta". Una excepción de un interceptor
+  // no interrumpe a los demás: se registra en consola y se sigue probando.
+  function procesarMensajeUsuario(texto) {
+    var limpio = String(texto == null ? '' : texto).trim();
+    if (!limpio) return Promise.resolve(false);
+
+    return interceptores.reduce(function (cadena, item) {
+      return cadena.then(function (yaResuelto) {
+        if (yaResuelto) return true;
+        try {
+          return Promise.resolve(item.handler(limpio)).catch(function (error) {
+            console.warn('[BUDDY SAYS] el interceptor "' + item.id + '" lanzó una excepción; se ignora y se prueba el siguiente.', error);
+            return false;
+          });
+        } catch (error) {
+          console.warn('[BUDDY SAYS] el interceptor "' + item.id + '" lanzó una excepción; se ignora y se prueba el siguiente.', error);
+          return false;
+        }
+      });
+    }, Promise.resolve(false)).then(function (resuelto) {
+      if (!resuelto) responderSinModulo();
+      return resuelto;
+    });
+  }
+
   window.Buddy.says = {
     config: SOURCES_CONFIG,
     decirSiLibre: decirSiLibre,
@@ -1433,6 +1575,11 @@ window.Buddy = window.Buddy || {};
     cancelarInteraccion: cancelInteractive,
     estaOcupado: isSystemBusy,
     iniciarFuentes: initializeSourceEngine,
+    registrarInterceptor: registrarInterceptor,
+    quitarInterceptor: quitarInterceptor,
+    listarInterceptores: listarInterceptores,
+    procesarMensajeUsuario: procesarMensajeUsuario,
+    responderSinModulo: responderSinModulo,
     _sources: SOURCES,
     _state: sourceStates,
     _recurrenceKey: SOURCE_STORAGE_KEY,
