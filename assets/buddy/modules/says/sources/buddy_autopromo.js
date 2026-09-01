@@ -14,7 +14,7 @@
  */
 window.BuddyInformSources = window.BuddyInformSources || {};
 
-window.BuddyInformSources.budy_autopromo = [
+window.BuddyInformSources.buddy_autopromo = [
   "Soy Buddy: me instalás con un script y le sumo identidad, conversación y datos a este sitio.",
   "No necesito servidor propio. Vivo en un backend que ya está armado — a tu sitio solo lo tocás para instalarme.",
   "¿Viste el <script> en el código de esta página? Esa línea es toda mi instalación.",
