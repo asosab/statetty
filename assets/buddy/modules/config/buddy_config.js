@@ -707,8 +707,11 @@ window.Buddy = window.Buddy || {};
 
         editor.querySelector('[data-module-save]').addEventListener('click', function () {
           var collected = window.BuddyConfigView.collect(schema, form);
+          console.log('[Buddy Config] collected:', collected);
+          console.log('[Buddy Config] schema:', schema);
+          console.log('[Buddy Config] form:', form);
           var clean = buildModulePayload(schema, collected);
-
+          console.log('[Buddy Config] clean:', clean);
           saveModule({
             configId: state.currentConfig._id,
             module: moduleId,
