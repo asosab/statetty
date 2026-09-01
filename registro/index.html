@@ -580,7 +580,11 @@ tags: [registro, formulario, Statetty, real state, inmuebles]
     var faltaIcono = !user.usrIconURL;
     if (publicKey && wa && (faltaAgencia || faltaIcono)) {
       var base = (typeof STATETTY_CONFIG !== 'undefined' && STATETTY_CONFIG.WS_API_BASE) || 'https://statetty.com/api/';
-      fetch(base + 'statetty/getAgntByPhone?cel=' + encodeURIComponent(wa) + '&publicKey=' + encodeURIComponent(publicKey))
+      var isJwt = publicKey.split('.').length === 3 && publicKey.indexOf(' ') === -1;
+      var urlG = base + 'statetty/getAgntByPhone?cel=' + encodeURIComponent(wa) + (isJwt ? '' : '&publicKey=' + encodeURIComponent(publicKey));
+      var optsG = {};
+      if (isJwt) optsG.headers = { 'Authorization': 'Bearer ' + publicKey };
+      fetch(urlG, optsG)
         .then(function(r) { return r.json(); })
         .then(function(res) {
           if (!res.ok || !res.data) return;

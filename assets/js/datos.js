@@ -2,24 +2,41 @@
 // Dependencias: STATETTY_CONFIG (config.js)
 
 async function fetchFinderResult(publicKey) {
-  // Si no se pasó publicKey, obtenerlo de user.js tras esperar que termine
+  // Si no se pasó publicKey, obtenerla de auth.js tras esperar que termine
   if (!publicKey) {
     if (window.STT && window.STT.ready) {
       await window.STT.ready;
     }
     publicKey = window.STT && window.STT.getKey ? window.STT.getKey() : null;
   }
-  if (!publicKey) {
-    console.warn('[fetchFinderResult] publicKey vacío o no definido, se aborta la petición.');
+
+  // Nuevo: JWT Buddy (Bearer) tiene prioridad sobre publicKey legacy.
+  var token = publicKey;
+  var isJwt = publicKey && publicKey.indexOf('.') !== -1 && publicKey.split('.').length === 3;
+
+  if (!isJwt && window.STT && typeof window.STT.getToken === 'function') {
+    var jwt = window.STT.getToken();
+    if (jwt) { token = jwt; isJwt = true; }
+  }
+
+  if (!token) {
+    console.warn('[fetchFinderResult] credencial vacía o no definida, se aborta la petición.');
     return null;
   }
 
-  var url = STATETTY_CONFIG.WS_API_BASE + 'statetty/finderresult?publicKey=' + encodeURIComponent(publicKey);
+  var base = STATETTY_CONFIG.WS_API_BASE;
+  var url, options = { cache: 'no-store' };
+  if (isJwt) {
+    url = base + 'statetty/finderresult';
+    options.headers = { 'Authorization': 'Bearer ' + token };
+  } else {
+    url = base + 'statetty/finderresult?publicKey=' + encodeURIComponent(token);
+  }
   console.log('[fetchFinderResult] Iniciando petición a:', url);
 
   var res;
   try {
-    res = await fetch(url);
+    res = await fetch(url, options);
   } catch (e) {
     console.error('[fetchFinderResult] Error de red al hacer fetch:', e);
     return null;

@@ -190,6 +190,10 @@
     localStorage.removeItem('stt_pk');
     window.publicKey = null;
     if (window.STT) window.STT.usuario = null;
+    // Si hay sesión Buddy, cerrarla también (auth.js delega en Buddy.auth.logout).
+    if (window.STT && typeof window.STT.logout === 'function') {
+      try { window.STT.logout(); } catch (_) {}
+    }
     window.location.href = '/';
   }
 
@@ -197,11 +201,20 @@
     e.preventDefault();
     var key = window.STT && window.STT.getKey();
     if (!key) { clearSession(); return; }
+    var isJwt = typeof key === 'string' && key.split('.').length === 3 && key.indexOf(' ') === -1;
     var base = window.STATETTY_CONFIG ? STATETTY_CONFIG.WS_API_BASE : '';
+    var headers = { 'Content-Type': 'application/json' };
+    var body;
+    if (isJwt) {
+      headers['Authorization'] = 'Bearer ' + key;
+      body = {};
+    } else {
+      body = { publicKey: key };
+    }
     fetch(base + 'statetty/changePublicKey', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ publicKey: key })
+      headers: headers,
+      body: JSON.stringify(body)
     }).then(function (res) {
       if (!res.ok) throw new Error('HTTP ' + res.status);
       return res.json();
@@ -501,7 +514,12 @@
     var detail = e.detail || {};
     // Solo se considera "logueado" si user.js trajo un usuario con _id real.
     // Un objeto usuario vacío/incompleto (o un error) no debe disparar el reemplazo.
-    if (!detail.usuario || !detail.usuario._id) return; // no logueado o error: se deja todo como está
+    if (!detail.usuario || !detail.usuario._id) {
+      // Fase 1.3: sin sesión statetty → si Buddy está disponible, mostrar CTA
+      // de login para entrar con correo (magic link). Solo en modo cta.
+      mountLoginCta();
+      return;
+    }
 
     if (document.body.dataset[READY_FLAG]) return; // evita duplicados si el evento se dispara más de una vez
 
@@ -523,9 +541,48 @@
     }
 
     if (n > 0) document.body.dataset[READY_FLAG] = '1';
+    removeLoginCta();
 
     // fndInm.js: independiente del modo (cta/toolbox); ver mountFndInm().
     mountFndInm(detail.usuario, mode);
+  }
+
+  // Fase 1.3: CTA de login Buddy cuando el usuario no está logueado.
+  var LOGIN_CTA_FLAG = 'menuUser-loginCta';
+  var LOGIN_CTA_SELECTOR = '.stt-login-cta';
+
+  function mountLoginCta() {
+    // Solo si Buddy está disponible (login por correo) y en modo cta.
+    if (!(window.Buddy && window.Buddy.auth)) return;
+    if (document.body.dataset[READY_FLAG]) return; // ya hay usuario, no login
+    if (document.body.dataset[LOGIN_CTA_FLAG]) return; // ya montado
+    if (resolveMode() !== 'cta') return;
+
+    var ctaEls = document.querySelectorAll(CTA_SELECTOR);
+    if (ctaEls.length === 0) return;
+
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'stt-login-cta';
+    btn.textContent = 'Ingresar';
+    btn.setAttribute('aria-label', 'Ingresar con tu correo');
+    btn.addEventListener('click', function () {
+      if (window.STT && window.STT.startLogin) window.STT.startLogin();
+    });
+
+    var mounted = 0;
+    ctaEls.forEach(function (el) {
+      var clone = btn.cloneNode(true);
+      el.parentNode.appendChild(clone);
+      mounted++;
+    });
+    if (mounted > 0) document.body.dataset[LOGIN_CTA_FLAG] = '1';
+  }
+
+  function removeLoginCta() {
+    if (!document.body.dataset[LOGIN_CTA_FLAG]) return;
+    document.querySelectorAll(LOGIN_CTA_SELECTOR).forEach(function (el) { el.remove(); });
+    delete document.body.dataset[LOGIN_CTA_FLAG];
   }
 
   function init() {

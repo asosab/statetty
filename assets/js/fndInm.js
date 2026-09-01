@@ -105,6 +105,25 @@
 (function () {
   'use strict';
 
+  // Detecta si una credencial es un JWT Buddy (tres segmentos separados por
+  // punto). Si lo es, las llamadas a la API llevan Authorization: Bearer en
+  // vez de ?publicKey=/body.publicKey (transición al auth Buddy).
+  function isJwtToken(value) {
+    return typeof value === 'string' &&
+      value.split('.').length === 3 &&
+      value.indexOf(' ') === -1;
+  }
+
+  // Autenticación de la key actual: devuelve { bearer, legacy } según el
+  // tipo de credencial expuesta por window.STT/auth.js.
+  function authCredentials() {
+    var token = window.STT && typeof window.STT.getKey === 'function'
+      ? window.STT.getKey()
+      : (window.publicKey || null);
+    if (isJwtToken(token)) return { bearer: token, legacy: null };
+    return { bearer: null, legacy: token };
+  }
+
   var SECTION_ID = 'fndInm-section';
   var FORM_ID = 'fndInm-form';
   var SLOTS_SELECT_ID = 'fndInm-slots-select';
@@ -901,10 +920,14 @@
         _pendingData = null;
         showSaveStatus('saving');
         var base = window.STATETTY_CONFIG ? STATETTY_CONFIG.WS_API_BASE : '';
+        var body = { i: idx, data: savedData };
+        var headers = { 'Content-Type': 'application/json' };
+        if (isJwtToken(pk)) { headers['Authorization'] = 'Bearer ' + pk; }
+        else { body.publicKey = pk; }
         fetch(base + 'statetty/updtUsrBusqueda', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ publicKey: pk, i: idx, data: savedData })
+          headers: headers,
+          body: JSON.stringify(body)
         }).then(function (r) { return r.json(); }).then(function (res) {
           showSaveStatus(res.ok ? 'success' : 'error', res.ok ? 'Cambio realizado' : 'Error al actualizar');
           if (res.ok) {
@@ -1054,9 +1077,19 @@
 
     // Sigue indagando cada 4s mientras no se cancele; sin límite de intentos.
     function pollSearchReady(base, pk, searchTs, overlay, controller, isCancelled, onDone) {
+      var creds = authCredentials();
+      var firstCred = pk || creds.legacy || creds.bearer;
       function check() {
         if (isCancelled()) return;
-        fetch(base + 'statetty/buscarInmueble/status?publicKey=' + encodeURIComponent(pk) + '&searchTs=' + searchTs, { signal: controller.signal })
+        var url = base + 'statetty/buscarInmueble/status?searchTs=' + searchTs;
+        var opts = { signal: controller.signal };
+        if (creds.bearer) {
+          url += '&bearer=1';
+          opts.headers = { 'Authorization': 'Bearer ' + creds.bearer };
+        } else {
+          url += '&publicKey=' + encodeURIComponent(firstCred || '');
+        }
+        fetch(url, opts)
           .then(function (r) { return r.json(); })
           .then(function (res) {
             if (isCancelled()) return;
@@ -1122,12 +1155,22 @@
 
       armSlowTimer();
 
-      params.publicKey = pk;
+      var creds = authCredentials();
+      if (creds.bearer) {
+        params.bearer = creds.bearer;
+        delete params.publicKey;
+      } else if (creds.legacy) {
+        params.publicKey = creds.legacy;
+      }
+      var searchTs = Date.now();
+      params.searchTs = searchTs;
 
       var base = window.STATETTY_CONFIG ? STATETTY_CONFIG.WS_API_BASE : '';
+      var headers = { 'Content-Type': 'application/json' };
+      if (creds.bearer) headers['Authorization'] = 'Bearer ' + creds.bearer;
       fetch(base + 'statetty/buscarInmueble', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: headers,
         body: JSON.stringify(params),
         signal: controller.signal
       }).then(function (r) { return r.json(); }).then(function (res) {

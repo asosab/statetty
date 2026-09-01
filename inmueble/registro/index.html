@@ -1338,6 +1338,15 @@
     var misInmueblesCache = null; // lista de "Mis inmuebles" cacheada; null = hay que pedirla de nuevo
     var SAVE_KEY = 'inmFormDraft';
 
+    // Detectar credenciales: JWT Buddy (Bearer) vs publicKey legacy.
+    function authInfo() {
+      var k = K || window.publicKey;
+      if (k && typeof k === 'string' && k.split('.').length === 3 && k.indexOf(' ') === -1) {
+        return { bearer: k, legacy: null };
+      }
+      return { bearer: null, legacy: k };
+    }
+
     // El borrador se escopa por _id para que el draft de un inmueble
     // nunca pise el de otro (o el de una publicación nueva en curso).
     function draftKey() {
@@ -1654,8 +1663,10 @@
           setMisInmueblesState('error', 'No se pudo determinar tu usuario. Recargá la página e intentá de nuevo.');
           return;
         }
-        var url = base + 'statetty/ginlius?_id=' + encodeURIComponent(USER._id) + '&publicKey=' + encodeURIComponent(K);
-        fetch(url)
+        var auth = authInfo();
+        var url = base + 'statetty/ginlius?_id=' + encodeURIComponent(USER._id) + (auth.legacy ? '&publicKey=' + encodeURIComponent(auth.legacy) : '');
+        var optsGin = auth.bearer ? { headers: { 'Authorization': 'Bearer ' + auth.bearer } } : {};
+        fetch(url, optsGin)
           .then(function (r) {
             return r.json().then(function (body) { return { status: r.status, ok: r.ok, body: body }; });
           })
@@ -2294,12 +2305,15 @@
 
       var formData = new FormData();
       formData.append('imagen', file);
-      formData.append('publicKey', k);
+      var auth = authInfo();
+      var optsU = { method: 'POST', body: formData };
+      if (auth.bearer) {
+        optsU.headers = { 'Authorization': 'Bearer ' + auth.bearer };
+      } else {
+        formData.append('publicKey', k);
+      }
 
-      fetch(base + 'imagenes/imagen/subir', {
-        method: 'POST',
-        body: formData
-      })
+      fetch(base + 'imagenes/imagen/subir', optsU)
       .then(function (r) { return r.json(); })
       .then(function (data) {
         setButtonLoading(DOM.photoUploadBtn, false);
@@ -2513,11 +2527,17 @@
 
       var base = STATETTY_CONFIG.WS_API_BASE;
       var method = payload._id ? 'PUT' : 'POST';
-      fetch(base + 'statetty/setinmueble', {
+      var authSubmit = authInfo();
+      var optsS = {
         method: method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
-      })
+      };
+      if (authSubmit.bearer) {
+        optsS.headers['Authorization'] = 'Bearer ' + authSubmit.bearer;
+        delete payload.publicKey; // con JWT el middleware resuelve el usuario
+      }
+      fetch(base + 'statetty/setinmueble', optsS)
       .then(function (r) { return r.json(); })
       .then(function (data) {
         setSubmitLoading(false, payload._id ? 'Actualizar inmueble' : 'Publicar inmueble');
