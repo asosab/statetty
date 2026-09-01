@@ -140,16 +140,15 @@ Buddy utiliza autenticación passwordless mediante magic link.
 
 Flujo actual:
 
-```text
-POST /api/buddy/auth/login
-        ↓
-email + appID + redirectUrl
-        ↓
-magic link
-        ↓
-GET /api/buddy/auth/verify
-        ↓
-accessToken + refreshToken + usuario
+```mermaid
+sequenceDiagram
+    participant U as Usuario
+    participant B as Buddy API
+
+    U->>B: POST /api/buddy/auth/login
+    B-->>U: magic link
+    U->>B: GET /api/buddy/auth/verify
+    B-->>U: accessToken + refreshToken + usuario
 ```
 
 El access token es corto y se almacena en `sessionStorage`.
@@ -310,14 +309,11 @@ Actualmente `user` determina qué campos faltan del perfil.
 
 En el futuro podría delegar la captura a Forms:
 
-```text
-user
-  ↓
-form: profile
-  ↓
-respuesta
-  ↓
-user profile
+```mermaid
+flowchart TD
+    U[user] --> F["Forms: profile"]
+    F --> R[Respuesta]
+    R --> P[User profile]
 ```
 
 ### Configuración de módulos
@@ -326,26 +322,21 @@ El actual mecanismo basado en `schema.json` ya representa conceptualmente una de
 
 Forms debería convertirse progresivamente en el renderer/servicio común:
 
-```text
-module schema
-      ↓
-Forms renderer
-      ↓
-formulario
-      ↓
-configuración
+```mermaid
+flowchart TD
+    S["Module schema"] --> F[Forms renderer]
+    F --> R[Formulario]
+    R --> C[Configuración]
 ```
 
 ### Archery School
 
 En lugar de construir formularios específicos para alumnos:
 
-```text
-archerySchool
-      ↓
-Forms
-      ↓
-student-profile
+```mermaid
+flowchart TD
+    A[archerySchool] --> F[Forms]
+    F --> S["student-profile"]
 ```
 
 ### Statetty
@@ -485,10 +476,10 @@ No se debería modificar silenciosamente la estructura de un formulario ya utili
 
 Ejemplo:
 
-```text
-customer-registration v1
-customer-registration v2
-customer-registration v3
+```mermaid
+flowchart LR
+    V1["customer-registration v1"] --> V2["customer-registration v2"]
+    V2 --> V3["customer-registration v3"]
 ```
 
 Una respuesta debe indicar:
@@ -546,18 +537,13 @@ forms:export
 
 Una de las capacidades estratégicas del módulo es permitir:
 
-```text
-Administrador
-      ↓
-crea formulario
-      ↓
-publica formulario
-      ↓
-usuarios completan
-      ↓
-Buddy almacena respuestas
-      ↓
-administrador consulta datos
+```mermaid
+flowchart TD
+    A[Administrador] --> C[Crea formulario]
+    C --> P[Publica formulario]
+    P --> U[Usuarios completan]
+    U --> B[Buddy almacena respuestas]
+    B --> Q[Administrador consulta datos]
 ```
 
 El administrador debe poder decidir si el formulario:
@@ -590,8 +576,11 @@ Ejemplo:
 
 Buddy puede entonces resolver:
 
-```text
-module → form → renderer → response
+```mermaid
+flowchart LR
+    M[Módulo] --> F[Form]
+    F --> R[Renderer]
+    R --> Q[Response]
 ```
 
 El módulo no necesita conocer cómo se dibuja el formulario.
@@ -640,22 +629,14 @@ La Wallet permitirá:
 
 Ejemplo:
 
-```text
-Usuario
-   │
-   │ transferencia bancaria + QR
-   ↓
-Cuenta bancaria Buddy
-   │
-   │ conciliación
-   ↓
-Wallet Buddy
-   │
-   ├── transferencia → otro usuario
-   │
-   ├── pago → Statetty
-   │
-   └── pago → Arbat
+```mermaid
+flowchart TD
+    U[Usuario] -->|transferencia bancaria + QR| B["Cuenta bancaria Buddy"]
+    B -->|conciliación| W["Wallet Buddy"]
+
+    W -->|transferencia| O["Otro usuario"]
+    W -->|pago| S[Statetty]
+    W -->|pago| A[Arbat]
 ```
 
 ---
@@ -674,28 +655,32 @@ La arquitectura debe utilizar un **ledger**.
 
 Conceptualmente:
 
-```text
-TRANSACTION
- ├── id
- ├── type
- ├── status
- ├── amount
- ├── currency
- ├── source
- ├── destination
- ├── reference
- ├── createdAt
- └── metadata
+```mermaid
+erDiagram
+    TRANSACTION {
+        string id
+        string type
+        string status
+        decimal amount
+        string currency
+        string source
+        string destination
+        string reference
+        datetime createdAt
+        json metadata
+    }
 ```
 
 Y las cuentas:
 
-```text
-WALLET
- ├── id
- ├── userId
- ├── currency
- └── status
+```mermaid
+erDiagram
+    WALLET {
+        string id
+        string userId
+        string currency
+        string status
+    }
 ```
 
 El saldo debe poder reconstruirse a partir del ledger o de un balance derivado protegido por transacciones atómicas.
@@ -767,18 +752,13 @@ Un depósito recibido no debería convertirse automáticamente en saldo disponib
 
 Conceptualmente:
 
-```text
-bank_transfer
-      ↓
-detected
-      ↓
-pending_reconciliation
-      ↓
-confirmed
-      ↓
-wallet_credit
-      ↓
-available_balance
+```mermaid
+flowchart TD
+    B[bank_transfer] --> D[detected]
+    D --> P[pending_reconciliation]
+    P --> C[confirmed]
+    C --> W[wallet_credit]
+    W --> A[available_balance]
 ```
 
 Esto evita que un comprobante falso o una transferencia no identificada genere saldo utilizable.
@@ -799,9 +779,10 @@ Siria
 
 La operación debe ser atómica:
 
-```text
-Wallet A: -50
-Wallet B: +50
+```mermaid
+flowchart LR
+    A["Wallet A"] -->|"-50"| T["Transacción atómica"]
+    T -->|"+50"| B["Wallet B"]
 ```
 
 Nunca debe existir un estado en el que:
@@ -848,32 +829,26 @@ Ejemplos:
 
 ### Statetty
 
-```text
-Wallet
-   ↓
-pago de suscripción
-   ↓
-Statetty
+```mermaid
+flowchart TD
+    W[Wallet] --> P["Pago de suscripción"]
+    P --> S[Statetty]
 ```
 
 ### Arbat
 
-```text
-Wallet
-   ↓
-pago de clase de tiro con arco
-   ↓
-Arbat / archerySchool
+```mermaid
+flowchart TD
+    W[Wallet] --> P["Pago de clase de tiro con arco"]
+    P --> A["Arbat / archerySchool"]
 ```
 
 ### Otros servicios
 
-```text
-Wallet
-   ↓
-producto/servicio
-   ↓
-módulo proveedor
+```mermaid
+flowchart TD
+    W[Wallet] --> P["Producto / servicio"]
+    P --> M["Módulo proveedor"]
 ```
 
 Esto convierte a Buddy en una plataforma con una economía interna.
@@ -900,14 +875,10 @@ PRODUCT / SERVICE
 
 Por ejemplo:
 
-```text
-Statetty
-  product: subscription-30-days
-  price: 75 Bs
-
-Arbat
-  product: archery-class
-  price: 50 Bs
+```mermaid
+flowchart LR
+    S["Statetty"] --> SP["subscription-30-days<br/>75 Bs"]
+    A["Arbat"] --> AP["archery-class<br/>50 Bs"]
 ```
 
 Wallet solamente procesa el pago.
@@ -958,10 +929,14 @@ deben soportar `idempotencyKey`.
 
 Ejemplo:
 
-```text
-POST /api/buddy/wallet/payment
+```mermaid
+sequenceDiagram
+    participant C as Cliente
+    participant W as Wallet API
 
-Idempotency-Key: 8e9...
+    C->>W: POST /api/buddy/wallet/payment
+    C->>W: Idempotency-Key: 8e9...
+    W-->>C: Resultado idempotente
 ```
 
 Una misma operación lógica nunca debe descontar dos veces.
@@ -1121,24 +1096,19 @@ El actual módulo `config` es un precursor importante de Forms.
 
 Hoy:
 
-```text
-schema.json
-    ↓
-config module
-    ↓
-formulario de configuración
+```mermaid
+flowchart TD
+    S["schema.json"] --> C["config module"]
+    C --> F["Formulario de configuración"]
 ```
 
 Objetivo:
 
-```text
-schema / definition
-       ↓
-      Forms
-       ↓
-renderer + validation
-       ↓
-config
+```mermaid
+flowchart TD
+    D["schema / definition"] --> F[Forms]
+    F --> RV["renderer + validation"]
+    RV --> C[config]
 ```
 
 Esto permite eliminar gradualmente código específico de formularios del módulo `config`.
@@ -1153,18 +1123,14 @@ El módulo `user` también debe consumir Forms.
 
 Objetivo:
 
-```text
-auth
- ↓
-user
- ↓
-¿faltan datos?
- ↓
-Forms
- ↓
-profile form
- ↓
-user profile
+```mermaid
+flowchart TD
+    A[auth] --> U[user]
+    U --> D{"¿Faltan datos?"}
+    D -- "Sí" --> F[Forms]
+    F --> PF["profile form"]
+    PF --> P["user profile"]
+    D -- "No" --> P
 ```
 
 `user` sigue siendo la autoridad sobre el estado del perfil, pero Forms se convierte en el mecanismo de captura.
@@ -1177,16 +1143,18 @@ user profile
 
 Ejemplo:
 
-```text
-archerySchool
-    │
-    ├── student-profile
-    ├── physical-profile
-    ├── equipment-profile
-    └── enrollment
-          │
-          ↓
-        Forms
+```mermaid
+flowchart TD
+    A[archerySchool]
+    A --> S["student-profile"]
+    A --> P["physical-profile"]
+    A --> E["equipment-profile"]
+    A --> N[enrollment]
+
+    S --> F[Forms]
+    P --> F
+    E --> F
+    N --> F
 ```
 
 Esto sirve además como primer caso real para validar que Forms es suficientemente flexible para verticales complejos.
@@ -1221,16 +1189,12 @@ Puede utilizarse para:
 
 Ejemplo:
 
-```text
-Usuario Statetty
-      ↓
-Wallet
-      ↓
-75 Bs
-      ↓
-suscripción 30 días
-      ↓
-Statetty habilita servicio
+```mermaid
+flowchart TD
+    U["Usuario Statetty"] --> W[Wallet]
+    W --> A["75 Bs"]
+    A --> O["suscripción 30 días"]
+    O --> S["Statetty habilita servicio"]
 ```
 
 ---
@@ -1241,24 +1205,27 @@ Con la aparición de Forms y Wallet, la telemetría debería evolucionar hacia u
 
 Ejemplos:
 
-```text
-user.created
-user.profile.updated
+```mermaid
+flowchart TD
+    E[Eventos de plataforma]
 
-form.created
-form.published
-form.response.created
+    E --> U1[user.created]
+    E --> U2[user.profile.updated]
 
-wallet.created
-wallet.deposit.pending
-wallet.deposit.confirmed
-wallet.transfer.completed
-wallet.payment.completed
-wallet.payment.failed
+    E --> F1[form.created]
+    E --> F2[form.published]
+    E --> F3[form.response.created]
 
-order.created
-order.paid
-order.cancelled
+    E --> W1[wallet.created]
+    E --> W2[wallet.deposit.pending]
+    E --> W3[wallet.deposit.confirmed]
+    E --> W4[wallet.transfer.completed]
+    E --> W5[wallet.payment.completed]
+    E --> W6[wallet.payment.failed]
+
+    E --> O1[order.created]
+    E --> O2[order.paid]
+    E --> O3[order.cancelled]
 ```
 
 Los eventos permitirán que otros módulos reaccionen sin acoplarse directamente.
@@ -1394,22 +1361,15 @@ Posteriormente:
 
 El MVP debería poder hacer exactamente esto:
 
-```text
-ADMIN
-  ↓
-Crear formulario
-  ↓
-Agregar campos
-  ↓
-Publicar
-  ↓
-Obtener formulario
-  ↓
-USER completa
-  ↓
-POST response
-  ↓
-ADMIN consulta respuestas
+```mermaid
+flowchart TD
+    A[ADMIN] --> C[Crear formulario]
+    C --> F[Agregar campos]
+    F --> P[Publicar]
+    P --> G[Obtener formulario]
+    G --> U[USER completa]
+    U --> R["POST response"]
+    R --> Q[ADMIN consulta respuestas]
 ```
 
 Sin intentar inicialmente construir un Typeform completo.
@@ -1420,22 +1380,15 @@ Sin intentar inicialmente construir un Typeform completo.
 
 El MVP debería poder hacer:
 
-```text
-USER
- ↓
-ver saldo
- ↓
-ver instrucciones/QR de depósito
- ↓
-solicitar/registrar depósito
- ↓
-ADMIN concilia
- ↓
-saldo acreditado
- ↓
-transferir a otro usuario
- ↓
-pagar un servicio Buddy
+```mermaid
+flowchart TD
+    U[USER] --> B[Ver saldo]
+    B --> Q["Ver instrucciones / QR de depósito"]
+    Q --> D["Solicitar / registrar depósito"]
+    D --> A[ADMIN concilia]
+    A --> C[Saldo acreditado]
+    C --> T[Transferir a otro usuario]
+    T --> P[Pagar un servicio Buddy]
 ```
 
 El primer objetivo es construir un sistema interno controlado, auditable y correcto, no competir inmediatamente con una billetera bancaria.
@@ -1491,12 +1444,10 @@ El hecho de centralizar capacidades no significa que todos los módulos deban co
 
 Debe mantenerse:
 
-```text
-core services
-     ↓
-stable contracts
-     ↓
-independent modules
+```mermaid
+flowchart TD
+    C["Core services"] --> S["Stable contracts"]
+    S --> M["Independent modules"]
 ```
 
 ## 43.2 Forms demasiado complejo
@@ -1512,16 +1463,12 @@ No intentar resolver desde la primera versión:
 
 Forms debe comenzar como:
 
-```text
-definition
-+
-render
-+
-validate
-+
-store
-+
-query
+```mermaid
+flowchart LR
+    D[Definition] --> R[Render]
+    R --> V[Validate]
+    V --> S[Store]
+    S --> Q[Query]
 ```
 
 ## 43.3 Wallet demasiado acoplada
@@ -1536,11 +1483,16 @@ Wallet no debe saber qué es:
 
 Debe saber qué es:
 
-```text
-account
-ledger
-order
-payment
+```mermaid
+flowchart TD
+    A[Account]
+    L[Ledger]
+    O[Order]
+    P[Payment]
+
+    A --> L
+    O --> P
+    P --> L
 ```
 
 ## 43.4 Saldo mutable sin ledger
@@ -1557,36 +1509,16 @@ La evolución propuesta cambia significativamente la naturaleza del proyecto.
 
 ### Buddy actual
 
-```text
-Identidad
-+
-Avatar
-+
-Engagement
-+
-Analítica
-+
-Módulos
+```mermaid
+flowchart LR
+    I[Identidad] --> A[Avatar] --> E[Engagement] --> N[Analítica] --> M[Módulos]
 ```
 
 ### Buddy objetivo
 
-```text
-Identidad
-+
-Datos
-+
-Formularios
-+
-Eventos
-+
-Servicios
-+
-Wallet
-+
-Pagos
-+
-Módulos verticales
+```mermaid
+flowchart LR
+    I[Identidad] --> D[Datos] --> F[Formularios] --> E[Eventos] --> S[Servicios] --> W[Wallet] --> P[Pagos] --> V["Módulos verticales"]
 ```
 
 La tesis de arquitectura es:
@@ -1616,26 +1548,23 @@ pagos
 
 su implementación debería aproximarse a:
 
-```text
-Buddy
-  +
-configuración del sitio
-  +
-módulo específico del negocio
+```mermaid
+flowchart TD
+    B[Buddy] --> C["Configuración del sitio"]
+    C --> M["Módulo específico del negocio"]
 ```
 
 y no a:
 
-```text
-nuevo sistema de usuarios
-+
-nuevo sistema de formularios
-+
-nuevo sistema de pagos
-+
-nuevo sistema de configuración
-+
-nuevo sistema de analítica
+```mermaid
+flowchart TD
+    U["Nuevo sistema de usuarios"]
+    F["Nuevo sistema de formularios"]
+    P["Nuevo sistema de pagos"]
+    C["Nuevo sistema de configuración"]
+    A["Nuevo sistema de analítica"]
+
+    U --- F --- P --- C --- A
 ```
 
 Ese es el criterio arquitectónico que debe guiar las próximas iteraciones.
