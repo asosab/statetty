@@ -1147,7 +1147,7 @@ $(document).ready(function () {
     $('.section-header').each(function () {
       var $header = $(this);
       if ($header.find('.section-collapse').length) return;
-      $header.append('<button type="button" class="section-collapse" aria-label="Minimizar sección" title="Minimizar" style="margin-left:auto;border:0;background:transparent;font-size:18px;line-height:1;cursor:pointer;padding:2px 5px;color:#777;">×</button>');
+      $header.append('<button type="button" class="section-collapse" aria-label="Minimizar sección" title="Minimizar" style="margin-left:auto;border:0;background:transparent;font-size:18px;line-height:1;cursor:pointer;padding:2px 5px;color:#777;display:none;">×</button>');
     });
 
     $(document).on('click', '.section-header', function (e) {
@@ -1155,15 +1155,17 @@ $(document).ready(function () {
       var $section = $(this).parent();
       var yaActiva = $section.hasClass('active');
       $('.section').removeClass('active');
+      $('.section-collapse').hide();
       if (!yaActiva) {
         $section.addClass('active');
+        $section.find('.section-collapse').show();
       }
     });
 
     $(document).on('click', '.section-collapse', function (e) {
       e.preventDefault();
       e.stopPropagation();
-      $(this).closest('.section').removeClass('active');
+      $(this).closest('.section').removeClass('active').find('.section-collapse').hide();
     });
 
     // agencias únicas
