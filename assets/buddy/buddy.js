@@ -1327,7 +1327,7 @@ window.Buddy = window.Buddy || {};
   // el host remoto configurado). Se expone para que los módulos resuelvan sus
   // recursos con el path completo aunque Buddy corra en otro dominio.
   window.Buddy.assetBase = ASSET_BASE;
-
+  window.Buddy.withVersion = withBuddyVersion;
   window.Buddy.registerBusyProvider = registerBusyProvider;
   window.Buddy.isBusy = isBusy;
   window.Buddy.resolveAsset = resolveAsset;
