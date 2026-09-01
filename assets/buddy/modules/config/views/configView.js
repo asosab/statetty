@@ -200,7 +200,7 @@ window.BuddyConfigView = window.BuddyConfigView || {};
 
   function renderObject(field, value) {
     var val = (value && typeof value === 'object' && !Array.isArray(value)) ? value : {};
-    return '<fieldset class="buddy-cfg-group">' +
+    return '<fieldset class="buddy-cfg-group" data-field-key="' + escapeHtml(field.key) + '">' +
       '<legend>' + escapeHtml(labelFor(field)) + '</legend>' +
       '<div data-field-container>' +
       (field.fields || []).map(function (sub) { return renderNode(sub, val[sub.key]); }).join('') +
@@ -233,7 +233,7 @@ window.BuddyConfigView = window.BuddyConfigView || {};
 
     // Codifica el schema del item para poder rendir "agregar" con la misma forma.
     var itemSchemaJson = escapeHtml(JSON.stringify(field.items || { type: 'string' }));
-    return '<fieldset class="buddy-cfg-group">' +
+    return '<fieldset class="buddy-cfg-group" data-field-key="' + escapeHtml(field.key) + '">' +
       '<legend>' + escapeHtml(labelFor(field)) + '</legend>' +
       '<div data-array-items data-item-schema="' + itemSchemaJson + '" data-item-scalar="' + (isObjectItems ? '0' : '1') + '">' +
         val.map(renderItem).join('') +
