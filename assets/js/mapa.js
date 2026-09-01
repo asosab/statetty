@@ -1142,14 +1142,28 @@ $(document).ready(function () {
       });
     });
 
-    // accordion (toggle: un segundo click sobre la misma sección la cierra)
-    $(document).on('click', '.section-header', function () {
+    // Accordion: cada encabezado muestra un control visual (×) para indicar
+    // claramente que la sección puede minimizarse.
+    $('.section-header').each(function () {
+      var $header = $(this);
+      if ($header.find('.section-collapse').length) return;
+      $header.append('<button type="button" class="section-collapse" aria-label="Minimizar sección" title="Minimizar" style="margin-left:auto;border:0;background:transparent;font-size:18px;line-height:1;cursor:pointer;padding:2px 5px;color:#777;">×</button>');
+    });
+
+    $(document).on('click', '.section-header', function (e) {
+      if ($(e.target).closest('.section-collapse').length) return;
       var $section = $(this).parent();
       var yaActiva = $section.hasClass('active');
       $('.section').removeClass('active');
       if (!yaActiva) {
         $section.addClass('active');
       }
+    });
+
+    $(document).on('click', '.section-collapse', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      $(this).closest('.section').removeClass('active');
     });
 
     // agencias únicas
