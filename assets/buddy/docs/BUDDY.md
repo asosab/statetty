@@ -1568,3 +1568,718 @@ flowchart TD
 ```
 
 Ese es el criterio arquitectónico que debe guiar las próximas iteraciones.
+
+---
+
+# 46. Evolución de Forms: Template → Instance → Override → Extension
+
+## 46.1 Nuevo objetivo arquitectónico
+
+La evolución natural de Forms no termina en un **Form Builder**. El siguiente nivel consiste en permitir que una definición creada por un usuario pueda convertirse en una **plantilla reutilizable**, instalarse en distintos sitios y adaptarse sin duplicar código.
+
+```mermaid
+flowchart LR
+    F[Formulario o conjunto de formularios] --> T[Template]
+    T --> I[Instance]
+    I --> O[Override]
+    I --> E[Extension]
+    T --> R[Versiones]
+```
+
+La responsabilidad de cada nivel debe ser distinta:
+
+- **Template**: conocimiento reutilizable del dominio.
+- **Instance**: instalación concreta para un cliente o sitio.
+- **Override**: diferencias declarativas permitidas por la instancia.
+- **Extension**: capacidades adicionales reutilizables compatibles con la plantilla.
+
+> **Nunca se personaliza un cliente copiando una plantilla; siempre se crea una instancia con overrides y extensiones.**
+
+Esto evita forks permanentes y mantiene una única fuente de evolución para las plantillas universales.
+
+## 46.2 Del formulario a la plantilla
+
+Cualquier formulario creado mediante Forms podrá convertirse en plantilla cuando su propietario decida reutilizarlo.
+
+```mermaid
+flowchart TD
+    U[Usuario crea formulario] --> D[Definición]
+    D --> V[Versionado]
+    V --> P[Publicar como plantilla]
+    P --> C[Catálogo]
+```
+
+El formulario original y la plantilla son entidades diferentes:
+
+| Concepto | Responsabilidad |
+|---|---|
+| Form | Captura datos mediante una definición concreta |
+| Template | Reutiliza una o varias definiciones para crear soluciones instalables |
+
+Una plantilla podrá contener un único formulario o múltiples formularios relacionados.
+
+---
+
+# 47. Template
+
+## 47.1 Alcance de disponibilidad
+
+El superusuario podrá gobernar la disponibilidad de cada plantilla mediante tres scopes iniciales.
+
+```mermaid
+flowchart TD
+    T[Template]
+    T --> P[Personal]
+    T --> S[Site]
+    T --> U[Universal]
+    P --> P1[Propietario]
+    S --> S1[Administradores del sitio]
+    U --> U1[Todos los sitios Buddy]
+```
+
+### Personal
+
+Pertenece a un usuario y se utiliza como biblioteca privada.
+
+### Site
+
+Pertenece a un `siteId` y puede instalarse únicamente dentro de ese sitio.
+
+### Universal
+
+Forma parte del catálogo oficial de Buddy y solamente el superusuario puede publicarla como universal.
+
+El **scope controla disponibilidad**, mientras que la propiedad histórica permanece asociada a quien creó y mantiene la plantilla.
+
+## 47.2 Template como solución reutilizable
+
+Una plantilla no representa solamente campos; representa una solución completa compuesta por contratos declarativos.
+
+```mermaid
+flowchart TB
+    T[Template]
+    T --> F[Forms]
+    T --> EN[Entities]
+    T --> RL[Relations]
+    T --> WF[Workflows]
+    T --> PM[Permissions]
+    T --> EV[Events]
+    T --> CFG[Configuration]
+```
+
+Esto permite que un dominio completo pueda distribuirse como plantilla sin depender de un módulo JavaScript específico.
+
+## 47.3 Plantillas compuestas
+
+Una plantilla puede agrupar componentes especializados.
+
+```mermaid
+flowchart TB
+    T[Archery School Template]
+    T --> S[Student]
+    T --> E[Enrollment]
+    T --> C[Classes]
+    T --> A[Attendance]
+    T --> EQ[Equipment]
+    T --> P[Payments opcional]
+    S --> E
+    E --> C
+    C --> A
+    S --> EQ
+    C --> P
+```
+
+Los componentes pueden ser formularios, entidades, relaciones, workflows, eventos o dashboards. La plantilla describe el dominio; Forms continúa siendo el motor de captura y renderizado.
+
+---
+
+# 48. Instance
+
+## 48.1 Definición
+
+Una **Instance** representa la instalación concreta de una plantilla para un cliente.
+
+Ejemplo conceptual:
+
+```text
+Template: Archery School v3
+Instance: Arbat
+```
+
+La instancia nunca copia la definición base.
+
+```mermaid
+flowchart LR
+    T[Archery School Template v3] --> A[Arbat Instance]
+    T --> B[Instituto Norte]
+    T --> C[Cliente Demo]
+```
+
+Cada instancia posee identidad, `siteId`, versión instalada, configuración propia, estado, overrides, extensiones y todos los datos generados por ese cliente.
+
+## 48.2 Ciclo de vida
+
+```mermaid
+stateDiagram-v2
+    [*] --> draft
+    draft --> active
+    active --> suspended
+    suspended --> active
+    active --> archived
+    archived --> [*]
+```
+
+| Estado | Descripción |
+|---|---|
+| draft | Instalada y en configuración |
+| active | Operativa para usuarios |
+| suspended | Temporalmente deshabilitada |
+| archived | Histórica, sin nuevas operaciones |
+
+El estado pertenece exclusivamente a la instancia.
+
+---
+
+# 49. Override
+
+## 49.1 Objetivo
+
+Un override permite adaptar una instancia sin modificar la plantilla original.
+
+```mermaid
+flowchart TD
+    T[Template base] --> I[Arbat Instance]
+    I --> O1[Cambiar etiquetas]
+    I --> O2[Modificar parámetros]
+    I --> O3[Activar o desactivar opcionales]
+    I --> O4[Agregar campos autorizados]
+```
+
+Ejemplos válidos:
+
+- cambiar “Alumno” por “Estudiante”;
+- modificar textos descriptivos;
+- alterar orden visual;
+- branding;
+- parámetros configurables;
+- validaciones autorizadas.
+
+No deberían poder alterar libremente entidades protegidas, relaciones obligatorias ni contratos públicos.
+
+## 49.2 Persistencia declarativa
+
+El override almacena únicamente la diferencia y no una copia completa de la definición.
+
+```text
+InstanceOverride
+├── id
+├── instanceId
+├── componentKey
+├── path
+├── operation
+├── value
+├── createdBy
+└── createdAt
+```
+
+Ejemplo conceptual:
+
+```json
+{
+  "instanceId": "arbat",
+  "componentKey": "student-profile",
+  "path": "fields.memberNumber.label",
+  "operation": "replace",
+  "value": "Código de socio"
+}
+```
+
+La resolución siempre reconstruirá la configuración efectiva desde la plantilla y sus diferencias declaradas.
+
+---
+
+# 50. Extension
+
+## 50.1 Definición
+
+Una extensión agrega nuevas capacidades compatibles con una plantilla o una instancia.
+
+```mermaid
+flowchart TD
+    A[Arbat Instance]
+    A --> B[Archery School Base]
+    A --> C[Control de clases]
+    A --> P[Payments]
+    A --> R[Ranking]
+    A --> E[Equipamiento avanzado]
+```
+
+La diferencia conceptual es clara:
+
+| Override | Extension |
+|---|---|
+| Personaliza | Amplía |
+| Cambia configuración | Agrega componentes |
+| No modifica el dominio | Puede ampliar el dominio |
+| Es propio de la instancia | Puede ser reutilizable |
+
+Ejemplo:
+
+- cambiar una etiqueta = Override;
+- incorporar gestión de pagos = Extension.
+
+## 50.2 Catálogo de extensiones
+
+Las extensiones también podrán publicarse como catálogo reutilizable.
+
+```mermaid
+flowchart LR
+    C[Catálogo Buddy] --> E1[Payments]
+    C --> E2[Attendance]
+    C --> E3[Inventory]
+    C --> E4[Scheduling]
+    E1 --> A[Arbat]
+    E2 --> A
+```
+
+Cada extensión deberá declarar compatibilidad, versión mínima de plantilla, componentes añadidos, permisos, eventos y parámetros de configuración.
+
+---
+
+# 51. Modelo persistente
+
+## 51.1 Entidades principales
+
+```mermaid
+erDiagram
+    FORM ||--o{ FORM_VERSION : has
+    TEMPLATE ||--o{ TEMPLATE_VERSION : has
+    TEMPLATE_VERSION ||--o{ TEMPLATE_COMPONENT : contains
+    TEMPLATE ||--o{ TEMPLATE_INSTANCE : instantiated_as
+    TEMPLATE_INSTANCE ||--o{ INSTANCE_OVERRIDE : has
+    EXTENSION ||--o{ EXTENSION_VERSION : has
+    TEMPLATE_INSTANCE ||--o{ INSTANCE_EXTENSION : enables
+    EXTENSION_VERSION ||--o{ INSTANCE_EXTENSION : installed_as
+```
+
+## 51.2 Template
+
+```text
+Template
+├── id
+├── slug
+├── name
+├── description
+├── ownerUserId
+├── ownerSiteId
+├── scope
+├── status
+├── currentVersion
+├── createdAt
+└── updatedAt
+```
+
+## 51.3 TemplateVersion
+
+Toda modificación estructural genera una nueva versión.
+
+```text
+TemplateVersion
+├── id
+├── templateId
+├── version
+├── status
+├── definition
+├── changelog
+├── createdBy
+├── createdAt
+└── publishedAt
+```
+
+```mermaid
+stateDiagram-v2
+    [*] --> draft
+    draft --> review
+    review --> published
+    published --> deprecated
+```
+
+Una versión publicada nunca se modifica silenciosamente.
+
+## 51.4 TemplateComponent
+
+Cada componente de una plantilla queda identificado explícitamente.
+
+```text
+TemplateComponent
+├── id
+├── templateVersionId
+├── type
+├── key
+├── title
+├── required
+├── order
+├── definition
+└── metadata
+```
+
+Tipos iniciales sugeridos:
+
+- form;
+- entity;
+- relation;
+- workflow;
+- event;
+- permission-set;
+- dashboard;
+- configuration.
+
+## 51.5 TemplateInstance
+
+```text
+TemplateInstance
+├── id
+├── templateId
+├── templateVersionId
+├── siteId
+├── name
+├── status
+├── configuration
+├── createdBy
+├── createdAt
+└── updatedAt
+```
+
+La instancia es la frontera de pertenencia de los datos del cliente.
+
+## 51.6 InstanceOverride
+
+```text
+InstanceOverride
+├── id
+├── instanceId
+├── componentKey
+├── path
+├── operation
+├── value
+├── createdBy
+└── createdAt
+```
+
+## 51.7 Extension e InstanceExtension
+
+```text
+Extension
+├── id
+├── slug
+├── name
+├── description
+├── owner
+├── status
+└── currentVersion
+
+InstanceExtension
+├── id
+├── instanceId
+├── extensionId
+├── extensionVersionId
+├── status
+├── configuration
+├── installedAt
+└── installedBy
+```
+
+---
+
+# 52. Grafo de composición y motor de resolución
+
+La aplicación efectiva nunca debe leerse directamente desde la plantilla ni desde la instancia de manera aislada.
+
+```mermaid
+flowchart TB
+    T[Template]
+    TV[Template Version]
+    I[Instance]
+    O[Overrides]
+    E1[Extension A]
+    E2[Extension B]
+    R[Resolved Application]
+
+    T --> TV
+    TV --> I
+    I --> O
+    I --> E1
+    I --> E2
+    TV --> R
+    O --> R
+    E1 --> R
+    E2 --> R
+```
+
+## 52.1 Resolver
+
+```mermaid
+sequenceDiagram
+    participant C as Cliente
+    participant R as Resolver
+    participant T as TemplateVersion
+    participant I as Instance
+    participant O as Overrides
+    participant E as Extensions
+
+    C->>R: Resolver aplicación
+    R->>T: cargar versión base
+    R->>I: cargar configuración
+    R->>O: aplicar diferencias
+    R->>E: integrar extensiones
+    R-->>C: Resolved Application
+```
+
+La **Resolved Application** será el único documento lógico consumido por:
+
+- renderer de Forms;
+- permisos;
+- workflows;
+- eventos;
+- dashboards;
+- servicios transversales.
+
+## 52.2 Prioridad de composición
+
+```mermaid
+flowchart TD
+    A[Template Version] --> R[Resolved Application]
+    B[Instance Configuration] --> R
+    C[Overrides] --> R
+    D[Extensions] --> R
+    R --> V[Validación final]
+```
+
+Orden de resolución propuesto:
+
+1. TemplateVersion.
+2. Instance Configuration.
+3. Overrides.
+4. Extensions.
+5. Validación.
+6. Resolved Application.
+
+---
+
+# 53. Compatibilidad y migraciones
+
+Las instancias deben permanecer vinculadas a una versión concreta hasta que exista una migración explícita.
+
+```mermaid
+flowchart LR
+    V1[Template v1] --> A[Arbat]
+    V2[Template v2] --> B[Cliente B]
+    V3[Template v3]
+    V3 -. migración opcional .-> A
+    V3 -. migración opcional .-> B
+```
+
+El motor de migración deberá informar antes de aplicar cambios:
+
+- componentes modificados;
+- overrides incompatibles;
+- extensiones afectadas;
+- relaciones nuevas;
+- campos eliminados;
+- transformaciones de datos necesarias.
+
+Nunca debe existir actualización implícita de una instancia activa.
+
+---
+
+# 54. Archery School como primera plantilla compuesta
+
+## 54.1 Plantilla universal
+
+```mermaid
+flowchart TB
+    A[Archery School Template]
+    A --> S[Student]
+    A --> E[Enrollment]
+    A --> C[Classes]
+    A --> AT[Attendance]
+    A --> EQ[Equipment]
+    S --> E
+    E --> C
+    C --> AT
+    S --> EQ
+```
+
+La plantilla conoce el dominio de una escuela de tiro con arco, pero no conoce a ningún cliente concreto.
+
+## 54.2 Instancia Arbat
+
+```mermaid
+flowchart TD
+    T[Archery School Template v1] --> I[Arbat Instance]
+    I --> O[Overrides Arbat]
+    I --> C[Control de clases]
+    I --> P[Payments]
+    O --> R[Aplicación efectiva]
+    C --> R
+    P --> R
+```
+
+Arbat podrá evolucionar activando extensiones y personalizando su instancia sin crear un fork de la plantilla.
+
+## 54.3 Payments como extensión reutilizable
+
+```mermaid
+flowchart LR
+    C[Clase] --> O[Order]
+    O --> P[Payment Extension]
+    P --> W[Wallet]
+    W --> L[Ledger]
+```
+
+La lógica financiera permanece dentro de Wallet y Commerce; la plantilla únicamente declara cuándo una clase o servicio genera una orden o requiere un pago.
+
+---
+
+# 55. Gobernanza
+
+## 55.1 Capacidades iniciales
+
+| Acción | Usuario | Admin sitio | Superusuario |
+|---|---|---|---|
+| Crear formulario | Sí | Sí | Sí |
+| Convertir en plantilla personal | Sí | Sí | Sí |
+| Crear plantilla de sitio | No | Sí | Sí |
+| Publicar universal | No | No | Sí |
+| Crear extensión universal | No | No | Sí |
+| Instanciar plantilla | Según permisos | Sí | Sí |
+| Aprobar catálogo universal | No | No | Sí |
+
+Este cuadro deberá integrarse posteriormente con el sistema general de permisos de Buddy.
+
+## 55.2 Propiedad y disponibilidad
+
+```mermaid
+flowchart LR
+    O[Propietario] --> T[Template]
+    S[Scope] --> T
+    T --> A[Acceso]
+```
+
+La propiedad histórica y el alcance de disponibilidad son conceptos independientes.
+
+---
+
+# 56. Persistencia de datos de negocio
+
+Los datos operativos nunca pertenecen a la plantilla universal; pertenecen a la instancia donde fueron generados.
+
+```mermaid
+erDiagram
+    TEMPLATE ||--o{ TEMPLATE_INSTANCE : creates
+    TEMPLATE_INSTANCE ||--o{ FORM_RESPONSE : stores
+    TEMPLATE_INSTANCE ||--o{ BUSINESS_ENTITY : owns
+    BUSINESS_ENTITY ||--o{ BUSINESS_RELATION : relates
+```
+
+Ejemplo conceptual:
+
+```text
+Template
+    Archery School
+
+Instance
+    Arbat
+
+Datos
+    alumnos
+    clases
+    asistencias
+    pagos
+```
+
+---
+
+# 57. API conceptual futura
+
+Sin definir todavía contratos definitivos, el modelo sugiere recursos separados para plantillas y sus instalaciones.
+
+```text
+GET    /api/buddy/templates
+GET    /api/buddy/templates/:id
+POST   /api/buddy/templates
+POST   /api/buddy/templates/:id/publish
+GET    /api/buddy/templates/:id/versions
+
+GET    /api/buddy/template-instances
+POST   /api/buddy/template-instances
+GET    /api/buddy/template-instances/:id
+POST   /api/buddy/template-instances/:id/resolve
+POST   /api/buddy/template-instances/:id/migrate
+
+GET    /api/buddy/extensions
+GET    /api/buddy/extensions/:id/versions
+POST   /api/buddy/template-extensions
+```
+
+La API de plantillas complementa a Forms; no reemplaza la API existente de formularios.
+
+---
+
+# 58. Decisiones abiertas antes de implementar
+
+## Identidad
+
+1. ¿Una plantilla universal puede tener varios mantenedores?
+2. ¿Cómo se transfiere la propiedad?
+3. ¿Puede un usuario proponer una plantilla universal para revisión?
+
+## Versionado
+
+4. ¿Las instancias podrán permanecer indefinidamente en una versión?
+5. ¿Habrá actualización automática opcional?
+6. ¿Cómo se coordinan versiones entre Template y Extension?
+
+## Overrides
+
+7. ¿Qué operaciones estarán permitidas inicialmente?
+8. ¿Cómo se detectarán incompatibilidades?
+9. ¿Qué ocurre cuando un override apunta a un componente eliminado?
+
+## Extensions
+
+10. ¿Una extensión puede depender de otra?
+11. ¿Cómo se resuelven conflictos entre extensiones?
+12. ¿Podrán agregar entidades y relaciones nuevas?
+
+## Datos
+
+13. ¿Cómo se representan entidades de negocio genéricas?
+14. ¿Cuándo una respuesta de formulario se convierte en entidad?
+15. ¿Qué relaciones requieren integridad referencial?
+
+Estas decisiones deberán formar parte del contrato arquitectónico antes de iniciar la implementación del motor.
+
+---
+
+# 59. Principio arquitectónico definitivo de plantillas
+
+```mermaid
+flowchart LR
+    T[Template universal] --> I[Instance por cliente]
+    I --> O[Overrides declarativos]
+    I --> E[Extensions reutilizables]
+    T --> R[Resolved Application]
+    O --> R
+    E --> R
+```
+
+La arquitectura queda definida por cinco piezas:
+
+- **Template** define conocimiento reutilizable del dominio.
+- **Instance** representa una instalación concreta por cliente.
+- **Override** expresa diferencias sin crear forks.
+- **Extension** agrega capacidades reutilizables compatibles.
+- **Resolved Application** es la única representación consumida por Forms, permisos, eventos, dashboards y los servicios transversales de Buddy.
+
+Este modelo establece la base para que aplicaciones como **Archery School** evolucionen desde un módulo específico hacia una plantilla compuesta instalable y personalizable, permitiendo que clientes como **Arbat** agreguen control de clases, pagos y futuras extensiones sin romper la evolución de la plantilla universal.
