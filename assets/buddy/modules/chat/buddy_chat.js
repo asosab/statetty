@@ -100,7 +100,7 @@ window.Buddy = window.Buddy || {};
     input.id = 'buddy-chat-input';
     input.autocomplete = 'off';
     input.spellcheck = true;
-    input.placeholder = CONFIG.placeholder || 'Escribe un comando…';
+    input.placeholder = CONFIG.placeholder || 'Escríbele al personaje…';
     input.setAttribute('aria-label', 'Comando de Buddy');
 
     var enterLabel = document.createElement('label');
@@ -207,7 +207,7 @@ window.Buddy = window.Buddy || {};
   }
 
   function restorePlaceholder() {
-    setPlaceholder(CONFIG.placeholder || 'Escribe un comando…');
+    setPlaceholder(CONFIG.placeholder || 'Escríbele al personaje…');
   }
 
   function clearInput() {
