@@ -58,6 +58,10 @@ window.Buddy = window.Buddy || {};
     }
   }
 
+  // API interna compartida por módulos que necesiten cargar
+  // recursos JavaScript adicionales después de su propia inicialización.
+  Buddy.withVersion = withBuddyVersion;
+
   var ASSET_BASE = (function () {
     // Si se define explícitamente, respetarlo. Puede ser absoluto o
     // relativo al documento que contiene Buddy.

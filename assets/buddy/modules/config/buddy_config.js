@@ -357,7 +357,11 @@ window.Buddy = window.Buddy || {};
     if (viewReady) return viewReady;
     viewReady = new Promise(function (resolve, reject) {
       var script = document.createElement('script');
-      script.src = MODULE_BASE + 'views/configView.js';
+      var viewUrl = MODULE_BASE + 'views/configView.js';
+      if (window.Buddy && typeof window.Buddy.withVersion === 'function') {
+        viewUrl = window.Buddy.withVersion(viewUrl);
+      }
+      script.src = viewUrl;
       script.onload = function () { resolve(); };
       script.onerror = function () { reject(new Error('No se pudo cargar el renderizador de formularios.')); };
       document.head.appendChild(script);
