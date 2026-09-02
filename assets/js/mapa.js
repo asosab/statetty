@@ -1,5 +1,7 @@
 // ---------------------------------------------
 // mapa.js - Lógica completa del mapa y selección
+// (versión modificada para que las agencias desmarcadas no participen
+//  en búsquedas, botones 'seleccionar todos', generación de PDFs, etc.)
 // ---------------------------------------------
 
 var map, locations = [], markers = [], seleccionados = [], ultimosFiltrados = [];
@@ -1140,30 +1142,59 @@ $(document).ready(function () {
       });
     });
 
-    // Accordion: cada encabezado muestra un control visual (×) para indicar
-    // claramente que la sección puede minimizarse.
-    $('.section-header').each(function () {
-      var $header = $(this);
-      if ($header.find('.section-collapse').length) return;
-      $header.append('<button type="button" class="section-collapse" aria-label="Minimizar sección" title="Minimizar" style="margin-left:auto;border:0;background:transparent;font-size:18px;line-height:1;cursor:pointer;padding:2px 5px;color:#777;display:none;">×</button>');
-    });
+    // accordion: la X solo aparece en la sección desplegada y queda alineada a la derecha.
+    function actualizarBotonesCollapse() {
+      $('.section-header').each(function () {
+        var $header = $(this);
+        var $section = $header.parent();
+        var $button = $header.find('.section-collapse');
+
+        if (!$button.length) {
+          $header.css({
+            display: 'flex',
+            alignItems: 'center'
+          });
+          $button = $('<button type="button" class="section-collapse" aria-label="Minimizar sección" title="Minimizar">×</button>')
+            .css({
+              display: 'none',
+              marginLeft: 'auto',
+              border: '0',
+              background: 'transparent',
+              fontSize: '18px',
+              lineHeight: '1',
+              cursor: 'pointer',
+              padding: '2px 5px',
+              color: '#777',
+              flexShrink: '0'
+            });
+          $header.append($button);
+        }
+
+        $button.css('display', $section.hasClass('active') ? 'block' : 'none');
+      });
+    }
+
+    actualizarBotonesCollapse();
 
     $(document).on('click', '.section-header', function (e) {
       if ($(e.target).closest('.section-collapse').length) return;
+
       var $section = $(this).parent();
       var yaActiva = $section.hasClass('active');
       $('.section').removeClass('active');
-      $('.section-collapse').hide();
+
       if (!yaActiva) {
         $section.addClass('active');
-        $section.find('.section-collapse').show();
       }
+
+      actualizarBotonesCollapse();
     });
 
     $(document).on('click', '.section-collapse', function (e) {
       e.preventDefault();
       e.stopPropagation();
-      $(this).closest('.section').removeClass('active').find('.section-collapse').hide();
+      $(this).closest('.section').removeClass('active');
+      actualizarBotonesCollapse();
     });
 
     // agencias únicas
