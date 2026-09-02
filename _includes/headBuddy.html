@@ -1,4 +1,16 @@
 <!-- Buddy embebible (login/magic link por correo). Usado por todas las páginas
-     (ver head.html y headMaps.html). Las páginas standalone que no procesan
-     includes de Jekyll replican esta misma etiqueta una vez en su <head>. -->
-<script src="https://statetty.com/assets/buddy/buddy.js?v=6" defer></script>
+     (ver head.html y headMaps.html). Este include ES LA ÚNICA fuente para las
+     páginas Jekyll de buddy.js, auth.js y menuUser.js: para versionar basta
+     editar el ?v= de estos <script> y no los layouts por separado.
+
+     Excepción: las páginas standalone (que no procesan includes de Jekyll) —
+     inmueble/index.html, inmueble/registro/index.html y buddy/verificado/
+     index.html — replican estas mismas etiquetas a mano en su <head>. Cuando se
+     cambie un ?v= acá, actualizar también las mismas líneas en esas 3 páginas.
+
+     El orden es importante: buddy.js primero, auth.js después (depende de
+     window.Buddy) y menuUser.js al final (depende del evento statetty:key-ready
+     que emite auth.js). -->
+<script src="https://statetty.com/assets/buddy/buddy.js?v=7" defer></script>
+<script src="/assets/js/auth.js?v=9" defer></script>
+<script src="/assets/js/menuUser.js?v=9" defer></script>
