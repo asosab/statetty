@@ -853,32 +853,6 @@ function agenciasActivas() {
   return activas;
 }
 
-function mostrarModalError() {
-  var overlay = document.createElement('div');
-  overlay.id = 'modal-error-overlay';
-  overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:99999;display:flex;justify-content:center;align-items:center;';
-  
-  var box = document.createElement('div');
-  box.style.cssText = 'background:#fff;border-radius:12px;padding:32px;max-width:420px;margin:20px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.3);font-family:sans-serif;';
-  
-  box.innerHTML =
-    '<div style="font-size:48px;margin-bottom:12px;">⚠️</div>' +
-    '<p style="font-size:18px;color:#333;margin:0 0 16px;line-height:1.5;">' +
-    'actualiza tu link al mapa desde Statetty Telegram, entonces has click en el nuevo link' +
-    '</p>' +
-    '<button id="modal-error-btn" style="background:#2563eb;color:#fff;border:none;border-radius:8px;padding:10px 24px;font-size:16px;cursor:pointer;">Cerrar</button>';
-  
-  overlay.appendChild(box);
-  document.body.appendChild(overlay);
-  
-  document.getElementById('modal-error-btn').addEventListener('click', function () {
-    overlay.remove();
-  });
-  overlay.addEventListener('click', function (e) {
-    if (e.target === overlay) overlay.remove();
-  });
-}
-
 function mostrarAvisoSinResultados() {
   if (document.getElementById('modal-sinresultados-overlay')) return; // evitar duplicados
 
@@ -933,6 +907,15 @@ function mostrarAvisoSinSesion() {
   overlay.addEventListener('click', function (e) {
     if (e.target === overlay) overlay.remove();
   });
+}
+
+function mostrarAvisoLogin() {
+  // Sin sesión Buddy: se abre el globo de login por correo para generar el magic link.
+  if (window.STT && typeof window.STT.startLogin === 'function') {
+    try { window.STT.startLogin(); } catch (e) { console.warn('[mostrarAvisoLogin]', e); }
+    return;
+  }
+  mostrarAvisoSinSesion();
 }
 
 $(document).ready(function () {
@@ -1304,21 +1287,24 @@ $(document).ready(function () {
     $('#loading-indicator').show();
 
     await waitForKey();
-    var pk = window.publicKey;
     var usuario = window.STT && window.STT.getUsuario ? window.STT.getUsuario() : null;
 
-    if (!pk) {
+    // Autenticación Buddy: se prioriza la sesión (JWT). El link legacy ?k= está en
+    // deshuso y ya NO se interpreta para entrar: un usuario con sesión entra con su
+    // cuenta; un usuario sin sesión ve el globo de login por correo (magic link).
+    var isBuddyAuth = !!(window.STT && typeof window.STT.getToken === 'function' && window.STT.getToken());
+
+    if (!isBuddyAuth) {
       $('#loading-indicator').hide();
-      mostrarAvisoSinSesion();
+      mostrarAvisoLogin();
       return;
     }
 
-    var response = await fetchFinderResult(pk);
+    var response = await fetchFinderResult(window.STT.getToken());
 
-    if (!response || response.error) {
+    if (!response || response.error || !Array.isArray(response.result)) {
       $('#loading-indicator').hide();
-      if (usuario) mostrarModalError();
-      else mostrarAvisoSinSesion();
+      mostrarAvisoSinResultados();
       return;
     }
 
@@ -1386,9 +1372,9 @@ $(document).ready(function () {
   init().catch(function(e) {
     console.error('Error al cargar datos del mapa', e);
     $('#loading-indicator').hide();
-    var usuario = window.STT && window.STT.getUsuario ? window.STT.getUsuario() : null;
-    if (usuario) mostrarModalError();
-    else mostrarAvisoSinSesion();
+    var isBuddyAuth = !!(window.STT && typeof window.STT.getToken === 'function' && window.STT.getToken());
+    if (isBuddyAuth) mostrarAvisoSinResultados();
+    else mostrarAvisoLogin();
   });
 
   // búsqueda
