@@ -134,7 +134,9 @@
       'width:min(320px,92vw);min-width:190px;max-height:min(75vh,560px);' +
       'overflow-y:auto;overflow-x:hidden;' +
       'background:#fff;border-radius:var(--radius-md,12px);' +
-      'box-shadow:0 10px 30px rgba(7,79,102,.18);padding:8px;z-index:1000;' +
+      'box-shadow:0 10px 30px rgba(7,79,102,.18);padding:8px;' +
+      // Por encima de las burbujas de texto de Buddy says (z-index 2147483000/301)
+      'z-index:2147483002;' +
       'opacity:0;visibility:hidden;transform:translateY(-6px);' +
       'transition:opacity .18s ease, transform .18s ease, visibility .18s;' +
       'font-family:var(--font-body,\'Lato\',sans-serif);}' +
