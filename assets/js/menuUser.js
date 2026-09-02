@@ -548,7 +548,7 @@
   }
 
   // Fase 1.3: CTA de login Buddy cuando el usuario no está logueado.
-  var LOGIN_CTA_FLAG = 'menuUser-loginCta';
+  var LOGIN_CTA_FLAG = 'menuUserLoginCta';
   var LOGIN_CTA_SELECTOR = '.stt-login-cta';
 
   function mountLoginCta() {
@@ -563,6 +563,10 @@
 
     var mounted = 0;
     ctaEls.forEach(function (el) {
+      // Idempotencia extra a nivel DOM: si el contenedor del CTA ya tiene un
+      // botón de login "Ingresar" como hermano, no crear otro (evita duplicados
+      // aunque el flag de body falle por cualquier motivo).
+      if (el.parentNode && el.parentNode.querySelector(LOGIN_CTA_SELECTOR)) return;
       var btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'stt-login-cta';

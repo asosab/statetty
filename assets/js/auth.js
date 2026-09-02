@@ -235,7 +235,11 @@
   window.STT.startLogin=function(){
     var a=buddyAuth();
     if(a&&typeof a.startAuthenticationPrompt==='function'){
-      return a.startAuthenticationPrompt().then(function(){
+      // startAuthenticationPrompt devuelve un booleano (true: form mostrado), no
+      // una Promise. Envolvemos con Promise.resolve para poder encadenar sin
+      // lanzar "....then is not a function" y así re-verificar la sesión tras
+      // mostrar el form (requeryAfterLogin).
+      return Promise.resolve(a.startAuthenticationPrompt()).then(function(){
         // Buddy mostró el form; re-verificar la sesión tras el login y mostrar
         // vinculación si aplica.
         return requeryAfterLogin();
