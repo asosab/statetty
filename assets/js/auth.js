@@ -141,6 +141,10 @@
       u.usrIconURL=tg.usrIconURL||'';
       u.activo=tg.activo;
       u.emailVerificado=tg.emailVerificado;
+      // Datos de trabajo que consumen mapa.js/fndInm.js u otros scripts:
+      u.busquedas=tg.busquedas||null;
+      u.seleccionados=tg.seleccionados||null;
+      u.dfotos=tg.dfotos||null;
     }
     // Campos Buddy siempre presentes
     if(buddy){
@@ -177,6 +181,11 @@
           window.STT.usuario=buildUsuario(authMe);
           dispatch({key:token,usuario:window.STT.usuario,error:null},'statetty:key-ready');
           dispatch({token:token,buddy:window.STT.buddy,tg:window.STT.tg,linked:window.STT.linked,error:null},'statetty:auth-ready');
+          // Backfill automático statetty.com: si hay buddy sin cuenta tg vinculada,
+          // intentar completar datos/vincular con un tgUser/agente del mismo email.
+          if(window.STT.buddy&&!window.STT.linked){
+            _maybeBackfill(token);
+          }
           return;
         }else{
           console.log('[Statetty] [K] auth/me:',authMe&&authMe.error||'respuesta inválida');
@@ -328,6 +337,7 @@
   function _dismissLink(){
     var ov=document.getElementById('stt-link-overlay');if(ov)ov.remove();
   }
+  window.__sttDismissLink=_dismissLink;
 
   function _setLinkStatus(ov,msg){
     var el=ov.querySelector('#stt-link-status');
@@ -417,7 +427,35 @@
     });
   }
 
-  // ── arranque ───────────────────────────────────────────────────────────────
+  // Backfill automático statetty.com: buddy sin tg vinculado → intentar completar
+  // datos/vincular con un tgUser o agente del mismo email vía backend.
+  async function _maybeBackfill(token){
+    if(!token) return;
+    try{
+      var base=getApiBase();
+      var res=await fetch(base+'statetty/auth/backfill-buddy',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+        body:'{}'
+      });
+      var data=await res.json();
+      if(!data||!data.ok) return;
+      if(data.linked&&data.tg&&data.tg._id){
+        window.STT.linked=true;
+        window.STT.tg=data.tg||null;
+        window.STT.buddy=data.buddy||window.STT.buddy||null;
+        window.STT.usuario=buildUsuario({linked:true,buddy:window.STT.buddy,tg:window.STT.tg});
+        if(window.__sttDismissLink)window.__sttDismissLink();
+        dispatch({key:token,usuario:window.STT.usuario,error:null},'statetty:key-ready');
+        dispatch({token:token,buddy:window.STT.buddy,tg:window.STT.tg,linked:true,error:null},'statetty:auth-ready');
+      }else if(data.backfilled&&data.buddy){
+        window.STT.buddy=data.buddy||window.STT.buddy||null;
+        window.STT.usuario=buildUsuario({linked:false,buddy:window.STT.buddy,tg:window.STT.tg});
+      }
+    }catch(e){
+      console.log('[Statetty] [K] _maybeBackfill:',e.message);
+    }
+  }
 
   function ready(fn){
     if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',fn);}

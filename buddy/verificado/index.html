@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Correo verificado — Statetty</title>
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="description" content="Verificación de correo en Statetty">
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/images/favicon/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/images/favicon/favicon-16x16.png">
+
+  <!-- Buddy embebible (login por correo) — detecta ?auth= y autentica en el browser -->
+  <script src="https://statetty.com/assets/buddy/buddy.js?v=4" defer></script>
+  <script src="/assets/js/config.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #eef6f9;
+      font-family: Lato, Arial, sans-serif;
+      color: #1f2d33;
+    }
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      max-width: 420px;
+      width: 100%;
+      margin: 24px;
+      padding: 34px 30px;
+      text-align: center;
+      box-shadow: 0 18px 50px rgba(0, 0, 0, .12);
+    }
+    .check {
+      width: 64px; height: 64px;
+      border-radius: 50%;
+      background: #e6f7ee;
+      color: #1c9d5c;
+      font-size: 36px; line-height: 64px;
+      margin: 0 auto 16px;
+    }
+    h1 { font-size: 22px; color: #074f66; margin: 0 0 8px; }
+    p { font-size: 15px; line-height: 1.5; color: #43555d; margin: 0 0 20px; }
+    .spinner {
+      width: 36px; height: 36px;
+      border: 4px solid #d3e9f0;
+      border-top-color: #17baef;
+      border-radius: 50%;
+      margin: 0 auto 16px;
+      animation: spin .9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    a.btn {
+      display: inline-block;
+      background: #17baef;
+      color: #fff;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 15px;
+      padding: 13px 22px;
+      border-radius: 9px;
+    }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div id="stt-loading">
+      <div class="spinner"></div>
+      <p>Verificando tu correo…</p>
+    </div>
+    <div id="stt-ok" class="hidden">
+      <div class="check">&#10004;</div>
+      <h1>Correo verificado</h1>
+      <p id="stt-msg">Tu correo fue verificado correctamente. Ya puedes usar Statetty desde este navegador.</p>
+      <a class="btn" id="stt-continue" href="/">Ir a Statetty</a>
+    </div>
+    <div id="stt-fail" class="hidden">
+      <div class="check" style="background:#fdecec;color:#d64545;">&#10007;</div>
+      <h1>No se pudo verificar</h1>
+      <p id="stt-msg-fail">El enlace es inválido o venció. Pedí uno nuevo desde @statettybot en Telegram.</p>
+      <a class="btn" href="/">Volver a Statetty</a>
+    </div>
+  </div>
+
+  <script>
+  (function () {
+    'use strict';
+    var loading = document.getElementById('stt-loading');
+    var ok = document.getElementById('stt-ok');
+    var fail = document.getElementById('stt-fail');
+
+    function showOk() {
+      loading.classList.add('hidden');
+      ok.classList.remove('hidden');
+      // Redirección opcional al destino (query ?next=), por defecto a /
+      try {
+        var next = new URLSearchParams(location.search).get('next') || '/';
+        document.getElementById('stt-continue').href = next;
+      } catch (e) { /* noop */ }
+    }
+    function showFail() {
+      loading.classList.add('hidden');
+      fail.classList.remove('hidden');
+    }
+
+    // Esperamos a que Buddy procese el ?auth= (buddy:auth-verified) o que auth.js
+    // confirme la sesión (statetty:auth-ready con token).
+    var done = false;
+    function success() {
+      if (done) return;
+      done = true;
+      showOk();
+    }
+    function failure() {
+      if (done) return;
+      done = true;
+      showFail();
+    }
+
+    document.addEventListener('buddy:auth-verified', function () { success(); }, { once: true });
+    document.addEventListener('buddy:auth-verify-failed', function () { failure(); }, { once: true });
+    document.addEventListener('buddy:auth-ready', function () { success(); }, { once: true });
+    document.addEventListener('statetty:auth-ready', function (e) {
+      if (e.detail && e.detail.token) success();
+    });
+
+    // Timeout de seguridad: si no hay ?auth= y ya hay sesión, mostrar OK igual.
+    setTimeout(function () {
+      var hasAuth = new URLSearchParams(location.search).has('auth');
+      if (!hasAuth) {
+        // Sin token de verificación en la URL: sesión ya existente o página directa.
+        document.addEventListener('buddy:auth-ready', function () { success(); }, { once: true });
+        // Si Buddy ya autenticó antes, forzar éxito.
+        var stt = window.STT;
+        if (stt && stt.getToken && stt.getToken()) success();
+      }
+    }, 3000);
+  })();
+  </script>
+  <script src="/assets/js/auth.js"></script>
+</body>
+</html>
