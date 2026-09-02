@@ -561,19 +561,17 @@
     var ctaEls = document.querySelectorAll(CTA_SELECTOR);
     if (ctaEls.length === 0) return;
 
-    var btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'stt-login-cta';
-    btn.textContent = 'Ingresar';
-    btn.setAttribute('aria-label', 'Ingresar con tu correo');
-    btn.addEventListener('click', function () {
-      if (window.STT && window.STT.startLogin) window.STT.startLogin();
-    });
-
     var mounted = 0;
     ctaEls.forEach(function (el) {
-      var clone = btn.cloneNode(true);
-      el.parentNode.appendChild(clone);
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'stt-login-cta';
+      btn.textContent = 'Ingresar';
+      btn.setAttribute('aria-label', 'Ingresar con tu correo');
+      btn.addEventListener('click', function () {
+        if (window.STT && window.STT.startLogin) window.STT.startLogin();
+      });
+      el.parentNode.appendChild(btn);
       mounted++;
     });
     if (mounted > 0) document.body.dataset[LOGIN_CTA_FLAG] = '1';

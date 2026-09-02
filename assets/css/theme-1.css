@@ -588,6 +588,14 @@ a:hover { color: var(--blue-dark); }
   padding: 8px 20px; border-radius: 50px; font-weight: 700;
 }
 .header-nav .btn-nav-cta:hover { background: var(--yellow-pale); color: var(--blue-dark); }
+.header-nav .stt-login-cta {
+  font-family: var(--font-head); font-weight: 700;
+  font-size: .82rem; text-transform: uppercase; letter-spacing: .04em;
+  background: var(--yellow); color: var(--blue-dark);
+  padding: 8px 20px; border: none; border-radius: 50px; cursor: pointer;
+  transition: var(--transition);
+}
+.header-nav .stt-login-cta:hover { background: var(--yellow-pale); color: var(--blue-dark); }
 .nav-toggle {
   display: none; flex-direction: column; gap: 5px;
   background: none; border: none; cursor: pointer; padding: 6px;
