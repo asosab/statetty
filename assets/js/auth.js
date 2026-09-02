@@ -483,8 +483,12 @@
       });
 
       // Re-procesar si Buddy cambia de modo de auth (login/logout desde la UI
-      // propia de Buddy, sin pasar por nuestro CTA).
-      ['buddy:auth-mode-changed','buddy:auth-ready'].forEach(function(evt){
+      // propia de Buddy) o autentica por magic link (verifyHash). Se escuchan
+      // tanto buddy:auth-state-changed como buddy:auth-verified porque en la
+      // ruta de verificación por hash buddy:auth-ready (solo emitido por
+      // checkSession) nunca se dispara; sin estos listeners auth.js no
+      // re-consultaba la sesión y hacía falta recargar la página.
+      ['buddy:auth-mode-changed','buddy:auth-ready','buddy:auth-state-changed','buddy:auth-verified'].forEach(function(evt){
         window.addEventListener(evt,function(){
           // Solo releva si ya hay token nuevo y no lo reflejamos aún.
           requeryAfterLogin();
