@@ -386,8 +386,8 @@ window.Buddy = window.Buddy || {};
     var user = authState.user || {};
 
     if (authState.welcomeType === 'existing' && user.name) {
-      var template = auth.config.existingWelcomeTemplate || '¡Bienvenido, {name}!';
-      emit(template.replace('{name}', user.name), 'alegre');
+      var template = auth.config.existingWelcomeTemplate || '¡Hola {name}!';
+      emit(template.replace('{name}', user.name.split(' ')[0]), 'alegre');
       auth.consumeWelcome();
       return;
     }

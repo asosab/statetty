@@ -30,7 +30,7 @@ window.BuddyAuthConfig = Object.assign({
 
   loginMessage: 'Escribe tu correo y te enviaremos un enlace de acceso a esa dirección.',
   emailSentMessage: 'Revisa tu correo y haz clic en el enlace para iniciar sesión.',
-  existingWelcomeTemplate: '¡Bienvenido, {name}!',
+  existingWelcomeTemplate: '¡Hola {name}!',
   newUserWelcomeMessage: '¡Bienvenido! Para continuar, necesitamos algunos datos.',
   nameSavedTemplate: '¡Mucho gusto, {name}!' ,
   logoutQuestion: '¿Deseas cerrar tu sesión en este navegador?',
