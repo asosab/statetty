@@ -1,7 +1,5 @@
 // ---------------------------------------------
 // mapa.js - Lógica completa del mapa y selección
-// (versión modificada para que las agencias desmarcadas no participen
-//  en búsquedas, botones 'seleccionar todos', generación de PDFs, etc.)
 // ---------------------------------------------
 
 var map, locations = [], markers = [], seleccionados = [], ultimosFiltrados = [];
