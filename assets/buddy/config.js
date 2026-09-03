@@ -18,6 +18,7 @@ window.BuddyConfig = Object.assign({
     'dashboard',
     'config',
     'says',
+    'hablar',
     'chat',
     'menu',
     'archerySchool',

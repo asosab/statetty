@@ -1,0 +1,26 @@
+{
+  "module": "hablar",
+  "name": "Hablar",
+  "description": "Text-to-Speech: convierte en voz los mensajes del globo (says) y los comandos del chat.",
+  "fields": [
+    { "key": "enabled", "label": "Activo", "type": "boolean", "default": true },
+    { "key": "autoSpeak", "label": "Leer automáticamente por defecto", "type": "boolean", "default": false },
+    { "key": "persistState", "label": "Recordar estado entre sesiones", "type": "boolean", "default": true },
+    { "key": "skipInteractive", "label": "No leer mensajes interactivos (formularios/elecciones)", "type": "boolean", "default": true },
+    { "key": "voice", "label": "Voz", "type": "object", "default": {}, "fields": [
+      { "key": "language", "label": "Idioma (bcp-47)", "type": "string", "default": "es-ES" },
+      { "key": "voiceName", "label": "Nombre de voz (vacío = por defecto)", "type": "string", "default": "" },
+      { "key": "rate", "label": "Velocidad (0.1 - 10)", "type": "number", "default": 1 },
+      { "key": "pitch", "label": "Tono (0 - 2)", "type": "number", "default": 1 },
+      { "key": "volume", "label": "Volumen (0 - 1)", "type": "number", "default": 1 }
+    ] },
+    { "key": "commands", "label": "Comandos del chat", "type": "object", "default": {}, "fields": [
+      { "key": "on", "label": "Activar lectura en voz alta", "type": "array", "default": ["habla", "hablame", "dilo", "dilo en voz alta"], "items": { "type": "string" } },
+      { "key": "off", "label": "Silenciar lectura", "type": "array", "default": ["calla", "no hables mas", "has silencio", "silencio", "deja de hablar"], "items": { "type": "string" } }
+    ] },
+    { "key": "messages", "label": "Mensajes de confirmación", "type": "object", "default": {}, "fields": [
+      { "key": "on", "label": "Al activar", "type": "string", "default": "Está bien, desde ahora leeré en voz alta lo que diga." },
+      { "key": "off", "label": "Al silenciar", "type": "string", "default": "De acuerdo, guardaré silencio." }
+    ] }
+  ]
+}

@@ -135,6 +135,7 @@ window.Buddy = window.Buddy || {};
     'telemetry',
     'wa_listener',
     'says',
+    'hablar',
     'character',
     'auth',
     'user',

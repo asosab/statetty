@@ -792,6 +792,12 @@ window.Buddy = window.Buddy || {};
     bubbleEl.style.display = 'block';
     void bubbleEl.offsetWidth;
     bubbleEl.classList.add('is-visible');
+
+    // Ofrecer el formulario al módulo Hablar (se puede ignorar si lo desea).
+    if (window.Buddy.hablar && typeof window.Buddy.hablar.__onSaysMessage === 'function') {
+      window.Buddy.hablar.__onSaysMessage('', { form: true }, true);
+    }
+
     setTimeout(function () {
       if (userFormState && userFormState.controls) {
         var controls = userFormState.controls;
@@ -847,6 +853,12 @@ window.Buddy = window.Buddy || {};
     window.Buddy.showCharacterImage(datosExpresion);
     // 2) muestra el globo, anclado a cabeza_superior de esa expresión.
     showBubble(texto, opciones, datosExpresion);
+
+    // 3) ofrece el mensaje al módulo Hablar (Text-to-Speech) para que pueda
+    // pronunciarlo en voz alta si la lectura automática está activada.
+    if (window.Buddy.hablar && typeof window.Buddy.hablar.__onSaysMessage === 'function') {
+      window.Buddy.hablar.__onSaysMessage(texto, opciones, interactive);
+    }
 
     // Este método sólo se ejecuta cuando el mensaje puede mostrarse ahora;
     // los nuevos buddy_says() durante un mensaje activo se incorporan a
