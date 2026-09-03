@@ -118,21 +118,25 @@ window.BuddyConfigView = window.BuddyConfigView || {};
     var items = container ? container.querySelectorAll('[data-array-item]') : [];
     var list = [];
     items.forEach(function (itemEl) {
-      var item = {};
       if (field.items && field.items.type === 'object') {
-        collectFields(itemEl, field.items.fields || [], item);
+        var obj = {};
+        collectFields(itemEl, field.items.fields || [], obj);
+        list.push(obj);
       } else {
+        // Items escalares (string/number/boolean): se guardan como valor
+        // simple, NO envueltos en {value: ...}. Antes se envolvían, lo que
+        // en cada guardado iba anidando {value: {...}} y corrompía los
+        // arrays de strings (p. ej. commands.on/off de hablar).
         var input = itemEl.querySelector('input, select, textarea');
         var raw = input ? input.value : '';
         if (field.items && field.items.type === 'number') {
-          item.value = raw === '' ? null : Number(raw);
+          list.push(raw === '' ? null : Number(raw));
         } else if (field.items && field.items.type === 'boolean') {
-          item.value = !!(itemEl.querySelector('input[type="checkbox"]').checked);
+          list.push(!!itemEl.querySelector('input[type="checkbox"]').checked);
         } else {
-          item.value = raw;
+          list.push(raw);
         }
       }
-      list.push(item);
     });
     out[field.key] = list;
   }

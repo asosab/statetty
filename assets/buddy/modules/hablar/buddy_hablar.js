@@ -241,12 +241,41 @@ window.Buddy = window.Buddy || {};
     return false;
   }
 
+  function splitTok(value) {
+    return value == null ? '' : String(value);
+  }
+
+  // Extrae una lista de comandos en forma de strings planos, tolerando el
+  // shape corrupto que pudiera quedar guardado en BD por un bug del editor
+  // (array de {value: "habla"} ó {value: '{ "value": "habla"}'} en vez de
+  // ["habla", ...]). Así el comando se reconoce aunque el dato esté anidado.
+  function commandsList(kind) {
+    var raw = CONFIG.commands && CONFIG.commands[kind];
+    if (!Array.isArray(raw)) return [];
+    var out = [];
+    for (var i = 0; i < raw.length; i++) {
+      var item = raw[i];
+      var value = item;
+      // Desanidar objetos {value: ...} (pueden venir anidados varias veces
+      // por el bug de guardado).
+      var guard = 0;
+      while (item && typeof item === 'object' && !Array.isArray(item) && guard < 3) {
+        item = item.value;
+        guard++;
+      }
+      value = item;
+      var text = splitTok(value).trim();
+      if (text) out.push(text);
+    }
+    return out;
+  }
+
   function interceptor(texto) {
     var limpio = normalize(texto);
     if (!limpio) return false;
 
-    var on = CONFIG.commands && Array.isArray(CONFIG.commands.on) ? CONFIG.commands.on : [];
-    var off = CONFIG.commands && Array.isArray(CONFIG.commands.off) ? CONFIG.commands.off : [];
+    var on = commandsList('on');
+    var off = commandsList('off');
 
     if (matchesAny(limpio, on)) {
       setAutoSpeak(true);
