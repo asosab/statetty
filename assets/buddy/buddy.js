@@ -1231,21 +1231,61 @@ window.Buddy = window.Buddy || {};
     });
   }
 
-  // Aplica el siteId/url de la config de runtime (BD) sobre la config estática
+  // Aplica la config de runtime (BD) sobre la config estática
   // assets/buddy/config.js (que hardcodea app.siteId='statetty'). Sin esto, el
-  // dashboard, telemetry y la URL de runtime siempre usarían el sitio estático
-  // en lugar del sitio configurado en BD para el dominio actual.
+  // dashboard, telemetry, debug y la URL de runtime siempre usarían los valores
+  // estáticos en lugar de la config de BD del dominio actual. Prioridad por
+  // capa: override (BD) > global (BD) > siteId/url top-level (BD) > estático.
   function applyRuntimeSiteConfig() {
     if (!runtimeConfig || typeof runtimeConfig !== 'object') return;
-    var app = (window.BuddyConfig && window.BuddyConfig.app) || {};
+    var cfg = window.BuddyConfig || {};
+    var app = cfg.app || {};
+
+    // 1) Valores top-level de la config BD: siteId y url.
     if (runtimeConfig.siteId && String(runtimeConfig.siteId) !== String(app.siteId || '')) {
       app.siteId = runtimeConfig.siteId;
     }
     if (runtimeConfig.url && String(runtimeConfig.url) !== String(app.url || '')) {
       app.url = runtimeConfig.url;
     }
-    window.Buddy.config = window.BuddyConfig || {};
-    debugLog('config: siteId aplicado desde BD', { siteId: app.siteId, url: app.url });
+
+    // 2) global (BD): debug y app.* desde la config de página del toolbox.
+    var g = runtimeConfig.global && typeof runtimeConfig.global === 'object' ? runtimeConfig.global : {};
+    if (g.debug !== undefined) cfg.debug = g.debug;
+    var gApp = g.app && typeof g.app === 'object' ? g.app : {};
+    if (gApp.siteId && String(gApp.siteId) !== String(app.siteId || '')) {
+      app.siteId = gApp.siteId;
+    }
+    if (gApp.email && String(gApp.email) !== String(app.email || '')) {
+      app.email = gApp.email;
+    }
+
+    // 3) override (BD): aplica merges explícitos sobre la config de arranque.
+    var ov = runtimeConfig.override && typeof runtimeConfig.override === 'object' ? runtimeConfig.override : {};
+    applyRuntimeOverride(ov);
+
+    window.Buddy.config = cfg;
+    debugLog('config: valores de BD aplicados', {
+      siteId: app.siteId,
+      url: app.url,
+      email: app.email,
+      debug: cfg.debug
+    });
+  }
+
+  // Los overrides de BD pueden anular ramas concretas de la config estática.
+  // Se aplican con deepMerge para que módulos que lean window.BuddyConfig o
+  // window.Buddy.<módulo>Config reciban los valores de BD.
+  function applyRuntimeOverride(override) {
+    if (!override || typeof override !== 'object') return;
+    Object.keys(override).forEach(function (key) {
+      var val = override[key];
+      if (val && typeof val === 'object' && !Array.isArray(val) && window.BuddyConfig && window.BuddyConfig[key]) {
+        window.BuddyConfig[key] = deepMerge(window.BuddyConfig[key], val);
+      } else if (window.BuddyConfig) {
+        window.BuddyConfig[key] = val;
+      }
+    });
   }
 
   function initialize() {
