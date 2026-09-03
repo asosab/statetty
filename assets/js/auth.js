@@ -90,8 +90,35 @@
     });
   }
 
-  function getBuddyUser(){
-    var a=buddyAuth();
+  // Espera a que Buddy esté listo y a que su checkSession (incluido el refresh
+  // de tokens) termine de asentarse. Motivo: en una carga fresca (pestaña nueva
+  // tras cerrar la anterior) el accessToken vive en sessionStorage (se limpia)
+  // y Buddy lo recupera vía refreshToken (localStorage) de forma asíncrona. Si
+  // auth.js leyera el token antes de que ese refresh concluya, concluiría "sin
+  // sesión" y mostraría el globo de login aunque la cuenta siga autenticada.
+  function waitBuddySession(timeoutMs){
+    timeoutMs=timeoutMs||8000;
+    return waitBuddyReady(timeoutMs).then(function(buddyReady){
+      if(!buddyReady) return false;
+      var auth=buddyAuth();
+      // Ya hay accessToken accesible: no hay ventana de carrera, salimos.
+      if(auth&&typeof auth.getAccessToken==='function'&&auth.getAccessToken()) return true;
+      return new Promise(function(resolve){
+        var done=false;
+        var timer=null;
+        function settle(){ if(done) return; done=true; if(timer)clearTimeout(timer); window.removeEventListener('buddy:auth-ready',onSettled); resolve(true); }
+        function onSettled(){ settle(); }
+        window.addEventListener('buddy:auth-ready',onSettled);
+        // Aseguramos que checkSession esté corriendo (el módulo auth de Buddy ya
+        // lo inicia en su init(); si no llegó todavía, lo lanzamos y esperamos
+        // el evento buddy:auth-ready que se emite al finalizar el flujo).
+        if(auth&&typeof auth.checkSession==='function'){ try{ auth.checkSession().catch(function(){}); }catch(e){} }
+        timer=setTimeout(settle,timeoutMs);
+      });
+    });
+  }
+
+  function getBuddyUser(){    var a=buddyAuth();
     if(a&&typeof a.getUser==='function') return a.getUser()||null;
     return null;
   }
@@ -467,7 +494,13 @@
   }
 
   ready(function(){
-    waitBuddyReady().then(function(buddyReady){
+    waitBuddySession().then(function(buddyReady){
+      // Esperamos a que el checkSession de Buddy se asiente (incluido el refresh
+      // de tokens) para no leer el accessToken antes de que termine. En una carga
+      // fresca el accessToken está en sessionStorage (se limpia al cerrar la
+      // pestaña) y Buddy lo recupera vía refreshToken (localStorage) de forma
+      // asíncrona; si leyéramos el token antes, concluiríamos "sin sesión" y
+      // mostraríamos el globo de login aunque la cuenta siga autenticada.
       if(buddyReady){
         // Buddy ya corrió su flujo (auth-ready emitido). Solo replicamos el estado.
         var auth=buddyAuth();

@@ -1366,6 +1366,7 @@ $(document).ready(function () {
 
     $('#loading-indicator').hide();
     renderMap(locs, lat, lng, radius, pProm, na, ag);
+    window.__mapaCargado = true;
     $('#loading-indicator').hide();
   }
 
@@ -1375,6 +1376,19 @@ $(document).ready(function () {
     var isBuddyAuth = !!(window.STT && typeof window.STT.getToken === 'function' && window.STT.getToken());
     if (isBuddyAuth) mostrarAvisoSinResultados();
     else mostrarAvisoLogin();
+  });
+
+  // Si la sesión Buddy se recuperó de forma tardía (refresh de tokens tras una
+  // carga fresca, o login por magic link) después de que el mapa ya se decidió
+  // a mostrar el globo de login, reintentamos init() para entrar con la cuenta.
+  window.addEventListener('statetty:auth-ready', function (e) {
+    var d = e && e.detail ? e.detail : {};
+    var hasToken = window.STT && typeof window.STT.getToken === 'function' && !!window.STT.getToken();
+    if (hasToken && d.token && !window.__mapaCargado) {
+      init().catch(function (err) {
+        console.error('Error al reintentar cargar el mapa', err);
+      });
+    }
   });
 
   // búsqueda
