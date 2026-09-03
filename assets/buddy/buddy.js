@@ -1231,6 +1231,23 @@ window.Buddy = window.Buddy || {};
     });
   }
 
+  // Aplica el siteId/url de la config de runtime (BD) sobre la config estática
+  // assets/buddy/config.js (que hardcodea app.siteId='statetty'). Sin esto, el
+  // dashboard, telemetry y la URL de runtime siempre usarían el sitio estático
+  // en lugar del sitio configurado en BD para el dominio actual.
+  function applyRuntimeSiteConfig() {
+    if (!runtimeConfig || typeof runtimeConfig !== 'object') return;
+    var app = (window.BuddyConfig && window.BuddyConfig.app) || {};
+    if (runtimeConfig.siteId && String(runtimeConfig.siteId) !== String(app.siteId || '')) {
+      app.siteId = runtimeConfig.siteId;
+    }
+    if (runtimeConfig.url && String(runtimeConfig.url) !== String(app.url || '')) {
+      app.url = runtimeConfig.url;
+    }
+    window.Buddy.config = window.BuddyConfig || {};
+    debugLog('config: siteId aplicado desde BD', { siteId: app.siteId, url: app.url });
+  }
+
   function initialize() {
     var entry = getEntryScript();
     if (!entry) {
@@ -1248,6 +1265,9 @@ window.Buddy = window.Buddy || {};
         // Config de runtime desde BD. Si el sitio no tiene config aún, queda
         // vacío y getConfiguredModules aplica el fallback de seguridad.
         return fetchRuntimeConfig();
+      })
+      .then(function () {
+        applyRuntimeSiteConfig();
       })
       .then(function () {
         return loadCharacterConfig();
