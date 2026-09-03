@@ -1187,8 +1187,19 @@ window.Buddy = window.Buddy || {};
         }
       }
 
-      var requested = String(config.defaultCharacter || '').trim().toLowerCase();
-      var fallback = String(config.fallbackCharacter || 'alejito').trim().toLowerCase();
+      // La config de runtime (BD) manda sobre el archivo estático
+      // modules/character/config.js, que sólo declara defaults (alejito).
+      // El panel de configuración guarda el personaje en la BD; si no se
+      // aplicara aquí, siempre se usaría el valor hardcodeado estático.
+      var runtimeChar = runtimeConfig && typeof runtimeConfig.character === 'object'
+        ? runtimeConfig.character
+        : {};
+      var requested = String(
+        (runtimeChar.defaultCharacter != null ? runtimeChar.defaultCharacter : config.defaultCharacter) || ''
+      ).trim().toLowerCase();
+      var fallback = String(
+        (runtimeChar.fallbackCharacter != null ? runtimeChar.fallbackCharacter : config.fallbackCharacter) || ''
+      ).trim().toLowerCase();
       personajeActivo = requested || fallback;
       if (!personajeActivo) personajeActivo = 'alejito';
 
