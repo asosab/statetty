@@ -15,7 +15,10 @@ window.BuddyAuthConfig = Object.assign({
     login: '/api/buddy/auth/login',
     verify: '/api/buddy/auth/verify',
     logout: '/api/buddy/auth/logout',
-    refresh: '/api/buddy/auth/refresh'
+    refresh: '/api/buddy/auth/refresh',
+    sessions: '/api/buddy/auth/sessions',
+    closeOtherSessions: '/api/buddy/auth/sessions/close-others',
+    closeSessionTemplate: '/api/buddy/auth/sessions/{sessionId}/close'
   },
   verificationParameter: 'auth',
 

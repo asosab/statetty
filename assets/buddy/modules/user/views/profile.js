@@ -52,6 +52,54 @@ window.BuddyUserViews = window.BuddyUserViews || {};
     var file=document.createElement('input');file.type='file';file.accept='image/*';file.addEventListener('change',function(){if(!file.files[0])return;api.uploadPhoto(file.files[0]).then(function(){return api.getCurrent();}).then(function(){return api.render({target:target,view:'profile'});}).catch(function(err){photoStatus.textContent=err.message;});});
     photo.appendChild(file);var photoStatus=document.createElement('span');photoStatus.className='hint';photo.appendChild(photoStatus);photoSection.appendChild(photo);root.appendChild(photoSection);
 
+    /* SESIONES ACTIVAS */
+    var authApi=window.Buddy&&window.Buddy.auth;
+    if(authApi&&typeof authApi.listSessions==='function'){
+      var sessSection=document.createElement('section');
+      var sh=document.createElement('h3');sh.textContent='Sesiones activas';sessSection.appendChild(sh);
+      var sHint=document.createElement('p');sHint.className='hint';sHint.textContent='Dispositivos donde tenés la sesión iniciada en este sitio. Podés cerrar los que no uses.';sessSection.appendChild(sHint);
+      var sStatus=document.createElement('div');sStatus.className='status';sessSection.appendChild(sStatus);
+      var sList=document.createElement('div');sList.className='cards';sessSection.appendChild(sList);
+      var closeOthers=document.createElement('button');closeOthers.type='button';closeOthers.textContent='Cerrar las demás sesiones menos esta';closeOthers.className='buddy-close-others';sessSection.appendChild(closeOthers);
+      function fmtDate(v){var d=v?new Date(v):null;return d&&!isNaN(d.getTime())?d.toLocaleString():'—';}
+      function shortDevice(d){d=d||'Dispositivo desconocido';return d.length>50?d.slice(0,50)+'…':d;}
+      function loadSessions(){
+        sStatus.textContent='Cargando…';
+        authApi.listSessions().then(function(data){
+          sStatus.textContent='';
+          sList.innerHTML='';
+          var sessions=(data&&data.sessions)||[];
+          closeOthers.style.display=(sessions.length>1)?'':'none';
+          if(!sessions.length){var none=document.createElement('p');none.className='hint';none.textContent='No hay otras sesiones activas.';sList.appendChild(none);return;}
+          sessions.forEach(function(s){
+            var art=document.createElement('article');
+            var meta=document.createElement('div');meta.className='meta';
+            var strong=document.createElement('strong');strong.textContent=shortDevice(s.deviceInfo);meta.appendChild(strong);
+            var ip=document.createElement('span');ip.textContent='IP: '+(s.ip||'—');meta.appendChild(ip);
+            var when=document.createElement('span');when.textContent='Desde: '+fmtDate(s.createdAt);meta.appendChild(when);
+            art.appendChild(meta);
+            if(s.isCurrent){
+              var cur=document.createElement('span');cur.className='hint';cur.textContent='(esta sesión)';art.appendChild(cur);
+            }else{
+              var btn=document.createElement('button');btn.type='button';btn.textContent='Cerrar';
+              btn.addEventListener('click',(function(id,b){return function(){b.disabled=true;sStatus.textContent='Cerrando sesión…';authApi.closeSession(id).then(function(){sStatus.textContent='Sesión cerrada.';loadSessions();}).catch(function(err){sStatus.textContent=err.message;b.disabled=false;});};})(s.id,btn));
+              art.appendChild(btn);
+            }
+            sList.appendChild(art);
+          });
+        }).catch(function(err){
+          sStatus.textContent=err.message;
+        });
+      }
+      closeOthers.addEventListener('click',function(){
+        if(!window.confirm('¿Deseás cerrar las demás sesiones (excepto esta) en todos los dispositivos?'))return;
+        closeOthers.disabled=true;sStatus.textContent='Cerrando las demás sesiones…';
+        authApi.closeOtherSessions().then(function(){sStatus.textContent='Se cerraron las demás sesiones.';loadSessions();}).catch(function(err){sStatus.textContent=err.message;}).finally(function(){closeOthers.disabled=false;});
+      });
+      loadSessions();
+      root.appendChild(sessSection);
+    }
+
     target.appendChild(root);
 
     var as=archerySchoolApi();

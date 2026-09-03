@@ -38,6 +38,21 @@
   }
   function getApiBase(){return (window.STATETTY_CONFIG&&STATETTY_CONFIG.WS_API_BASE)||'https://api.statetty.com/api/';}
 
+  // Elimina del URL (query string) los parámetros legados que ya no deben
+  // propagarse a otras páginas ni quedar expuestos a ser copiados: `k`
+  // (publicKey de Telegram, deprecado - Fase 4) y `auth` (hash de magic link,
+  // de un solo uso). Se hace en su lugar (history.replaceState, sin recargar).
+  function stripLegacyParams(){
+    try{
+      var url=new URL(window.location.href);
+      var changed=false;
+      ['k','auth'].forEach(function(param){
+        if(url.searchParams.has(param)){url.searchParams.delete(param);changed=true;}
+      });
+      if(changed) window.history.replaceState({},document.title,url.href);
+    }catch(e){}
+  }
+
   window.STT=window.STT||{};
   window.STT.usuario=null;
   window.STT.buddy=null;
@@ -191,6 +206,9 @@
   // ── flujo de sesión ────────────────────────────────────────────────────────
 
   async function initAuth(){
+    // Eliminar `?k=` (y `?auth=`, de un solo uso) del URL apenas entra el flujo,
+    // para que el link legacy no se propague a otras páginas ni quede expuesto.
+    stripLegacyParams();
     var token=null;
     var buddyUser=getBuddyUser();
 
@@ -222,29 +240,13 @@
       }
     }
 
-    // 2) Fallback legacy `?k=` publicKey (transición)
-    try{
-      var url=new URL(location.href);
-      var k=url.searchParams.get('k')||readCookie(COOKIE_NAME)||localStorage.getItem(COOKIE_NAME);
-      if(k){
-        var base=getApiBase();
-        var res=await fetch(base+'statetty/getuser?publicKey='+encodeURIComponent(k));
-        if(res.ok){
-          var data=await res.json();
-          var u=data&&data.ok&&data.data?data.data:null;
-          if(u){
-            window.publicKey=k;window.STT.token=k;window.STT.usuario=u;
-            dispatch({key:k,usuario:u,error:null},'statetty:key-ready');
-            dispatch({token:k,buddy:null,tg:u,linked:false,error:null},'statetty:auth-ready');
-            return;
-          }else{
-            localStorage.removeItem(COOKIE_NAME);clearCookie(COOKIE_NAME);
-          }
-        }
-      }
-    }catch(e){
-      console.log('[Statetty] [K] fallback publicKey:',e.message);
-    }
+    // 2) Fallback legacy eliminado (Fase 4 de deprecación): el parámetro `?k=`
+    //    (publicKey de Telegram) ya NO se interpreta como puerta de entrada.
+    //    Si un usuario carga una página con `?k=`, ese valor se ignora y el link
+    //    se limpia del URL; solo vale una sesión Buddy activa (JWT) o el login
+    //    por correo. Esto evita que `?k=` sobrescriba el token Buddy y "rompa"
+    //    la sesión al navegar a otras páginas, además de no arrastrar/copiar el
+    //    key legacy.
 
     // 3) Sin sesión
     window.STT.usuario=null;window.STT.token=null;window.STT.buddy=null;window.STT.tg=null;window.STT.linked=false;

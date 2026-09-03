@@ -125,6 +125,14 @@ window.Buddy = window.Buddy || {};
     return headers;
   }
 
+  function getSiteId() {
+    return window.BuddyConfig &&
+      window.BuddyConfig.app &&
+      window.BuddyConfig.app.siteId
+      ? String(window.BuddyConfig.app.siteId).trim().toLowerCase()
+      : null;
+  }
+
   function apiRequest(endpointKey, options) {
     options = options || {};
     var telemetry = getAuthApi();
@@ -646,6 +654,77 @@ window.Buddy = window.Buddy || {};
     }
   }
 
+  // --- Gestión de sesiones activas ---
+
+  // Lista las sesiones activas del usuario para este sitio.
+  // Devuelve { ok, siteId, maxSessions, activeCount, sessions:[{...isCurrent}] }.
+  function listSessions() {
+    if (!state.accessToken) return Promise.reject(new Error('No hay sesión activa.'));
+    configureTelemetryApi();
+    var telemetry = getAuthApi();
+    var siteId = getSiteId();
+    var qs = (typeof URLSearchParams !== 'undefined') ? new URLSearchParams() : null;
+    if (qs && siteId) qs.set('siteId', siteId);
+    var endpoint = CONFIG.endpoints.sessions + (qs ? '?' + qs.toString() : '');
+    return telemetry.request(CONFIG.apiService || 'auth', endpoint, {
+      method: 'GET',
+      cache: 'no-store',
+      headers: buildHeaders()
+    }).then(authResponseOrThrow('No se pudieron obtener las sesiones.'));
+  }
+
+  // Cierra todas las sesiones activas del usuario/sitio excepto la actual.
+  // Requiere que la sesión actual esté identificada (body.refreshToken).
+  function closeOtherSessions() {
+    if (!state.accessToken) return Promise.reject(new Error('No hay sesión activa.'));
+    if (!state.refreshToken) return Promise.reject(new Error('No se pudo identificar la sesión actual.'));
+    configureTelemetryApi();
+    var telemetry = getAuthApi();
+    var siteId = getSiteId();
+    var body = { refreshToken: state.refreshToken };
+    if (siteId) body.siteId = siteId;
+    return telemetry.request(CONFIG.apiService || 'auth', CONFIG.endpoints.closeOtherSessions, {
+      method: 'POST',
+      cache: 'no-store',
+      headers: buildHeaders(),
+      body: body
+    }).then(authResponseOrThrow('No se pudieron cerrar las otras sesiones.'));
+  }
+
+  // Cierra una sesión activa específica (por id) de este usuario/sitio.
+  // No puede cerrar la sesión actual. Devuelve { ok, closed }.
+  function closeSession(sessionId) {
+    if (!state.accessToken) return Promise.reject(new Error('No hay sesión activa.'));
+    if (!sessionId) return Promise.reject(new Error('Sesión no identificada.'));
+    configureTelemetryApi();
+    var telemetry = getAuthApi();
+    var siteId = getSiteId();
+    var endpoint = String(CONFIG.endpoints.closeSessionTemplate || '').replace('{sessionId}', encodeURIComponent(String(sessionId)));
+    if (!endpoint) return Promise.reject(new Error('Endpoint de cierre de sesión no configurado.'));
+    var qs = (typeof URLSearchParams !== 'undefined') ? new URLSearchParams() : null;
+    if (qs && siteId) qs.set('siteId', siteId);
+    var body = {};
+    if (state.refreshToken) body.refreshToken = state.refreshToken;
+    return telemetry.request(CONFIG.apiService || 'auth', endpoint + (qs ? '?' + qs.toString() : ''), {
+      method: 'POST',
+      cache: 'no-store',
+      headers: buildHeaders(),
+      body: body
+    }).then(authResponseOrThrow('No se pudo cerrar la sesión.'));
+  }
+
+  // Convierte la respuesta de sesiones en un reject con causa útil si algo falla.
+  function authResponseOrThrow(fallbackMessage) {
+    return function (data) {
+      if (!data || data.ok === false) {
+        var e = new Error((data && data.error) || fallbackMessage);
+        e.status = (data && data.code === 'MAX_SESSIONS') ? 403 : 0;
+        throw e;
+      }
+      return data;
+    };
+  }
+
   window.Buddy.auth = {
     enabled: state.enabled,
     config: CONFIG,
@@ -654,6 +733,9 @@ window.Buddy = window.Buddy || {};
     getState: getState,
     getAccessToken: function () { return state.accessToken || null; },
     getRefreshToken: function () { return state.refreshToken || null; },
+    listSessions: listSessions,
+    closeOtherSessions: closeOtherSessions,
+    closeSession: closeSession,
     checkSession: checkSession,
     requestLogin: requestLogin,
     startAuthenticationPrompt: startAuthenticationPrompt,
