@@ -130,17 +130,20 @@
       // interno con width:100% (incluido fndInm.js) se ve igual en
       // cualquier página, no solo en #toolbox (que sí tiene ancho fijo
       // propio via mapa.css).
-      '.stt-user-dropdown{position:absolute;top:calc(100% + 10px);right:0;' +
+      '.stt-user-dropdown{position:fixed;' +
       'width:min(320px,92vw);min-width:190px;max-height:min(75vh,560px);' +
       'overflow-y:auto;overflow-x:hidden;' +
       'background:#fff;border-radius:var(--radius-md,12px);' +
       'box-shadow:0 10px 30px rgba(7,79,102,.18);padding:8px;' +
-      // Por encima de las burbujas de texto de Buddy says (z-index 2147483000/301)
+      // Por encima de las burbujas de texto de Buddy says (z-index 2147483000/301).
+      // Se monta como portal en <body> (no dentro del header, que crea su propio
+      // stacking context con z-index:1000) para que este valor sí aplique a nivel
+      // raíz y no quede atrapado bajo la capa de Buddy.
       'z-index:2147483002;' +
       'opacity:0;visibility:hidden;transform:translateY(-6px);' +
       'transition:opacity .18s ease, transform .18s ease, visibility .18s;' +
       'font-family:var(--font-body,\'Lato\',sans-serif);}' +
-      '.stt-user-menu.open .stt-user-dropdown{opacity:1;visibility:visible;transform:translateY(0);}' +
+      '.stt-user-dropdown.open{opacity:1;visibility:visible;transform:translateY(0);}' +
       '.stt-user-dropdown a{display:block;padding:10px 12px;border-radius:var(--radius-sm,6px);' +
       'font-size:.92rem;color:#2b3a42;text-decoration:none;white-space:nowrap;' +
       'transition:background .15s ease, color .15s ease;}' +
@@ -151,7 +154,7 @@
       'font-size:.92rem;font-family:var(--font-body,\'Lato\',sans-serif);color:#999;text-decoration:none;text-align:left;' +
       'background:none;cursor:pointer;white-space:nowrap;transition:background .15s ease,color .15s ease;}' +
       '.stt-user-logout:hover,.stt-user-logout:focus-visible{background:rgba(0,0,0,.04);color:#666;}' +
-      '@media (max-width:768px){.stt-user-dropdown{right:auto;left:0;width:min(320px,92vw);}}';
+      '@media (max-width:768px){.stt-user-dropdown{width:min(320px,92vw);}}';
     var style = document.createElement('style');
     style.id = STYLE_ID;
     style.textContent = css;
@@ -338,28 +341,51 @@
     dropdown.appendChild(logoutBtn);
 
     wrap.appendChild(trigger);
-    wrap.appendChild(dropdown);
+    // El dropdown se monta como portal en <body>: al quedar fuera del header
+    // (position:fixed; z-index:1000 → crea stacking context), su z-index
+    // 2147483002 se respeta a nivel raíz y queda por encima de las burbujas de
+    // "Buddy says" (2147483001) en vez de ocultarse debajo.
+    document.body.appendChild(dropdown);
 
+    function positionDropdown() {
+      var r = trigger.getBoundingClientRect();
+      var dd = dropdown.getBoundingClientRect();
+      var gap = 10;
+      var top = r.bottom + gap;
+      if (top + dd.height > window.innerHeight - gap) top = Math.max(gap, window.innerHeight - dd.height - gap);
+      var left = r.right - dd.width;
+      left = Math.max(gap, Math.min(left, window.innerWidth - dd.width - gap));
+      dropdown.style.top = Math.round(top) + 'px';
+      dropdown.style.left = Math.round(left) + 'px';
+    }
     function open() {
       wrap.classList.add('open');
+      dropdown.classList.add('open');
       trigger.setAttribute('aria-expanded', 'true');
+      positionDropdown();
     }
     function close() {
       wrap.classList.remove('open');
+      dropdown.classList.remove('open');
       trigger.setAttribute('aria-expanded', 'false');
     }
     function toggle(e) {
       e.stopPropagation();
       wrap.classList.contains('open') ? close() : open();
     }
+    function repositionIfOpen() {
+      if (wrap.classList.contains('open')) positionDropdown();
+    }
 
     trigger.addEventListener('click', toggle);
     document.addEventListener('click', function (e) {
-      if (!wrap.contains(e.target)) close();
+      if (!wrap.contains(e.target) && !dropdown.contains(e.target)) close();
     });
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape') close();
     });
+    window.addEventListener('resize', repositionIfOpen);
+    window.addEventListener('scroll', repositionIfOpen, true);
 
     return wrap;
   }
