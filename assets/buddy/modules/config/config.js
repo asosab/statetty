@@ -20,6 +20,7 @@ window.BuddyConfigToolboxConfig = Object.assign({
     listModules: '/api/buddy/modules/list',
     getModule: '/api/buddy/modules/get',
     saveModule: '/api/buddy/modules/save',
+    syncModuleDefaults: '/api/buddy/modules/sync-defaults',
     deleteModule: '/api/buddy/modules/delete'
   },
   superuserEmail: 'asosab@gmail.com',

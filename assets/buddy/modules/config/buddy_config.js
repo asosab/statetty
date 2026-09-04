@@ -654,6 +654,49 @@ window.Buddy = window.Buddy || {};
 
   // --- Editor de módulo (formulario interpretando el schema) ----------------
 
+  // Recorre el schema de un módulo y construye un objeto con los valores del
+  // config.js estático para los campos que AÚN NO existen en la config de BD
+  // (`current`). Regla: BD gana al leer, así que SOLO se aportan los faltantes.
+  // Penetra objetos anidados (p.ej. `sso.enabled`) y evita campos type 'secret'
+  // (no se debe sembrar su default; se conserva/edita online).
+  function missingSchemaDefaults(schema, staticConfig, current, out) {
+    out = out || {};
+    (schema.fields || []).forEach(function (f) {
+      if (f.type === 'secret') return;
+      var staticVal = staticConfig ? staticConfig[f.key] : undefined;
+      if (staticVal === undefined) return;
+
+      if (f.type === 'object') {
+        var staticObj = (staticVal && typeof staticVal === 'object' && !Array.isArray(staticVal)) ? staticVal : {};
+        var currentSub = (current && current[f.key] && typeof current[f.key] === 'object' && !Array.isArray(current[f.key]))
+          ? current[f.key]
+          : {};
+        var subOut = {};
+        missingSchemaDefaults({ fields: f.fields || [] }, staticObj, currentSub, subOut);
+        if (Object.keys(subOut).length) out[f.key] = subOut;
+        return;
+      }
+
+      // Escalar o array: solo se siembra si la clave no existe en BD.
+      if (!current || !(f.key in current)) {
+        out[f.key] = staticVal;
+      }
+    });
+    return out;
+  }
+
+  // Persiste en BD los defaults de config.js que faltan para este módulo.
+  // Fire-and-forget: no bloquea la edición. Una vez sembrados, BD es la fuente
+  // editable (el toolbox ya muestra esos valores).
+  function persistModuleDefaults(configId, moduleId, defaults) {
+    if (!configId || !moduleId || !defaults || typeof defaults !== 'object' || !Object.keys(defaults).length) {
+      return Promise.resolve(null);
+    }
+    return request('syncModuleDefaults', { method: 'POST', data: { configId: configId, module: moduleId, defaults: defaults } })
+      .then(function () { return null; })
+      .catch(function () { return null; });
+  }
+
   function openModuleEditor(moduleId, existingValue) {
     if (!state.currentConfig || !state.currentConfig._id) return;
 
@@ -678,6 +721,14 @@ window.Buddy = window.Buddy || {};
         // Si hay campos tipo array sin valor guardado (p.ej. `sources`/`menu`),
         // sembrar los defaults estáticos del config.js para pre-poblar el editor.
         values = seedArrayDefaults(moduleId, schema, values);
+
+        // Persistir en BD los defaults de config.js que aún no estén (merge
+        // solo-faltantes en el backend): así BD queda como fuente editable con
+        // peso sobre config.js al leer.
+        var defaults = missingSchemaDefaults(schema, staticConfigForModule(moduleId), values, {});
+        if (state.currentConfig && state.currentConfig._id) {
+          persistModuleDefaults(state.currentConfig._id, moduleId, defaults);
+        }
 
         state.editingModule = { module: moduleId, schema: schema, values: values };
 
@@ -832,6 +883,7 @@ window.Buddy = window.Buddy || {};
     saveConfig: saveConfig,
     modulesList: modulesList,
     saveModule: saveModule,
+    persistModuleDefaults: persistModuleDefaults,
     isSuperuser: function () { return state.isSuperuser; },
     getCatalog: function () { return state.catalog.slice(); }
   };

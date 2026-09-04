@@ -22,6 +22,16 @@ window.BuddyAuthConfig = Object.assign({
   },
   verificationParameter: 'auth',
 
+  // SSO cruzado entre dominios que usan Buddy. La página puente vive en
+  // <apiBaseUrl>/api/buddy/sso (origen api.statetty.com) y comparte la sesión
+  // del usuario entre los distintos sitios. disabled/implicito => off.
+  sso: {
+    enabled: false,
+    // Cooldown anti-bucle: no intentar el redirect de SSO más de una vez por
+    // ventana (ms). Evita un bucle de redirects entre el sitio y la puente.
+    retryAfterMs: 10 * 60 * 1000
+  },
+
   userFields: ['id', 'email', 'name', 'firstName', 'lastName', 'phone', 'locale', 'createdAt'],
 
   loginButtonText: 'Iniciar sesión',

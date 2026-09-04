@@ -94,6 +94,64 @@ window.Buddy = window.Buddy || {};
     if (!state.refreshToken) state.refreshToken = getStoredRefreshToken();
   }
 
+  // --- Sync entre pestañas del mismo origen ---
+  //
+  // Cuando otra pestaña escribe/borra el refresh token en localStorage (login,
+  // rotación o logout), esta pestaña actualiza su estado en memoria para no
+  // usar un token revocado (evita el falso REUSE_DETECTED). No se dispara un
+  // refresh inmediato para no caer en un bucle de rotaciones entre pestañas:
+  // basta re-leer el token actualizado; el refresh se hará cuando esta pestaña
+  // realmente necesite un accessToken (checkSession en recarga o un 401 de API).
+  function syncRefreshFromStorage(event) {
+    try {
+      if (!event || event.key !== REFRESH_KEY) return;
+      // El storage event NO se dispara en la pestaña que hizo el cambio, solo
+      // en las hermanas; si llega aquí es un cambio de otra pestaña.
+      var newValue = event.newValue;
+      if (state.checking || state.busy) {
+        // En plena operación de auth: se re-evalúa a detalle conservando el valor
+        // del evento ORIGINAL (no re-leer localStorage, que pudo cambiar entretanto
+        // y perdería la señal de borrado).
+        setTimeout(function () {
+          syncRefreshFromStorage({ key: event.key, newValue: newValue, oldValue: event.oldValue });
+        }, 50);
+        return;
+      }
+      if (newValue) {
+        // Otra pestaña guardó un refresh token (login o rotación). Se actualiza
+        // en memoria y quedará listo para el próximo refresh de esta pestaña.
+        state.refreshToken = newValue;
+        debugLog('syncRefreshFromStorage: refresh token actualizado desde otra pestaña');
+        // Si esta pestaña no está autenticada pero ahora hay refresh (p. ej. el
+        // link del correo se validó en la pestaña hermana), tratar de autenticarse.
+        if (!state.authenticated && !state.accessToken) {
+          checkSession();
+        }
+      } else {
+        // Otra pestaña borró el refresh token (logout de esta sesión en el
+        // mismo navegador) → desloguear localmente para mantener coherencia.
+        if (state.refreshToken || state.authenticated) {
+          clearLocalState();
+          emitEvent('buddy:auth-state-changed', {
+            authenticated: false,
+            user: null,
+            needsName: false,
+            welcomeType: null
+          });
+          emitEvent('buddy:auth-logout', { ok: true, remote: true });
+          debugLog('syncRefreshFromStorage: sesión cerrada remotamente (otra pestaña)');
+        }
+      }
+    } catch (e) {
+      debugLog('syncRefreshFromStorage: error', e);
+    }
+  }
+
+  function bindStorageSync() {
+    if (typeof window.addEventListener !== 'function') return;
+    window.addEventListener('storage', syncRefreshFromStorage);
+  }
+
   // --- API client ---
 
   function getAuthApi() {
@@ -157,6 +215,11 @@ window.Buddy = window.Buddy || {};
   // --- Refresh flow ---
 
   function tryRefreshToken() {
+    // Fuente de verdad = localStorage: otra pestaña del mismo navegador puede
+    // haber rotado el token, de modo que el valor en memoria podría estar
+    // revocado. Se re-lee para no usar un token caduco.
+    var persisted = getStoredRefreshToken();
+    if (persisted) state.refreshToken = persisted;
     if (!state.refreshToken) return Promise.reject(new Error('No hay refreshToken.'));
 
     debugLog('tryRefreshToken: refrescando...');
@@ -180,6 +243,16 @@ window.Buddy = window.Buddy || {};
       return data;
     }).catch(function (error) {
       debugLog('tryRefreshToken: fallo', error);
+      // Si otra pestaña ya rotó el token (STALE_REFRESH_TOKEN), no limpiar:
+      // re-leer el token nuevo de localStorage y reintentar una vez.
+      if (error && (error.code === 'STALE_REFRESH_TOKEN' || (error.message && error.message.indexOf('STALE_REFRESH_TOKEN') !== -1))) {
+        var latest = getStoredRefreshToken();
+        if (latest && latest !== state.refreshToken) {
+          state.refreshToken = latest;
+          debugLog('tryRefreshToken: reintentando con token actualizado de otra pestaña');
+          return tryRefreshToken();
+        }
+      }
       clearTokens();
       setUnauthenticated();
       throw error;
@@ -227,6 +300,99 @@ window.Buddy = window.Buddy || {};
       url.searchParams.delete(CONFIG.verificationParameter);
       window.history.replaceState({}, document.title, url.href);
     } catch (e) {}
+  }
+
+  // --- SSO cruzado entre dominios que usan Buddy ---
+  //
+  // La sesión se comparte vía una página puente en el origen api.statetty.com
+  // (GET /api/buddy/sso). Flujo: el sitio sin sesión redirige a la puente, que
+  // refresca y vuelve con los tokens en el fragmento de URL
+  // (#buddy_access=...&buddy_refresh=...&buddy_sso=ok). Acá se procesa el
+  // fragmento y, si hace falta, se dispara el redirect (una vez por ventana).
+
+  function ssoConfig() {
+    var sso = CONFIG.sso;
+    return (sso && sso.enabled === true) ? sso : null;
+  }
+
+  function ssoUrlForReturn() {
+    var sso = ssoConfig();
+    if (!sso) return null;
+    var apiBase = String(CONFIG.apiBaseUrl || '').replace(/\/+$/, '');
+    var qs = new URLSearchParams();
+    qs.set('site', getSiteId() || '');
+    qs.set('return', window.location.href);
+    return (apiBase + '/api/buddy/sso?' + qs.toString());
+  }
+
+  // Procesa el fragmento de retorno del SSO (tokens entregados por la puente).
+  // Devuelve true si consumió un fragmento SSO, false si no había.
+  function processSsoFragment() {
+    try {
+      var hash = window.location.hash || '';
+      if (hash.indexOf('buddy_sso=') === -1) return false;
+
+      var params = new URLSearchParams(hash.replace(/^#/, ''));
+      var status = params.get('buddy_sso');
+
+      // Limpiar el fragmento SIEMPRE, para no dejar tokens en la URL/historial.
+      try {
+        var url = window.location.href.split('#')[0];
+        window.history.replaceState({}, document.title, url);
+      } catch (e) {}
+
+      if (status === 'ok') {
+        var access = params.get('buddy_access');
+        var refresh = params.get('buddy_refresh');
+        if (access && refresh) {
+          debugLog('processSsoFragment: sesión recibida del SSO');
+          saveTokens(decodeURIComponent(access), decodeURIComponent(refresh));
+          // Marcar el canal para no re-disparar el redirect.
+          setSsoLastAttempt();
+          // Verificar con el servidor para poblar el usuario.
+          checkSession();
+          return true;
+        }
+      }
+      // status === 'failed' (o tokens incompletos): sin sesión; se marca el
+      // cooldown para no volver a redirigir en bucle y fluye el login normal.
+      setSsoLastAttempt();
+      return true;
+    } catch (e) {
+      debugLog('processSsoFragment: error', e);
+      return false;
+    }
+  }
+
+  function getSsoLastAttempt() {
+    try { return Number(window.sessionStorage.getItem('buddy_sso_last_attempt') || 0); }
+    catch (e) { return 0; }
+  }
+
+  function setSsoLastAttempt() {
+    try { window.sessionStorage.setItem('buddy_sso_last_attempt', String(Date.now())); }
+    catch (e) {}
+  }
+
+  function ssoOnCooldown() {
+    var sso = ssoConfig();
+    if (!sso) return true;
+    var elapsed = Date.now() - getSsoLastAttempt();
+    return elapsed < (Number(sso.retryAfterMs) || 0);
+  }
+
+  // Redirige a la página puente SSO (una vez por ventana y en cooldown).
+  // Devuelve true si inició el redirect.
+  function trySsoRedirect() {
+    var sso = ssoConfig();
+    if (!sso) return false;
+    if (state.authenticated) return false;
+    if (ssoOnCooldown()) return false;
+    var target = ssoUrlForReturn();
+    if (!target) return false;
+    debugLog('trySsoRedirect: redirigiendo a la puente SSO');
+    window.location.href = target;
+    return true;
   }
 
   // --- State management ---
@@ -346,9 +512,13 @@ window.Buddy = window.Buddy || {};
 
     restoreTokens();
 
-    // Si no hay tokens almacenados, no hay sesión
+    // Si no hay tokens almacenados, no hay sesión. Antes de rendirse, probar el
+    // SSO cruzado (una vez por ventana / en cooldown) redirigiendo a la puente.
     if (!state.accessToken && !state.refreshToken) {
       state.checking = false;
+      if (trySsoRedirect()) {
+        return new Promise(function () { /* la página navega a la puente */ });
+      }
       setUnauthenticated();
       emitEvent('buddy:auth-ready', {
         authenticated: false,
@@ -362,20 +532,33 @@ window.Buddy = window.Buddy || {};
 
     // Si hay refreshToken pero no accessToken, intentar refresh primero
     if (!state.accessToken && state.refreshToken) {
-      return tryRefreshToken().then(function () {
-        return checkSessionAfterRefresh();
-      }).catch(function () {
-        state.checking = false;
-        setUnauthenticated();
-        emitEvent('buddy:auth-ready', {
-          authenticated: false,
-          user: null,
-          needsName: false,
-          welcomeType: null,
-          sessionOk: false
+      return tryRefreshToken()
+        .then(function () {
+          return checkSessionAfterRefresh();
+        })
+        .then(function (result) {
+          state.checking = false;
+          emitEvent('buddy:auth-ready', {
+            authenticated: state.authenticated,
+            user: state.user,
+            needsName: state.needsName,
+            welcomeType: state.welcomeType,
+            sessionOk: result
+          });
+          return result;
+        })
+        .catch(function () {
+          state.checking = false;
+          setUnauthenticated();
+          emitEvent('buddy:auth-ready', {
+            authenticated: false,
+            user: null,
+            needsName: false,
+            welcomeType: null,
+            sessionOk: false
+          });
+          return false;
         });
-        return false;
-      });
     }
 
     // Hay accessToken — verificar con el servidor
@@ -645,10 +828,13 @@ window.Buddy = window.Buddy || {};
     }
 
     configureTelemetryApi();
+    bindStorageSync();
 
     var hash = getVerificationHash();
     if (hash) {
       verifyHash(hash);
+    } else if (processSsoFragment()) {
+      // Fragmento SSO consumido (login via puente o intento fallido).
     } else {
       checkSession();
     }
@@ -736,6 +922,8 @@ window.Buddy = window.Buddy || {};
     listSessions: listSessions,
     closeOtherSessions: closeOtherSessions,
     closeSession: closeSession,
+    trySsoRedirect: trySsoRedirect,
+    processSsoFragment: processSsoFragment,
     checkSession: checkSession,
     requestLogin: requestLogin,
     startAuthenticationPrompt: startAuthenticationPrompt,

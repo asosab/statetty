@@ -7,6 +7,16 @@
     { "key": "apiBaseUrl", "label": "URL base de API", "type": "string", "default": "https://api.statetty.com" },
     { "key": "apiService", "label": "Servicio API", "type": "string", "default": "auth" },
     { "key": "verificationParameter", "label": "Parámetro de verificación", "type": "string", "default": "auth" },
-    { "key": "requestTimeoutMs", "label": "Timeout (ms)", "type": "number", "default": 15000 }
+    { "key": "requestTimeoutMs", "label": "Timeout (ms)", "type": "number", "default": 15000 },
+    {
+      "key": "sso",
+      "label": "SSO entre dominios",
+      "type": "object",
+      "description": "Reconocimiento cruzado de sesión entre sitios que usan Buddy via página puente.",
+      "fields": [
+        { "key": "enabled", "label": "Habilitado", "type": "boolean", "default": false },
+        { "key": "retryAfterMs", "label": "Cooldown anti-bucle (ms)", "type": "number", "default": 600000 }
+      ]
+    }
   ]
 }
