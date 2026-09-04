@@ -302,99 +302,6 @@ window.Buddy = window.Buddy || {};
     } catch (e) {}
   }
 
-  // --- SSO cruzado entre dominios que usan Buddy ---
-  //
-  // La sesión se comparte vía una página puente en el origen api.statetty.com
-  // (GET /api/buddy/sso). Flujo: el sitio sin sesión redirige a la puente, que
-  // refresca y vuelve con los tokens en el fragmento de URL
-  // (#buddy_access=...&buddy_refresh=...&buddy_sso=ok). Acá se procesa el
-  // fragmento y, si hace falta, se dispara el redirect (una vez por ventana).
-
-  function ssoConfig() {
-    var sso = CONFIG.sso;
-    return (sso && sso.enabled === true) ? sso : null;
-  }
-
-  function ssoUrlForReturn() {
-    var sso = ssoConfig();
-    if (!sso) return null;
-    var apiBase = String(CONFIG.apiBaseUrl || '').replace(/\/+$/, '');
-    var qs = new URLSearchParams();
-    qs.set('site', getSiteId() || '');
-    qs.set('return', window.location.href);
-    return (apiBase + '/api/buddy/sso?' + qs.toString());
-  }
-
-  // Procesa el fragmento de retorno del SSO (tokens entregados por la puente).
-  // Devuelve true si consumió un fragmento SSO, false si no había.
-  function processSsoFragment() {
-    try {
-      var hash = window.location.hash || '';
-      if (hash.indexOf('buddy_sso=') === -1) return false;
-
-      var params = new URLSearchParams(hash.replace(/^#/, ''));
-      var status = params.get('buddy_sso');
-
-      // Limpiar el fragmento SIEMPRE, para no dejar tokens en la URL/historial.
-      try {
-        var url = window.location.href.split('#')[0];
-        window.history.replaceState({}, document.title, url);
-      } catch (e) {}
-
-      if (status === 'ok') {
-        var access = params.get('buddy_access');
-        var refresh = params.get('buddy_refresh');
-        if (access && refresh) {
-          debugLog('processSsoFragment: sesión recibida del SSO');
-          saveTokens(decodeURIComponent(access), decodeURIComponent(refresh));
-          // Marcar el canal para no re-disparar el redirect.
-          setSsoLastAttempt();
-          // Verificar con el servidor para poblar el usuario.
-          checkSession();
-          return true;
-        }
-      }
-      // status === 'failed' (o tokens incompletos): sin sesión; se marca el
-      // cooldown para no volver a redirigir en bucle y fluye el login normal.
-      setSsoLastAttempt();
-      return true;
-    } catch (e) {
-      debugLog('processSsoFragment: error', e);
-      return false;
-    }
-  }
-
-  function getSsoLastAttempt() {
-    try { return Number(window.sessionStorage.getItem('buddy_sso_last_attempt') || 0); }
-    catch (e) { return 0; }
-  }
-
-  function setSsoLastAttempt() {
-    try { window.sessionStorage.setItem('buddy_sso_last_attempt', String(Date.now())); }
-    catch (e) {}
-  }
-
-  function ssoOnCooldown() {
-    var sso = ssoConfig();
-    if (!sso) return true;
-    var elapsed = Date.now() - getSsoLastAttempt();
-    return elapsed < (Number(sso.retryAfterMs) || 0);
-  }
-
-  // Redirige a la página puente SSO (una vez por ventana y en cooldown).
-  // Devuelve true si inició el redirect.
-  function trySsoRedirect() {
-    var sso = ssoConfig();
-    if (!sso) return false;
-    if (state.authenticated) return false;
-    if (ssoOnCooldown()) return false;
-    var target = ssoUrlForReturn();
-    if (!target) return false;
-    debugLog('trySsoRedirect: redirigiendo a la puente SSO');
-    window.location.href = target;
-    return true;
-  }
-
   // --- State management ---
 
   function clearLocalState() {
@@ -512,13 +419,9 @@ window.Buddy = window.Buddy || {};
 
     restoreTokens();
 
-    // Si no hay tokens almacenados, no hay sesión. Antes de rendirse, probar el
-    // SSO cruzado (una vez por ventana / en cooldown) redirigiendo a la puente.
+    // Si no hay tokens almacenados, no hay sesión → flujo de login normal.
     if (!state.accessToken && !state.refreshToken) {
       state.checking = false;
-      if (trySsoRedirect()) {
-        return new Promise(function () { /* la página navega a la puente */ });
-      }
       setUnauthenticated();
       emitEvent('buddy:auth-ready', {
         authenticated: false,
@@ -833,8 +736,6 @@ window.Buddy = window.Buddy || {};
     var hash = getVerificationHash();
     if (hash) {
       verifyHash(hash);
-    } else if (processSsoFragment()) {
-      // Fragmento SSO consumido (login via puente o intento fallido).
     } else {
       checkSession();
     }
@@ -922,8 +823,6 @@ window.Buddy = window.Buddy || {};
     listSessions: listSessions,
     closeOtherSessions: closeOtherSessions,
     closeSession: closeSession,
-    trySsoRedirect: trySsoRedirect,
-    processSsoFragment: processSsoFragment,
     checkSession: checkSession,
     requestLogin: requestLogin,
     startAuthenticationPrompt: startAuthenticationPrompt,

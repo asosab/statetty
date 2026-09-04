@@ -563,13 +563,13 @@ editable con más peso que el estático al leer.
 - **Disparador (frontend):** al abrir el editor de un módulo en el toolbox
   (`openModuleEditor`), `missingSchemaDefaults()` recorre el `schema.json` y arma
   los valores del `config.js` estático que faltan en la config de BD
-  (penetra objetos anidados como `sso.enabled`, ignora `type:'secret'`).
+  (penetra objetos anidados, ignora `type:'secret'`).
   Luego `persistModuleDefaults()` los envía al backend (fire-and-forget).
 - **Persistencia (backend):** `POST /modules/sync-defaults` → `mergeOnlyMissing()`
   añade **solo las claves ausentes** (recursivo en objetos), nunca pisa un valor
   ya editado; es idempotente (`changed:false` si no hay nada nuevo).
 - **Editable:** cualquier campo declarado en el `schema.json` de un módulo pasa a
-  ser configurable desde el toolbox (p. ej. el bloque `sso` de `auth`).
+  ser configurable desde el toolbox.
 
 ```mermaid
 flowchart TB
