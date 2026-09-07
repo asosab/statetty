@@ -256,7 +256,7 @@ window.Buddy = window.Buddy || {};
         siteId: siteId,
         activo: true,
         character: (cfg && cfg.character) || { defaultCharacter: 'alejito', fallbackCharacter: 'alejito' },
-        google: (cfg && cfg.google) || { email: '', timezone: 'America/La_Paz', calendarId: '' },
+        google: (cfg && cfg.google) || { email: '', timezone: 'America/La_Paz', calendarId: '', from: '' },
         override: {}
       }).then(function (saved) {
         state.currentConfig = saved || cfg || { url: url, siteId: siteId, activo: true };
@@ -495,6 +495,9 @@ window.Buddy = window.Buddy || {};
           '<input type="text" value="' + escapeHtml(goog.timezone || 'America/La_Paz') + '" data-cfg-google-tz></div>' +
         '<div class="buddy-cfg-field"><label>CalendarId</label>' +
           '<input type="text" value="' + escapeHtml(goog.calendarId || '') + '" data-cfg-google-cal></div>' +
+        '<div class="buddy-cfg-field"><label>' + escapeHtml(CONFIG.labels.from || 'Remitente visible (From)') + '</label>' +
+          '<input type="text" value="' + escapeHtml(goog.from || '') + '" data-cfg-google-from placeholder="hola@statetty.com">' +
+          '<p class="buddy-cfg-desc">Alias cargado en "Enviar correo como" de Gmail (ej. hola@statetty.com). Si queda vacío se usa la cuenta Gmail como remitente.</p></div>' +
         '<div class="buddy-cfg-field"><label>API Key (se conserva si se deja vacío)</label>' +
           '<input type="password" value="" data-cfg-google-key placeholder="••••••"></div>' +
         '<div class="buddy-cfg-field"><label>Password (se conserva si se deja vacío)</label>' +
@@ -611,6 +614,7 @@ window.Buddy = window.Buddy || {};
         email: (content.querySelector('[data-cfg-google-email]') || {}).value || '',
         timezone: (content.querySelector('[data-cfg-google-tz]') || {}).value || 'America/La_Paz',
         calendarId: (content.querySelector('[data-cfg-google-cal]') || {}).value || '',
+        from: (content.querySelector('[data-cfg-google-from]') || {}).value || '',
         apiKey: (content.querySelector('[data-cfg-google-key]') || {}).value || '',
         password: (content.querySelector('[data-cfg-google-pass]') || {}).value || ''
       }

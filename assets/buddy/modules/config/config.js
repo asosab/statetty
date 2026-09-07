@@ -41,6 +41,7 @@ window.BuddyConfigToolboxConfig = Object.assign({
     enabled: 'Habilitado',
     global: 'Configuración de página',
     google: 'Cuenta de Google',
+    from: 'Remitente visible (From)',
     character: 'Personaje',
     noConfigSelected: 'Seleccioná o creá una configuración de página.',
     noModules: 'Todavía no hay módulos configurados para esta página.',
