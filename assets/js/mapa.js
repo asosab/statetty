@@ -948,6 +948,63 @@ $(document).ready(function () {
     }
   });
 
+  // accordion del toolbox: se registra a nivel de document.ready (NO dentro de
+  // renderMap) para que funcione incluso cuando no hay búsqueda activa y se
+  // muestra el mapa vacío con initEmptyMap().
+  function actualizarBotonesCollapse() {
+    $('.section-header').each(function () {
+      var $header = $(this);
+      var $section = $header.parent();
+      var $button = $header.find('.section-collapse');
+
+      if (!$button.length) {
+        $header.css({
+          display: 'flex',
+          alignItems: 'center'
+        });
+        $button = $('<button type="button" class="section-collapse" aria-label="Minimizar sección" title="Minimizar">×</button>')
+          .css({
+            display: 'none',
+            marginLeft: 'auto',
+            border: '0',
+            background: 'transparent',
+            fontSize: '18px',
+            lineHeight: '1',
+            cursor: 'pointer',
+            padding: '2px 5px',
+            color: '#777',
+            flexShrink: '0'
+          });
+        $header.append($button);
+      }
+
+      $button.css('display', $section.hasClass('active') ? 'block' : 'none');
+    });
+  }
+
+  actualizarBotonesCollapse();
+
+  $(document).on('click', '.section-header', function (e) {
+    if ($(e.target).closest('.section-collapse').length) return;
+
+    var $section = $(this).parent();
+    var yaActiva = $section.hasClass('active');
+    $('.section').removeClass('active');
+
+    if (!yaActiva) {
+      $section.addClass('active');
+    }
+
+    actualizarBotonesCollapse();
+  });
+
+  $(document).on('click', '.section-collapse', function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    $(this).closest('.section').removeClass('active');
+    actualizarBotonesCollapse();
+  });
+
   const agencyNames = {
     "ic":     "Info Casas",
     "UC":     "Ultra Casas",
@@ -1137,61 +1194,6 @@ $(document).ready(function () {
           actualizarToolbox();
         });
       });
-    });
-
-    // accordion: la X solo aparece en la sección desplegada y queda alineada a la derecha.
-    function actualizarBotonesCollapse() {
-      $('.section-header').each(function () {
-        var $header = $(this);
-        var $section = $header.parent();
-        var $button = $header.find('.section-collapse');
-
-        if (!$button.length) {
-          $header.css({
-            display: 'flex',
-            alignItems: 'center'
-          });
-          $button = $('<button type="button" class="section-collapse" aria-label="Minimizar sección" title="Minimizar">×</button>')
-            .css({
-              display: 'none',
-              marginLeft: 'auto',
-              border: '0',
-              background: 'transparent',
-              fontSize: '18px',
-              lineHeight: '1',
-              cursor: 'pointer',
-              padding: '2px 5px',
-              color: '#777',
-              flexShrink: '0'
-            });
-          $header.append($button);
-        }
-
-        $button.css('display', $section.hasClass('active') ? 'block' : 'none');
-      });
-    }
-
-    actualizarBotonesCollapse();
-
-    $(document).on('click', '.section-header', function (e) {
-      if ($(e.target).closest('.section-collapse').length) return;
-
-      var $section = $(this).parent();
-      var yaActiva = $section.hasClass('active');
-      $('.section').removeClass('active');
-
-      if (!yaActiva) {
-        $section.addClass('active');
-      }
-
-      actualizarBotonesCollapse();
-    });
-
-    $(document).on('click', '.section-collapse', function (e) {
-      e.preventDefault();
-      e.stopPropagation();
-      $(this).closest('.section').removeClass('active');
-      actualizarBotonesCollapse();
     });
 
     // agencias únicas
