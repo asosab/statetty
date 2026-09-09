@@ -886,6 +886,7 @@ function initEmptyMap() {
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap'
   }).addTo(map);
+  initACMMapClickMarker(map);
 
   $('#toolbox').show();
 
