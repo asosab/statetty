@@ -929,7 +929,7 @@
           headers: headers,
           body: JSON.stringify(body)
         }).then(function (r) { return r.json(); }).then(function (res) {
-          showSaveStatus(res.ok ? 'success' : 'error', res.ok ? 'Cambio realizado' : 'Error al actualizar');
+          showSaveStatus(res.ok ? 'success' : 'error', res.ok ? 'Guardado' : 'Error');
           if (res.ok) {
             var usuario = window.STT && window.STT.getUsuario && window.STT.getUsuario();
             if (usuario && Array.isArray(usuario.busquedas) && idx >= 0 && idx < usuario.busquedas.length) {
