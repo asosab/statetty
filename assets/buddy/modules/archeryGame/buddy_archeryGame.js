@@ -1975,6 +1975,15 @@ function showPose(key) {
   }
 
 function showCharacter(preserveCurrentPose) {
+    // Personaje oculto por decisión del usuario (botón ×): el juego no debe
+    // arrancar ni robar visibilidad. Se resetean los recursos y se vuelve al
+    // estado hidden; cuando el personaje vuelva a mostrarse, el evento
+    // buddy:character-visible reactivará el juego normalmente.
+    if (window.Buddy && typeof window.Buddy.isCharacterHidden === 'function' &&
+        window.Buddy.isCharacterHidden()) {
+      hideCharacter();
+      return;
+    }
     state = 'idle';
     ensureElements();
 
@@ -2831,6 +2840,11 @@ function init() {
         showCharacter(true);
       }
     });
+
+    // Al ocultar al personaje (botón ×), la partida debe resetearse por
+    // completo: el juego no puede seguir ejecutándose con el personaje
+    // fuera de vista (ni temporizadores que muevan poses o reproduzcan audio).
+    window.addEventListener('buddy:character-hidden', hideCharacter);
 
     // Si Buddy ya estaba visible antes de que este módulo terminara de
     // inicializarse, el evento de visibilidad pudo haber ocurrido antes de

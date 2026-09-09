@@ -48,6 +48,19 @@ window.Buddy = window.Buddy || {};
     return window.Buddy.auth;
   }
 
+  function getCharacterName() {
+    var charData = null;
+    if (window.Buddy && typeof window.Buddy.getCharacter === 'function') {
+      try { charData = window.Buddy.getCharacter(); } catch (e) { charData = null; }
+    }
+    return (charData && charData.perfil && charData.perfil.nombre) || 'Buddy';
+  }
+
+  function isCharacterHidden() {
+    return !!(window.Buddy && typeof window.Buddy.isCharacterHidden === 'function' &&
+      window.Buddy.isCharacterHidden());
+  }
+
   function ensureStyles() {
     if (document.getElementById('buddy-chat-style')) return;
     var style = document.createElement('style');
@@ -71,7 +84,12 @@ window.Buddy = window.Buddy || {};
       '.buddy-chat-input:focus{border-color:#777;}' +
       '.buddy-chat-auth,.buddy-chat-send{display:none!important;}' +
       '.buddy-chat-enter{display:none!important;}' +
-      '.buddy-chat-enter input{margin:0;}';
+      '.buddy-chat-enter input{margin:0;}' +
+      '.buddy-chat-show-char{height:36px;padding:0 12px;border:1px solid #0d6efd;' +
+      'border-radius:6px;background:#0d6efd;color:#fff;font:inherit;' +
+      'cursor:pointer;white-space:nowrap;box-sizing:border-box;}' +
+      '.buddy-chat-show-char:hover{background:#0b5ed7;}' +
+      '.buddy-chat-show-char[hidden]{display:none!important;}';
     document.head.appendChild(style);
   }
 
@@ -110,6 +128,23 @@ window.Buddy = window.Buddy || {};
     input.placeholder = CONFIG.placeholder || 'Escribe un comando…';
     input.setAttribute('aria-label', 'Comando de Buddy');
 
+    // Botón para volver a mostrar al personaje cuando está oculto (botón ×).
+    // Aparece junto al input, solo mientras la barra de chat está abierta y
+    // el personaje sigue oculto.
+    var nombre = getCharacterName();
+    var showCharBtn = document.createElement('button');
+    showCharBtn.type = 'button';
+    showCharBtn.className = 'buddy-chat-show-char';
+    showCharBtn.id = 'buddy-chat-show-char';
+    showCharBtn.hidden = true;
+    showCharBtn.textContent = 'ver a ' + nombre;
+    showCharBtn.setAttribute('aria-label', 'Mostrar a ' + nombre);
+    showCharBtn.addEventListener('click', function () {
+      if (window.Buddy && typeof window.Buddy.showCharacter === 'function') {
+        window.Buddy.showCharacter();
+      }
+    });
+
     var enterLabel = document.createElement('label');
     enterLabel.className = 'buddy-chat-enter';
     enterLabel.hidden = true;
@@ -131,6 +166,7 @@ window.Buddy = window.Buddy || {};
 
     // Auth queda deliberadamente antes del input.
     container.appendChild(authButton);
+    container.insertBefore(showCharBtn, input);
     container.appendChild(input);
     container.appendChild(enterLabel);
     container.appendChild(send);
@@ -140,6 +176,7 @@ window.Buddy = window.Buddy || {};
       toggle: toggle,
       container: container,
       authButton: authButton,
+      showCharBtn: showCharBtn,
       input: input,
       checkbox: checkbox,
       enter: enterLabel,
@@ -161,6 +198,18 @@ window.Buddy = window.Buddy || {};
         sendCurrent();
       }
     });
+
+    // El botón "ver a {nombre}" se sincroniza con el estado oculto del
+    // personaje: aparece solo cuando el personaje está oculto y desaparece
+    // en cuanto vuelve a mostrarse.
+    window.addEventListener('buddy:character-hidden', syncShowCharButton);
+    window.addEventListener('buddy:character-visible', syncShowCharButton);
+    syncShowCharButton();
+  }
+
+  function syncShowCharButton() {
+    if (!elements.showCharBtn) return;
+    elements.showCharBtn.hidden = !isCharacterHidden();
   }
 
   function focusInput(options) {

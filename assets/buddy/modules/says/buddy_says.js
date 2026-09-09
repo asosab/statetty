@@ -777,6 +777,9 @@ window.Buddy = window.Buddy || {};
       throw new Error('Buddy.says.frmUsr requiere config.fields.');
     }
 
+    // Personaje oculto: un formulario tampoco puede mostrarse en globo.
+    if (window.Buddy.isCharacterHidden && window.Buddy.isCharacterHidden()) return false;
+
     var entry = { type: 'form', config: config };
     if (userFormState || hasActiveSpeech()) {
       speechQueue.push(entry);
@@ -832,6 +835,10 @@ window.Buddy = window.Buddy || {};
 
   function showSpeechNow(texto, opciones) {
     opciones = opciones || {};
+    // Personaje oculto: no se puede mostrar ningún globo ni forzar su
+    // reaparición. El mensaje queda en speechQueue y se entregará cuando
+    // showCharacter() vuelva a hacer visible al personaje.
+    if (window.Buddy.isCharacterHidden && window.Buddy.isCharacterHidden()) return false;
     if (userFormState) return false;
     if (bubbleEl) bubbleEl.classList.remove('is-form');
     var interactive = opciones.interactive === true && Array.isArray(opciones.choices);
@@ -1573,6 +1580,19 @@ window.Buddy = window.Buddy || {};
     }, Promise.resolve(false)).then(function (resuelto) {
       if (!resuelto) responderSinModulo();
       return resuelto;
+    });
+  }
+
+  if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+    window.addEventListener('buddy:character-hidden', function () {
+      // El personaje quedó oculto: ocultar cualquier globo/formulario
+      // activo. La cola se conserva; showSpeechNow() la bloqueará mientras
+      // el personaje siga oculto y la reanudará al volver a mostrarse.
+      if (userFormState) {
+        cancelUserForm();
+      } else {
+        cancelarMensajeActual();
+      }
     });
   }
 

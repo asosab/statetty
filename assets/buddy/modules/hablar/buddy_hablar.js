@@ -152,6 +152,10 @@ window.Buddy = window.Buddy || {};
       return false;
     }
 
+    // Personaje oculto: no se reproduce audio (ni el de los globos ni el
+    // de llamadas directas a la API).
+    if (window.Buddy.isCharacterHidden && window.Buddy.isCharacterHidden()) return false;
+
     // Forzar start de la síntesis en algunos navegadores.
     if (window.speechSynthesis.paused) {
       try { window.speechSynthesis.resume(); } catch (e) {}
@@ -323,6 +327,7 @@ window.Buddy = window.Buddy || {};
   function onSaysMessage(texto, opciones, interactivo) {
     if (!autoSpeak) return false;
     if (!supported()) return false;
+    if (window.Buddy.isCharacterHidden && window.Buddy.isCharacterHidden()) return false;
 
     opciones = opciones || {};
     if (CONFIG.skipInteractive === true && (interactivo === true || opciones.form === true)) {

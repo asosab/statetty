@@ -544,17 +544,65 @@ window.Buddy = window.Buddy || {};
     var renderedWidth = charEl.offsetWidth;
     if (!renderedHeight || !renderedWidth) return;
 
-    charEl.style.bottom = characterBottomOffsetPx(
+    var bottomPx = characterBottomOffsetPx(
       datosImagen,
       renderedHeight,
       renderedWidth
-    ) + 'px';
-
-    charEl.style.right = characterRightOffsetPx(
+    );
+    var rightPx = characterRightOffsetPx(
       datosImagen,
       renderedWidth,
       renderedHeight
-    ) + 'px';
+    );
+
+    charEl.style.bottom = bottomPx + 'px';
+    charEl.style.right = rightPx + 'px';
+
+    positionCloseButton(bottomPx, rightPx);
+  }
+
+  function positionCloseButton(bottomPx, rightPx) {
+    if (!closeBtnEl) return;
+    closeBtnEl.style.right = (Number(rightPx) + CLOSE_BUTTON_OFFSET_PX) + 'px';
+    closeBtnEl.style.bottom = (Number(bottomPx) + CLOSE_BUTTON_OFFSET_PX) + 'px';
+  }
+
+  function ensureCloseButton() {
+    if (closeBtnEl) return closeBtnEl;
+
+    var nombre = (getCharData() && getCharData().perfil && getCharData().perfil.nombre) || 'Buddy';
+
+    closeBtnEl = document.createElement('button');
+    closeBtnEl.type = 'button';
+    closeBtnEl.id = 'buddy-close';
+    closeBtnEl.setAttribute('aria-label', 'Ocultar a ' + nombre);
+    closeBtnEl.title = 'Ocultar';
+    closeBtnEl.textContent = '×';
+    Object.assign(closeBtnEl.style, {
+      position: 'fixed',
+      zIndex: '10000',
+      width: '24px',
+      height: '24px',
+      padding: '0',
+      border: 'none',
+      borderRadius: '50%',
+      background: 'rgba(0,0,0,.42)',
+      color: '#fff',
+      fontSize: '16px',
+      fontWeight: '700',
+      lineHeight: '24px',
+      textAlign: 'center',
+      cursor: 'pointer',
+      boxSizing: 'border-box',
+      display: 'none'
+    });
+    closeBtnEl.addEventListener('click', function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      hideCharacter();
+    });
+    document.body.appendChild(closeBtnEl);
+    return closeBtnEl;
   }
 
   // ---------------------------------------------------------------------
@@ -563,6 +611,21 @@ window.Buddy = window.Buddy || {};
   // ---------------------------------------------------------------------
   var charEl = null;
   var lastDatosImagen = null; // último dato de imagen mostrado, para el resize
+
+  // Estado oculto del personaje (botón ×). Se persiste en localStorage para
+  // que una recarga no lo vuelva a mostrar pese a la decisión del usuario.
+  // Mientras esté oculto, ningún módulo (says, hablar, archeryGame) puede
+  // hacer visible al personaje ni mostrar globos/audio.
+  var HIDDEN_STORAGE_KEY = 'buddy.characterHidden.v1';
+  var characterHidden = (function () {
+    try {
+      return window.localStorage.getItem(HIDDEN_STORAGE_KEY) === '1';
+    } catch (e) {
+      return false;
+    }
+  })();
+  var closeBtnEl = null;
+  var CLOSE_BUTTON_OFFSET_PX = 6;
 
   function ensureCharacterElement() {
     if (charEl) return charEl;
@@ -592,6 +655,9 @@ window.Buddy = window.Buddy || {};
     });
 
     document.body.appendChild(charEl);
+
+    ensureCloseButton();
+
     window.addEventListener('resize', onResize);
 
     return charEl;
@@ -610,12 +676,17 @@ window.Buddy = window.Buddy || {};
   // que devuelven resolveAsset/resolveExpression/resolveExpressionByCategory.
   // ---------------------------------------------------------------------
   function showCharacterImage(datosImagen) {
+    // Si el usuario ocultó al personaje (botón ×), ningún módulo (says,
+    // archery, etc.) puede forzar su reaparición. La única vía es la API
+    // pública Buddy.showCharacter().
+    if (characterHidden === true) return;
     if (!datosImagen || !datosImagen.archivo) return;
 
     ensureCharacterElement();
     lastDatosImagen = datosImagen;
     var wasHidden = charEl.style.display === 'none';
     charEl.style.display = 'block';
+    if (closeBtnEl) closeBtnEl.style.display = 'block';
     charEl.src = datosImagen.archivo;
 
     // Una vez que cualquier parte de Buddy hace visible al personaje,
@@ -645,6 +716,62 @@ window.Buddy = window.Buddy || {};
       fitLongSide(charEl, characterTargetPx(datosImagen.escala));
       positionCharacter(datosImagen);
     }
+  }
+
+  // ---------------------------------------------------------------------
+  // hideCharacter() / showCharacter() / isCharacterHidden()
+  // Decide el usuario (botón ×) o una llamada a la API pública. Mientras
+  // el personaje está oculto, los módulos no pueden mostrarlo: el guard de
+  // showCharacterImage() lo bloquea; los propios módulos (says, hablar,
+  // archeryGame) además lo consultan para no ejecutarse.
+  // ---------------------------------------------------------------------
+  function hideCharacter() {
+    characterHidden = true;
+    try {
+      window.localStorage.setItem(HIDDEN_STORAGE_KEY, '1');
+    } catch (e) { /* storage no disponible */ }
+
+    if (charEl) charEl.style.display = 'none';
+    if (closeBtnEl) closeBtnEl.style.display = 'none';
+
+    // Detener cualquier audio en curso (el personaje quedó fuera de vista).
+    if (window.Buddy.hablar && typeof window.Buddy.hablar.stop === 'function') {
+      try { window.Buddy.hablar.stop(); } catch (e) { /* sin hablar */ }
+    }
+
+    try {
+      window.dispatchEvent(new CustomEvent('buddy:character-hidden', {
+        detail: { character: personajeActivo }
+      }));
+    } catch (e) {
+      // Compatibilidad con entornos antiguos.
+    }
+
+    return true;
+  }
+
+  function showCharacter() {
+    if (!characterHidden) return false;
+
+    characterHidden = false;
+    try {
+      window.localStorage.removeItem(HIDDEN_STORAGE_KEY);
+    } catch (e) { /* storage no disponible */ }
+
+    if (lastDatosImagen) {
+      // showCharacterImage() restaura la última expresión y emite
+      // buddy:character-visible (los módulos se sincronizan con ella).
+      showCharacterImage(lastDatosImagen);
+    } else {
+      var sereno = resolveExpression(EXPRESION_OBLIGATORIA);
+      if (sereno) showCharacterImage(sereno);
+    }
+
+    return true;
+  }
+
+  function isCharacterHidden() {
+    return characterHidden === true;
   }
 
   // ---------------------------------------------------------------------
@@ -1413,6 +1540,9 @@ window.Buddy = window.Buddy || {};
   window.Buddy.isCharacterVisible = function () {
     return !!(charEl && charEl.style.display !== 'none');
   };
+  window.Buddy.hideCharacter = hideCharacter;
+  window.Buddy.showCharacter = showCharacter;
+  window.Buddy.isCharacterHidden = isCharacterHidden;
   window.Buddy.getCharacter = getCharData;
   window.Buddy.isReady = function () { return ready; };
   window.Buddy.preloadCharacterAssets = preloadCharacterAssets;
