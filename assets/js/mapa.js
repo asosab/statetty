@@ -796,7 +796,7 @@ function actualizarToolbox() {
         <button id="btn-pdf-mobile" disabled>📱 PDF móvil</button>
         <button id="btn-tsv" disabled>⬇️ Descargar datos</button>
         <button id="btn-copiar" disabled>📋 Copiar datos</button>
-        <span id="tsv-copied-msg" style="display:none;color:green;margin-left:6px;"></br>Datos copiados al portapapeles</span> 
+        <span id="tsv-copied-msg" style="display:none;color:green;margin-left:6px;"></br>Datos copiados al portapapeles, puedes pegarlos en una hoja de cálculo</span> 
       </div>
     `);
 

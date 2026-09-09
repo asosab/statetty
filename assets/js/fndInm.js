@@ -335,7 +335,7 @@
     if (state === 'saving') {
       el.innerHTML = '<span class="fndinm-spinner"></span>';
     } else if (state === 'success') {
-      el.innerHTML = '\u2705 ' + (msg || 'Cambio realizado');
+      el.innerHTML = '\u2705 ' + (msg || 'guardado');
       el.classList.add('fndinm-success');
       clearTimeout(el._hideTimer);
       el._hideTimer = setTimeout(function () { el.innerHTML = ''; }, 5000);
