@@ -164,9 +164,11 @@ window.Buddy = window.Buddy || {};
     send.setAttribute('aria-label', 'Enviar comando');
 
 
-    // Auth queda deliberadamente antes del input.
+    // Auth queda deliberadamente antes del input. El botón "ver a {nombre}"
+    // se agrega inmediatamente antes del input (el contenedor es flex, el
+    // orden visual sigue el orden de appendChild).
     container.appendChild(authButton);
-    container.insertBefore(showCharBtn, input);
+    container.appendChild(showCharBtn);
     container.appendChild(input);
     container.appendChild(enterLabel);
     container.appendChild(send);
