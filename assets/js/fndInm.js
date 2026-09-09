@@ -709,6 +709,13 @@
       var nombreEl = form.elements['nombre'];
       if (nombreEl) nombreEl.value = param.nombre !== undefined && param.nombre !== null ? param.nombre : '';
 
+      // Si el título del PDF está vacío y hay nombre de búsqueda, pre-cargarlo ahí.
+      var pdfTitle = document.getElementById('pdf-title');
+      var nombreText = nombreEl ? String(nombreEl.value || '').trim() : '';
+      if (pdfTitle && nombreText && !String(pdfTitle.value || '').trim()) {
+        pdfTitle.value = nombreText;
+      }
+
       GROUPS.forEach(function (group) {
         group.fields.forEach(function (field) {
           if (field.type === 'latlng') return;
