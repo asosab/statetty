@@ -793,7 +793,8 @@ function actualizarToolbox() {
         ${html}
         <br>
         <button id="btn-pdf-landscape" disabled>📄 PDF pantalla</button>
-        <button id="btn-pdf-mobile" disabled>📱 PDF móvil</button> 
+        <button id="btn-pdf-mobile" disabled>📱 PDF móvil</button>
+        <button id="btn-tsv" disabled>📋 Datos tabulados</button> 
       </div>
     `);
 
@@ -810,23 +811,35 @@ function actualizarToolbox() {
 
     $("#btn-pdf-landscape").prop("disabled", !habilitar);
     $("#btn-pdf-mobile").prop("disabled", !habilitar);
+    $("#btn-tsv").prop("disabled", !habilitar);
 
     $("#pdf-show-all").off("change").on("change", function(){
       const habilitar = seleccionados.length > 0 || this.checked === true;
       $("#btn-pdf-landscape").prop("disabled", !habilitar);
       $("#btn-pdf-mobile").prop("disabled", !habilitar);
+      $("#btn-tsv").prop("disabled", !habilitar);
     });
+
+    function getNombreBusqueda() {
+      var inputName = ($('#fndInm-nombre').val() || '').trim();
+      var slotLabel = ($('#fndInm-slots-select option:selected').text() || '').trim();
+      if (slotLabel === 'Búsquedas guardadas…' || slotLabel === '--- Vacío ---') slotLabel = '';
+      return inputName || slotLabel || '';
+    }
 
     $("#btn-pdf-landscape").off("click").on("click", function () {
       const showAll = $("#pdf-show-all").prop("checked");
-      const data = showAll ? locations : seleccionados;
-      generarBrochurePDF(data, "landscape", seleccionados);
+      generarBrochurePDF(showAll ? locations : seleccionados, "landscape", seleccionados, getNombreBusqueda());
     });
 
     $("#btn-pdf-mobile").off("click").on("click", function () {
       const showAll = $("#pdf-show-all").prop("checked");
-      const data = showAll ? locations : seleccionados;
-      generarBrochurePDF(data, "mobile", seleccionados);
+      generarBrochurePDF(showAll ? locations : seleccionados, "mobile", seleccionados, getNombreBusqueda());
+    });
+
+    $("#btn-tsv").off("click").on("click", function () {
+      const showAll = $("#pdf-show-all").prop("checked");
+      descargarTSV(showAll ? locations : seleccionados, getNombreBusqueda());
     });
 
   } 

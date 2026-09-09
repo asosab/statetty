@@ -215,6 +215,72 @@ const camposDisponibles = [
   { key: "anoc",            label: "Año de construc.",index: 24 },
 ];
 
+/** ----------------------------------------------------------------------------------------------- nombreArchivoSeguro
+ * Sanitiza una etiqueta para usarla como nombre de archivo: sin acentos, espacios y caracteres
+ * inadecuados → "_", máx 80 chars. Devuelve "" si queda vacío (el caller decide el fallback).
+ */
+function nombreArchivoSeguro(nombre) {
+  return (nombre || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, '_')
+    .replace(/[^a-zA-Z0-9_-]+/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .slice(0, 80);
+}
+
+/** ----------------------------------------------------------------------------------------------- descargarTSV
+ * Exporta un .tsv con TODAS las columnas de cada inmueble (no depende de la selección de columnas del PDF),
+ * ordenado por precio ascendente. El caller decide qué datos pasar según el check "Mostrar todos".
+ * nombreArchivo (opcional): etiqueta base del archivo (se sanitiza en modo seguro).
+ */
+function descargarTSV(inmuebles, nombreArchivo) {
+  try {
+    if (!Array.isArray(inmuebles) || inmuebles.length === 0) {
+      console.log("[Statetty] [warn] descargarTSV: no hay datos para exportar");
+      return;
+    }
+
+    var ordenados = inmuebles.slice().sort(function (a, b) {
+      return (parseInt(a.precio) || 0) - (parseInt(b.precio) || 0);
+    });
+
+    var claves = [];
+    ordenados.forEach(function (row) {
+      Object.keys(row).forEach(function (k) {
+        if (claves.indexOf(k) === -1) claves.push(k);
+      });
+    });
+
+    var limpiar = function (v) {
+      if (v === null || v === undefined) return '';
+      return String(v)
+        .replace(/[\t\r\n]+/g, ' ')
+        .replace(/[\u0000-\u001F\u007F-\u009F]/g, ' ')
+        .replace(/\s{2,}/g, ' ')
+        .trim();
+    };
+
+    var lineas = [claves.join('\t')];
+    ordenados.forEach(function (row) {
+      lineas.push(claves.map(function (k) { return limpiar(row[k]); }).join('\t'));
+    });
+
+    var blob = new Blob(['\uFEFF' + lineas.join('\r\n')], { type: 'text/tab-separated-values;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = (nombreArchivoSeguro(nombreArchivo) || 'inmuebles') + '.tsv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch (e) {
+    console.log("[Statetty] [error] descargarTSV:", e);
+  }
+}
+
 /** ------------------------------------------------------------------------------------------- initPDFACMImageToggle
  * Muestra u oculta el input de imagen ACM según el checkbox
  */
@@ -382,7 +448,7 @@ async function generarMapaInmuebles(inmuebles, vertical = false) {
 // ---------------------------------------------
 // Generar PDF (modo = "landscape" | "mobile")
 // ---------------------------------------------
-async function generarBrochurePDF(inmuebles, modo = "landscape", seleccionados = []) {
+async function generarBrochurePDF(inmuebles, modo = "landscape", seleccionados = [], nombreArchivo = "") {
 
   if (!inmuebles || inmuebles.length === 0) {alert("No hay inmuebles para generar el PDF.");return;}
 
@@ -633,7 +699,7 @@ async function generarBrochurePDF(inmuebles, modo = "landscape", seleccionados =
 
     }
 
-    doc.save("brochure-inmuebles.pdf");
+    doc.save((nombreArchivoSeguro(nombreArchivo) || 'brochure-inmuebles') + ".pdf");
 
   } catch(err) {
 
