@@ -563,8 +563,12 @@ window.Buddy = window.Buddy || {};
 
   function positionCloseButton(bottomPx, rightPx) {
     if (!closeBtnEl) return;
+    // El personaje se ancla por la cintura (~52% de la altura): su borde
+    // inferior queda por debajo de la línea de piso y `bottom` sale negativo.
+    // La × se clama a ≥0 para que nunca quede fuera de la pantalla: se
+    // coloca sobre el borde visible del personaje (el doblez del viewport).
     closeBtnEl.style.right = (Number(rightPx) + CLOSE_BUTTON_OFFSET_PX) + 'px';
-    closeBtnEl.style.bottom = (Number(bottomPx) + CLOSE_BUTTON_OFFSET_PX) + 'px';
+    closeBtnEl.style.bottom = Math.max(0, Number(bottomPx)) + CLOSE_BUTTON_OFFSET_PX + 'px';
   }
 
   function ensureCloseButton() {
