@@ -881,29 +881,18 @@ function mostrarAvisoSinResultados() {
   });
 }
 
-function mostrarAvisoSinBusquedaActiva() {
-  if (document.getElementById('modal-sinbusqueda-overlay')) return; // evitar duplicados
+function initEmptyMap() {
+  map = L.map('mapid').setView([-17.7833, -63.1821], 12);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap'
+  }).addTo(map);
 
-  var overlay = document.createElement('div');
-  overlay.id = 'modal-sinbusqueda-overlay';
-  overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:99999;display:flex;justify-content:center;align-items:center;';
+  $('#toolbox').show();
 
-  var box = document.createElement('div');
-  box.style.cssText = 'background:#fff;border-radius:12px;padding:32px;max-width:420px;margin:20px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.3);font-family:sans-serif;';
-
-  box.innerHTML =
-    '<div style="font-size:48px;margin-bottom:12px;">📭</div>' +
-    '<p style="font-size:18px;color:#333;margin:0 0 16px;line-height:1.5;">' +
-    'No hay una búsqueda activa para tu cuenta. Ejecuta una búsqueda desde la propia web y vuelve a entrar para ver los resultados en el mapa: ' +
-    '<a href="https://statetty.com/maps/find/" target="_blank" rel="noopener" style="color:#2563eb;text-decoration:underline;">https://statetty.com/maps/find/</a>' +
-    '</p>' +
-
-  overlay.appendChild(box);
-  document.body.appendChild(overlay);
-
-  overlay.addEventListener('click', function (e) {
-    if (e.target === overlay) overlay.remove();
-  });
+  setTimeout(function () {
+    var fndInmHeader = document.querySelector('#stt-fndinm-slot .section-header');
+    if (fndInmHeader) fndInmHeader.click();
+  }, 300);
 }
 
 function mostrarAvisoSinSesion() {
@@ -1329,7 +1318,7 @@ $(document).ready(function () {
 
     if (!response || response.error || !Array.isArray(response.result)) {
       $('#loading-indicator').hide();
-      mostrarAvisoSinBusquedaActiva();
+      initEmptyMap();
       return;
     }
 
@@ -1399,7 +1388,7 @@ $(document).ready(function () {
     console.error('Error al cargar datos del mapa', e);
     $('#loading-indicator').hide();
     var isBuddyAuth = !!(window.STT && typeof window.STT.getToken === 'function' && window.STT.getToken());
-    if (isBuddyAuth) mostrarAvisoSinBusquedaActiva();
+    if (isBuddyAuth) initEmptyMap();
     else mostrarAvisoLogin();
   });
 
