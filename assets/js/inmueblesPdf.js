@@ -230,6 +230,53 @@ function nombreArchivoSeguro(nombre) {
     .slice(0, 80);
 }
 
+/** ----------------------------------------------------------------------------------------------- tsvEnLineas
+ * Construye el texto TSV (CRLF) con TODAS las columnas de cada inmueble (unión de claves reales, sin depender
+ * de la selección de columnas del PDF), ordenado por precio ascendente. Devuelve null si no hay datos.
+ */
+function tsvEnLineas(inmuebles) {
+  if (!Array.isArray(inmuebles) || inmuebles.length === 0) return null;
+
+  var ordenados = inmuebles.slice().sort(function (a, b) {
+    return (parseInt(a.precio) || 0) - (parseInt(b.precio) || 0);
+  });
+
+  var claves = [];
+  ordenados.forEach(function (row) {
+    Object.keys(row).forEach(function (k) {
+      if (claves.indexOf(k) === -1) claves.push(k);
+    });
+  });
+
+  var limpiar = function (v) {
+    if (v === null || v === undefined) return '';
+    return String(v)
+      .replace(/[\t\r\n]+/g, ' ')
+      .replace(/[\u0000-\u001F\u007F-\u009F]/g, ' ')
+      .replace(/\s{2,}/g, ' ')
+      .trim();
+  };
+
+  var lineas = [claves.join('\t')];
+  ordenados.forEach(function (row) {
+    lineas.push(claves.map(function (k) { return limpiar(row[k]); }).join('\t'));
+  });
+
+  return lineas.join('\r\n');
+}
+
+/** ----------------------------------------------------------------------------------------------- copiarTSV
+ * Copia los datos del TSV al portapapeles. Devuelve una Promise que resuelve con true si se copió.
+ */
+function copiarTSV(inmuebles) {
+  var tsv = tsvEnLineas(inmuebles);
+  if (tsv === null) {
+    console.log("[Statetty] [warn] copiarTSV: no hay datos para exportar");
+    return Promise.resolve(false);
+  }
+  return navigator.clipboard.writeText(tsv).then(function () { return true; });
+}
+
 /** ----------------------------------------------------------------------------------------------- descargarTSV
  * Exporta un .tsv con TODAS las columnas de cada inmueble (no depende de la selección de columnas del PDF),
  * ordenado por precio ascendente. El caller decide qué datos pasar según el check "Mostrar todos".
@@ -237,37 +284,13 @@ function nombreArchivoSeguro(nombre) {
  */
 function descargarTSV(inmuebles, nombreArchivo) {
   try {
-    if (!Array.isArray(inmuebles) || inmuebles.length === 0) {
+    var tsv = tsvEnLineas(inmuebles);
+    if (tsv === null) {
       console.log("[Statetty] [warn] descargarTSV: no hay datos para exportar");
       return;
     }
 
-    var ordenados = inmuebles.slice().sort(function (a, b) {
-      return (parseInt(a.precio) || 0) - (parseInt(b.precio) || 0);
-    });
-
-    var claves = [];
-    ordenados.forEach(function (row) {
-      Object.keys(row).forEach(function (k) {
-        if (claves.indexOf(k) === -1) claves.push(k);
-      });
-    });
-
-    var limpiar = function (v) {
-      if (v === null || v === undefined) return '';
-      return String(v)
-        .replace(/[\t\r\n]+/g, ' ')
-        .replace(/[\u0000-\u001F\u007F-\u009F]/g, ' ')
-        .replace(/\s{2,}/g, ' ')
-        .trim();
-    };
-
-    var lineas = [claves.join('\t')];
-    ordenados.forEach(function (row) {
-      lineas.push(claves.map(function (k) { return limpiar(row[k]); }).join('\t'));
-    });
-
-    var blob = new Blob(['\uFEFF' + lineas.join('\r\n')], { type: 'text/tab-separated-values;charset=utf-8' });
+    var blob = new Blob(['\uFEFF' + tsv], { type: 'text/tab-separated-values;charset=utf-8' });
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
     a.href = url;

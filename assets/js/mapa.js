@@ -794,7 +794,9 @@ function actualizarToolbox() {
         <br>
         <button id="btn-pdf-landscape" disabled>📄 PDF pantalla</button>
         <button id="btn-pdf-mobile" disabled>📱 PDF móvil</button>
-        <button id="btn-tsv" disabled>📋 Datos tabulados</button> 
+        <button id="btn-tsv" disabled>⬇️ Descargar datos</button>
+        <button id="btn-copiar" disabled>📋 Copiar datos</button>
+        <span id="tsv-copied-msg" style="display:none;color:green;margin-left:6px;">Datos copiados al portapapeles</span> 
       </div>
     `);
 
@@ -812,12 +814,14 @@ function actualizarToolbox() {
     $("#btn-pdf-landscape").prop("disabled", !habilitar);
     $("#btn-pdf-mobile").prop("disabled", !habilitar);
     $("#btn-tsv").prop("disabled", !habilitar);
+    $("#btn-copiar").prop("disabled", !habilitar);
 
     $("#pdf-show-all").off("change").on("change", function(){
       const habilitar = seleccionados.length > 0 || this.checked === true;
       $("#btn-pdf-landscape").prop("disabled", !habilitar);
       $("#btn-pdf-mobile").prop("disabled", !habilitar);
       $("#btn-tsv").prop("disabled", !habilitar);
+      $("#btn-copiar").prop("disabled", !habilitar);
     });
 
     function getNombreBusqueda() {
@@ -840,6 +844,20 @@ function actualizarToolbox() {
     $("#btn-tsv").off("click").on("click", function () {
       const showAll = $("#pdf-show-all").prop("checked");
       descargarTSV(showAll ? locations : seleccionados, getNombreBusqueda());
+    });
+
+    $("#btn-copiar").off("click").on("click", function () {
+      const showAll = $("#pdf-show-all").prop("checked");
+      copiarTSV(showAll ? locations : seleccionados).then(function (ok) {
+        if (!ok) return;
+        $("#tsv-copied-msg").show();
+        clearTimeout($("#btn-copiar").data("sp-msg-timer"));
+        $("#btn-copiar").data("sp-msg-timer", setTimeout(function () {
+          $("#tsv-copied-msg").hide();
+        }, 2500));
+      }).catch(function (e) {
+        console.log("[Statetty] [error] copiarTSV:", e);
+      });
     });
 
   } 
