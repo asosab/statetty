@@ -1,8 +1,8 @@
 ---
-layout: post
+layout: page
 title: "Lo que las nuevas medidas del BCB significan para el mercado inmobiliario boliviano"
 date: 2026-09-10
-categories: [Mercado Inmobiliario, Economía, Política Monetaria]
+categories: Mercado Inmobiliario, Economía, Política Monetaria
 comments: true
 description: "El BCB restringió liquidez bancaria y frenó la compra de dólares. Aquí te explicamos, como asesor inmobiliario, qué debes saber para asesorar mejor a tus clientes en este nuevo escenario."
 tags: [BCB, Mercado Inmobiliario, Tipo de Cambio, Créditos Hipotecarios, Economía Bolivia, Asesores Inmobiliarios]
