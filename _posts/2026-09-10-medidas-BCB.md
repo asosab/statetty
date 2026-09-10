@@ -7,8 +7,10 @@ comments: true
 description: "El BCB restringió liquidez bancaria y frenó la compra de dólares. Aquí te explicamos, como asesor inmobiliario, qué debes saber para asesorar mejor a tus clientes en este nuevo escenario."
 tags: [BCB, Mercado Inmobiliario, Tipo de Cambio, Créditos Hipotecarios, Economía Bolivia, Asesores Inmobiliarios]
 published: true
-image: "politica_cambiaria.png"
+image: "politica_cambiaria.jpg"
 ---
+¿Sin tiempo para leer? Escucha el artículo en [Statetty Podcast](https://open.spotify.com/episode/7w6yRTubntLj4qLPfHinXl?si=pV3mUYEsRFCMhVPhY8l_Ng)
+
 
 Si trabajas como asesor inmobiliario en Bolivia, esta semana cambió una parte importante de las reglas del juego. Entre el 7 y el 9 de septiembre de 2026, el Banco Central de Bolivia (BCB) puso en marcha un paquete de medidas para frenar la subida del dólar y absorber liquidez del sistema financiero. La medida central inmoviliza temporalmente el 3% de los depósitos en bolivianos de la banca. **El efecto que más te interesa como asesor es directo: los créditos hipotecarios se volverán más escasos y selectivos, mientras que la compra de propiedades al contado gana fuerza como refugio de valor.** Vamos por partes, para que puedas explicárselo a tus clientes con seguridad.
 
