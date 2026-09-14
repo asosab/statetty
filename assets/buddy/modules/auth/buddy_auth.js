@@ -10,6 +10,7 @@ window.Buddy = window.Buddy || {};
   var CONFIG = window.BuddyAuthConfig || {};
   var REFRESH_KEY = 'buddy_refresh_token';
   var ACCESS_KEY = 'buddy_access_token';
+  var CORS_BLOCKED_MESSAGE = 'Este sitio aún no ha sido agregado a Buddy, favor comunicarlo al administrador de estas páginas';
 
   var state = {
     enabled: CONFIG.enabled !== false,
@@ -191,6 +192,22 @@ window.Buddy = window.Buddy || {};
       : null;
   }
 
+  // Falla a nivel de red (sin status HTTP): CORS bloqueado, servidor caído, etc.
+  // El navegador no permite diferenciar CORS de otros fallos de red, así que se
+  // presenta el mensaje de "sitio aún no agregado a Buddy" para el caso más común.
+  // ponytail: no distingue CORS de red caída; si se quiere exactitud, añadir un
+  // endpoint público con ACAO:* que diga si el origen está registrado.
+  function isCorsBlockedError(error) {
+    if (!error || error.status != null) return false;
+    var msg = String(error.message || '');
+    return error instanceof TypeError ||
+      msg === 'Failed to fetch' ||
+      msg === 'Load failed' ||
+      msg === 'Network request failed' ||
+      msg === 'NetworkError when attempting to fetch resource.' ||
+      msg === 'fetch failed';
+  }
+
   function apiRequest(endpointKey, options) {
     options = options || {};
     var telemetry = getAuthApi();
@@ -209,7 +226,14 @@ window.Buddy = window.Buddy || {};
     if (options.signal) requestOptions.signal = options.signal;
 
     debugLog('apiRequest:', endpointKey, method, endpoint);
-    return telemetry.request(service, endpoint, requestOptions);
+    return telemetry.request(service, endpoint, requestOptions).catch(function (error) {
+      if (isCorsBlockedError(error)) {
+        var blocked = new Error(CORS_BLOCKED_MESSAGE);
+        blocked.corsBlocked = true;
+        throw blocked;
+      }
+      throw error;
+    });
   }
 
   // --- Refresh flow ---
