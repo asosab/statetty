@@ -142,7 +142,12 @@ window.BuddyBackgrounds = window.BuddyBackgrounds || {};
     if (!ch || !cw) return;
 
     var layerScale = layer.scale != null ? layer.scale : 1;
-    var layerTarget = 0.45 * screenLongSide() * layerScale;
+    var baseScale =
+      window.Buddy && window.Buddy.characterLayout &&
+      window.Buddy.characterLayout.scalePercent != null
+        ? window.Buddy.characterLayout.scalePercent
+        : 45;
+    var layerTarget = (baseScale / 100) * screenLongSide() * layerScale;
 
     var chBottom = Number(charEl.style.bottom) || 0;
     var chRight = Number(charEl.style.right) || 0;

@@ -255,7 +255,11 @@ window.Buddy = window.Buddy || {};
         url: url,
         siteId: siteId,
         activo: true,
-        character: (cfg && cfg.character) || { defaultCharacter: 'alejito', fallbackCharacter: 'alejito' },
+        character: (cfg && cfg.character) || {
+        defaultCharacter: 'alejito',
+        fallbackCharacter: 'alejito',
+        layout: { scalePercent: 45, marginPx: 16, anchorRightPercent: 15 }
+      },
         google: (cfg && cfg.google) || { email: '', timezone: 'America/La_Paz', calendarId: '', from: '' },
         override: {}
       }).then(function (saved) {
@@ -486,6 +490,14 @@ window.Buddy = window.Buddy || {};
             '<option value="alejito"' + (char.fallbackCharacter === 'alejito' ? ' selected' : '') + '>alejito</option>' +
             '<option value="raulito"' + (char.fallbackCharacter === 'raulito' ? ' selected' : '') + '>raulito</option>' +
           '</select></div>' +
+        '<div class="buddy-cfg-field"><label>Escala (% del lado largo de la pantalla)</label>' +
+          '<input type="number" min="1" max="200" step="1" value="' + (((char.layout && char.layout.scalePercent) != null) ? char.layout.scalePercent : 45) + '" data-cfg-char-scale>' +
+          '<p class="buddy-cfg-desc">Tamaño del personaje en pantalla (45 = actual por defecto; 90 = doble).</p></div>' +
+        '<div class="buddy-cfg-field"><label>Posición horizontal (% desde el borde derecho)</label>' +
+          '<input type="number" min="0" max="100" step="1" value="' + (((char.layout && char.layout.anchorRightPercent) != null) ? char.layout.anchorRightPercent : 15) + '" data-cfg-char-anchor-right>' +
+          '<p class="buddy-cfg-desc">El ancla del personaje (cintura) queda a ese % medido desde el borde derecho (15 = por defecto; 50 = centro).</p></div>' +
+        '<div class="buddy-cfg-field"><label>Margen inferior (px)</label>' +
+          '<input type="number" min="0" step="1" value="' + (((char.layout && char.layout.marginPx) != null) ? char.layout.marginPx : 16) + '" data-cfg-char-margin></div>' +
       '</div>' +
       '<div class="buddy-config-toolbox__section">' +
         '<h3 class="buddy-config-toolbox__section-title">' + escapeHtml(CONFIG.labels.google || 'Cuenta de Google') + '</h3>' +
@@ -602,13 +614,24 @@ window.Buddy = window.Buddy || {};
     if (!state.currentConfig) return;
     var content = document.querySelector('[data-config-content]');
     var url = (content.querySelector('[data-cfg-url]') || {}).value || '';
+
+    var existingChar = state.currentConfig && state.currentConfig.character &&
+      typeof state.currentConfig.character === 'object' ? state.currentConfig.character : {};
+    var charLayout = existingChar.layout && typeof existingChar.layout === 'object' ? existingChar.layout : {};
+    var layout = {
+      scalePercent: parseFloat((content.querySelector('[data-cfg-char-scale]') || {}).value) || 45,
+      anchorRightPercent: parseFloat((content.querySelector('[data-cfg-char-anchor-right]') || {}).value) || 15,
+      marginPx: parseFloat((content.querySelector('[data-cfg-char-margin]') || {}).value) || 16
+    };
+
     var payload = {
       url: url,
       siteId: (content.querySelector('[data-cfg-site-id]') || {}).value || state.currentConfig.siteId || '',
       activo: !!content.querySelector('[data-cfg-activo]').checked,
       character: {
         defaultCharacter: (content.querySelector('[data-cfg-char]') || {}).value || 'alejito',
-        fallbackCharacter: (content.querySelector('[data-cfg-char-fallback]') || {}).value || 'alejito'
+        fallbackCharacter: (content.querySelector('[data-cfg-char-fallback]') || {}).value || 'alejito',
+        layout: Object.assign({}, charLayout, layout)
       },
       google: {
         email: (content.querySelector('[data-cfg-google-email]') || {}).value || '',

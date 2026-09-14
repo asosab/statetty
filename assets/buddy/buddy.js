@@ -85,12 +85,15 @@ window.Buddy = window.Buddy || {};
     return BUDDY_REMOTE_BASE_FALLBACK;
   })();
 
-  // Reglas de tamaño/posición del personaje en pantalla. 
+  // Reglas de tamaño/posición del personaje en pantalla. Pueden ser
+  // sobrescritas por página desde BD (BuddyConfig.character.layout) vía el
+  // toolbox de configuración; loadCharacterConfig() arma activeLayout.
   var LAYOUT = {
-    characterLongSidePercent: 0.45,
-    characterMarginPx: 16,
-    characterAnchorRightPercent: 0.15
+    scalePercent: 45,
+    marginPx: 16,
+    anchorRightPercent: 15
   };
+  var activeLayout = LAYOUT;
 
   // Expresión obligatoria de cualquier personaje (ver planBuddy_v5.md,
   // sección 2): única con fallback garantizado.
@@ -451,7 +454,7 @@ window.Buddy = window.Buddy || {};
   // Ahora recibe directamente `escala` del objeto ya resuelto.
   function characterTargetPx(escala) {
     var scale = typeof escala === 'number' ? escala : 1;
-    return LAYOUT.characterLongSidePercent * screenLongSide() * scale;
+    return (activeLayout.scalePercent / 100) * screenLongSide() * scale;
   }
 
   // Las coordenadas de `anclas` son coordenadas ABSOLUTAS en píxeles
@@ -489,7 +492,7 @@ window.Buddy = window.Buddy || {};
   }
 
   function characterAnchorTargetPx() {
-    return LAYOUT.characterAnchorRightPercent * screenLongSide();
+    return (activeLayout.anchorRightPercent / 100) * screenLongSide();
   }
 
   function characterBottomOffsetPx(datosImagen, renderedHeightPx, renderedWidthPx) {
@@ -511,7 +514,7 @@ window.Buddy = window.Buddy || {};
 
     // `bottom` se mide desde el borde inferior del viewport. Queremos que
     // el punto absoluto de la imagen quede sobre la línea de referencia.
-    return LAYOUT.characterMarginPx -
+    return activeLayout.marginPx -
       (renderedHeightPx - renderedAnchor.y);
   }
 
@@ -641,8 +644,8 @@ window.Buddy = window.Buddy || {};
     charEl.draggable = false;
     Object.assign(charEl.style, {
       position: 'fixed',
-      right: LAYOUT.characterMarginPx + 'px',
-      bottom: LAYOUT.characterMarginPx + 'px',
+      right: activeLayout.marginPx + 'px',
+      bottom: activeLayout.marginPx + 'px',
       zIndex: '9999',
       touchAction: 'none',
       userSelect: 'none',
@@ -1334,6 +1337,26 @@ window.Buddy = window.Buddy || {};
       ).trim().toLowerCase();
       personajeActivo = requested || fallback;
       if (!personajeActivo) personajeActivo = 'alejito';
+
+      // Layout del personaje (escala y posición en pantalla). La config de BD
+      // (BuddyConfig.character.layout, editada en el toolbox) vence sobre los
+      // defaults LAYOUT de buddy.js; si el sitio no define layout, queda igual.
+      var runtimeLayout = runtimeChar.layout && typeof runtimeChar.layout === 'object'
+        ? runtimeChar.layout
+        : {};
+      activeLayout = {
+        scalePercent: Number(
+          runtimeLayout.scalePercent != null ? runtimeLayout.scalePercent : LAYOUT.scalePercent
+        ),
+        marginPx: Number(
+          runtimeLayout.marginPx != null ? runtimeLayout.marginPx : LAYOUT.marginPx
+        ),
+        anchorRightPercent: Number(
+          runtimeLayout.anchorRightPercent != null ? runtimeLayout.anchorRightPercent : LAYOUT.anchorRightPercent
+        )
+      };
+      debugLog('character: layout aplicado', activeLayout);
+      window.Buddy.characterLayout = activeLayout;
 
       window.Buddy.characterId = personajeActivo;
       debugLog('character: personaje seleccionado', personajeActivo);
