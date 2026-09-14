@@ -133,21 +133,18 @@ window.BuddyBackgrounds = window.BuddyBackgrounds || {};
     var charEl = document.getElementById('buddy-character');
     if (!charEl || img.style.display === 'none') return;
 
-    // El background se ancla absoluto al box RENDERIZADO del personaje: así
-    // sigue fielmente su escala y posición reales (layout de BD, escala por
-    // expresión, viewport) sin depender de clones del layout.
+    // El background se ancla al box RENDERIZADO del personaje: así sigue su
+    // escala y posición reales (layout de BD, escala por expresión, viewport)
+    // sin depender de clones del layout. La escala es relativa al personaje
+    // (no a la pantalla) y la posición usa anclas en px desde el 0,0 del
+    // personaje (esquina superior-izquierda de su box), por lo que la
+    // composición se mantiene idéntica en cualquier dispositivo.
     var rect = charEl.getBoundingClientRect();
     if (!rect || !rect.width || !rect.height) return;
     var charLongSide = Math.max(rect.width, rect.height);
 
     var layerScale = layer.scale != null ? layer.scale : 1;
     var layerTarget = charLongSide * layerScale;
-
-    var chBottom = window.innerHeight - rect.bottom;
-    var chRight = window.innerWidth - rect.right;
-
-    var layerBottom = chBottom + (((layer.offsetY || 0) / 100) * rect.height);
-    var layerRight = chRight + (((layer.offsetX || 0) / 100) * rect.width);
 
     if (img.naturalWidth && img.naturalHeight) {
       var nw = img.naturalWidth;
@@ -161,17 +158,15 @@ window.BuddyBackgrounds = window.BuddyBackgrounds || {};
         renderedW = (nw / nh) * layerTarget;
       }
 
-      var anchorX = (layer.anchorX != null ? layer.anchorX : 0) / 100;
-      var anchorY = (layer.anchorY != null ? layer.anchorY : 0) / 100;
-      layerRight = layerRight - renderedW * anchorX;
-      layerBottom = layerBottom - renderedH * anchorY;
+      var anchorX = layer.anchorX != null ? layer.anchorX : 0;
+      var anchorY = layer.anchorY != null ? layer.anchorY : 0;
 
+      // Esquina superior-izquierda de la capa en el 0,0 del personaje + ancla (px).
       img.style.width = renderedW + 'px';
       img.style.height = renderedH + 'px';
+      img.style.right = (window.innerWidth - (rect.left + anchorX) - renderedW) + 'px';
+      img.style.bottom = (window.innerHeight - (rect.top + anchorY) - renderedH) + 'px';
     }
-
-    img.style.bottom = layerBottom + 'px';
-    img.style.right = layerRight + 'px';
   }
 
   // --- Audio ---
