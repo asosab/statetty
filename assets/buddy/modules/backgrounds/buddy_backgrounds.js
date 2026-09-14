@@ -119,11 +119,14 @@ window.BuddyBackgrounds = window.BuddyBackgrounds || {};
       pointerEvents: 'none',
       userSelect: 'none',
       webkitUserSelect: 'none',
+      // Oculta hasta la primera posición exitosa: evita el flash a tamaño
+      // natural cuando #buddy-character todavía no existe en el DOM.
+      visibility: 'hidden',
       opacity: String(layer.opacity != null ? layer.opacity : 1)
     });
 
     img.addEventListener('load', function () {
-      if (visible) positionLayer(img, layer);
+      if (visible) waitForCharacterAndPosition(img, layer);
     });
 
     containerEl.appendChild(img);
@@ -132,7 +135,7 @@ window.BuddyBackgrounds = window.BuddyBackgrounds || {};
 
   function positionLayer(img, layer) {
     var charEl = document.getElementById('buddy-character');
-    if (!charEl || img.style.display === 'none') return;
+    if (!charEl) return false;
 
     // El background se ancla al box RENDERIZADO del personaje: así sigue su
     // escala y posición reales (layout de BD, escala por expresión, viewport)
@@ -141,33 +144,56 @@ window.BuddyBackgrounds = window.BuddyBackgrounds || {};
     // personaje (esquina superior-izquierda de su box), por lo que la
     // composición se mantiene idéntica en cualquier dispositivo.
     var rect = charEl.getBoundingClientRect();
-    if (!rect || !rect.width || !rect.height) return;
-    var charLongSide = Math.max(rect.width, rect.height);
+    if (!rect || !rect.width || !rect.height) return false;
+    if (!img.naturalWidth || !img.naturalHeight) return false;
 
+    var charLongSide = Math.max(rect.width, rect.height);
     var layerScale = layer.scale != null ? layer.scale : 1;
     var layerTarget = charLongSide * layerScale;
 
-    if (img.naturalWidth && img.naturalHeight) {
-      var nw = img.naturalWidth;
-      var nh = img.naturalHeight;
-      var renderedW, renderedH;
-      if (nw >= nh) {
-        renderedW = layerTarget;
-        renderedH = (nh / nw) * layerTarget;
-      } else {
-        renderedH = layerTarget;
-        renderedW = (nw / nh) * layerTarget;
-      }
-
-      var anchorX = layer.anchorX != null ? layer.anchorX : 0;
-      var anchorY = layer.anchorY != null ? layer.anchorY : 0;
-
-      // Esquina superior-izquierda de la capa en el 0,0 del personaje + ancla (px).
-      img.style.width = renderedW + 'px';
-      img.style.height = renderedH + 'px';
-      img.style.right = (window.innerWidth - (rect.left + anchorX) - renderedW) + 'px';
-      img.style.bottom = (window.innerHeight - (rect.top + anchorY) - renderedH) + 'px';
+    var nw = img.naturalWidth;
+    var nh = img.naturalHeight;
+    var renderedW, renderedH;
+    if (nw >= nh) {
+      renderedW = layerTarget;
+      renderedH = (nh / nw) * layerTarget;
+    } else {
+      renderedH = layerTarget;
+      renderedW = (nw / nh) * layerTarget;
     }
+
+    var anchorX = layer.anchorX != null ? layer.anchorX : 0;
+    var anchorY = layer.anchorY != null ? layer.anchorY : 0;
+
+    // Esquina superior-izquierda de la capa en el 0,0 del personaje + ancla (px).
+    img.style.width = renderedW + 'px';
+    img.style.height = renderedH + 'px';
+    img.style.right = (window.innerWidth - (rect.left + anchorX) - renderedW) + 'px';
+    img.style.bottom = (window.innerHeight - (rect.top + anchorY) - renderedH) + 'px';
+    img.style.visibility = 'visible';
+    return true;
+  }
+
+  // Reintenta posicionar hasta que #buddy-character exista en el DOM (en
+  // móvil puede montarse más tarde que en desktop). Evita que la capa quede
+  // huérfana a tamaño natural cuando el primer intento llega demasiado
+  // temprano.
+  var CHAR_WAIT_MAX_ATTEMPTS = 120; // ~2s a 60fps
+
+  function waitForCharacterAndPosition(img, layer, attempt) {
+    attempt = attempt || 0;
+    if (!visible) return; // se ocultó mientras esperábamos
+
+    if (positionLayer(img, layer)) {
+      observeCharacter();
+      return;
+    }
+
+    if (attempt >= CHAR_WAIT_MAX_ATTEMPTS) return; // el personaje nunca apareció, desistimos
+
+    requestAnimationFrame(function () {
+      waitForCharacterAndPosition(img, layer, attempt + 1);
+    });
   }
 
   // --- Audio ---
@@ -212,10 +238,9 @@ window.BuddyBackgrounds = window.BuddyBackgrounds || {};
 
     containerEl.style.display = 'block';
     visible = true;
-    observeCharacter();
 
     layerEls.forEach(function (img, i) {
-      positionLayer(img, activeLayers[i]);
+      waitForCharacterAndPosition(img, activeLayers[i]);
     });
 
     playSounds();
