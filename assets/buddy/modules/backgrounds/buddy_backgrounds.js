@@ -22,6 +22,7 @@ window.BuddyBackgrounds = window.BuddyBackgrounds || {};
   var audioEls = {};
   var activeLayers = [];
   var visible = false;
+  var charObserver = null;
 
   // --- Helpers ---
 
@@ -211,6 +212,7 @@ window.BuddyBackgrounds = window.BuddyBackgrounds || {};
 
     containerEl.style.display = 'block';
     visible = true;
+    observeCharacter();
 
     layerEls.forEach(function (img, i) {
       positionLayer(img, activeLayers[i]);
@@ -223,6 +225,7 @@ window.BuddyBackgrounds = window.BuddyBackgrounds || {};
     if (!visible) return;
     containerEl.style.display = 'none';
     visible = false;
+    if (charObserver) { charObserver.ro.disconnect(); charObserver = null; }
     stopSounds();
   }
 
@@ -234,11 +237,25 @@ window.BuddyBackgrounds = window.BuddyBackgrounds || {};
     }
   }
 
-  function onResize() {
-    if (!visible) return;
+  function positionAll() {
     layerEls.forEach(function (img, i) {
       positionLayer(img, activeLayers[i]);
     });
+  }
+
+  function observeCharacter() {
+    var charEl = document.getElementById('buddy-character');
+    if (!charEl || !window.ResizeObserver) return;
+    if (charObserver && charObserver.element === charEl) return;
+    if (charObserver) charObserver.ro.disconnect();
+    var ro = new ResizeObserver(function () { if (visible) positionAll(); });
+    ro.observe(charEl);
+    charObserver = { element: charEl, ro: ro };
+  }
+
+  function onResize() {
+    if (!visible) return;
+    positionAll();
   }
 
   function refresh() {

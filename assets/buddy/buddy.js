@@ -635,6 +635,15 @@ window.Buddy = window.Buddy || {};
   var closeBtnEl = null;
   var CLOSE_BUTTON_OFFSET_PX = 6;
 
+  // El resize del personaje se registra AQUÍ (evaluación del script) y no
+  // dentro de ensureCharacterElement(): los módulos (backgrounds, archery…)
+  // registran sus propios handlers de resize tras buddy:ready, y si este
+  // handler se registrara después, reposicionarían usando el rect VIEJO del
+  // personaje y quedarían desalineados (el personaje se mueve tras ellos).
+  // Registrado primero => siempre reposiciona antes de que los módulos lean
+  // su rect. Guard inofensivo hasta que exista charEl.
+  window.addEventListener('resize', onResize);
+
   function ensureCharacterElement() {
     if (charEl) return charEl;
 
@@ -665,8 +674,6 @@ window.Buddy = window.Buddy || {};
     document.body.appendChild(charEl);
 
     ensureCloseButton();
-
-    window.addEventListener('resize', onResize);
 
     return charEl;
   }
