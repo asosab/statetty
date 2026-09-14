@@ -36,10 +36,6 @@ window.BuddyBackgrounds = window.BuddyBackgrounds || {};
     return base + 'modules/backgrounds/';
   }
 
-  function screenLongSide() {
-    return Math.max(window.innerWidth, window.innerHeight);
-  }
-
   function currentPageUrl() {
     return (window.location.href || '').replace(/\/+$/, '');
   }
@@ -137,23 +133,21 @@ window.BuddyBackgrounds = window.BuddyBackgrounds || {};
     var charEl = document.getElementById('buddy-character');
     if (!charEl || img.style.display === 'none') return;
 
-    var ch = charEl.offsetHeight;
-    var cw = charEl.offsetWidth;
-    if (!ch || !cw) return;
+    // El background se ancla absoluto al box RENDERIZADO del personaje: así
+    // sigue fielmente su escala y posición reales (layout de BD, escala por
+    // expresión, viewport) sin depender de clones del layout.
+    var rect = charEl.getBoundingClientRect();
+    if (!rect || !rect.width || !rect.height) return;
+    var charLongSide = Math.max(rect.width, rect.height);
 
     var layerScale = layer.scale != null ? layer.scale : 1;
-    var baseScale =
-      window.Buddy && window.Buddy.characterLayout &&
-      window.Buddy.characterLayout.scalePercent != null
-        ? window.Buddy.characterLayout.scalePercent
-        : 45;
-    var layerTarget = (baseScale / 100) * screenLongSide() * layerScale;
+    var layerTarget = charLongSide * layerScale;
 
-    var chBottom = Number(charEl.style.bottom) || 0;
-    var chRight = Number(charEl.style.right) || 0;
+    var chBottom = window.innerHeight - rect.bottom;
+    var chRight = window.innerWidth - rect.right;
 
-    var layerBottom = chBottom + (((layer.offsetY || 0) / 100) * ch);
-    var layerRight = chRight + (((layer.offsetX || 0) / 100) * cw);
+    var layerBottom = chBottom + (((layer.offsetY || 0) / 100) * rect.height);
+    var layerRight = chRight + (((layer.offsetX || 0) / 100) * rect.width);
 
     if (img.naturalWidth && img.naturalHeight) {
       var nw = img.naturalWidth;

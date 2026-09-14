@@ -1356,7 +1356,6 @@ window.Buddy = window.Buddy || {};
         )
       };
       debugLog('character: layout aplicado', activeLayout);
-      window.Buddy.characterLayout = activeLayout;
 
       window.Buddy.characterId = personajeActivo;
       debugLog('character: personaje seleccionado', personajeActivo);
