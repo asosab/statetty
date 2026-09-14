@@ -1,0 +1,75 @@
+{
+  "module": "backgrounds",
+  "name": "Backgrounds",
+  "description": "Capas de imagen y sonido que se muestran detrás del personaje (exteriores, interiores, clima).",
+  "fields": [
+    {
+      "key": "enabled",
+      "label": "Activo",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "key": "defaultLayers",
+      "label": "Layers por defecto (todo el sitio)",
+      "type": "array",
+      "description": "Capas que se muestran detrás del personaje en todo el sitio.",
+      "items": {
+        "type": "object",
+        "fields": [
+          { "key": "id", "label": "ID", "type": "string", "description": "Identificador único de la capa (ej. 'bg-interior', 'bg-lluvia')" },
+          { "key": "image", "label": "Imagen", "type": "string", "description": "Ruta relativa desde images/ (ej. 'interiores/la-esquina.org.01.jpg')" },
+          { "key": "width", "label": "Ancho (px)", "type": "number", "default": 0, "description": "Ancho de la imagen fuente en píxeles (0 = detectar automáticamente)" },
+          { "key": "height", "label": "Alto (px)", "type": "number", "default": 0, "description": "Alto de la imagen fuente en píxeles (0 = detectar automáticamente)" },
+          { "key": "scale", "label": "Escala vs personaje", "type": "number", "default": 1, "description": "1 = misma escala que el personaje; 0.5 = mitad; 2 = doble" },
+          { "key": "offsetX", "label": "Offset X (%)", "type": "number", "default": 0, "description": "Desplazamiento horizontal en % del ancho del personaje (negativo = izquierda)" },
+          { "key": "offsetY", "label": "Offset Y (%)", "type": "number", "default": 0, "description": "Desplazamiento vertical en % del alto del personaje (negativo = arriba)" },
+          { "key": "anchorX", "label": "Ancla X (%)", "type": "number", "default": 0, "description": "Punto de anclaje horizontal de la imagen (0=izquierda, 50=centro, 100=derecha)" },
+          { "key": "anchorY", "label": "Ancla Y (%)", "type": "number", "default": 0, "description": "Punto de anclaje vertical de la imagen (0=arriba, 50=centro, 100=abajo)" },
+          { "key": "opacity", "label": "Opacidad", "type": "number", "default": 1, "description": "0 = transparente, 1 = opaco" },
+          { "key": "zOrder", "label": "Orden Z", "type": "number", "default": 0, "description": "Menor = más atrás entre las capas" },
+          { "key": "loop", "label": "Sonido en bucle", "type": "boolean", "default": false, "description": "Si tiene sonido de ambiente en bucle" },
+          { "key": "sound", "label": "Archivo de sonido", "type": "string", "description": "Nombre del archivo en sounds/ (ej. 'lluvia.mp3')" },
+          { "key": "soundVolume", "label": "Volumen sonido", "type": "number", "default": 0.5, "description": "0 a 1" }
+        ]
+      }
+    },
+    {
+      "key": "pageOverrides",
+      "label": "Overrides por página",
+      "type": "array",
+      "description": "Combinaciones de layers específicas para páginas concretas (por URL). Si una página coincide, usa estas capas en vez de las por defecto.",
+      "items": {
+        "type": "object",
+        "fields": [
+          { "key": "url", "label": "URL de la página", "type": "string", "description": "Ej. 'https://arbatarchery.com/sala'. Coincide por prefijo" },
+          {
+            "key": "layers",
+            "label": "Layers",
+            "type": "array",
+            "description": "Capas específicas para esta página.",
+            "items": {
+              "type": "object",
+              "fields": [
+                { "key": "id", "label": "ID", "type": "string", "description": "Identificador único de la capa (ej. 'bg-sala', 'bg-fuego')" },
+                { "key": "image", "label": "Imagen", "type": "string", "description": "Ruta relativa desde images/ (ej. 'interiores/sala.jpg')" },
+                { "key": "width", "label": "Ancho (px)", "type": "number", "default": 0, "description": "Ancho de la imagen fuente en píxeles (0 = detectar automáticamente)" },
+                { "key": "height", "label": "Alto (px)", "type": "number", "default": 0, "description": "Alto de la imagen fuente en píxeles (0 = detectar automáticamente)" },
+                { "key": "scale", "label": "Escala vs personaje", "type": "number", "default": 1, "description": "1 = misma escala que el personaje; 0.5 = mitad; 2 = doble" },
+                { "key": "offsetX", "label": "Offset X (%)", "type": "number", "default": 0, "description": "Desplazamiento horizontal en % del ancho del personaje (negativo = izquierda)" },
+                { "key": "offsetY", "label": "Offset Y (%)", "type": "number", "default": 0, "description": "Desplazamiento vertical en % del alto del personaje (negativo = arriba)" },
+                { "key": "anchorX", "label": "Ancla X (%)", "type": "number", "default": 0, "description": "Punto de anclaje horizontal de la imagen (0=izquierda, 50=centro, 100=derecha)" },
+                { "key": "anchorY", "label": "Ancla Y (%)", "type": "number", "default": 0, "description": "Punto de anclaje vertical de la imagen (0=arriba, 50=centro, 100=abajo)" },
+                { "key": "opacity", "label": "Opacidad", "type": "number", "default": 1, "description": "0 = transparente, 1 = opaco" },
+                { "key": "zOrder", "label": "Orden Z", "type": "number", "default": 0, "description": "Menor = más atrás entre las capas" },
+                { "key": "loop", "label": "Sonido en bucle", "type": "boolean", "default": false, "description": "Si tiene sonido de ambiente en bucle" },
+                { "key": "sound", "label": "Archivo de sonido", "type": "string", "description": "Nombre del archivo en sounds/ (ej. 'viento.mp3')" },
+                { "key": "soundVolume", "label": "Volumen sonido", "type": "number", "default": 0.5, "description": "0 a 1" }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

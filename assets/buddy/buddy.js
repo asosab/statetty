@@ -116,7 +116,7 @@ window.Buddy = window.Buddy || {};
   // Módulos que se asumen activos ante un sistema nuevo sin config en BD.
   // `menu` (menú de usuario en el chat) y `config` (toolbox de configuración,
   // única vía de admin de módulos) se incluyen por defecto para sitios nuevos.
-  var DEFAULT_RUNTIME_MODULES = ['chat', 'auth', 'says', 'admin', 'menu', 'config'];
+  var DEFAULT_RUNTIME_MODULES = ['chat', 'auth', 'says', 'admin', 'menu', 'config', 'backgrounds'];
 
   // Orden de carga REQUERIDO de los módulos (por dependencias reales), NO
   // alfabético ni dependiente del `order` que venga de BD (que hoy es 100 para
@@ -137,6 +137,7 @@ window.Buddy = window.Buddy || {};
     'says',
     'hablar',
     'character',
+    'backgrounds',
     'auth',
     'user',
     'admin',
@@ -1551,6 +1552,16 @@ window.Buddy = window.Buddy || {};
   window.Buddy.isReady = function () { return ready; };
   window.Buddy.preloadCharacterAssets = preloadCharacterAssets;
   window.Buddy.preloadModuleAssets = preloadModuleAssets;
+  window.Buddy.showBackgrounds = function () {
+    return window.Buddy.backgrounds && typeof window.Buddy.backgrounds.show === 'function'
+      ? window.Buddy.backgrounds.show()
+      : false;
+  };
+  window.Buddy.hideBackgrounds = function () {
+    return window.Buddy.backgrounds && typeof window.Buddy.backgrounds.hide === 'function'
+      ? window.Buddy.backgrounds.hide()
+      : false;
+  };
 
   // La inicialización se expone como Promise y comienza una sola vez.
   readyPromise = initialize();
