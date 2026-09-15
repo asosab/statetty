@@ -1,16 +1,16 @@
 ---
 layout: page
-title: "El Mercado Inmobiliario en Datos: Radiografía de +99,000 Propiedades Activas en Bolivia y Perú"
+title: "Radiografía de las +99.000 Propiedades Activas en Statetty"
 date: 2026-09-15
 categories: mercado-inmobiliario, analisis-de-datos
 comments: true
-description: "Analizamos más de 99,000 anuncios inmobiliarios activos en Bolivia y Perú para entender qué se vende, dónde y a qué precio. Datos, gráficas y conclusiones para agentes inmobiliarios."
+description: "Analizamos más de 99.000 anuncios inmobiliarios activos en Bolivia y Perú para entender qué se vende, dónde y a qué precio. Datos, gráficas y conclusiones para agentes inmobiliarios."
 tags: [mercado inmobiliario, bienes raíces, datos, bolivia, peru, tendencias inmobiliarias, agentes inmobiliarios, precios inmobiliarios]
 published: true
 image: "posts/260915-grafica-01.png"
 ---
 
-<!-- ¿Sin tiempo para leer? Escucha el artículo en [Statetty Podcast](AGREGAR-LINK-DEL-EPISODIO) -->
+¿Sin tiempo para leer? Escucha el artículo en [Statetty Podcast](https://open.spotify.com/episode/5ms97ikPQvmkDNJirZJxJb?si=CtVjh801T3isMwAOlV9oQw) 
 
 Todos los días se publican, actualizan y eliminan miles de anuncios inmobiliarios en Bolivia y Perú. Pero pocas veces nos detenemos a mirar ese mercado en conjunto: ¿qué tipo de inmueble domina el mercado?, ¿en qué ciudades se concentra la oferta?, ¿cuánto cuesta realmente comprar o alquilar según el tipo de propiedad?
 
