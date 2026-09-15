@@ -7,7 +7,7 @@ comments: true
 description: "Analizamos más de 99,000 anuncios inmobiliarios activos en Bolivia y Perú para entender qué se vende, dónde y a qué precio. Datos, gráficas y conclusiones para agentes inmobiliarios."
 tags: [mercado inmobiliario, bienes raíces, datos, bolivia, peru, tendencias inmobiliarias, agentes inmobiliarios, precios inmobiliarios]
 published: true
-image: "radiografia-mercado-inmobiliario-2026.jpg"
+image: "posts/260915-grafica-01.png"
 ---
 
 <!-- ¿Sin tiempo para leer? Escucha el artículo en [Statetty Podcast](AGREGAR-LINK-DEL-EPISODIO) -->
