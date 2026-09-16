@@ -206,28 +206,48 @@
   // ── flujo de sesión ────────────────────────────────────────────────────────
 
   async function initAuth(){
-    // Eliminar `?k=` (y `?auth=`, de un solo uso) del URL apenas entra el flujo,
-    // para que el link legacy no se propague a otras páginas ni quede expuesto.
+    // Capturar el parámetro legacy `?k=` (publicKey de Telegram) ANTES de
+    // limpiarlo del URL: si no hay sesión Buddy, se intercambia por una (JWT).
+    var legacyKey=null;
+    try{ legacyKey=new URL(window.location.href).searchParams.get('k'); }catch(e){}
     stripLegacyParams();
     var token=null;
     var buddyUser=getBuddyUser();
 
     // 1) Ruta principal: JWT Buddy
     token=getBuddyAccessToken();
+
+    // 1b) Método viejo: publicKey de Telegram → sesión Buddy (JWT)
+    //     Si no hay JWT pero hay ?k=, intentar el intercambio. El backend valida
+    //     la publicKey y, si el email del tgUser coincide con un BuddyUser, emite
+    //     tokens sin pedir verificación de correo. Si no hay BuddyUser, se cae
+    //     al flujo normal (sin sesión / login por correo).
+    if(!token && legacyKey){
+      var a=buddyAuth();
+      if(a && typeof a.loginWithTelegramKey==='function'){
+        try{
+          console.log('[Statetty] [info] initAuth: intercambiando publicKey legacy por sesión Buddy');
+          await a.loginWithTelegramKey(legacyKey);
+        }catch(e){
+          console.log('[Statetty] [warn] initAuth: loginWithTelegramKey:', e.message);
+        }
+      }
+      token=getBuddyAccessToken();
+      buddyUser=getBuddyUser();
+    }
+
     if(token){
       try{
         var authMe=await fetchAuthMe(token);
         if(authMe&&authMe.ok){
           window.STT.token=token;
-          window.publicKey=token; // compat: algunos scripts leen window.publicKey
+          window.publicKey=token;
           window.STT.buddy=authMe.buddy||buddyUser||null;
           window.STT.tg=authMe.tg||null;
           window.STT.linked=authMe.linked===true;
           window.STT.usuario=buildUsuario(authMe);
           dispatch({key:token,usuario:window.STT.usuario,error:null},'statetty:key-ready');
           dispatch({token:token,buddy:window.STT.buddy,tg:window.STT.tg,linked:window.STT.linked,error:null},'statetty:auth-ready');
-          // Backfill automático statetty.com: si hay buddy sin cuenta tg vinculada,
-          // intentar completar datos/vincular con un tgUser/agente del mismo email.
           if(window.STT.buddy&&!window.STT.linked){
             _maybeBackfill(token);
           }
@@ -240,15 +260,7 @@
       }
     }
 
-    // 2) Fallback legacy eliminado (Fase 4 de deprecación): el parámetro `?k=`
-    //    (publicKey de Telegram) ya NO se interpreta como puerta de entrada.
-    //    Si un usuario carga una página con `?k=`, ese valor se ignora y el link
-    //    se limpia del URL; solo vale una sesión Buddy activa (JWT) o el login
-    //    por correo. Esto evita que `?k=` sobrescriba el token Buddy y "rompa"
-    //    la sesión al navegar a otras páginas, además de no arrastrar/copiar el
-    //    key legacy.
-
-    // 3) Sin sesión
+    // 2) Sin sesión
     window.STT.usuario=null;window.STT.token=null;window.STT.buddy=null;window.STT.tg=null;window.STT.linked=false;
     dispatch({key:null,usuario:null,error:null},'statetty:key-ready');
     dispatch({token:null,buddy:null,tg:null,linked:false,error:null},'statetty:auth-ready');

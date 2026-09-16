@@ -10,6 +10,12 @@ window.Buddy = window.Buddy || {};
   var CONFIG = window.BuddyAuthConfig || {};
   var REFRESH_KEY = 'buddy_refresh_token';
   var ACCESS_KEY = 'buddy_access_token';
+  // Flag de logout explícito de este sitio: evita que checkSession re-autentique
+  // vía bridge tras un logout (el master de otros sitios sigue activo).
+  var LOGOUT_KEY = 'buddy_logout';
+  // Ruta del bridge (orgien api.statetty.com) que almacena la sesión maestra y
+  // concede tokens por sitio sin volver a pedir el correo.
+  var BRIDGE_PATH = '/api/buddy/buddy-bridge.html';
   var CORS_BLOCKED_MESSAGE = 'Este sitio aún no ha sido agregado a Buddy, favor comunicarlo al administrador de estas páginas';
 
   var state = {
@@ -59,6 +65,105 @@ window.Buddy = window.Buddy || {};
       if (token) localStorage.setItem(REFRESH_KEY, token);
       else localStorage.removeItem(REFRESH_KEY);
     } catch (e) {}
+  }
+
+  // --- Bridge de verificación única multisitio ---
+  //
+  // La sesión maestra vive en el localStorage del origen de la API
+  // (api.statetty.com). Los sitios no comparten localStorage entre sí: un iframe
+  // oculto sirve de puente para leerla (grant) y escribirla (tras verificar).
+  function bridgeUrl() {
+    return String(CONFIG.apiBaseUrl || '').replace(/\/+$/, '') + BRIDGE_PATH;
+  }
+
+  function bridgeOrigin() {
+    try { return new URL(bridgeUrl()).origin; } catch (e) { return null; }
+  }
+
+  function getStoredLogoutFlag() {
+    try { return localStorage.getItem(LOGOUT_KEY) === '1'; } catch (e) { return false; }
+  }
+
+  function setLocalLogout() {
+    try { localStorage.setItem(LOGOUT_KEY, '1'); } catch (e) {}
+  }
+
+  function clearLocalLogout() {
+    try { localStorage.removeItem(LOGOUT_KEY); } catch (e) {}
+  }
+
+  // Guarda (o rota) la sesión maestra en el bridge tras una verificación nueva.
+  function sendMasterToBridge(master) {
+    if (!master) return;
+    var origin = bridgeOrigin();
+    if (!origin) return;
+    try {
+      var iframe = document.createElement('iframe');
+      iframe.setAttribute('aria-hidden', 'true');
+      iframe.style.cssText = 'display:none;width:1px;height:1px;';
+      iframe.src = bridgeUrl();
+      var done = false;
+      var kill = function () {
+        if (done) return;
+        done = true;
+        try { iframe.remove(); } catch (e) {}
+      };
+      iframe.onload = function () {
+        try {
+          iframe.contentWindow.postMessage({ type: 'buddy_set_master', master: master }, origin);
+        } catch (e) {}
+        setTimeout(kill, 1500);
+      };
+      setTimeout(kill, 5000);
+      document.body.appendChild(iframe);
+    } catch (e) {}
+  }
+
+  // Pide al bridge una sesión para ESTE sitio usando el master del dispositivo.
+  // Resolve true solo si el bridge devolvió accessToken + refreshToken válidos.
+  function tryBridgeAuth() {
+    var origin = bridgeOrigin();
+    var siteId = getSiteId() || '';
+    if (!origin) return Promise.resolve(false);
+
+    return new Promise(function (resolve) {
+      var iframe = document.createElement('iframe');
+      iframe.setAttribute('aria-hidden', 'true');
+      iframe.style.cssText = 'display:none;width:1px;height:1px;';
+      iframe.src = bridgeUrl();
+
+      var done = false;
+      var finish = function (ok) {
+        if (done) return;
+        done = true;
+        clearTimeout(timer);
+        try { iframe.remove(); } catch (e) {}
+        window.removeEventListener('message', onMsg);
+        resolve(ok);
+      };
+      var timer = setTimeout(function () { finish(false); }, 5000);
+
+      function onMsg(evt) {
+        if (evt.origin !== origin || !evt.data || evt.data.type !== 'buddy_grant_result') return;
+        if (evt.data.ok && evt.data.accessToken && evt.data.refreshToken) {
+          saveTokens(evt.data.accessToken, evt.data.refreshToken);
+          updateLocalUser(evt.data);
+          finish(true);
+        } else {
+          finish(false);
+        }
+      }
+
+      iframe.onload = function () {
+        try {
+          iframe.contentWindow.postMessage({ type: 'buddy_grant', siteId: siteId }, origin);
+        } catch (e) {
+          finish(false);
+        }
+      };
+      window.addEventListener('message', onMsg);
+      document.body.appendChild(iframe);
+    });
   }
 
   function getStoredRefreshToken() {
@@ -130,8 +235,10 @@ window.Buddy = window.Buddy || {};
         }
       } else {
         // Otra pestaña borró el refresh token (logout de esta sesión en el
-        // mismo navegador) → desloguear localmente para mantener coherencia.
+        // mismo navegador) → desloguear localmente para mantener coherencia y
+        // marcar el flag de logout del sitio (no re-autenticar vía bridge).
         if (state.refreshToken || state.authenticated) {
+          setLocalLogout();
           clearLocalState();
           emitEvent('buddy:auth-state-changed', {
             authenticated: false,
@@ -443,18 +550,38 @@ window.Buddy = window.Buddy || {};
 
     restoreTokens();
 
-    // Si no hay tokens almacenados, no hay sesión → flujo de login normal.
+    // Si no hay tokens almacenados, no hay sesión local. Si hay flag de logout
+    // explícito de este sitio, no re-autenticar vía bridge (el master de los
+    // otros sitios debe seguir intacto). Si no, preguntar al bridge por un
+    // master de este dispositivo y concederse una sesión de sitio.
     if (!state.accessToken && !state.refreshToken) {
-      state.checking = false;
-      setUnauthenticated();
-      emitEvent('buddy:auth-ready', {
-        authenticated: false,
-        user: null,
-        needsName: false,
-        welcomeType: null,
-        sessionOk: false
+      if (getStoredLogoutFlag()) {
+        state.checking = false;
+        setUnauthenticated();
+        emitEvent('buddy:auth-ready', {
+          authenticated: false,
+          user: null,
+          needsName: false,
+          welcomeType: null,
+          sessionOk: false
+        });
+        return Promise.resolve(false);
+      }
+      return tryBridgeAuth().then(function (bridged) {
+        if (bridged) return checkSessionAfterRefresh();
+        setUnauthenticated();
+        return false;
+      }).then(function (result) {
+        state.checking = false;
+        emitEvent('buddy:auth-ready', {
+          authenticated: state.authenticated,
+          user: state.user,
+          needsName: state.needsName,
+          welcomeType: state.welcomeType,
+          sessionOk: result
+        });
+        return result;
       });
-      return Promise.resolve(false);
     }
 
     // Si hay refreshToken pero no accessToken, intentar refresh primero
@@ -558,6 +685,7 @@ window.Buddy = window.Buddy || {};
 
     state.busy = true;
     state.mode = 'waiting-email';
+    clearLocalLogout();
     var params = new URLSearchParams();
     params.set('email', normalized);
     params.set('appID', window.BuddyConfig &&
@@ -603,6 +731,11 @@ window.Buddy = window.Buddy || {};
         saveTokens(data.accessToken, data.refreshToken);
       }
 
+      // Verificación satisfecha → este sitio vuelve a confiar en el master.
+      // Se limpia el flag de logout y se guarda/rota el master en el bridge.
+      clearLocalLogout();
+      sendMasterToBridge(data.masterRefresh || null);
+
       var user = normalizeUser(data);
       var authNeedsName = data.needsName === true;
       var isNewUser = data.newUser === true || data.isNewUser === true;
@@ -622,6 +755,62 @@ window.Buddy = window.Buddy || {};
     }).finally(function () {
       state.busy = false;
       removeVerificationParameter();
+    });
+  }
+
+  // ── Autologin por publicKey legacy de Telegram (?k=) ──────────────────────
+  // El backend valida la publicKey (método paralelo de autenticación de
+  // Telegram, con TTL y renovación) y, si el email del tgUser coincide con un
+  // BuddyUser, emite una sesión Buddy (JWT) sin pedir verificación de correo.
+  // Si no hay BuddyUser con ese email (BUDDY_NOT_FOUND) o el backend falla,
+  // devuelve false sin autenticar (el frontend cae al login normal).
+  // Se llama desde statetty.com/assets/js/auth.js cuando no hay sesión y la URL
+  // contiene ?k={publicKey}.
+  function loginWithTelegramKey(publicKey) {
+    var value = normalizeText(publicKey);
+    if (!value || state.busy) return Promise.resolve(false);
+
+    state.busy = true;
+    state.mode = 'verifying';
+    configureTelemetryApi();
+
+    var siteId = getSiteId() || 'statetty';
+
+    return apiRequest('tgKey', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ publicKey: value, siteId: siteId })
+    }).then(function (data) {
+      if (!data || data.ok === false || data.authenticated === false) {
+        debugLog('loginWithTelegramKey: sin sesión emitida', data);
+        return false;
+      }
+
+      if (data.accessToken && data.refreshToken) {
+        saveTokens(data.accessToken, data.refreshToken);
+      }
+
+      clearLocalLogout();
+      sendMasterToBridge(data.masterRefresh || null);
+
+      var user = normalizeUser(data);
+      var authNeedsName = data.needsName === true;
+      var isNewUser = data.newUser === true || data.isNewUser === true;
+      setAuthenticated(user, authNeedsName, (isNewUser || authNeedsName) ? 'new' : 'existing');
+
+      emitEvent('buddy:auth-verified', {
+        authenticated: true,
+        user: state.user,
+        needsName: state.needsName
+      });
+      return true;
+    }).catch(function (error) {
+      debugLog('No se pudo autenticar con la clave de Telegram.', error);
+      setUnauthenticated();
+      emitEvent('buddy:auth-tgkey-failed', { error: error });
+      return false;
+    }).finally(function () {
+      state.busy = false;
     });
   }
 
@@ -648,6 +837,10 @@ window.Buddy = window.Buddy || {};
     });
 
     return logoutPromise.then(function () {
+      // Logout SOLO de este sitio: se revocó el token de la sesión local y se
+      // marca el flag para no re-autenticar vía bridge en recargas. El master
+      // (otros sitios) queda intacto.
+      setLocalLogout();
       setUnauthenticated();
       emitEvent('buddy:auth-logout', { ok: true });
       window.location.reload();
@@ -851,6 +1044,7 @@ window.Buddy = window.Buddy || {};
     requestLogin: requestLogin,
     startAuthenticationPrompt: startAuthenticationPrompt,
     verifyHash: verifyHash,
+    loginWithTelegramKey: loginWithTelegramKey,
     logout: logout,
     enterLoginMode: enterLoginMode,
     enterLogoutMode: enterLogoutMode,

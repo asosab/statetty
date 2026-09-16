@@ -14,6 +14,7 @@ window.BuddyAuthConfig = Object.assign({
     session: '/api/buddy/auth/session',
     login: '/api/buddy/auth/login',
     verify: '/api/buddy/auth/verify',
+    tgKey: '/api/statetty/auth/tg-key',
     logout: '/api/buddy/auth/logout',
     refresh: '/api/buddy/auth/refresh',
     sessions: '/api/buddy/auth/sessions',
