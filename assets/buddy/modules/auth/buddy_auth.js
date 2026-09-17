@@ -712,6 +712,7 @@ window.Buddy = window.Buddy || {};
     if (!value || state.busy) return Promise.resolve(false);
 
     state.busy = true;
+    state.checking = true;
     state.mode = 'verifying';
     configureTelemetryApi();
 
@@ -752,8 +753,21 @@ window.Buddy = window.Buddy || {};
       setUnauthenticated();
       emitEvent('buddy:auth-verify-failed', { error: error });
       return false;
+    }).then(function (result) {
+      // Emitir buddy:auth-ready tal como hace checkSession, para que
+      // waitBuddySession (auth.js) resuelva al instante con el token ya
+      // guardado y no quede esperando el backstop de 8s.
+      emitEvent('buddy:auth-ready', {
+        authenticated: state.authenticated,
+        user: state.user,
+        needsName: state.needsName,
+        welcomeType: state.welcomeType,
+        sessionOk: result
+      });
+      return result;
     }).finally(function () {
       state.busy = false;
+      state.checking = false;
       removeVerificationParameter();
     });
   }
@@ -771,6 +785,7 @@ window.Buddy = window.Buddy || {};
     if (!value || state.busy) return Promise.resolve(false);
 
     state.busy = true;
+    state.checking = true;
     state.mode = 'verifying';
     configureTelemetryApi();
 
@@ -809,8 +824,18 @@ window.Buddy = window.Buddy || {};
       setUnauthenticated();
       emitEvent('buddy:auth-tgkey-failed', { error: error });
       return false;
+    }).then(function (result) {
+      emitEvent('buddy:auth-ready', {
+        authenticated: state.authenticated,
+        user: state.user,
+        needsName: state.needsName,
+        welcomeType: state.welcomeType,
+        sessionOk: result
+      });
+      return result;
     }).finally(function () {
       state.busy = false;
+      state.checking = false;
     });
   }
 
