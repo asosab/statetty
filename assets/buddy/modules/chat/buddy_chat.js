@@ -80,8 +80,11 @@ window.Buddy = window.Buddy || {};
       '.buddy-chat[hidden]{display:none!important;}' +
       '.buddy-chat-input{min-width:0;flex:1 1 auto;height:36px;box-sizing:border-box;' +
       'padding:7px 10px;border:1px solid #bbb;border-radius:6px;outline:none;' +
-      'font:inherit;line-height:20px;}' +
-      '.buddy-chat-input:focus{border-color:#777;}' +
+      'font:inherit;line-height:20px;color:#000!important;background:#fff!important;' +
+      'text-shadow:none;-webkit-text-fill-color:#000;}' +
+      '.buddy-chat-input:focus{border-color:#777;color:#000!important;background:#fff!important;}' +
+      '.buddy-chat-input::placeholder{color:#8a8a8a;opacity:1;}' +
+      '.buddy-chat-input::-webkit-input-placeholder{color:#8a8a8a;}' +
       '.buddy-chat-auth,.buddy-chat-send{display:none!important;}' +
       '.buddy-chat-enter{display:none!important;}' +
       '.buddy-chat-enter input{margin:0;}' +
