@@ -1076,6 +1076,7 @@ $(document).ready(function () {
     crossMarker.bindPopup('Coordenadas: ' + centerLat + ',' + centerLng + '<br>Valor promedio: USD' + formatNumber(avgPrice));
 
     // markers
+    var waphoneUsuario = (window.STT && window.STT.getUsuario && window.STT.getUsuario() || {}).waphone || '';
     locations.forEach(function (dato) {
       let url = dato.uid;
       var brand = dato.brand;
@@ -1195,7 +1196,8 @@ $(document).ready(function () {
         `${descripcion}` +
         `${direccion}` +
         fotoHTML +                                     
-        '<a href="' + url + '" target="_blank">🔗 Ver fuente de datos</a>' +
+        '<a href="' + url + '" target="_blank">🔗 Página oficial</a>' +
+        '&nbsp;|&nbsp;<a href="https://statetty.com/inmueble/' + encodeURIComponent(dato._id) + '?t=' + encodeURIComponent(waphoneUsuario) + '" target="_blank">🔗 Página Statetty</a>' +
         linkWA +
         `<br><label><input type="checkbox" class="chk-sel" data-id="${dato.uid}"> Seleccionar</label>`;
 
