@@ -1761,6 +1761,7 @@
       if (!USER || !USER._id || !K) return;
       DOM.inmSidebar.classList.add('val-panel-loading');
       try {
+        var base = window.STATETTY_CONFIG ? STATETTY_CONFIG.WS_API_BASE : '';
         var auth = authInfo();
         var url = base + 'statetty/panelInmuebles';
         var opts = auth.bearer ? { headers: { 'Authorization': 'Bearer ' + auth.bearer } } : {};
