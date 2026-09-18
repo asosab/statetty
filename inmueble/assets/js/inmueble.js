@@ -495,6 +495,11 @@
 
   /* ---------- Similares ---------- */
   function renderSimilares(id) {
+    // Llegar aquí significa que NO se activó la vista de asesor (?t= no presente
+    // o no es de un usuario activo), así que se muestran las tarjetas de contacto
+    // e inmuebles similares, que arrancan ocultas por defecto.
+    if (DOM.contactCard) DOM.contactCard.classList.remove('inm-hidden');
+
     getInmSim(id, { max: 4 }, function (lista) {
       if (!Array.isArray(lista) || lista.length === 0) return;
       DOM.simCard.classList.remove('inm-hidden');
