@@ -157,16 +157,31 @@
     @media (min-width: 900px) {
       .registro-section { max-width: 1160px; }
     }
-    .inm-btn-binoculars {
+    .inm-panel-row {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .inm-panel-link {
+      flex: 1 1 auto;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--text-strong);
+      text-decoration: none;
+    }
+    .inm-panel-link:hover { color: var(--blue); }
+    .inm-btn-icon {
       flex-shrink: 0;
-      width: 34px; height: 34px;
-      display: flex; align-items: center; justify-content: center;
+      width: 32px; height: 32px;
+      display: inline-flex; align-items: center; justify-content: center;
       border: none; border-radius: 50%;
       background: transparent; color: var(--blue);
-      font-size: .95rem; cursor: pointer;
+      font-size: .9rem; cursor: pointer; text-decoration: none;
       transition: var(--transition);
     }
-    .inm-btn-binoculars:hover { background: rgba(23,186,239,.14); color: var(--blue-dark); }
+    .inm-btn-icon:hover { background: rgba(23,186,239,.14); color: var(--blue-dark); }
     .registro-card {
       background: var(--card-bg);
       border: 1px solid var(--border);
@@ -1677,10 +1692,12 @@
         : null;
       var tipo  = (item && item.tipoInmueble) || (item && item.nombre) || 'Inmueble';
       var id    = item && item._id ? String(item._id) : '';
+      var phone = (USER && USER.waphone) || '';
       var infoTxt = (precioTxt ? precioTxt + ' · ' : '') + tipo;
       return {
         id: id,
         href: 'https://statetty.com/inmueble/' + encodeURIComponent(id),
+        fotoHref: 'https://statetty.com/i/' + encodeURIComponent(id) + '/' + encodeURIComponent(phone),
         info: infoTxt,
       };
     }
@@ -1708,21 +1725,54 @@
         link.textContent = data.info;
         link.setAttribute('aria-label', 'Ver inmueble ' + data.info + ' en Statetty (se abre en una pestaña nueva)');
 
-        var btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'inm-btn-binoculars';
-        btn.setAttribute('data-inmueble-id', data.id);
-        btn.setAttribute('data-tippy-content', 'Averiguá si alguien está buscando un inmueble como el tuyo en la última semana');
-        btn.setAttribute('aria-label', 'Averiguá si alguien está buscando un inmueble como el tuyo en la última semana');
-        btn.innerHTML = '<i class="fa-solid fa-binoculars" aria-hidden="true"></i>';
-        btn.addEventListener('click', function (e) {
-          e.preventDefault();
-          e.stopPropagation();
-          binocularsTODO(data.id);
+        function btnIcon(opciones) {
+          var b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'inm-btn-icon';
+          b.innerHTML = opciones.icon;
+          b.setAttribute('aria-label', opciones.aria);
+          if (opciones.tippy) b.setAttribute('data-tippy-content', opciones.tippy);
+          b.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            opciones.accion();
+          });
+          return b;
+        }
+
+        var btnPencil = btnIcon({
+          icon: '<i class="fa-solid fa-pencil" aria-hidden="true"></i>',
+          aria: 'Cargar este inmueble en el formulario para editarlo',
+          tippy: 'Editar inmueble: cargá sus datos en este formulario',
+          accion: function () { selectMisInmueble(data.id); },
+        });
+
+        var btnEye = btnIcon({
+          icon: '<i class="fa-solid fa-eye" aria-hidden="true"></i>',
+          aria: 'Ver inmueble en la página (se abre en una pestaña nueva)',
+          tippy: 'Ver en la página',
+          accion: function () { window.open(data.href, '_blank', 'noopener'); },
+        });
+
+        var btnBinoculars = btnIcon({
+          icon: '<i class="fa-solid fa-binoculars" aria-hidden="true"></i>',
+          aria: 'Averiguá si alguien está buscando un inmueble como el tuyo en la última semana',
+          tippy: 'Averiguá si alguien está buscando un inmueble como el tuyo en la última semana',
+          accion: function () { binocularsTODO(data.id); },
+        });
+
+        var btnFoto = btnIcon({
+          icon: '<i class="fa-solid fa-image" aria-hidden="true"></i>',
+          aria: 'Abrir la galería de fotos del inmueble',
+          tippy: 'Fotos del inmueble',
+          accion: function () { window.open(data.fotoHref, '_blank', 'noopener'); },
         });
 
         row.appendChild(link);
-        row.appendChild(btn);
+        row.appendChild(btnPencil);
+        row.appendChild(btnEye);
+        row.appendChild(btnBinoculars);
+        row.appendChild(btnFoto);
         listEl.appendChild(row);
       });
       initPanelTooltips(listEl);
