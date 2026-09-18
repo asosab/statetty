@@ -626,13 +626,6 @@
       card.appendChild(desc);
     }
 
-    if (data.desde) {
-      var desde = document.createElement('div');
-      desde.className = 'inm-agent-desde';
-      desde.textContent = 'En Statetty desde ' + data.desde;
-      card.appendChild(desde);
-    }
-
     var acciones = document.createElement('div');
     acciones.className = 'inm-agent-acciones';
 
@@ -650,7 +643,7 @@
       var mail = document.createElement('a');
       mail.className = 'inm-agent-btn inm-agent-btn-mail';
       mail.href = 'mailto:' + data.email;
-      mail.textContent = data.email;
+      mail.textContent = 'Correo';
       acciones.appendChild(mail);
     }
 

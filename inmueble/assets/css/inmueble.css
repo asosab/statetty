@@ -820,12 +820,6 @@
   line-height: 1.6;
 }
 
-.inm-agent-desde {
-  margin-top: 10px;
-  font-size: .78rem;
-  color: #999;
-}
-
 .inm-agent-acciones {
   display: flex;
   flex-wrap: wrap;
