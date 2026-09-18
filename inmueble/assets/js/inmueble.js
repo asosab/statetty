@@ -31,7 +31,23 @@
 
     var id = getParam();
     console.log('STATETTY: id =', id);
-    if (id) {
+    var waphone = getWaphoneParam();
+
+    // Vista de "asesor": /inmueble/{id}?t={waphone}. Se pregunta a la API si el
+    // waphone pertenece a un usuario activo; si es así se ocultan las tarjetas
+    // laterales y se dibuja la card del asesor. Si no, la página queda como
+    // siempre (sin cambios).
+    if (waphone && id) {
+      getAgentePublico(waphone, function (data) {
+        if (data && data.activo === true) {
+          activateAgentMode(data);
+        } else {
+          renderSimilares(id);
+        }
+      }, function () {
+        renderSimilares(id);
+      });
+    } else if (id) {
       renderSimilares(id);
     }
   }
@@ -59,6 +75,7 @@
     DOM.mapContainer    = document.getElementById('inm-map');
     DOM.simCard         = document.getElementById('inm-sim-card');
     DOM.simList         = document.getElementById('inm-sim-list');
+    DOM.contactCard     = document.querySelector('.inm-contact-card');
   }
 
   function getParam() {
@@ -75,6 +92,50 @@
     // 3) Fallback: parsear /inmueble/<_id> directamente de la ruta.
     var m = window.location.pathname.match(/\/inmueble\/([^\/?#]+)\/?$/);
     return m ? decodeURIComponent(m[1]) : null;
+  }
+
+  // Parámetro ?t= = número telefónico con código de país sin "+" (ej. 59174189700),
+  // sin relación con el id del inmueble ni con ?p=/_id=. Solo dígitos, 8-15.
+  function getWaphoneParam() {
+    var t = new URLSearchParams(window.location.search).get('t');
+    if (!t) return null;
+    var digits = t.replace(/\D/g, '');
+    return /^\d{8,15}$/.test(digits) ? digits : null;
+  }
+
+  // Datos públicos del asesor dueño de un waphone (GET /api/statetty/agentes/{celular}).
+  // onSuccess(data) recibe { activo, nombre, foto, agencia, logoAgencia, celular,
+  // whatsapp, email, desde, descripcion }; si el número no es de un usuario activo,
+  // data.activo === false (mismas respuesta para "no existe" y "no activo").
+  function getAgentePublico(cel, onSuccess, onError) {
+    try {
+      var base = window.STATETTY_CONFIG ? STATETTY_CONFIG.WS_API_BASE : '';
+      if (!base) {
+        if (onError) onError('No se pudo determinar el endpoint del servidor.');
+        return;
+      }
+
+      var url = base + 'statetty/agentes/' + encodeURIComponent(cel);
+      console.log('STATETTY: fetching', url);
+
+      fetch(url, {})
+        .then(function (r) {
+          return r.json().then(function (body) { return { status: r.status, ok: r.ok, body: body }; });
+        })
+        .then(function (res) {
+          if (!res.ok) throw new Error(res.body && res.body.error ? res.body.error : 'HTTP ' + res.status);
+          if (res.body.error) throw new Error(res.body.error);
+          if (!res.body.data || typeof res.body.data !== 'object') throw new Error('Respuesta inválida del servidor');
+          onSuccess(res.body.data);
+        })
+        .catch(function (err) {
+          console.warn('STATETTY: getAgentePublico fetch error', err);
+          if (onError) onError(err.message || 'No se pudieron cargar los datos del agente.');
+        });
+    } catch (err) {
+      console.warn('STATETTY: getAgentePublico sync error', err);
+      if (onError) onError(err.message);
+    }
   }
 
   function fetchInmueble(id) {
@@ -488,6 +549,114 @@
         DOM.simList.appendChild(el);
       });
     }, function () {});
+  }
+
+  /* ---------- Vista asesor (?t=waphone, usuario activo) ---------- */
+  function activateAgentMode(data) {
+    if (DOM.contactBar) DOM.contactBar.classList.add('inm-hidden');
+    if (DOM.contactCard) DOM.contactCard.classList.add('inm-hidden');
+    if (DOM.simCard) DOM.simCard.classList.add('inm-hidden');
+    renderAgenteCard(data);
+  }
+
+  function renderAgenteCard(data) {
+    if (!DOM.sidebar) return;
+
+    var card = document.createElement('div');
+    card.className = 'inm-agent-card';
+
+    var head = document.createElement('div');
+    head.className = 'inm-agent-head';
+
+    var foto = document.createElement('div');
+    foto.className = 'inm-agent-foto';
+    if (data.foto) {
+      var img = document.createElement('img');
+      img.src = data.foto;
+      img.alt = data.nombre || 'Asesor inmobiliario';
+      img.loading = 'lazy';
+      img.addEventListener('error', function () {
+        foto.classList.add('sin-foto');
+        foto.textContent = '👤';
+      });
+      foto.appendChild(img);
+    } else {
+      foto.classList.add('sin-foto');
+      foto.textContent = '👤';
+    }
+    head.appendChild(foto);
+
+    var info = document.createElement('div');
+    info.className = 'inm-agent-info';
+
+    var nombre = document.createElement('div');
+    nombre.className = 'inm-agent-nombre';
+    nombre.textContent = data.nombre || 'Asesor inmobiliario';
+    info.appendChild(nombre);
+
+    var rol = document.createElement('div');
+    rol.className = 'inm-agent-rol';
+    rol.textContent = 'Asesor inmobiliario';
+    info.appendChild(rol);
+
+    if (data.agencia) {
+      var agenciaEl = document.createElement('div');
+      agenciaEl.className = 'inm-agent-agencia';
+      if (data.logoAgencia) {
+        var logo = document.createElement('img');
+        logo.className = 'inm-agent-agencia-logo';
+        logo.src = data.logoAgencia;
+        logo.alt = '';
+        logo.loading = 'lazy';
+        agenciaEl.appendChild(logo);
+      }
+      var agenciaNombre = document.createElement('span');
+      agenciaNombre.textContent = data.agencia;
+      agenciaEl.appendChild(agenciaNombre);
+      info.appendChild(agenciaEl);
+    }
+
+    head.appendChild(info);
+    card.appendChild(head);
+
+    if (data.descripcion) {
+      var desc = document.createElement('p');
+      desc.className = 'inm-agent-desc';
+      desc.textContent = data.descripcion;
+      card.appendChild(desc);
+    }
+
+    if (data.desde) {
+      var desde = document.createElement('div');
+      desde.className = 'inm-agent-desde';
+      desde.textContent = 'En Statetty desde ' + data.desde;
+      card.appendChild(desde);
+    }
+
+    var acciones = document.createElement('div');
+    acciones.className = 'inm-agent-acciones';
+
+    if (data.whatsapp) {
+      var wa = document.createElement('a');
+      wa.className = 'inm-agent-btn inm-agent-btn-wa';
+      wa.href = 'https://wa.me/' + data.whatsapp + '?text=' + encodeURIComponent('Hola, vi tu perfil en Statetty');
+      wa.target = '_blank';
+      wa.rel = 'noopener';
+      wa.textContent = 'WhatsApp';
+      acciones.appendChild(wa);
+    }
+
+    if (data.email) {
+      var mail = document.createElement('a');
+      mail.className = 'inm-agent-btn inm-agent-btn-mail';
+      mail.href = 'mailto:' + data.email;
+      mail.textContent = data.email;
+      acciones.appendChild(mail);
+    }
+
+    card.appendChild(acciones);
+
+    DOM.sidebar.insertBefore(card, DOM.sidebar.firstChild);
   }
 
   /* ---------- Bootstrap ---------- */
