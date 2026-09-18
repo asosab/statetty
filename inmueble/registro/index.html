@@ -152,6 +152,21 @@
       margin: 0 auto;
       padding: 80px 24px 40px;
     }
+    /* Panel "Mis inmuebles": layout 2 col reusa .inmueble-layout/.inm-sidebar/.inm-sim-* de inmueble.css.
+       En escritorio se ensancha la sección para que el form no quede estrecho junto al sidebar sticky. */
+    @media (min-width: 900px) {
+      .registro-section { max-width: 1160px; }
+    }
+    .inm-btn-binoculars {
+      flex-shrink: 0;
+      width: 34px; height: 34px;
+      display: flex; align-items: center; justify-content: center;
+      border: none; border-radius: 50%;
+      background: transparent; color: var(--blue);
+      font-size: .95rem; cursor: pointer;
+      transition: var(--transition);
+    }
+    .inm-btn-binoculars:hover { background: rgba(23,186,239,.14); color: var(--blue-dark); }
     .registro-card {
       background: var(--card-bg);
       border: 1px solid var(--border);
@@ -903,7 +918,8 @@
 
   <!-- Registration form -->
   <section class="registro-section hidden" id="form-section">
-    <div class="registro-card">
+    <div class="inmueble-layout">
+      <div class="registro-card inmueble-main">
 
       <h1 class="registro-title">Registrar inmueble</h1>
       <p class="registro-subtitle">
@@ -1201,6 +1217,21 @@
       </div>
 
     </div>
+
+    <aside class="inm-sidebar" id="inm-sidebar">
+      <div class="inm-sim-card">
+        <h3 class="inm-sim-card-title">Mis inmuebles</h3>
+        <div class="inm-sim-list" id="panel-mis-list"></div>
+        <p class="inm-no-data hidden" id="panel-mis-empty">No tenés inmuebles cargados todavía.</p>
+      </div>
+      <div class="inm-sim-card">
+        <h3 class="inm-sim-card-title">Inmuebles activos en Statetty</h3>
+        <div class="inm-sim-list" id="panel-activos-list"></div>
+        <p class="inm-no-data hidden" id="panel-activos-empty">No tenés inmuebles publicados y activos en Statetty.</p>
+      </div>
+    </aside>
+
+    </div>
   </section>
 
   <!-- ==================== CUSTOM FOOTER ==================== -->
@@ -1453,6 +1484,11 @@
       DOM.misInmueblesState    = document.getElementById('misInmueblesState');
       DOM.misInmueblesList     = document.getElementById('misInmueblesList');
       DOM.btnMisInmueblesClose = document.getElementById('btnMisInmueblesClose');
+      DOM.inmSidebar           = document.getElementById('inm-sidebar');
+      DOM.panelMisList         = document.getElementById('panel-mis-list');
+      DOM.panelMisEmpty        = document.getElementById('panel-mis-empty');
+      DOM.panelActivosList     = document.getElementById('panel-activos-list');
+      DOM.panelActivosEmpty    = document.getElementById('panel-activos-empty');
     }
 
     /* ---- Loader genérico para botones que disparan una llamada ajax ---- */
@@ -1505,6 +1541,8 @@
       } else {
         restoreDraft();
       }
+
+      loadPanelInmuebles();
     }
 
     /* ---- Load existing (edit mode) ---- */
@@ -1617,6 +1655,136 @@
         setSubmitLoading(false, 'Actualizar inmueble');
         console.warn('STATETTY: loadInmueble error', err);
       });
+    }
+
+    /* --------------------------------------------------------------------- Panel lateral
+     * "Mis inmuebles" / "Inmuebles activos en Statetty". Se renderiza una sola
+     * vez (al entrar en modo edición/formulario) y vuelve a pedirse en cada
+     * apertura del formulario. Reusa el estilo paramétrico inm-sim-* que el
+     * detalle ya carga (inmueble.css).
+     */
+
+    function panelPrecio(valor) {
+      if (valor == null || valor === undefined) return null;
+      var n = Number(valor);
+      return isFinite(n) ? n : null;
+    }
+
+    function panelItemHTML(item) {
+      var p = panelPrecio(item && item.precio);
+      var precioTxt = p !== null
+        ? '$ ' + Number(p).toLocaleString('es-BO')
+        : null;
+      var tipo  = (item && item.tipoInmueble) || (item && item.nombre) || 'Inmueble';
+      var id    = item && item._id ? String(item._id) : '';
+      var infoTxt = (precioTxt ? precioTxt + ' · ' : '') + tipo;
+      return {
+        id: id,
+        href: 'https://statetty.com/inmueble/' + encodeURIComponent(id),
+        info: infoTxt,
+      };
+    }
+
+    function renderPanelSection(listEl, emptyEl, items, emptyMsg) {
+      listEl.innerHTML = '';
+      if (!items || !items.length) {
+        emptyEl.textContent = emptyMsg;
+        emptyEl.classList.remove('hidden');
+        return;
+      }
+      emptyEl.classList.add('hidden');
+      items.forEach(function (item) {
+        var data = panelItemHTML(item);
+        if (!data.id) return;
+
+        var row  = document.createElement('div');
+        row.className = 'inm-panel-row';
+
+        var link = document.createElement('a');
+        link.href = data.href;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.className = 'inm-panel-link';
+        link.textContent = data.info-throw;
+        link.setAttribute('aria-label', 'Ver inmueble ' + data.info + ' en Statetty (se abre en una pestaña nueva)');
+
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'inm-btn-binoculars';
+        btn.setAttribute('data-inmueble-id', data.id);
+        btn.setAttribute('data-tippy-content', 'Averiguá si alguien está buscando un inmueble como el tuyo en la última semana');
+        btn.setAttribute('aria-label', 'Averiguá si alguien está buscando un inmueble como el tuyo en la última semana');
+        btn.innerHTML = '<i class="fa-solid fa-binoculars" aria-hidden="true"></i>';
+        btn.addEventListener('click', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          binocularsTODO(data.id);
+        });
+
+        row.appendChild(link);
+        row.appendChild(btn);
+        listEl.appendChild(row);
+      });
+      initPanelTooltips(listEl);
+    }
+
+    function renderPanelInmuebles(data) {
+      DOM.inmSidebar.classList.remove('val-panel-loading');
+      var mis     = (data && data.mis)     || [];
+      var activos = (data && data.activos) || [];
+      renderPanelSection(DOM.panelMisList,     DOM.panelMisEmpty,     mis,     'No tenés inmuebles cargados todavía.');
+      renderPanelSection(DOM.panelActivosList, DOM.panelActivosEmpty, activos, 'No tenés inmuebles activos en Statetty.');
+    }
+
+    function setPanelInmueblesError(msg) {
+      DOM.inmSidebar.classList.remove('val-panel-loading');
+      renderPanelSection(DOM.panelMisList,     DOM.panelMisEmpty,     [], 'No se pudo cargar la lista.');
+      renderPanelSection(DOM.panelActivosList, DOM.panelActivosEmpty, [], msg || 'No se pudo cargar la lista.');
+    }
+
+    function binocularsTODO(id) {
+      if (!id) return;
+      console.warn('[Statetty][panel] TODO: averiguar si alguien está buscando un inmueble como el tuyo en la última semana (inmueble ' + id + ')');
+    }
+
+    function initPanelTooltips(scope) {
+      var targets = (scope || document).querySelectorAll('[data-tippy-content]');
+      if (!targets.length || !window.tippy) return;
+      // si el usuario ya inicializó tippy para otros targets, no lo reinicializo
+      targets.forEach(function (el) {
+        if (el._tippy) return;   // ya inicializado
+        window.tippy(el, {});
+      });
+    }
+
+    function loadPanelInmuebles() {
+      if (!USER || !USER._id || !K) return;
+      DOM.inmSidebar.classList.add('val-panel-loading');
+      try {
+        var auth = authInfo();
+        var url = base + 'statetty/panelInmuebles';
+        var opts = auth.bearer ? { headers: { 'Authorization': 'Bearer ' + auth.bearer } } : {};
+        fetch(url, opts)
+          .then(function (r) {
+            return r.json().then(function (body) { return { status: r.status, body: body }; });
+          })
+          .then(function (res) {
+            if (res.status !== 200 || !res.body || res.body.ok !== true) {
+              var msg = (res.body && res.body.error) || 'No se pudo cargar el panel.';
+              console.warn('[Statetty][panel] respuesta', res.status, res.body);
+              setPanelInmueblesError(msg);
+              return;
+            }
+            renderPanelInmuebles(res.body.data || {});
+          })
+          .catch(function (err) {
+            console.warn('[Statetty][panel] fetch error', err);
+            setPanelInmueblesError(err && err.message ? err.message : 'No se pudo cargar el panel.');
+          });
+      } catch (err) {
+        console.warn('[Statetty][panel] sync error', err);
+        setPanelInmueblesError(err && err.message ? err.message : 'No se pudo cargar el panel.');
+      }
     }
 
     /* ---- Mis inmuebles (toolbox) ---- */
