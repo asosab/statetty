@@ -1695,7 +1695,6 @@
         editable: !!(item && item.brocker === 'BO_statetty'),
         href: 'https://statetty.com/inmueble/' + encodeURIComponent(id),
         viewHref: 'https://statetty.com/inmueble/' + encodeURIComponent(id) + (tPhon ? '?t=' + encodeURIComponent(tPhon) : ''),
-        fotoHref: 'https://statetty.com/i/' + encodeURIComponent(id) + '/' + encodeURIComponent(phone),
         info: infoTxt,
       };
     }
@@ -1766,19 +1765,11 @@
           accion: function () { binocularsTODO(data.id); },
         });
 
-        var btnFoto = btnIcon({
-          icon: '<i class="fa-solid fa-image" aria-hidden="true"></i>',
-          aria: 'Abrir la galería de fotos del inmueble',
-          tippy: 'Fotos del inmueble',
-          accion: function () { window.open(data.fotoHref, '_blank', 'noopener'); },
-        });
-
         row.appendChild(link);
         if (btnPencil) row.appendChild(btnPencil);
         row.appendChild(btnEye);
         row.appendChild(btnWhats);
         row.appendChild(btnBinoculars);
-        row.appendChild(btnFoto);
         listEl.appendChild(row);
       });
       initPanelTooltips(listEl);
