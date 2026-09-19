@@ -1239,11 +1239,6 @@
         <div class="inm-sim-list" id="panel-mis-list"></div>
         <p class="inm-no-data hidden" id="panel-mis-empty">No tenés inmuebles cargados todavía.</p>
       </div>
-      <div class="inm-sim-card">
-        <h3 class="inm-sim-card-title">Inmuebles activos en Statetty</h3>
-        <div class="inm-sim-list" id="panel-activos-list"></div>
-        <p class="inm-no-data hidden" id="panel-activos-empty">No tenés inmuebles publicados y activos en Statetty.</p>
-      </div>
     </aside>
 
     </div>
@@ -1502,8 +1497,6 @@
       DOM.inmSidebar           = document.getElementById('inm-sidebar');
       DOM.panelMisList         = document.getElementById('panel-mis-list');
       DOM.panelMisEmpty        = document.getElementById('panel-mis-empty');
-      DOM.panelActivosList     = document.getElementById('panel-activos-list');
-      DOM.panelActivosEmpty    = document.getElementById('panel-activos-empty');
     }
 
     /* ---- Loader genérico para botones que disparan una llamada ajax ---- */
@@ -1673,10 +1666,12 @@
     }
 
     /* --------------------------------------------------------------------- Panel lateral
-     * "Mis inmuebles" / "Inmuebles activos en Statetty". Se renderiza una sola
-     * vez (al entrar en modo edición/formulario) y vuelve a pedirse en cada
-     * apertura del formulario. Reusa el estilo paramétrico inm-sim-* que el
-     * detalle ya carga (inmueble.css).
+     * "Mis inmuebles". Es la unión de los inmuebles del usuario: activos con
+     * agentPhon == waphone (cualquier broker) + inactivos propios (brocker
+     * 'BO_statetty'). El lápiz (editar) solo aparece en los terminados en
+     * Statetty (brocker == 'BO_statetty'). Se renderiza una sola vez (al
+     * entrar en modo edición/formulario) y vuelve a pedirse en cada apertura.
+     * Reusa el estilo paramétrico inm-sim-* que el detalle ya carga (inmueble.css).
      */
 
     function panelPrecio(valor) {
@@ -1696,6 +1691,7 @@
       var infoTxt = (precioTxt ? precioTxt + ' · ' : '') + tipo;
       return {
         id: id,
+        editable: !!(item && item.brocker === 'BO_statetty'),
         href: 'https://statetty.com/inmueble/' + encodeURIComponent(id),
         fotoHref: 'https://statetty.com/i/' + encodeURIComponent(id) + '/' + encodeURIComponent(phone),
         info: infoTxt,
@@ -1740,12 +1736,12 @@
           return b;
         }
 
-        var btnPencil = btnIcon({
+        var btnPencil = data.editable ? btnIcon({
           icon: '<i class="fa-solid fa-pencil" aria-hidden="true"></i>',
           aria: 'Cargar este inmueble en el formulario para editarlo',
           tippy: 'Editar inmueble: cargá sus datos en este formulario',
           accion: function () { selectMisInmueble(data.id); },
-        });
+        }) : null;
 
         var btnEye = btnIcon({
           icon: '<i class="fa-solid fa-eye" aria-hidden="true"></i>',
@@ -1769,7 +1765,7 @@
         });
 
         row.appendChild(link);
-        row.appendChild(btnPencil);
+        if (btnPencil) row.appendChild(btnPencil);
         row.appendChild(btnEye);
         row.appendChild(btnBinoculars);
         row.appendChild(btnFoto);
@@ -1780,16 +1776,13 @@
 
     function renderPanelInmuebles(data) {
       DOM.inmSidebar.classList.remove('val-panel-loading');
-      var mis     = (data && data.mis)     || [];
-      var activos = (data && data.activos) || [];
-      renderPanelSection(DOM.panelMisList,     DOM.panelMisEmpty,     mis,     'No tenés inmuebles cargados todavía.');
-      renderPanelSection(DOM.panelActivosList, DOM.panelActivosEmpty, activos, 'No tenés inmuebles activos en Statetty.');
+      var inmuebles = (data && data.inmuebles) || [];
+      renderPanelSection(DOM.panelMisList, DOM.panelMisEmpty, inmuebles, 'No tenés inmuebles cargados todavía.');
     }
 
     function setPanelInmueblesError(msg) {
       DOM.inmSidebar.classList.remove('val-panel-loading');
-      renderPanelSection(DOM.panelMisList,     DOM.panelMisEmpty,     [], 'No se pudo cargar la lista.');
-      renderPanelSection(DOM.panelActivosList, DOM.panelActivosEmpty, [], msg || 'No se pudo cargar la lista.');
+      renderPanelSection(DOM.panelMisList, DOM.panelMisEmpty, [], msg || 'No se pudo cargar la lista.');
     }
 
     function binocularsTODO(id) {
