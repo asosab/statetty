@@ -1688,11 +1688,13 @@
       var tipo  = (item && item.tipoInmueble) || (item && item.nombre) || 'Inmueble';
       var id    = item && item._id ? String(item._id) : '';
       var phone = (USER && USER.waphone) || '';
+      var tPhon = phone.replace(/\+/g, '');
       var infoTxt = (precioTxt ? precioTxt + ' · ' : '') + tipo;
       return {
         id: id,
         editable: !!(item && item.brocker === 'BO_statetty'),
         href: 'https://statetty.com/inmueble/' + encodeURIComponent(id),
+        viewHref: 'https://statetty.com/inmueble/' + encodeURIComponent(id) + (tPhon ? '?t=' + encodeURIComponent(tPhon) : ''),
         fotoHref: 'https://statetty.com/i/' + encodeURIComponent(id) + '/' + encodeURIComponent(phone),
         info: infoTxt,
       };
@@ -1747,7 +1749,14 @@
           icon: '<i class="fa-solid fa-eye" aria-hidden="true"></i>',
           aria: 'Ver inmueble en la página (se abre en una pestaña nueva)',
           tippy: 'Ver en la página',
-          accion: function () { window.open(data.href, '_blank', 'noopener'); },
+          accion: function () { window.open(data.viewHref, '_blank', 'noopener'); },
+        });
+
+        var btnWhats = btnIcon({
+          icon: '<i class="fa-solid fa-comment-dots" aria-hidden="true"></i>',
+          aria: 'Copiar un texto del inmueble para pegar en WhatsApp',
+          tippy: 'Copy para usar en WhatsApp',
+          accion: function () { copiarFichaWhatsApp(data.id, btnWhats); },
         });
 
         var btnBinoculars = btnIcon({
@@ -1767,6 +1776,7 @@
         row.appendChild(link);
         if (btnPencil) row.appendChild(btnPencil);
         row.appendChild(btnEye);
+        row.appendChild(btnWhats);
         row.appendChild(btnBinoculars);
         row.appendChild(btnFoto);
         listEl.appendChild(row);
@@ -1829,6 +1839,66 @@
         console.warn('[Statetty][panel] sync error', err);
         setPanelInmueblesError(err && err.message ? err.message : 'No se pudo cargar el panel.');
       }
+    }
+
+    /* ---- Copiar ficha para WhatsApp (panel-whatsapp-copy.md) ----
+     * Pide al backend el texto + shortlink del inmueble y lo copia al
+     * portapapeles. El backend valida que el inmueble sea del usuario. */
+    function copiarAlPortapapeles(texto) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        return navigator.clipboard.writeText(texto);
+      }
+      return new Promise(function (resolve, reject) {
+        try {
+          var ta = document.createElement('textarea');
+          ta.value = texto;
+          ta.style.position = 'fixed';
+          ta.style.opacity = '0';
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+          resolve();
+        } catch (e) { reject(e); }
+      });
+    }
+
+    function fichaTippyFeedback(btn, msg) {
+      if (!btn || !btn._tippy || !btn._tippy.setContent) return;
+      if (btn._tippyOriginal === undefined) {
+        btn._tippyOriginal = btn.getAttribute('data-tippy-content') || '';
+      }
+      btn._tippy.setContent(msg);
+      setTimeout(function () {
+        if (btn._tippy) btn._tippy.setContent(btn._tippyOriginal);
+      }, 1500);
+    }
+
+    function copiarFichaWhatsApp(id, btn) {
+      if (!id || !btn || btn.disabled) return;
+      var base = window.STATETTY_CONFIG ? STATETTY_CONFIG.WS_API_BASE : '';
+      var auth = authInfo();
+      var headers = { 'Content-Type': 'application/json' };
+      if (auth.bearer) headers['Authorization'] = 'Bearer ' + auth.bearer;
+      var body = { _id: id };
+      if (auth.legacy) body.publicKey = auth.legacy;
+      setButtonLoading(btn, true, '');
+      fetch(base + 'statetty/inmueble/whatsapp', {
+        method: 'POST', headers: headers, body: JSON.stringify(body),
+      })
+        .then(function (r) { return r.json().then(function (b) { return { status: r.status, body: b }; }); })
+        .then(function (res) {
+          if (res.status !== 200 || !res.body || res.body.ok !== true || !res.body.data || !res.body.data.texto) {
+            throw new Error((res.body && res.body.error) || 'No se pudo generar el texto.');
+          }
+          return copiarAlPortapapeles(res.body.data.texto);
+        })
+        .then(function () { fichaTippyFeedback(btn, '¡Copiado!'); })
+        .catch(function (err) {
+          console.warn('[Statetty][panel] copiarFichaWhatsApp', err);
+          fichaTippyFeedback(btn, 'No se pudo copiar');
+        })
+        .then(function () { setButtonLoading(btn, false); });
     }
 
     /* ---- Mis inmuebles (toolbox) ---- */
