@@ -1258,9 +1258,9 @@ $(document).ready(function () {
         `${descripcion}` +
         `${direccion}` +
         fotoHTML +                                     
-        '<a href="' + url + '" target="_blank">🔗 Página oficial</a>' +
-        '&nbsp;|&nbsp;<a href="https://statetty.com/inmueble/' + encodeURIComponent(dato._id) + '?t=' + encodeURIComponent(waphoneUsuario) + '" target="_blank">🔗 Página Statetty</a>' +
-        '<br><a href="#" data-tippy-content="Copy para usar en WhatsApp" onclick="return copyFichaWhatsApp(\'' + encodeURIComponent(dato._id) + '\', this);">🗨️ Copy</a>' +
+        '<a href="' + url + '" target="_blank" style="text-decoration:none;">🔗 Página oficial</a>' +
+        '&nbsp;|&nbsp;<a href="https://statetty.com/inmueble/' + encodeURIComponent(dato._id) + '?t=' + encodeURIComponent(waphoneUsuario) + '" target="_blank" style="text-decoration:none;">🔗 Página Statetty</a>' +
+        '<br><a href="#" style="text-decoration:none;" data-tippy-content="Copy para usar en WhatsApp" onclick="return copyFichaWhatsApp(\'' + encodeURIComponent(dato._id) + '\', this);">🗨️ Copy</a>' +
         linkWA +
         `<br><label><input type="checkbox" class="chk-sel" data-id="${dato.uid}"> Seleccionar</label>`;
 
