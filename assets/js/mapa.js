@@ -34,6 +34,68 @@ function openWsRedirect(serverUrl, waUrl) {
   window.open(waUrl, "_blank");
 }
 
+// Copia al portapapeles el texto de la ficha WhatsApp de un inmueble
+// (misma función que el botón "Mis inmuebles" de inmueble/registro),
+// llamando a statetty/inmueble/whatsapp y mostrando el resultado en el tippy.
+function copyFichaWhatsApp(encId, btn) {
+  var id = decodeURIComponent(encId);
+  if (!id || !btn || btn.dataset.disabled) return false;
+  var base = (window.STATETTY_CONFIG && STATETTY_CONFIG.WS_API_BASE) || '';
+  var headers = { 'Content-Type': 'application/json' };
+  if (window.STT && typeof window.STT.getKey === 'function') {
+    var token = window.STT.getKey();
+    if (token) headers['Authorization'] = 'Bearer ' + token;
+  }
+  if (btn._tippyOriginal === undefined) {
+    btn._tippyOriginal = btn.getAttribute('data-tippy-content') || '';
+  }
+  btn.dataset.disabled = '1';
+  return fetch(base + 'statetty/inmueble/whatsapp', {
+    method: 'POST', headers: headers, body: JSON.stringify({ _id: id }),
+  })
+    .then(function (r) { return r.json().then(function (b) { return { status: r.status, body: b }; }); })
+    .then(function (res) {
+      if (res.status !== 200 || !res.body || res.body.ok !== true || !res.body.data || !res.body.data.texto) {
+        throw new Error((res.body && res.body.error) || 'No se pudo generar el texto.');
+      }
+      return copiarTextoPortapapeles(res.body.data.texto);
+    })
+    .then(function () { fichaTippyFeedback(btn, '¡Copiado!'); })
+    .catch(function (err) {
+      console.log('[Statetty] [error] copyFichaWhatsApp:', err && err.message ? err.message : err);
+      fichaTippyFeedback(btn, 'No se pudo copiar');
+    })
+    .then(function () { delete btn.dataset.disabled; return false; });
+}
+
+function copiarTextoPortapapeles(texto) {
+  texto = String(texto || '');
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    return navigator.clipboard.writeText(texto);
+  }
+  return new Promise(function (resolve, reject) {
+    try {
+      var ta = document.createElement('textarea');
+      ta.value = texto;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      resolve();
+    } catch (e) { reject(e); }
+  });
+}
+
+function fichaTippyFeedback(btn, msg) {
+  if (!btn || !btn._tippy || !btn._tippy.setContent) return;
+  btn._tippy.setContent(msg);
+  setTimeout(function () {
+    if (btn._tippy) btn._tippy.setContent(btn._tippyOriginal);
+  }, 1500);
+}
+
 /** --------------------------------------------------------------------------------------- calcularBoundsDesdeLocations
  * Calcula bounds y centro óptimo a partir de locations visibles
  * @param {Array} locs
@@ -1198,6 +1260,7 @@ $(document).ready(function () {
         fotoHTML +                                     
         '<a href="' + url + '" target="_blank">🔗 Página oficial</a>' +
         '&nbsp;|&nbsp;<a href="https://statetty.com/inmueble/' + encodeURIComponent(dato._id) + '?t=' + encodeURIComponent(waphoneUsuario) + '" target="_blank">🔗 Página Statetty</a>' +
+        '<br><a href="#" data-tippy-content="Copy para usar en WhatsApp" onclick="return copyFichaWhatsApp(\'' + encodeURIComponent(dato._id) + '\', this);">🗨️ Copy</a>' +
         linkWA +
         `<br><label><input type="checkbox" class="chk-sel" data-id="${dato.uid}"> Seleccionar</label>`;
 
