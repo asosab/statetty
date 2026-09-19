@@ -634,19 +634,19 @@
     var acciones = document.createElement('div');
     acciones.className = 'inm-agent-acciones';
 
+    var titulo = (DOM.title && (DOM.title.textContent || '').trim()) || '';
+    var precioTxt = '';
+    if (DOM.price) {
+      var mPrecio = (DOM.price.textContent || '').match(/\$\s*[\d][\d\.,]*/);
+      if (mPrecio) precioTxt = mPrecio[0].trim();
+    }
+    var msg = 'Hola, estoy interesado en ' + (titulo || 'este inmueble') +
+      (precioTxt ? ' en ' + precioTxt : '') +
+      '\n\n' + window.location.href;
+
     if (data.whatsapp) {
       var wa = document.createElement('a');
       wa.className = 'inm-agent-btn inm-agent-btn-wa';
-
-      var titulo = (DOM.title && (DOM.title.textContent || '').trim()) || '';
-      var precioTxt = '';
-      if (DOM.price) {
-        var mPrecio = (DOM.price.textContent || '').match(/\$\s*[\d][\d\.,]*/);
-        if (mPrecio) precioTxt = mPrecio[0].trim();
-      }
-      var msg = 'Hola, estoy interesado en ' + (titulo || 'este inmueble') +
-        (precioTxt ? ' en ' + precioTxt : '');
-
       wa.href = 'https://wa.me/' + data.whatsapp + '?text=' + encodeURIComponent(msg);
       wa.target = '_blank';
       wa.rel = 'noopener';
@@ -657,7 +657,9 @@
     if (data.email) {
       var mail = document.createElement('a');
       mail.className = 'inm-agent-btn inm-agent-btn-mail';
-      mail.href = 'mailto:' + data.email;
+      mail.href = 'mailto:' + data.email +
+        '?subject=' + encodeURIComponent('Interés en ' + (titulo || 'inmueble')) +
+        '&body=' + encodeURIComponent(msg);
       mail.textContent = 'Correo';
       acciones.appendChild(mail);
     }
