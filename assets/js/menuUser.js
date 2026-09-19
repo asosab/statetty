@@ -68,10 +68,15 @@
     : [
         { label: 'Mis inmuebles', href: 'https://statetty.com/inmueble/registro' },
         { label: 'Mis datos', href: 'https://statetty.com/registro' },
-        { label: 'Mapa', href: 'https://statetty.com/maps/find/' }
+        { label: 'Mapa', href: 'https://statetty.com/maps/find/' },
+        { label: 'Acortador', href: 'https://statetty.com/shortlinks', superuser: true }
       ];
 
   var LOGOUT_LABEL = 'Cerrar sesión';
+
+  // Superusuario: único email autorizado a ver el ítem "Acortador".
+  var SUPER_ADMIN_EMAIL = 'asosab@gmail.com';
+  var LOGGED_USER = null;
 
   // Selector de el/los botón(es) del header a reemplazar por el ícono (modo cta).
   var CTA_SELECTOR = window.STT_MENU_USER_SELECTOR || '.btn-nav-cta';
@@ -261,6 +266,9 @@
   // considerando "index.html" y "/" como la misma ubicación).
   function getMenuItems() {
     return MENU_ITEMS.filter(function (item) {
+      if (item.superuser && !(LOGGED_USER && LOGGED_USER.email === SUPER_ADMIN_EMAIL)) {
+        return false;
+      }
       try {
         var url = new URL(item.href, window.location.href);
         var samePathname = normalizePath(url.pathname) === normalizePath(window.location.pathname);
@@ -550,6 +558,8 @@
     }
 
     if (document.body.dataset[READY_FLAG]) return; // evita duplicados si el evento se dispara más de una vez
+
+    LOGGED_USER = detail.usuario;
 
     var mode = resolveMode();
     var n = 0;

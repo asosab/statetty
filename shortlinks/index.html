@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Acortador — Statetty</title>
+  <meta name="robots" content="noindex, nofollow">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/images/favicon/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/images/favicon/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/images/favicon/favicon-16x16.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --blue: #17baef; --blue-dark: #074f66; --blue-light: #6dd0f5;
+      --yellow: #eebf3f; --red: #e04f5f;
+      --font-head: 'Montserrat', sans-serif; --font-body: 'Lato', sans-serif;
+      --radius: 12px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-body); color: #444; background: #f4f7f9;
+      line-height: 1.6; -webkit-font-smoothing: antialiased;
+    }
+    header {
+      background: linear-gradient(135deg, var(--blue-dark), var(--blue));
+      color: #fff; padding: 22px 28px; display: flex; align-items: center; justify-content: space-between;
+    }
+    header h1 { font-family: var(--font-head); font-size: 1.35rem; font-weight: 800; }
+    header .sub { font-size: .82rem; opacity: .85; }
+    header a { color: #fff; text-decoration: none; font-size: .9rem; }
+    .wrap { max-width: 980px; margin: 0 auto; padding: 24px 16px 60px; }
+    .card {
+      background: #fff; border-radius: var(--radius); padding: 20px;
+      box-shadow: 0 2px 10px rgba(7,79,102,.08); margin-bottom: 22px;
+    }
+    .card h2 { font-family: var(--font-head); font-size: 1rem; color: var(--blue-dark); margin-bottom: 14px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 720px) { .grid-2 { grid-template-columns: 1fr; } }
+    label { display: block; font-size: .82rem; font-weight: 700; color: #555; margin: 8px 0 4px; }
+    input[type=text], input[type=url] {
+      width: 100%; padding: 10px 12px; border: 1px solid #cfdde4; border-radius: 8px;
+      font-size: .95rem; font-family: var(--font-body); color: #333;
+    }
+    input:focus { outline: 2px solid var(--blue-light); border-color: var(--blue); }
+    .hint { font-size: .76rem; color: #8b98a3; margin-top: 4px; }
+    button {
+      font-family: var(--font-head); font-weight: 700; font-size: .85rem; cursor: pointer;
+      border: 0; border-radius: 8px; padding: 9px 16px; color: #fff; background: var(--blue);
+      transition: opacity .2s;
+    }
+    button:hover { opacity: .88; }
+    button.secondary { background: #e7eef2; color: var(--blue-dark); }
+    button.danger { background: var(--red); }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+    .ok-badge { background: #e5f7ec; color: #1d8a4e; font-size: .8rem; font-weight: 700; padding: 4px 10px; border-radius: 20px; }
+    .off-badge { background: #fdebed; color: var(--red); font-size: .8rem; font-weight: 700; padding: 4px 10px; border-radius: 20px; }
+    table { width: 100%; border-collapse: collapse; font-size: .86rem; }
+    th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid #eef2f5; vertical-align: top; }
+    th { color: #8b98a3; font-size: .74rem; text-transform: uppercase; letter-spacing: .04em; }
+    td .url { color: #74838f; word-break: break-all; font-size: .8rem; }
+    td .codigo { font-family: var(--font-head); font-weight: 800; color: var(--blue-dark); }
+    td .actions a, td .actions button { margin-right: 6px; font-size: .75rem; }
+    .acciones a {
+      color: var(--blue); text-decoration: none; font-weight: 700; font-size: .78rem; margin-right: 8px;
+    }
+    .acciones a.danger-link { color: var(--red); }
+    .msg { padding: 12px 14px; border-radius: 8px; font-size: .88rem; margin: 10px 0; display: none; }
+    .msg.ok { display: block; background: #e5f7ec; color: #1d8a4e; }
+    .msg.err { display: block; background: #fdebed; color: var(--red); }
+    .msg.info { display: block; background: #e8f4fb; color: var(--blue-dark); }
+    .page { display: none; }
+    .page.visible { display: block; }
+    .pager { display: flex; gap: 8px; align-items: center; margin-top: 14px; font-size: .85rem; color: #555; }
+    #qr { width: 100%; max-width: 420px; }
+    textarea { width: 100%; font-family: var(--font-body); font-size: .95rem; padding: 10px; border: 1px solid #cfdde4; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Acortador</h1>
+      <div class="sub">Enlaces cortos https://statetty.com/i/…</div>
+    </div>
+    <a href="https://statetty.com">← statetty.com</a>
+  </header>
+
+  <div class="wrap">
+    <div class="page" id="pg-cargando"><div class="msg info">Cargando…</div></div>
+
+    <div class="page" id="pg-error">
+      <div class="card">
+        <h2 id="errTitulo">Acceso no autorizado</h2>
+        <p id="errTexto">No tenés permisos para administrar los enlaces cortos.</p>
+      </div>
+    </div>
+
+    <div class="page" id="pg-app">
+      <div id="msgBox"></div>
+
+      <div class="card">
+        <h2>Crear enlace</h2>
+        <form id="form-crear">
+          <div class="grid-2">
+            <div>
+              <label for="f-url">URL de destino *</label>
+              <input type="url" id="f-url" placeholder="https://ejemplo.com/articulo/123" required>
+              <div class="hint" id="f-url-msg"></div>
+            </div>
+            <div>
+              <label for="f-codigo">Nombre corto (opcional)</label>
+              <input type="text" id="f-codigo" placeholder="p.ej. oferta-lp (vacío = 4 caracteres al azar)">
+              <div class="hint" id="f-codigo-msg"></div>
+            </div>
+          </div>
+          <label for="f-titulo">Título (vacío = automático)</label>
+          <input type="text" id="f-titulo" placeholder="Dejalo vacío para extraerlo de la página">
+          <div style="margin-top:14px;"><button type="submit">Crear</button></div>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>Enlaces</h2>
+        <input type="text" id="b-q" placeholder="Buscar por código, URL o título…" style="margin-bottom:12px;">
+        <div style="overflow-x:auto;">
+          <table>
+            <thead><tr><th>Código</th><th>Destino</th><th>Título</th><th>Clicks</th><th>Estado</th><th></th></tr></thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+        <div class="pager" id="pager"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="edit-modal" style="display:none;position:fixed;inset:0;background:rgba(10,30,40,.55);z-index:50;align-items:center;justify-content:center;">
+    <div style="background:#fff;border-radius:12px;padding:22px;width:min(520px,92vw);box-shadow:0 8px 30px rgba(0,0,0,.2);">
+      <h2 style="font-family:var(--font-head);font-size:1rem;color:var(--blue-dark);margin-bottom:4px;">Editar enlace</h2>
+      <label for="edit-codigo">Nombre corto</label>
+      <input type="text" id="edit-codigo">
+      <label for="edit-url">URL de destino</label>
+      <input type="url" id="edit-url">
+      <label for="edit-titulo">Título</label>
+      <input type="text" id="edit-titulo">
+      <div style="margin-top:14px;display:flex;gap:8px;">
+        <button id="edit-save">Guardar</button>
+        <button id="edit-cancel" class="secondary">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Buddy embebible (login por correo) — mismo patrón que el resto del cliente -->
+  <script src="https://statetty.com/assets/buddy/buddy.js?v=a10" defer></script>
+  <script src="/assets/js/config.js"></script>
+  <script src="/assets/js/auth.js?v=13" defer></script>
+  <script src="/assets/js/shortlinks.js?v=1" defer></script>
+</body>
+</html>
