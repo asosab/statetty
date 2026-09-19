@@ -182,6 +182,25 @@
       transition: var(--transition);
     }
     .inm-btn-icon:hover { background: rgba(23,186,239,.14); color: var(--blue-dark); }
+    /* Módulo de mensajes WhatsApp (buscarMsjWA): scroll vertical interno para no alargar la página. */
+    .inm-wa-list {
+      max-height: 42vh;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding-right: 4px;
+    }
+    .inm-wa-msg {
+      white-space: pre-wrap;
+      overflow-wrap: break-word;
+      font: .85rem/1.5 var(--font-body);
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      margin: 0;
+    }
     .registro-card {
       background: var(--card-bg);
       border: 1px solid var(--border);
@@ -1239,6 +1258,12 @@
         <div class="inm-sim-list" id="panel-mis-list"></div>
         <p class="inm-no-data hidden" id="panel-mis-empty">No tenés inmuebles cargados todavía.</p>
       </div>
+
+      <div class="inm-sim-card hidden" id="panel-wa-card">
+        <h3 class="inm-sim-card-title">Alguien busca un inmueble como el tuyo</h3>
+        <p class="inm-no-data" id="panel-wa-info"></p>
+        <div class="inm-wa-list" id="panel-wa-list"></div>
+      </div>
     </aside>
 
     </div>
@@ -1497,6 +1522,9 @@
       DOM.inmSidebar           = document.getElementById('inm-sidebar');
       DOM.panelMisList         = document.getElementById('panel-mis-list');
       DOM.panelMisEmpty        = document.getElementById('panel-mis-empty');
+      DOM.panelWaCard          = document.getElementById('panel-wa-card');
+      DOM.panelWaInfo          = document.getElementById('panel-wa-info');
+      DOM.panelWaList          = document.getElementById('panel-wa-list');
     }
 
     /* ---- Loader genérico para botones que disparan una llamada ajax ---- */
@@ -1760,9 +1788,9 @@
 
         var btnBinoculars = btnIcon({
           icon: '<i class="fa-solid fa-binoculars" aria-hidden="true"></i>',
-          aria: 'Averiguá si alguien está buscando un inmueble como el tuyo en la última semana',
-          tippy: 'Averiguá si alguien está buscando un inmueble como el tuyo en la última semana',
-          accion: function () { binocularsTODO(data.id); },
+          aria: 'Averiguá si alguien está buscando un inmueble como el tuyo en los últimos 10 días',
+          tippy: 'Averiguá si alguien está buscando un inmueble como el tuyo en los últimos 10 días',
+          accion: function () { buscarMsjWA(data.id); },
         });
 
         row.appendChild(link);
@@ -1786,9 +1814,58 @@
       renderPanelSection(DOM.panelMisList, DOM.panelMisEmpty, [], msg || 'No se pudo cargar la lista.');
     }
 
-    function binocularsTODO(id) {
+    function setWaInfo(msg) {
+      DOM.panelWaInfo.textContent = msg || '';
+      DOM.panelWaInfo.classList.toggle('hidden', !msg);
+    }
+
+    function renderWaMensajes(data) {
+      var mensajes = (data && data.mensajes) || [];
+      DOM.panelWaList.innerHTML = '';
+      if (!mensajes.length) {
+        setWaInfo('No se encontraron requerimientos cercanos en los últimos 10 días.');
+        return;
+      }
+      setWaInfo('');
+      mensajes.forEach(function (m) {
+        var el = document.createElement('div');
+        el.className = 'inm-wa-msg';
+        el.textContent = m.texto;
+        DOM.panelWaList.appendChild(el);
+      });
+    }
+
+    function buscarMsjWA(id) {
       if (!id) return;
-      console.warn('[Statetty][panel] TODO: averiguar si alguien está buscando un inmueble como el tuyo en la última semana (inmueble ' + id + ')');
+      DOM.panelWaCard.classList.remove('hidden');
+      DOM.panelWaList.innerHTML = '';
+      setWaInfo('Buscando requerimientos…');
+      try {
+        var base = window.STATETTY_CONFIG ? STATETTY_CONFIG.WS_API_BASE : '';
+        var auth = authInfo();
+        var url = base + 'statetty/buscarMsjWA?_id=' + encodeURIComponent(id);
+        var opts = auth.bearer ? { headers: { 'Authorization': 'Bearer ' + auth.bearer } } : {};
+        fetch(url, opts)
+          .then(function (r) {
+            return r.json().then(function (body) { return { status: r.status, body: body }; });
+          })
+          .then(function (res) {
+            if (res.status !== 200 || !res.body || res.body.ok !== true) {
+              var msg = (res.body && res.body.error) || 'No se pudieron cargar los mensajes.';
+              console.warn('[Statetty][panel] buscarMsjWA', res.status, res.body);
+              setWaInfo(msg);
+              return;
+            }
+            renderWaMensajes(res.body.data || {});
+          })
+          .catch(function (err) {
+            console.warn('[Statetty][panel] buscarMsjWA fetch error', err);
+            setWaInfo(err && err.message ? err.message : 'No se pudieron cargar los mensajes.');
+          });
+      } catch (err) {
+        console.warn('[Statetty][panel] buscarMsjWA sync error', err);
+        setWaInfo(err && err.message ? err.message : 'No se pudieron cargar los mensajes.');
+      }
     }
 
     function initPanelTooltips(scope) {
