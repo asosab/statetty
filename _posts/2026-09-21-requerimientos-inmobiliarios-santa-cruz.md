@@ -3,7 +3,7 @@ layout: page
 title: "Radiografía de Requerimientos Inmobiliarios en Santa Cruz de la Sierra"
 date: 2026-09-21
 categories: mercado-inmobiliario, requerimientos, santa-cruz
-description: "Análisis estadístico sobre 42122 pedidos de inmuebles recolectados en 111 grupos de WhatsApp."
+description: "Análisis estadístico sobre 42122 pedidos de inmuebles recolectados en 111 grupos de WhatsApp 21/09/2026."
 published: true
 ---
 
