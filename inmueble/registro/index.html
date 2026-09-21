@@ -201,6 +201,42 @@
       padding: 10px 12px;
       margin: 0;
     }
+    .inm-wa-item {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .inm-wa-item.oculto { display: none; }
+    .inm-wa-controles {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding: 0 2px;
+    }
+    .inm-wa-wa {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: rgba(23,186,239,.14);
+      color: var(--blue-dark);
+      text-decoration: none;
+      font-size: 1rem;
+      transition: var(--transition);
+    }
+    .inm-wa-wa:hover { background: rgba(23,186,239,.26); }
+    .inm-wa-check {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font: .78rem/1.4 var(--font-body);
+      color: var(--muted);
+      cursor: pointer;
+    }
+    .inm-wa-check input { cursor: pointer; }
     .registro-card {
       background: var(--card-bg);
       border: 1px solid var(--border);
@@ -1679,6 +1715,9 @@
       DOM.panelWaInfo.classList.toggle('hidden', !msg);
     }
 
+    var waInmuebleActualId = null; // _id del inmueble cuyos requerimientos se están mostrando
+    var waEstadosMap = {};         // idMensaje -> { mensajeEnviado, mensajeRechazado, contactoIniciado }
+
     function renderWaMensajes(data) {
       var mensajes = (data && data.mensajes) || [];
       DOM.panelWaList.innerHTML = '';
@@ -1687,18 +1726,145 @@
         return;
       }
       setWaInfo('');
+      waEstadosMap = {};
+      var ids = [];
       mensajes.slice().sort(function (a, b) {
         return (+new Date(b.fecha) || 0) - (+new Date(a.fecha) || 0); // fecha de publicación desc
       }).forEach(function (m) {
-        var el = document.createElement('div');
-        el.className = 'inm-wa-msg';
-        el.textContent = m.texto;
-        DOM.panelWaList.appendChild(el);
+        if (m.idMensaje) ids.push(m.idMensaje);
+        var item = document.createElement('div');
+        item.className = 'inm-wa-item';
+        item.setAttribute('data-idMensaje', m.idMensaje || '');
+
+        var msg = document.createElement('div');
+        msg.className = 'inm-wa-msg';
+        msg.textContent = m.texto;
+        item.appendChild(msg);
+
+        var controles = document.createElement('div');
+        controles.className = 'inm-wa-controles';
+
+        if (m.remitente && m.remitente.wa) {
+          var waLink = document.createElement('a');
+          waLink.className = 'inm-wa-wa';
+          waLink.href = m.remitente.wa;
+          waLink.target = '_blank';
+          waLink.rel = 'noopener noreferrer';
+          waLink.title = 'Iniciar conversación por WhatsApp';
+          waLink.setAttribute('aria-label', 'Iniciar conversación por WhatsApp con quien busca este tipo de inmueble');
+          waLink.textContent = '💬';
+          waLink.addEventListener('click', function () {
+            updRequerimientoEstado(m.idMensaje, { mensajeEnviado: true });
+          });
+          controles.appendChild(waLink);
+        }
+
+        controles.appendChild(checkRequerimiento('Comunicado', 'mensajeEnviado', m.idMensaje));
+        controles.appendChild(checkRequerimiento('De interés', 'contactoIniciado', m.idMensaje));
+        controles.appendChild(checkRequerimiento('Quitar', 'mensajeRechazado', m.idMensaje));
+
+        item.appendChild(controles);
+        DOM.panelWaList.appendChild(item);
       });
+      cargarEstadosRequerimientos(ids);
+    }
+
+    function checkRequerimiento(texto, campo, idMensaje) {
+      var label = document.createElement('label');
+      label.className = 'inm-wa-check';
+      var cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.setAttribute('data-campo', campo);
+      cb.setAttribute('data-idMensaje', idMensaje || '');
+      cb.addEventListener('change', function () {
+        var upd = {};
+        upd[campo] = cb.checked;
+        updRequerimientoEstado(idMensaje, upd, cb);
+      });
+      label.appendChild(cb);
+      label.appendChild(document.createTextNode(' ' + texto));
+      return label;
+    }
+
+    function cargarEstadosRequerimientos(ids) {
+      if (!waInmuebleActualId || !ids || !ids.length) return;
+      try {
+        var base = window.STATETTY_CONFIG ? STATETTY_CONFIG.WS_API_BASE : '';
+        var auth = authInfo();
+        if (!base) return;
+        var opts = {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ idinmueble: waInmuebleActualId, idMensajes: ids })
+        };
+        if (auth.bearer) opts.headers['Authorization'] = 'Bearer ' + auth.bearer;
+        fetch(base + 'statetty/inmuebleRequerimientos', opts)
+          .then(function (r) { return r.json(); })
+          .then(function (res) {
+            if (!res || res.ok !== true || !res.data || !res.data.registros) return;
+            waEstadosMap = {};
+            res.data.registros.forEach(function (reg) { waEstadosMap[String(reg.idMensaje)] = reg; });
+            DOM.panelWaList.querySelectorAll('.inm-wa-item').forEach(applyWaEstado);
+          })
+          .catch(function (err) { console.warn('[Statetty][panel] cargar estados', err); });
+      } catch (err) { console.warn('[Statetty][panel] cargar estados sync', err); }
+    }
+
+    function applyWaEstado(item) {
+      var idMensaje = item.getAttribute('data-idMensaje');
+      if (!idMensaje) return;
+      var estado = waEstadosMap[String(idMensaje)];
+      if (!estado) return;
+      item.querySelectorAll('input[type=checkbox]').forEach(function (cb) {
+        cb.checked = !!estado[cb.getAttribute('data-campo')];
+      });
+      if (estado.mensajeRechazado) item.classList.add('oculto');
+    }
+
+    function updRequerimientoEstado(idMensaje, campos, cb) {
+      if (!waInmuebleActualId || !idMensaje) {
+        if (cb) cb.checked = !cb.checked;
+        return;
+      }
+      try {
+        var base = window.STATETTY_CONFIG ? STATETTY_CONFIG.WS_API_BASE : '';
+        var auth = authInfo();
+        if (!base) return;
+        var payload = { idinmueble: waInmuebleActualId, idMensaje: idMensaje };
+        Object.keys(campos).forEach(function (k) { payload[k] = campos[k]; });
+        var opts = {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        };
+        if (auth.bearer) opts.headers['Authorization'] = 'Bearer ' + auth.bearer;
+        fetch(base + 'statetty/inmuebleRequerimientos', opts)
+          .then(function (r) { return r.json(); })
+          .then(function (res) {
+            if (res && res.ok === true) {
+              waEstadosMap[String(idMensaje)] = Object.assign({}, waEstadosMap[String(idMensaje)], campos);
+              if (campos.mensajeRechazado) {
+                var item = DOM.panelWaList.querySelector('[data-idMensaje="' + idMensaje + '"]');
+                if (item) item.classList.add('oculto');
+              }
+            } else {
+              if (cb) cb.checked = !cb.checked;
+              console.warn('[Statetty][panel] updRequerimiento', res);
+            }
+          })
+          .catch(function (err) {
+            if (cb) cb.checked = !cb.checked;
+            console.warn('[Statetty][panel] updRequerimiento fetch error', err);
+          });
+      } catch (err) {
+        if (cb) cb.checked = !cb.checked;
+        console.warn('[Statetty][panel] updRequerimiento sync error', err);
+      }
     }
 
     function buscarMsjWA(id) {
       if (!id) return;
+      waInmuebleActualId = String(id);
       DOM.panelWaCard.classList.remove('hidden');
       DOM.panelWaList.innerHTML = '';
       setWaInfo('Buscando requerimientos…');
