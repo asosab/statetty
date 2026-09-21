@@ -1687,7 +1687,9 @@
         return;
       }
       setWaInfo('');
-      mensajes.forEach(function (m) {
+      mensajes.slice().sort(function (a, b) {
+        return (+new Date(b.fecha) || 0) - (+new Date(a.fecha) || 0); // fecha de publicación desc
+      }).forEach(function (m) {
         var el = document.createElement('div');
         el.className = 'inm-wa-msg';
         el.textContent = m.texto;
