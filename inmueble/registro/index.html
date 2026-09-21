@@ -2632,6 +2632,7 @@
           clearDraft();
           resetInmuebleForm();
           showSuccessToast(data.id ? ('ID de referencia: ' + data.id) : '');
+          loadPanelInmuebles();
         } else {
           DOM.errorEl.textContent = data.error || 'Error del servidor. Intentalo de nuevo.';
           DOM.errorEl.style.display = 'block';
