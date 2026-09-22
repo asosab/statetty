@@ -1747,13 +1747,14 @@
         if (m.remitente && m.remitente.wa) {
           var waLink = document.createElement('a');
           waLink.className = 'inm-wa-wa';
-          waLink.href = m.remitente.wa;
+          waLink.href = m.remitente.wa + (m.msgWhats ? '?text=' + encodeURIComponent(m.msgWhats) : '');
           waLink.target = '_blank';
           waLink.rel = 'noopener noreferrer';
           waLink.title = 'Iniciar conversación por WhatsApp';
           waLink.setAttribute('aria-label', 'Iniciar conversación por WhatsApp con quien busca este tipo de inmueble');
           waLink.textContent = '💬';
           waLink.addEventListener('click', function () {
+            if (m.remitente.telefono) registrarClickReqWA(m.remitente.telefono);
             updRequerimientoEstado(m.idMensaje, { mensajeEnviado: true });
           });
           controles.appendChild(waLink);
@@ -1860,6 +1861,23 @@
         if (cb) cb.checked = !cb.checked;
         console.warn('[Statetty][panel] updRequerimiento sync error', err);
       }
+    }
+
+    function registrarClickReqWA(cel) {
+      if (!waInmuebleActualId || !cel) return;
+      try {
+        var base = window.STATETTY_CONFIG ? STATETTY_CONFIG.WS_API_BASE : '';
+        var auth = authInfo();
+        if (!base) return;
+        var opts = {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ idinmueble: waInmuebleActualId, cel: cel })
+        };
+        if (auth.bearer) opts.headers['Authorization'] = 'Bearer ' + auth.bearer;
+        fetch(base + 'statetty/usrClckReqWA', opts)
+          .catch(function (err) { console.warn('[Statetty][panel] registrarClickReqWA', err); });
+      } catch (err) { console.warn('[Statetty][panel] registrarClickReqWA sync', err); }
     }
 
     function buscarMsjWA(id) {
