@@ -618,13 +618,6 @@ window.BuddyArcheryGameConfig = window.BuddyArcheryGameConfig || {
         ]
       },
   
-      // Triple click de prueba para invocar/ocultar a Buddy. Cambiar
-      // clicksToTrigger o windowMs si genera falsos positivos/negativos.
-
-      testTrigger: {
-        clicksToTrigger: 3,
-        windowMs: 500
-      },
       // -------------------------------------------------------------------
       // Efecto de concentración durante el apuntado.
       //

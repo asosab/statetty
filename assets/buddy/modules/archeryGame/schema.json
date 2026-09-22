@@ -27,10 +27,6 @@
         { "key": "whatsappNumber", "label": "Número WhatsApp", "type": "string", "default": "" }
       ] }
     ] },
-    { "key": "testTrigger", "label": "Gatillo de prueba", "type": "object", "default": {}, "fields": [
-      { "key": "clicksToTrigger", "label": "Clicks", "type": "number", "default": 3 },
-      { "key": "windowMs", "label": "Ventana (ms)", "type": "number", "default": 500 }
-    ] },
     { "key": "menu", "label": "Elementos de menú", "type": "array", "default": [], "items": { "type": "object", "fields": [
       { "key": "id", "label": "ID", "type": "string", "default": "" },
       { "key": "label", "label": "Texto", "type": "string", "default": "" },

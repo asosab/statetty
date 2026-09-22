@@ -157,12 +157,6 @@
     var pendingAimStartX = 0;
     var pendingAimStartY = 0;
 
-    // Triple-click de prueba para invocar/ocultar a Buddy.
-    // Mantener este estado privado dentro del módulo; no depende de variables
-    // globales del script original.
-    var testTriggerClickCount = 0;
-    var testTriggerClickTimer = null;
-  
     // Precarga: dimensiones naturales cacheadas por nombre de archivo, para
     // poder posicionar/dimensionar una flecha clavada al instante, sin
     // esperar un nuevo evento 'load'.
@@ -2766,32 +2760,6 @@ function resolve(outcome, reasonLabel, failBubbleText) {
     }, CONFIG.resolveDisplayMs);
   }
 
-function onTestTriggerClick(e) {
-    testTriggerClickCount++;
-
-    if (testTriggerClickTimer) {
-      clearTimeout(testTriggerClickTimer);
-    }
-    testTriggerClickTimer = setTimeout(function () {
-      testTriggerClickCount = 0;
-      testTriggerClickTimer = null;
-    }, CONFIG.testTrigger.windowMs);
-
-    if (testTriggerClickCount < CONFIG.testTrigger.clicksToTrigger) return;
-
-    testTriggerClickCount = 0;
-    clearTimeout(testTriggerClickTimer);
-    testTriggerClickTimer = null;
-
-    // El triple click solo invoca al personaje cuando está oculto.
-    // No se utiliza para desactivar un personaje que ya fue mostrado por
-    // Says u otro módulo activo.
-    if (state === 'hidden') {
-      showCharacter();
-    }
-    // Si está visible o en una partida en curso, el triple click no hace nada.
-  }
-
 function registerBusyProvider() {
     if (!window.Buddy || typeof window.Buddy.registerBusyProvider !== 'function') {
       return false;
@@ -2831,7 +2799,7 @@ function init() {
 
     // Buddy es quien decide cuándo el personaje está visible. Si cualquier
     // módulo (por ejemplo Says) lo hace visible, Archery debe activarse de
-    // inmediato si está habilitado, sin exigir triple click.
+    // inmediato si está habilitado.
     window.addEventListener('buddy:character-visible', function () {
       if (state === 'hidden') {
         // La visibilidad fue provocada por otro módulo (por ejemplo Says).
@@ -2848,17 +2816,12 @@ function init() {
 
     // Si Buddy ya estaba visible antes de que este módulo terminara de
     // inicializarse, el evento de visibilidad pudo haber ocurrido antes de
-    // registrar el listener. En ese caso no esperamos un nuevo triple click:
+    // registrar el listener. En ese caso no esperamos un nuevo evento:
     // Archery debe quedar activo inmediatamente.
     if (window.Buddy && typeof window.Buddy.isCharacterVisible === 'function' &&
         window.Buddy.isCharacterVisible() && state === 'hidden') {
       showCharacter(true);
     }
-
-    // El triple click queda únicamente como mecanismo de INVOCACIÓN cuando
-    // Buddy está oculto. Una vez visible, no debe desactivar Archery ni
-    // apagar el personaje que otro módulo acaba de activar.
-    document.addEventListener('click', onTestTriggerClick);
   }
 
 
