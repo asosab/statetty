@@ -1140,6 +1140,11 @@ $(document).ready(function () {
     // markers
     var waphoneUsuario = (window.STT && window.STT.getUsuario && window.STT.getUsuario() || {}).waphone || '';
     locations.forEach(function (dato) {
+      // RE/MAX BO guarda a veces la foto como ruta relativa "listings/..."
+      // → completar con el dominio para que el popup/WhatsApp/PDF no la rompan.
+      if (/^\s*listings\//.test(dato.foto || '') && /remax/i.test(dato.broker || '')) {
+        dato.foto = 'https://intramax.bo/storage/' + dato.foto.trim();
+      }
       let url = dato.uid;
       var brand = dato.brand;
 
