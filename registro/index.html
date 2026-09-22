@@ -608,12 +608,17 @@ tags: [registro, formulario, Statetty, real state, inmuebles]
     // Saludo en el header
     var greetingEl = document.getElementById('header-greeting');
 
-    // Indicador visual
+    // Indicador visual (insertar una sola vez: key-ready dispara varias veces)
     var ind = document.createElement('p');
+    ind.id = 'stt-registro-indicator';
     ind.style.cssText = 'font-size:.78rem;color:var(--brand);margin-top:-10px;margin-bottom:18px;';
     ind.textContent = '\u2713 Datos cargados desde tu cuenta';
     var sub = document.querySelector('#RegistroForm .registro-subtitle');
-    if (sub) sub.parentNode.insertBefore(ind, sub.nextSibling);
+    if (sub) {
+      var prev = document.getElementById('stt-registro-indicator');
+      if (prev) prev.remove();
+      sub.parentNode.insertBefore(ind, sub.nextSibling);
+    }
   });
 
   form.addEventListener('submit', function(e) {
