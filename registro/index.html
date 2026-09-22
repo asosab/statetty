@@ -317,7 +317,7 @@ tags: [registro, formulario, Statetty, real state, inmuebles]
             <select id="f-pais" name="pais" required>
               <option value="">Seleccioná</option>
               <option value="Bolivia" selected>Bolivia</option>
-              <option value="Peru">Perú</option>
+              <option value="Perú">Perú</option>
             </select>
           </div>
           <div class="form-group">
@@ -503,7 +503,7 @@ tags: [registro, formulario, Statetty, real state, inmuebles]
       { value: '', label: 'Seleccioná una ciudad' },
       { value: 'SCZ', label: 'Santa Cruz de la Sierra' }
     ],
-    Peru: [
+    'Perú': [
       { value: '', label: 'Seleccioná una ciudad' },
       { value: 'LIM', label: 'Lima' }
     ]
@@ -555,6 +555,11 @@ tags: [registro, formulario, Statetty, real state, inmuebles]
     if (user.nivel_tecnologia) {
       var nt = form.querySelector('input[name="nivel_tecnologia"][value="' + user.nivel_tecnologia.toLowerCase() + '"]');
       if (nt) nt.checked = true;
+    }
+    if (el('f-intereses') && user.intereses) el('f-intereses').value = user.intereses;
+    if (el('f-expectativas') && user.expectativas) el('f-expectativas').value = user.expectativas;
+    if (el('f-codigo') && (user.referidoPor || user.codigo_referencia)) {
+      el('f-codigo').value = user.referidoPor || user.codigo_referencia;
     }
 
     // Normalizar país (capitalizar) y cargar ciudades

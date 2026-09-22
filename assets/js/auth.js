@@ -183,6 +183,13 @@
       u.usrIconURL=tg.usrIconURL||'';
       u.activo=tg.activo;
       u.emailVerificado=tg.emailVerificado;
+      u.sexo=tg.sexo||'';
+      u.birthday=tg.birthday||'';
+      u.nivel_experiencia=tg.nivel_experiencia||'';
+      u.nivel_tecnologia=tg.nivel_tecnologia||'';
+      u.intereses=tg.intereses||'';
+      u.expectativas=tg.expectativas||'';
+      u.referidoPor=tg.referidoPor||'';
       // Datos de trabajo que consumen mapa.js/fndInm.js u otros scripts:
       u.busquedas=tg.busquedas||null;
       u.seleccionados=tg.seleccionados||null;

@@ -32,10 +32,18 @@ scrollLinks.forEach((scrollLink) => {
 /* ===== Gumshoe SrollSpy ===== */
 /* Ref: https://github.com/cferdinandi/gumshoe  */
 
-// Initialize Gumshoe
-var spy = new Gumshoe('#nav-menu .nav-link', {
-	offset: 70
+// Initialize Gumshoe solo si existen enlaces de navegación con sección destino.
+// Sin targets, gumshoe.detect() lee `item.content` de un array vacío y lanza
+// TypeError en cada frame (las páginas no-landing como registro/ no tienen #inicio).
+var gumshoeLinks = document.querySelectorAll('#nav-menu .nav-link');
+var gumshoeHasTargets = Array.prototype.some.call(gumshoeLinks, function (a) {
+  return a.hash && document.getElementById(a.hash.substring(1));
 });
+if (gumshoeHasTargets) {
+  var spy = new Gumshoe('#nav-menu .nav-link', {
+    offset: 70
+  });
+}
 
 /* ======= Scroll animation (fade-up) ======= */
 const fadeEls = document.querySelectorAll('.fade-up');
