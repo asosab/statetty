@@ -281,7 +281,7 @@ permalink: /manual/
   <button class="mobile-toggle" id="navBtn">Índice del manual <span>☰</span></button>
 
   <nav class="toc" id="tocNav">
-    <div class="brand">🏠 Statetty <small>MANUAL DE USUARIO</small></div>
+    <div class="brand">Statetty <small>MANUAL DE USUARIO</small></div>
     <p class="toc-hint">Busca por lo que quieres lograr. Cada sección indica qué necesitas tener listo
     antes de empezar.</p>
 
