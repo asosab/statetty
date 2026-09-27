@@ -295,18 +295,18 @@ tags: [registro, formulario, Statetty, real state, inmuebles]
 
         <!-- SEXO -->
         <div class="form-group">
-          <label>Sexo <span class="required">*</span></label>
+          <label>Sexo</label>
           <span class="hint" style="margin-bottom:6px;display:block;">En referencia a las características anatómicas de una persona</span>
           <div class="radio-group">
-            <label><input type="radio" name="sexo" value="masculino" required> Masculino</label>
+            <label><input type="radio" name="sexo" value="masculino"> Masculino</label>
             <label><input type="radio" name="sexo" value="femenino"> Femenino</label>
           </div>
         </div>
 
         <!-- AGENCIA INMOBILIARIA -->
         <div class="form-group">
-          <label for="f-agencia">Agencia Inmobiliaria <span class="required">*</span></label>
-          <input type="text" id="f-agencia" name="agencia" placeholder="RE/MAX, Century 21, independiente…" required>
+          <label for="f-agencia">Agencia Inmobiliaria</label>
+          <input type="text" id="f-agencia" name="agencia" placeholder="RE/MAX, Century 21, independiente…">
           <span class="hint">La agencia acompañará tu nombre cuando promocionemos tus captaciones</span>
         </div>
 
@@ -331,10 +331,10 @@ tags: [registro, formulario, Statetty, real state, inmuebles]
 
         <!-- NIVEL DE EXPERIENCIA -->
         <div class="form-group">
-          <label>Nivel de experiencia en el mercado inmobiliario <span class="required">*</span></label>
+          <label>Nivel de experiencia en el mercado inmobiliario</label>
           <div class="radio-card-group">
             <div class="radio-card">
-              <input type="radio" name="nivel_experiencia" value="principiante" id="exp-principiante" required>
+              <input type="radio" name="nivel_experiencia" value="principiante" id="exp-principiante">
               <label for="exp-principiante">Principiante</label>
             </div>
             <div class="radio-card">
@@ -354,11 +354,11 @@ tags: [registro, formulario, Statetty, real state, inmuebles]
 
         <!-- NIVEL DE EXPERTICIA TECNOLÓGICA -->
         <div class="form-group">
-          <label>Nivel de experticia tecnológica <span class="required">*</span></label>
+          <label>Nivel de experticia tecnológica</label>
           <span class="hint" style="margin-bottom:8px;display:block;">Adaptamos la asistencia y el soporte técnico según tu nivel</span>
           <div class="radio-card-group">
             <div class="radio-card">
-              <input type="radio" name="nivel_tecnologia" value="basico" id="tec-basico" required>
+              <input type="radio" name="nivel_tecnologia" value="basico" id="tec-basico">
               <label for="tec-basico">Básico</label>
             </div>
             <div class="radio-card">
@@ -646,12 +646,8 @@ tags: [registro, formulario, Statetty, real state, inmuebles]
     if (!apellidos) missing.push('apellido(s)');
     if (!wa) missing.push('WhatsApp');
     if (!nacimiento) missing.push('fecha de nacimiento');
-    if (!sexo) missing.push('sexo');
-    if (!agencia) missing.push('agencia inmobiliaria');
     if (!pais) missing.push('país');
     if (!ciudad) missing.push('ciudad');
-    if (!nivelExp) missing.push('nivel de experiencia');
-    if (!nivelTec) missing.push('nivel de experticia tecnológica');
 
     if (missing.length) {
       errorEl.textContent = 'Completá los siguientes campos: ' + missing.join(', ') + '.';
@@ -676,12 +672,12 @@ tags: [registro, formulario, Statetty, real state, inmuebles]
       apellidos: apellidos,
       whatsapp: wa,
       fecha_nacimiento: nacimiento,
-      sexo: sexo.value,
+      sexo: sexo ? sexo.value : '',
       agencia_inmobiliaria: agencia,
       pais: pais,
       ciudad: ciudad.toUpperCase(),
-      nivel_experiencia: nivelExp.value,
-      nivel_tecnologia: nivelTec.value,
+      nivel_experiencia: nivelExp ? nivelExp.value : '',
+      nivel_tecnologia: nivelTec ? nivelTec.value : '',
       intereses: document.getElementById('f-intereses').value.trim(),
       expectativas: document.getElementById('f-expectativas').value.trim(),
       codigo_referencia: document.getElementById('f-codigo').value.trim(),
