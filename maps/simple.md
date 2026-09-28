@@ -23,7 +23,7 @@ image:              mapa.png
   /* .header es position:fixed con 64px: el mapa arranca debajo. */
   #mapid { width: 100%; height: calc(100vh - 64px); margin-top: 64px; }
   /* Posiciones de la caja (fixed = relativa a la pantalla visible):
-     inicio: centro vertical | .con-resultados: top 66% | .abajo: pegada a la base. */
+     inicio: centro vertical | .con-resultados: top 70% | .abajo: pegada a la base. */
   #caja {
     position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
     z-index: 1100; width: min(92vw, 520px); background: #fff;
@@ -31,7 +31,7 @@ image:              mapa.png
     box-shadow: 0 6px 24px rgba(0, 0, 0, .25);
     transition: top .5s ease, transform .5s ease;
   }
-  #caja.con-resultados { top: 66%; }
+  #caja.con-resultados { top: 70%; }
   /* 28px de margen para no tapar la atribución de OpenStreetMap */
   #caja.abajo { top: calc(100% - 28px); transform: translate(-50%, -100%); }
   @media (prefers-reduced-motion: reduce) { #caja { transition: none; } }
@@ -48,6 +48,21 @@ image:              mapa.png
   #caja button:disabled { opacity: .6; cursor: wait; }
   #estado { margin-top: 8px; min-height: 1.2em; font-size: .9rem; color: #04364a; }
   #estado.error { color: #b3261e; }
+
+  /* Pin con insignia de tipo de inmueble */
+  .pin-tipo { background: none; border: 0; }
+  .pin-tipo .pin-img {
+    display: block; width: 40px; height: 60px;
+    filter: drop-shadow(0 2px 2px rgba(0, 0, 0, .35));
+  }
+  .pin-tipo .pin-emoji {
+    position: absolute; top: -4px; left: -6px;
+    width: 22px; height: 22px; line-height: 22px; text-align: center;
+    font-size: 14px; background: #fff; border-radius: 50%;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, .35); pointer-events: none;
+  }
+
+
   /* buddy: en esta página solo va el mapa. Estos elementos los crea el JS al vuelo
      con estilos inline, así que el !important es necesario para ganarle. */
   #buddy-chat-toggle, #buddy-chat, #buddy-character, #buddy-close, #buddy-backgrounds {
@@ -81,11 +96,52 @@ image:              mapa.png
   }).addTo(map);
   setTimeout(function () { map.invalidateSize(); }, 300);
 
-  var icon = L.icon({
-    iconUrl: PIN,
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-    iconSize: [40, 60], iconAnchor: [20, 60], popupAnchor: [1, -54], shadowSize: [60, 60],
+  // Claves en minúscula y sin tildes. Se busca como palabra completa dentro del
+  // valor de tipoInmueble; ante varias coincidencias gana la clave más larga.
+  var TIPO_INMUEBLE_EMOJI = {
+    'casa': '🏡',
+    'departamento': '🏢',
+    'monoambiente': '🏢',
+    'penthouse': '🏢',
+    'duplex': '🏢',
+    'terreno': '🌳',
+    'lote': '🌳',
+    'oficina': '💼',
+    'local comercial': '🏬',
+    'local': '🏬',
+    'tienda': '🏬',
+    'edificio': '🏛️',
+    'quinta': '🏞️',
+    'ph': '🏘️',
+    'condominio': '🏘️',
+    'galpon': '🏭',
+    'deposito': '🏭',
+    'habitacion': '🛏️'
+  };
+  var EMOJI_DEFECTO = '📍';
+  var TIPOS_ORDENADOS = Object.keys(TIPO_INMUEBLE_EMOJI).sort(function (a, b) {
+    return b.length - a.length;
   });
+
+  function emojiTipo(tipo) {
+    var t = String(tipo == null ? '' : tipo).toLowerCase().trim()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    if (!t) return EMOJI_DEFECTO;
+    for (var i = 0; i < TIPOS_ORDENADOS.length; i++) {
+      var k = TIPOS_ORDENADOS[i];
+      if (new RegExp('(^|[^a-z])' + k + '([^a-z]|$)').test(t)) return TIPO_INMUEBLE_EMOJI[k];
+    }
+    return EMOJI_DEFECTO;
+  }
+
+  function iconoPara(tipo) {
+    return L.divIcon({
+      className: 'pin-tipo',
+      html: '<img class="pin-img" src="' + PIN + '" alt="">' +
+            '<span class="pin-emoji" aria-hidden="true">' + emojiTipo(tipo) + '</span>',
+      iconSize: [40, 60], iconAnchor: [20, 60], popupAnchor: [1, -54],
+    });
+  }
 
   var form = document.getElementById('form-buscar');
   var input = document.getElementById('texto');
@@ -147,7 +203,7 @@ image:              mapa.png
     (resultados || []).forEach(function (r) {
       var lat = num(r.lat), lng = num(r.lng);
       if (!isFinite(lat) || !isFinite(lng)) return;   // sin coordenadas no hay pin
-      var m = L.marker([lat, lng], { icon: icon }).addTo(map);
+      var m = L.marker([lat, lng], { icon: iconoPara(r.tipoInmueble) }).addTo(map);
       m.bindPopup(popup(r));
       markers.push(m);
     });
