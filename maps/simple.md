@@ -281,6 +281,39 @@ image:              mapa.png
   var LIMITE = { poligono: 1, circunferencia: 1 };
   var RADIO_MIN = 20;        // metros; un círculo menor se descarta
   var PUNTOS_MIN = 3;
+  var PUNTOS_MAX = 2000;     // tope de vértices por polígono enviado
+  var TOLERANCIA_PX = 1.5;   // Douglas-Peucker: puntos que se desvían menos se eliminan
+
+  // Deja el mínimo de vértices que conserva la forma dibujada; si aun así
+  // pasan de PUNTOS_MAX, los reparte equitativamente a lo largo del contorno.
+  function simplificar(pts) {
+    var n = pts.length, z = map.getZoom();
+    if (n <= PUNTOS_MIN) return pts;
+    var P = pts.map(function (p) { return map.project(p, z); });
+    var keep = new Uint8Array(n);
+    keep[0] = keep[n - 1] = 1;
+    var pila = [[0, n - 1]];
+    while (pila.length) {
+      var seg = pila.pop(), a = seg[0], b = seg[1], maxd = 0, idx = -1;
+      for (var i = a + 1; i < b; i++) {
+        var d = L.LineUtil.pointToSegmentDistance(P[i], P[a], P[b]);
+        if (d > maxd) { maxd = d; idx = i; }
+      }
+      if (idx > -1 && maxd > TOLERANCIA_PX) {
+        keep[idx] = 1;
+        pila.push([a, idx], [idx, b]);
+      }
+    }
+    var res = pts.filter(function (_, i) { return keep[i]; });
+    if (res.length > PUNTOS_MAX) {
+      var m = res.length, out = [];
+      for (var k = 0; k < PUNTOS_MAX; k++) {
+        out.push(res[Math.round(k * (m - 1) / (PUNTOS_MAX - 1))]);
+      }
+      res = out;
+    }
+    return res;
+  }
   var ESTILO_AREA = { color: '#17baef', weight: 2, fillColor: '#17baef', fillOpacity: 0.22 };
 
   var contenedor = map.getContainer();
@@ -371,13 +404,14 @@ image:              mapa.png
     trazo = null;
     if (contenedor.hasPointerCapture(e.pointerId)) contenedor.releasePointerCapture(e.pointerId);
     var figura = null;
-    if (ok && t.tipo === 'poligono' && t.pts.length >= PUNTOS_MIN) {
+    var pts = (ok && t.tipo === 'poligono') ? simplificar(t.pts) : null;
+    if (pts && pts.length >= PUNTOS_MIN) {
       map.removeLayer(t.capa);
       // L.polygon cierra el trazo solo: rellena la superficie completa.
       figura = {
         tipo: 'poligono',
-        capa: L.polygon(t.pts, ESTILO_AREA).addTo(map),
-        datos: { puntos: t.pts.map(function (p) {
+        capa: L.polygon(pts, ESTILO_AREA).addTo(map),
+        datos: { puntos: pts.map(function (p) {
           return { lat: redondear(p.lat, 6), lng: redondear(p.lng, 6) };
         }) }
       };
