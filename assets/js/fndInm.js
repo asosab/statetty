@@ -949,8 +949,7 @@
           setTextoLibreNota('error', 'No se reconoció ningún filtro' + (avisos.length ? ': ' + avisos.join(' ') : '.'));
           return;
         }
-        setTextoLibreNota('ok', '✓ Filtro creado (' + n + ' campos) — revisá y ajustá, luego Buscar.'
-          + (avisos.length ? ' ' + avisos.join(' ') : ''));
+        setTextoLibreNota('ok', '✓ Filtro creado (' + n + ' campos)');
       }).catch(function () {
         restaurar();
         setTextoLibreNota('error', 'No se pudo interpretar el texto. Probá de nuevo o usá los filtros a mano.');
