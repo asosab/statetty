@@ -1592,6 +1592,275 @@ window.Buddy = window.Buddy || {};
       : false;
   };
 
+  // -------------------------------------------------------------------
+  // UI — caja flotante modal (Buddy.ui)
+  //
+  // Formulario independiente del personaje: ni globo, ni animación, ni
+  // expresión. La usan los módulos que necesitan pedir un dato (auth,
+  // user) sin que Buddy "hable".
+  //
+  // config: { title, message, fields[], submitText, cancelText,
+  //           onSubmit(data), onCancel() }
+  //   fields[]: { key, label, type, placeholder, readonly, required,
+  //               autocomplete }
+  //   onSubmit puede devolver una Promise: el botón se deshabilita mientras
+  //   dura y, si rechaza o devuelve false, el error se muestra dentro de la
+  //   caja sin cerrarla (mismo contrato que says.frmUsr).
+  //
+  // Devuelve { close(), setSubmitEnabled(bool) }. Solo hay una caja a la
+  // vez: abrir otra cierra la anterior SIN disparar su onCancel.
+  // -------------------------------------------------------------------
+  var uiBoxState = null;
+  var UI_STYLE_ID = 'buddy-ui-styles';
+
+  function uiInjectStyles() {
+    if (document.getElementById(UI_STYLE_ID)) return;
+    var style = document.createElement('style');
+    style.id = UI_STYLE_ID;
+    style.textContent =
+      '.buddy-ui-overlay{position:fixed;inset:0;z-index:2147483100;display:flex;align-items:center;' +
+      'justify-content:center;padding:16px;box-sizing:border-box;background:rgba(0,0,0,.4);' +
+      'font:14px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:#222;}' +
+      '.buddy-ui-box{position:relative;width:min(420px,100%);max-height:85vh;overflow:auto;' +
+      'box-sizing:border-box;padding:20px;background:#fff;border-radius:12px;' +
+      'box-shadow:0 12px 40px rgba(0,0,0,.25);}' +
+      '.buddy-ui-box__title{margin:0 0 6px;font-size:1.15rem;}' +
+      '.buddy-ui-box__message{margin:0 0 14px;color:#555;}' +
+      '.buddy-ui-box__field{display:grid;gap:6px;margin-bottom:12px;}' +
+      '.buddy-ui-box__label{font-weight:600;}' +
+      '.buddy-ui-box__input{font:inherit;padding:9px 10px;border:1px solid #ccc;border-radius:8px;' +
+      'box-sizing:border-box;width:100%;}' +
+      '.buddy-ui-box__input[readonly]{background:#f4f4f4;color:#666;}' +
+      '.buddy-ui-box__error{min-height:1.3em;margin:0 0 10px;color:#c0392b;font-size:.92rem;}' +
+      '.buddy-ui-box__actions{display:flex;gap:8px;justify-content:flex-end;}' +
+      '.buddy-ui-box__btn{padding:9px 16px;border:0;border-radius:8px;cursor:pointer;font:inherit;}' +
+      '.buddy-ui-box__btn--primary{background:#222;color:#fff;}' +
+      '.buddy-ui-box__btn--secondary{background:#eee;color:#222;}' +
+      '.buddy-ui-box__btn:disabled{opacity:.55;cursor:wait;}' +
+      '@media(max-width:480px){.buddy-ui-box{padding:16px}}';
+    document.head.appendChild(style);
+  }
+
+  function uiClose(silencioso) {
+    if (!uiBoxState) return false;
+    var state = uiBoxState;
+    uiBoxState = null;
+    if (state.overlay && state.overlay.parentNode) state.overlay.parentNode.removeChild(state.overlay);
+    if (window.removeEventListener) window.removeEventListener('keydown', state.onKey, true);
+    if (window.removeEventListener) window.removeEventListener('resize', state.onKey, true);
+    if (!silencioso && typeof state.config.onCancel === 'function') {
+      try { state.config.onCancel(); } catch (e) {}
+    }
+    return true;
+  }
+
+  function uiBox(config) {
+    config = config || {};
+    var fields = Array.isArray(config.fields) ? config.fields : [];
+
+    uiClose(true);
+    uiInjectStyles();
+
+    var overlay = document.createElement('div');
+    overlay.className = 'buddy-ui-overlay';
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-modal', 'true');
+
+    var box = document.createElement('form');
+    box.className = 'buddy-ui-box';
+    box.noValidate = true;
+
+    if (config.title) {
+      var title = document.createElement('h2');
+      title.className = 'buddy-ui-box__title';
+      title.textContent = String(config.title);
+      box.appendChild(title);
+    }
+
+    if (config.message) {
+      var message = document.createElement('p');
+      message.className = 'buddy-ui-box__message';
+      message.textContent = String(config.message);
+      box.appendChild(message);
+    }
+
+    var controls = {};
+    fields.forEach(function (field) {
+      field = field || {};
+      var row = document.createElement('div');
+      row.className = 'buddy-ui-box__field';
+
+      if (field.label) {
+        var label = document.createElement('label');
+        label.className = 'buddy-ui-box__label';
+        label.textContent = String(field.label);
+        row.appendChild(label);
+      }
+
+      var input = document.createElement('input');
+      input.className = 'buddy-ui-box__input';
+      input.type = field.type || 'text';
+      input.name = field.key;
+      input.value = field.value == null ? '' : String(field.value);
+      input.placeholder = field.placeholder || '';
+      input.readOnly = field.readonly === true;
+      input.required = field.required === true;
+      if (field.autocomplete) input.setAttribute('autocomplete', field.autocomplete);
+      row.appendChild(input);
+
+      box.appendChild(row);
+      controls[field.key] = input;
+    });
+
+    var error = document.createElement('div');
+    error.className = 'buddy-ui-box__error';
+    box.appendChild(error);
+
+    var actions = document.createElement('div');
+    actions.className = 'buddy-ui-box__actions';
+    var cancel = document.createElement('button');
+    cancel.type = 'button';
+    cancel.className = 'buddy-ui-box__btn buddy-ui-box__btn--secondary';
+    cancel.textContent = config.cancelText || 'cancelar';
+    var submit = document.createElement('button');
+    submit.type = 'submit';
+    submit.className = 'buddy-ui-box__btn buddy-ui-box__btn--primary';
+    submit.textContent = config.submitText || 'enviar';
+    actions.appendChild(cancel);
+    actions.appendChild(submit);
+    box.appendChild(actions);
+
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+
+    function setError(message) {
+      error.textContent = message ? String(message) : '';
+    }
+
+    function setSubmitEnabled(enabled) {
+      submit.disabled = !enabled;
+    }
+
+    function setLocked(locked) {
+      submit.disabled = locked;
+      cancel.disabled = locked;
+      fields.forEach(function (field) {
+        if (controls[field && field.key]) controls[field.key].disabled = locked;
+      });
+    }
+
+    function collect() {
+      var data = {};
+      fields.forEach(function (field) {
+        if (!field || !field.key) return;
+        data[field.key] = controls[field.key].value.trim();
+      });
+      return data;
+    }
+
+    function validate() {
+      for (var i = 0; i < fields.length; i++) {
+        var field = fields[i] || {};
+        if (!field.required) continue;
+        var control = controls[field.key];
+        var value = control ? control.value.trim() : '';
+        if (!value) {
+          if (control) { try { control.focus(); } catch (e) {} }
+          return 'Completa "' + (field.label || field.key) + '".';
+        }
+        if (field.type === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+          if (control) { try { control.focus(); } catch (e) {} }
+          return 'Escribe un correo válido.';
+        }
+      }
+      return '';
+    }
+
+    var state = {
+      config: config,
+      overlay: overlay,
+      onKey: function (event) {
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          uiClose();
+          return;
+        }
+        if (event.key === 'Tab') {
+          // El foco no puede salirse de la caja mientras esté abierta.
+          var focusables = [cancel, submit];
+          fields.forEach(function (field) {
+            if (field && controls[field.key] && !controls[field.key].readOnly) focusables.push(controls[field.key]);
+          });
+          var first = focusables[0];
+          var last = focusables[focusables.length - 1];
+          if (event.shiftKey && document.activeElement === first) {
+            event.preventDefault();
+            try { last.focus(); } catch (e) {}
+          } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault();
+            try { first.focus(); } catch (e) {}
+          }
+        }
+      }
+    };
+    uiBoxState = state;
+
+    cancel.addEventListener('click', function (event) {
+      event.preventDefault();
+      uiClose();
+    });
+
+    box.addEventListener('submit', function (event) {
+      event.preventDefault();
+      var validationError = validate();
+      if (validationError) {
+        setError(validationError);
+        return;
+      }
+
+      setError('');
+      setLocked(true);
+      var result;
+      try {
+        result = typeof config.onSubmit === 'function' ? config.onSubmit(collect()) : true;
+      } catch (e) {
+        result = Promise.reject(e);
+      }
+
+      Promise.resolve(result).then(function (exito) {
+        if (exito === false) throw new Error('La operación no fue confirmada.');
+        // onSubmit puede haber abierto otra caja (p. ej. login → "revisa tu
+        // correo"): solo se cierra si esta sigue siendo la caja vigente.
+        if (uiBoxState === state) uiClose(true);
+      }).catch(function (e) {
+        setLocked(false);
+        setError(e && e.message ? e.message : 'No se pudo completar la operación.');
+      });
+    });
+
+    if (window.addEventListener) {
+      window.addEventListener('keydown', state.onKey, true);
+      window.addEventListener('resize', state.onKey, true);
+    }
+
+    var firstInput = null;
+    fields.forEach(function (field) {
+      if (field && controls[field.key] && !controls[field.key].readOnly) { firstInput = controls[field.key]; }
+    });
+    try { (firstInput || submit).focus(); } catch (e) {}
+
+    return {
+      close: function () { return uiClose(); },
+      setSubmitEnabled: setSubmitEnabled
+    };
+  }
+
+  window.Buddy.ui = {
+    box: uiBox,
+    closeBox: function () { return uiClose(); },
+    isOpen: function () { return !!uiBoxState; }
+  };
+
   // La inicialización se expone como Promise y comienza una sola vez.
   readyPromise = initialize();
   window.Buddy.readyPromise = readyPromise;

@@ -128,52 +128,55 @@ window.Buddy = window.Buddy || {};
     if (!state.user || !missingProfileFields(state.user).length) return false;
     if (state.profilePrompted) return true;
 
-    if (!window.Buddy.says || typeof window.Buddy.says.frmUsr !== 'function') {
+    if (!window.Buddy.ui || typeof window.Buddy.ui.box !== 'function') {
       emitEvent('buddy:user-profile-incomplete', {
         user: state.user,
         missingFields: missingProfileFields(state.user)
       });
-      debugLog('No se puede mostrar el formulario User todavía: Buddy.says.frmUsr no está disponible.');
+      debugLog('No se puede mostrar el formulario User todavía: window.Buddy.ui no está disponible.');
       return false;
     }
 
     state.profilePrompted = true;
     var user = state.user;
     var onboarding = CONFIG.onboarding || {};
+    var missing = missingProfileFields(user);
 
-    window.Buddy.says.frmUsr({
-      emocion: onboarding.emocion || 'sereno',
-      fields: {
-        email: {
+    window.Buddy.ui.box({
+      title: onboarding.title,
+      fields: [
+        {
+          key: 'email',
+          type: 'email',
           value: user.email || '',
           readonly: true,
-          required: false,
           label: onboarding.emailLabel || 'Correo:'
         },
-        name: {
+        {
+          key: 'name',
           value: user.name || '',
-          readonly: false,
-          required: missingProfileFields(user).indexOf('name') !== -1,
+          required: missing.indexOf('name') !== -1,
+          autocomplete: 'name',
           label: onboarding.nameLabel || 'Nombre:',
           placeholder: onboarding.namePlaceholder || ''
         },
-        whatsapp: {
+        {
+          key: 'phone',
+          type: 'tel',
           value: user.phone || '',
-          readonly: false,
-          required: missingProfileFields(user).indexOf('phone') !== -1,
+          required: missing.indexOf('phone') !== -1,
+          autocomplete: 'tel',
           label: onboarding.phoneLabel || 'Número celular que usa en WhatsApp',
           placeholder: onboarding.phonePlaceholder || ''
         }
-      },
+      ],
       submitText: onboarding.submitText || 'enviar',
       cancelText: onboarding.cancelText || 'cancelar',
       onSubmit: function (data) {
-        var payload = {
+        return updateProfile({
           name: data.name,
-          phone: data.whatsapp
-        };
-
-        return updateProfile(payload).then(function (response) {
+          phone: data.phone
+        }).then(function (response) {
           var returnedUser = normalizeUser(response);
           if (returnedUser) state.user = returnedUser;
           state.profilePrompted = false;
@@ -202,7 +205,7 @@ window.Buddy = window.Buddy || {};
 
     emitEvent('buddy:user-profile-incomplete', {
       user: state.user,
-      missingFields: missingProfileFields(state.user)
+      missingFields: missing
     });
     return true;
   }

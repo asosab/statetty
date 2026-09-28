@@ -85,7 +85,7 @@ window.Buddy = window.Buddy || {};
       '.buddy-chat-input:focus{border-color:#777;color:#000!important;background:#fff!important;}' +
       '.buddy-chat-input::placeholder{color:#8a8a8a;opacity:1;}' +
       '.buddy-chat-input::-webkit-input-placeholder{color:#8a8a8a;}' +
-      '.buddy-chat-auth,.buddy-chat-send{display:none!important;}' +
+      '.buddy-chat-send{display:none!important;}' +
       '.buddy-chat-enter{display:none!important;}' +
       '.buddy-chat-enter input{margin:0;}' +
       '.buddy-chat-show-char{height:36px;padding:0 12px;border:1px solid #0d6efd;' +
@@ -115,12 +115,6 @@ window.Buddy = window.Buddy || {};
     container.hidden = true;
     container.setAttribute('role', 'search');
     container.setAttribute('aria-label', 'Chat de Buddy');
-
-    var authButton = document.createElement('button');
-    authButton.type = 'button';
-    authButton.className = 'buddy-chat-auth';
-    authButton.hidden = true;
-    authButton.setAttribute('aria-label', 'Autenticación');
 
     var input = document.createElement('input');
     input.type = 'text';
@@ -167,10 +161,8 @@ window.Buddy = window.Buddy || {};
     send.setAttribute('aria-label', 'Enviar comando');
 
 
-    // Auth queda deliberadamente antes del input. El botón "ver a {nombre}"
-    // se agrega inmediatamente antes del input (el contenedor es flex, el
-    // orden visual sigue el orden de appendChild).
-    container.appendChild(authButton);
+    // El botón "ver a {nombre}" se agrega inmediatamente antes del input (el
+    // contenedor es flex, el orden visual sigue el orden de appendChild).
     container.appendChild(showCharBtn);
     container.appendChild(input);
     container.appendChild(enterLabel);
@@ -180,7 +172,6 @@ window.Buddy = window.Buddy || {};
     elements = {
       toggle: toggle,
       container: container,
-      authButton: authButton,
       showCharBtn: showCharBtn,
       input: input,
       checkbox: checkbox,
@@ -189,7 +180,6 @@ window.Buddy = window.Buddy || {};
     };
 
     send.addEventListener('click', function () { sendCurrent(); });
-    authButton.addEventListener('click', function () { handleAuthButton(); });
     toggle.addEventListener('click', function () { toggleChat(); });
     input.addEventListener('keydown', function (event) {
       if (event.key === 'Escape') {
@@ -409,28 +399,6 @@ window.Buddy = window.Buddy || {};
     } catch (e) {}
   }
 
-  function setAuthButton(auth) {
-    if (!elements.authButton) return;
-    var enabled = !!auth;
-    elements.authButton.hidden = true;
-    if (!enabled) return;
-    var authenticated = auth.isAuthenticated();
-    elements.authButton.textContent = authenticated
-      ? (auth.config.logoutButtonText || 'Logout')
-      : (auth.config.loginButtonText || 'Login');
-    elements.authButton.setAttribute('aria-label', authenticated ? 'Cerrar sesión' : 'Iniciar sesión');
-  }
-
-  function showAuthPrompt(text, placeholder, interaction) {
-    ensureUI();
-    openChat();
-    setPlaceholder(placeholder);
-    clearInput();
-    setInteraction(interaction);
-    focusInput();
-    emit(text, 'sereno');
-  }
-
   function showWelcome(authState) {
     var auth = getAuth();
     if (!auth) return;
@@ -452,85 +420,15 @@ window.Buddy = window.Buddy || {};
     }
   }
 
-  function handleAuthButton() {
-    if (window.Buddy.says && typeof window.Buddy.says.formularioActivo === 'function' && window.Buddy.says.formularioActivo()) return;
-    var auth = getAuth();
-    if (!auth) return;
-
-    if (auth.isAuthenticated()) {
-      auth.enterLogoutMode();
-      var logoutInteraction = function (texto) {
-        var respuesta = normalize(texto);
-        if (respuesta === 'si' || respuesta === 'sí') return auth.logout();
-        if (respuesta === 'no') {
-          auth.cancelFlow();
-          restorePlaceholder();
-          clearInput();
-          return true;
-        }
-        showAuthPrompt(
-          auth.config.logoutQuestion || '¿Deseas cerrar tu sesión de usuario en este explorador?',
-          auth.config.logoutPlaceholder || 'Escribe Si para cerrar tu sesion',
-          logoutInteraction
-        );
-        return false;
-      };
-      showAuthPrompt(
-        auth.config.logoutQuestion || '¿Deseas cerrar tu sesión de usuario en este explorador?',
-        auth.config.logoutPlaceholder || 'Escribe Si para cerrar tu sesion',
-        logoutInteraction
-      );
-      return;
-    }
-
-    auth.enterLoginMode();
-    if (!window.Buddy.says || typeof window.Buddy.says.frmUsr !== 'function') {
-      showAuthPrompt(
-        auth.config.loginMessage || 'Escribe tu correo en la caja de texto, te enviaré un link de verificación a esa dirección',
-        auth.config.emailPlaceholder || 'Escribe tu dirección de correo',
-        function (texto) {
-          return auth.requestLogin(String(texto || '').trim().toLowerCase());
-        }
-      );
-      return;
-    }
-
-    window.Buddy.says.frmUsr({
-      emocion: 'sereno',
-      fields: {
-        email: {
-          value: '',
-          readonly: false,
-          required: true,
-          label: 'Correo:',
-          placeholder: auth.config.emailPlaceholder || 'Escribe tu dirección de correo'
-        },
-      },
-      submitText: 'enviar',
-      onSubmit: function (data) {
-        return auth.requestLogin(data.email).then(function () {
-          auth.cancelFlow();
-          emit(auth.config.emailSentMessage || 'Revisa tu correo y has click en el link de logueo', 'sereno');
-          return true;
-        }).catch(function (error) {
-          auth.enterLoginMode();
-          throw new Error(error && error.message ? error.message : 'No pude enviar el enlace. Inténtalo nuevamente.');
-        });
-      }
-    });
-  }
-
   function refreshAuthIntegration() {
     ensureUI();
     var auth = getAuth();
-    setAuthButton(auth);
     if (auth) showWelcome(auth.getState());
   }
 
   function handleAuthStateChanged(event) {
     var auth = getAuth();
     if (!auth) return;
-    setAuthButton(auth);
     showWelcome(event && event.detail ? event.detail : auth.getState());
   }
 

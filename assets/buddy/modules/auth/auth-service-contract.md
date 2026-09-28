@@ -48,6 +48,12 @@ https://api.statetty.com
 
 ### Respuesta exitosa (usuario nuevo):
 
+> `name`/`firstName`/`lastName`/`phone` llegan `null` **solo si** el correo tampoco
+> está registrado en `tgusers` ni en `agentes`. Antes de emitir la sesión,
+> `verifyLogin` rellena los campos vacíos desde `tgusers` (la verdad) y, para lo
+> que falte, desde `agentes`; nunca pisa un campo ya cargado. Un usuario nuevo
+> con datos en esas tablas responde entonces `newUser:false` y `needsName:false`.
+
 ```json
 {
   "ok": true,

@@ -1167,7 +1167,7 @@ function getAuthForNameCapture() {
   function handleAuthenticationForName(event) {
     var detail = event && event.detail ? event.detail : {};
     if (!detail.authenticated) return;
-    // Auth es el único módulo que decide cuándo abrir frmUsr. Archery solo
+    // Auth es el único módulo que decide cuándo abrir la caja de login. Archery solo
     // conserva la necesidad de un saludo específico si la autenticación fue
     // provocada por una tanda que acababa de terminar.
     if (pendingAndanadaNameGreeting && detail.user && detail.user.name) {
@@ -1206,7 +1206,7 @@ function getAuthForNameCapture() {
       // todavía no tiene nombre, Auth/Says se encargan del formulario.
       // Archery solo recuerda que, cuando el formulario sea resuelto, debe
       // emitir su saludo específico. Si no está autenticado, se invita a
-      // iniciar sesión; después de la autenticación Auth abrirá frmUsr.
+      // iniciar sesión; después de la autenticación Auth abrirá esa caja.
       var auth = window.Buddy && window.Buddy.auth;
       var isAuthenticated = !!(auth &&
         typeof auth.isAuthenticated === 'function' &&

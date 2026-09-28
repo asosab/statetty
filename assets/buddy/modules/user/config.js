@@ -26,7 +26,7 @@ window.BuddyUserConfig = Object.assign({
   requiredProfileFields: ['name', 'phone'],
   onboarding: {
     enabled: true,
-    emocion: 'sereno',
+    title: 'Completa tus datos',
     emailLabel: 'Correo:',
     nameLabel: 'Nombre:',
     phoneLabel: 'Número celular que usa en WhatsApp',

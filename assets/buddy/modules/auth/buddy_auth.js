@@ -877,39 +877,38 @@ window.Buddy = window.Buddy || {};
 
   // --- UI prompts ---
 
-  function startAuthenticationPrompt() {
-    if (!state.enabled || state.authenticated || state.busy) return false;
-    if (!window.Buddy.says || typeof window.Buddy.says.frmUsr !== 'function') {
-      debugLog('No se puede mostrar el formulario de login: Buddy.says.frmUsr no está disponible.');
+  var resendTimer = null;
+
+  function clearResendTimer() {
+    if (resendTimer) clearInterval(resendTimer);
+    resendTimer = null;
+  }
+
+  function openLoginBox() {
+    if (!window.Buddy.ui || typeof window.Buddy.ui.box !== 'function') {
+      debugLog('No se puede mostrar el login: window.Buddy.ui no está disponible.');
       return false;
     }
 
     state.mode = 'login-email';
     emitEvent('buddy:auth-mode-changed', { mode: state.mode });
 
-    var config = {
-      emocion: 'sereno',
-      fields: {
-        email: {
-          value: '',
-          readonly: false,
-          required: true,
-          label: 'Correo:',
-          placeholder: CONFIG.emailPlaceholder || ''
-        },
-        name: { value: '', readonly: true, required: false, hidden: true, label: 'Nombre:' },
-        whatsapp: { value: '', readonly: true, required: false, hidden: true, label: 'Teléfono:' }
-      },
-      submitText: 'enviar',
-      cancelText: 'cancelar',
+    window.Buddy.ui.box({
+      title: CONFIG.loginButtonText,
+      message: CONFIG.loginMessage,
+      fields: [{
+        key: 'email',
+        type: 'email',
+        required: true,
+        autocomplete: 'email',
+        label: CONFIG.emailLabel,
+        placeholder: CONFIG.emailPlaceholder || ''
+      }],
+      submitText: CONFIG.submitText,
+      cancelText: CONFIG.cancelText,
       onSubmit: function (data) {
         return requestLogin(data.email).then(function () {
-          if (typeof window.buddy_says === 'function') {
-            window.buddy_says(
-              CONFIG.emailSentMessage || 'Revisa tu correo y haz clic en el enlace para iniciar sesión.',
-              { emocion: 'sereno' }
-            );
-          }
+          openEmailSentBox(data.email);
           return true;
         });
       },
@@ -917,15 +916,56 @@ window.Buddy = window.Buddy || {};
         state.mode = 'idle';
         emitEvent('buddy:auth-mode-changed', { mode: state.mode });
       }
-    };
-
-    setTimeout(function () {
-      if (!state.authenticated && window.Buddy.says && typeof window.Buddy.says.frmUsr === 'function') {
-        window.Buddy.says.frmUsr(config);
-      }
-    }, 220);
+    });
 
     return true;
+  }
+
+  // Estado "revisa tu correo": la caja se reenvía a sí misma con un botón de
+  // reenviar en cooldown. El magic link abre otra pestaña; esta queda aquí con
+  // el correo enviado y la opción de pedirlo de nuevo.
+  function openEmailSentBox(email) {
+    var segundos = Number(CONFIG.resendCooldownSeconds) || 60;
+
+    var box = window.Buddy.ui.box({
+      title: CONFIG.emailSentTitle,
+      message: CONFIG.emailSentMessage,
+      submitText: CONFIG.resendText,
+      cancelText: CONFIG.cancelText,
+      onSubmit: function () {
+        return requestLogin(email).then(function () {
+          openEmailSentBox(email);
+          return true;
+        });
+      },
+      onCancel: function () {
+        clearResendTimer();
+        state.mode = 'idle';
+        emitEvent('buddy:auth-mode-changed', { mode: state.mode });
+      }
+    });
+
+    if (!box) return false;
+
+    var restantes = segundos;
+    box.setSubmitEnabled(false);
+    clearResendTimer();
+    resendTimer = setInterval(function () {
+      restantes--;
+      if (restantes > 0) {
+        box.setSubmitEnabled(false);
+        return;
+      }
+      clearResendTimer();
+      box.setSubmitEnabled(true);
+    }, 1000);
+
+    return true;
+  }
+
+  function startAuthenticationPrompt() {
+    if (!state.enabled || state.authenticated || state.busy) return false;
+    return openLoginBox();
   }
 
   function enterLoginMode() {

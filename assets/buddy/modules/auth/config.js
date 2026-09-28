@@ -32,6 +32,15 @@ window.BuddyAuthConfig = Object.assign({
   namePlaceholder: 'Escribe tu nombre',
   logoutPlaceholder: 'Escribe Sí para cerrar tu sesión',
 
+  /* Caja flotante de login (window.Buddy.ui), independiente del personaje. */
+  emailLabel: 'Correo:',
+  submitText: 'enviar',
+  cancelText: 'cancelar',
+  emailSentTitle: 'Revisa tu correo',
+  resendText: 'Reenviar',
+  /* Debe coincidir con BUDDY_AUTH_RESEND_COOLDOWN_SECONDS del backend. */
+  resendCooldownSeconds: 60,
+
   loginMessage: 'Escribe tu correo y te enviaremos un enlace de acceso a esa dirección.',
   emailSentMessage: 'Revisa tu correo y haz clic en el enlace para iniciar sesión.',
   existingWelcomeTemplate: '¡Hola {name}!',
