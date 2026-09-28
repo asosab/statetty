@@ -147,7 +147,7 @@ image:              mapa.png
     { '🏛️': ['edificio'] },
     { '🏞️': ['quinta'] },
     { '🏘️': ['ph', 'condominio'] },
-    { '🏭': ['deposito', 'galpon'] },
+    { '🏭': ['tinglado','deposito', 'galpon'] },
     { '🛏️': ['habitacion', 'cuarto'] },
     { '🚗': ['garaje', 'cochera'] }
   ];
@@ -276,9 +276,10 @@ image:              mapa.png
   }
 
   // ---------- Figuras de área (polígono / circunferencia) ----------
-  // Límite por tipo. Para permitir más en el futuro basta subir estos números:
-  // el resto del código ya trabaja con colecciones.
-  var LIMITE = { poligono: 1, circunferencia: 1 };
+  // Máximo de figuras por tipo (cada una es independiente y se envía en su arreglo).
+  // Mientras no se llegue al máximo, la herramienta activa sigue dibujando figuras
+  // nuevas; al alcanzarlo se apaga y su botón se deshabilita hasta borrar alguna.
+  var LIMITE = { poligono: 10, circunferencia: 10 };
   var RADIO_MIN = 20;        // metros; un círculo menor se descarta
   var PUNTOS_MIN = 3;
   var PUNTOS_MAX = 2000;     // tope de vértices por polígono enviado
