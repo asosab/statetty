@@ -21,7 +21,18 @@ image:              mapa.png
 
 <style>
   /* .header es position:fixed con 64px: el mapa arranca debajo. */
-  #mapid { width: 100%; height: calc(100vh - 64px); margin-top: 64px; }
+  /* Mapa fijo a pantalla completa: llega siempre al borde inferior visible.
+     El header (fixed) flota encima y se oculta subiendo al hacer zoom in. */
+  html, body { margin: 0; overflow: hidden; }
+  #mapid { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 1; }
+  .header { z-index: 1200; transition: transform .35s ease; }
+  body.header-oculto .header { transform: translateY(-110%); }
+  /* Controles de Leaflet (zoom +/-) bajan 64px mientras el header está visible */
+  .leaflet-top { margin-top: 64px; transition: margin-top .35s ease; }
+  body.header-oculto .leaflet-top { margin-top: 0; }
+  @media (prefers-reduced-motion: reduce) {
+    .header, .leaflet-top { transition: none; }
+  }
   /* Posiciones de la caja (fixed = relativa a la pantalla visible):
      inicio: centro vertical | .con-resultados: top 70% | .abajo: pegada a la base. */
   #caja {
@@ -160,10 +171,20 @@ image:              mapa.png
   var zoomRef = map.getZoom();
   var respondio = false;   // true tras la primera respuesta válida del servidor
 
+  // Header: se oculta al superar zoomRef y vuelve cuando el zoom baja hasta
+  // zoomRef - MARGEN_HEADER. Con 0 vuelve al zoom de reposo; con 1 exige
+  // alejar un nivel más antes de que reaparezca.
+  var MARGEN_HEADER = 0;
+  var headerOculto = false;
+
   function colocarCaja() {
-    caja.className = map.getZoom() > zoomRef
+    var z = map.getZoom();
+    caja.className = z > zoomRef
       ? 'abajo'
       : (respondio ? 'con-resultados' : '');
+    if (!headerOculto && z > zoomRef) headerOculto = true;
+    else if (headerOculto && z <= zoomRef - MARGEN_HEADER) headerOculto = false;
+    document.body.classList.toggle('header-oculto', headerOculto);
   }
   map.on('zoomend', colocarCaja);
 
