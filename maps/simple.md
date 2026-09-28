@@ -23,7 +23,7 @@ image:              mapa.png
   /* .header es position:fixed con 64px: el mapa arranca debajo. */
   #mapid { width: 100%; height: calc(100vh - 64px); margin-top: 64px; }
   #caja {
-    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    position: absolute; top: 66%; left: 50%; transform: translate(-50%, -50%);
     z-index: 1100; width: min(92vw, 520px); background: #fff;
     border-radius: 12px; padding: 14px;
     box-shadow: 0 6px 24px rgba(0, 0, 0, .25);
@@ -41,6 +41,11 @@ image:              mapa.png
   #caja button:disabled { opacity: .6; cursor: wait; }
   #estado { margin-top: 8px; min-height: 1.2em; font-size: .9rem; color: #04364a; }
   #estado.error { color: #b3261e; }
+  /* buddy: en esta página solo va el mapa. Estos elementos los crea el JS al vuelo
+     con estilos inline, así que el !important es necesario para ganarle. */
+  #buddy-chat-toggle, #buddy-chat, #buddy-character, #buddy-close, #buddy-backgrounds {
+    display: none !important;
+  }
 </style>
 
 <div id="mapid"></div>
