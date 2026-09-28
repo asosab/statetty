@@ -109,7 +109,8 @@ image:              mapa.png
     { '🏞️': ['quinta'] },
     { '🏘️': ['ph', 'condominio'] },
     { '🏭': ['deposito', 'galpon'] },
-    { '🛏️': ['habitacion', 'cuarto'] }
+    { '🛏️': ['habitacion', 'cuarto'] },
+    { '🚗': ['garaje', 'cochera'] }
   ];
   var EMOJI_DEFECTO = '📍';
 
