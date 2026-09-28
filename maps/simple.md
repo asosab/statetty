@@ -56,11 +56,26 @@ image:              mapa.png
     border: 1px solid #ccc; border-radius: 8px;
   }
   #caja input:focus { outline: 2px solid #17baef; outline-offset: 1px; }
-  #caja button {
+  #caja form { flex-wrap: wrap; }
+  #btn-buscar {
     padding: 10px 18px; font-size: 1rem; font-weight: 700; cursor: pointer;
     color: #04364a; background: #ffd54a; border: 0; border-radius: 8px;
   }
-  #caja button:disabled { opacity: .6; cursor: wait; }
+  #btn-buscar:disabled { opacity: .6; cursor: wait; }
+  @media (max-width: 440px) { #caja input { flex-basis: 100%; } }
+
+  /* Herramientas de área (lápiz, pin, deshacer) */
+  .herr {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 42px; padding: 0; cursor: pointer; color: #04364a;
+    background: #e8f7fd; border: 1px solid #b7e3f4; border-radius: 8px;
+  }
+  .herr:hover:not(:disabled) { background: #d2f0fb; }
+  .herr[aria-pressed="true"] { background: #17baef; color: #fff; border-color: #17baef; }
+  .herr:disabled { opacity: .4; cursor: not-allowed; }
+  .herr:focus-visible { outline: 2px solid #17baef; outline-offset: 1px; }
+  #mapid.dibujando, #mapid.dibujando .leaflet-interactive { cursor: crosshair !important; }
+  #mapid.dibujando { touch-action: none; }
   #estado { margin-top: 8px; min-height: 1.2em; font-size: .9rem; color: #04364a; }
   #estado.error { color: #b3261e; }
 
@@ -90,6 +105,15 @@ image:              mapa.png
 <div id="caja">
   <form id="form-buscar" autocomplete="off">
     <input type="text" id="texto" name="texto" placeholder="escribe lo que estás buscando" aria-label="Qué inmueble estás buscando">
+    <button type="button" class="herr" id="btn-lapiz" aria-pressed="false" title="Dibujar un polígono" aria-label="Dibujar un polígono">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+    </button>
+    <button type="button" class="herr" id="btn-pin" aria-pressed="false" title="Dibujar una circunferencia" aria-label="Dibujar una circunferencia">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-6-5.6-6-10a6 6 0 0 1 12 0c0 4.4-6 10-6 10z"/><circle cx="12" cy="11" r="2"/></svg>
+    </button>
+    <button type="button" class="herr" id="btn-deshacer" title="Borrar la última figura" aria-label="Borrar la última figura" disabled>
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>
+    </button>
     <button type="submit" id="btn-buscar">Buscar</button>
   </form>
   <div id="estado" role="status" aria-live="polite"></div>
@@ -250,6 +274,142 @@ image:              mapa.png
     }
   }
 
+  // ---------- Figuras de área (polígono / circunferencia) ----------
+  // Límite por tipo. Para permitir más en el futuro basta subir estos números:
+  // el resto del código ya trabaja con colecciones.
+  var LIMITE = { poligono: 1, circunferencia: 1 };
+  var RADIO_MIN = 20;        // metros; un círculo menor se descarta
+  var PUNTOS_MIN = 3;
+  var ESTILO_AREA = { color: '#17baef', weight: 2, fillColor: '#17baef', fillOpacity: 0.22 };
+
+  var contenedor = map.getContainer();
+  var btnLapiz = document.getElementById('btn-lapiz');
+  var btnPin = document.getElementById('btn-pin');
+  var btnDeshacer = document.getElementById('btn-deshacer');
+  var figuras = [];          // pila: la más antigua primero, la más nueva al final
+  var herramienta = null;    // 'poligono' | 'circunferencia' | null
+  var trazo = null;          // figura en curso mientras el puntero está presionado
+  var HANDLERS = ['dragging', 'touchZoom', 'doubleClickZoom', 'boxZoom'];
+
+  function contar(tipo) {
+    return figuras.filter(function (f) { return f.tipo === tipo; }).length;
+  }
+  function redondear(n, d) { return Number(n.toFixed(d)); }
+
+  function activar(tipo) {
+    if (tipo && contar(tipo) >= LIMITE[tipo]) return;
+    herramienta = tipo;
+    btnLapiz.setAttribute('aria-pressed', tipo === 'poligono');
+    btnPin.setAttribute('aria-pressed', tipo === 'circunferencia');
+    contenedor.classList.toggle('dibujando', !!tipo);
+    HANDLERS.forEach(function (h) { map[h][tipo ? 'disable' : 'enable'](); });
+    if (tipo === 'poligono') avisar('Mantén presionado y arrastra para dibujar el área.', false);
+    else if (tipo === 'circunferencia') avisar('Presiona el centro y arrastra para definir el radio.', false);
+  }
+
+  function refrescarBotones() {
+    btnLapiz.disabled = contar('poligono') >= LIMITE.poligono;
+    btnPin.disabled = contar('circunferencia') >= LIMITE.circunferencia;
+    btnDeshacer.disabled = !figuras.length;
+    if (herramienta && contar(herramienta) >= LIMITE[herramienta]) activar(null);
+  }
+
+  btnLapiz.addEventListener('click', function () {
+    activar(herramienta === 'poligono' ? null : 'poligono');
+  });
+  btnPin.addEventListener('click', function () {
+    activar(herramienta === 'circunferencia' ? null : 'circunferencia');
+  });
+  btnDeshacer.addEventListener('click', function () {
+    var f = figuras.pop();
+    if (!f) return;
+    map.removeLayer(f.capa);
+    refrescarBotones();
+    avisar('', false);
+  });
+
+  function iniciarTrazo(e) {
+    if (!herramienta || trazo || e.button !== 0) return;
+    if (e.target.closest('.leaflet-control')) return;
+    e.preventDefault();
+    e.stopPropagation();
+    contenedor.setPointerCapture(e.pointerId);
+    var ll = map.mouseEventToLatLng(e);
+    trazo = { id: e.pointerId, tipo: herramienta };
+    if (herramienta === 'poligono') {
+      trazo.pts = [ll];
+      trazo.capa = L.polyline([ll], { color: ESTILO_AREA.color, weight: 2, interactive: false }).addTo(map);
+    } else {
+      trazo.centro = ll;
+      trazo.circulo = L.circle(ll, L.extend({ radius: 1, interactive: false }, ESTILO_AREA));
+      var centro = L.circleMarker(ll, {
+        radius: 4, color: '#04364a', weight: 2, fillColor: '#ffd54a', fillOpacity: 1, interactive: false
+      });
+      trazo.capa = L.featureGroup([trazo.circulo, centro]).addTo(map);
+    }
+  }
+
+  function moverTrazo(e) {
+    if (!trazo || e.pointerId !== trazo.id) return;
+    var ll = map.mouseEventToLatLng(e);
+    if (trazo.tipo === 'poligono') {
+      var ult = map.latLngToContainerPoint(trazo.pts[trazo.pts.length - 1]);
+      if (ult.distanceTo(map.latLngToContainerPoint(ll)) < 3) return;   // filtra ruido
+      trazo.pts.push(ll);
+      trazo.capa.setLatLngs(trazo.pts);
+    } else {
+      trazo.circulo.setRadius(trazo.centro.distanceTo(ll));
+    }
+  }
+
+  function terminarTrazo(e, ok) {
+    if (!trazo || e.pointerId !== trazo.id) return;
+    var t = trazo;
+    trazo = null;
+    if (contenedor.hasPointerCapture(e.pointerId)) contenedor.releasePointerCapture(e.pointerId);
+    var figura = null;
+    if (ok && t.tipo === 'poligono' && t.pts.length >= PUNTOS_MIN) {
+      map.removeLayer(t.capa);
+      // L.polygon cierra el trazo solo: rellena la superficie completa.
+      figura = {
+        tipo: 'poligono',
+        capa: L.polygon(t.pts, ESTILO_AREA).addTo(map),
+        datos: { puntos: t.pts.map(function (p) {
+          return { lat: redondear(p.lat, 6), lng: redondear(p.lng, 6) };
+        }) }
+      };
+    } else if (ok && t.tipo === 'circunferencia' && t.circulo.getRadius() >= RADIO_MIN) {
+      figura = {
+        tipo: 'circunferencia',
+        capa: t.capa,
+        datos: {
+          lat: redondear(t.centro.lat, 6),
+          lng: redondear(t.centro.lng, 6),
+          radio: Math.round(t.circulo.getRadius())   // metros
+        }
+      };
+    }
+    if (!figura) {
+      map.removeLayer(t.capa);
+      if (ok) avisar('El trazo fue muy corto. Intenta de nuevo.', true);
+      return;
+    }
+    figuras.push(figura);
+    avisar('', false);
+    refrescarBotones();
+  }
+
+  // Captura: se atiende antes que Leaflet para que no arrastre el mapa ni abra popups.
+  contenedor.addEventListener('pointerdown', iniciarTrazo, true);
+  contenedor.addEventListener('pointermove', moverTrazo);
+  contenedor.addEventListener('pointerup', function (e) { terminarTrazo(e, true); });
+  contenedor.addEventListener('pointercancel', function (e) { terminarTrazo(e, false); });
+
+  function datosDe(tipo) {
+    return figuras.filter(function (f) { return f.tipo === tipo; })
+                  .map(function (f) { return f.datos; });
+  }
+
   function buscar() {
     var texto = input.value.trim();
     if (!texto) {
@@ -262,7 +422,11 @@ image:              mapa.png
     fetch(base + 'statetty/buscarMapa', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ texto: texto }),
+      body: JSON.stringify({
+        texto: texto,
+        poligono: datosDe('poligono'),              // [{ puntos: [{lat, lng}, ...] }]
+        circunferencia: datosDe('circunferencia'),  // [{ lat, lng, radio }] radio en metros
+      }),
     }).then(function (r) {
       return r.json().then(function (d) { return { status: r.status, data: d }; });
     }).then(function (res) {
