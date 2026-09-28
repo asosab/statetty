@@ -23,16 +23,20 @@ image:              mapa.png
   /* .header es position:fixed con 64px: el mapa arranca debajo. */
   /* Mapa fijo a pantalla completa: llega siempre al borde inferior visible.
      El header (fixed) flota encima y se oculta subiendo al hacer zoom in. */
-  html, body { margin: 0; overflow: hidden; }
-  #mapid { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 1; }
-  .header { z-index: 1200; transition: transform .35s ease; }
-  body.header-oculto .header { transform: translateY(-110%); }
+  html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
+  #mapid {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    width: auto; height: auto; margin: 0; z-index: 1;
+  }
+  #header { z-index: 1200; transition: transform .35s ease; }
+  body.header-oculto #header { transform: translateY(-110%); }
   /* Controles de Leaflet (zoom +/-) bajan 64px mientras el header está visible */
   .leaflet-top { margin-top: 64px; transition: margin-top .35s ease; }
   body.header-oculto .leaflet-top { margin-top: 0; }
   @media (prefers-reduced-motion: reduce) {
-    .header, .leaflet-top { transition: none; }
+    #header, .leaflet-top { transition: none; }
   }
+
   /* Posiciones de la caja (fixed = relativa a la pantalla visible):
      inicio: centro vertical | .con-resultados: top 70% | .abajo: pegada a la base. */
   #caja {
