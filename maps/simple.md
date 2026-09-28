@@ -96,40 +96,44 @@ image:              mapa.png
   }).addTo(map);
   setTimeout(function () { map.invalidateSize(); }, 300);
 
-  // Claves en minúscula y sin tildes. Se busca como palabra completa dentro del
-  // valor de tipoInmueble; ante varias coincidencias gana la clave más larga.
-  var TIPO_INMUEBLE_EMOJI = {
-    'casa': '🏡',
-    'departamento': '🏢',
-    'monoambiente': '🏢',
-    'penthouse': '🏢',
-    'duplex': '🏢',
-    'terreno': '🌳',
-    'lote': '🌳',
-    'oficina': '💼',
-    'local comercial': '🏬',
-    'local': '🏬',
-    'tienda': '🏬',
-    'edificio': '🏛️',
-    'quinta': '🏞️',
-    'ph': '🏘️',
-    'condominio': '🏘️',
-    'galpon': '🏭',
-    'deposito': '🏭',
-    'habitacion': '🛏️'
-  };
+    // Cada grupo: un emoji y las palabras que lo activan (en minúscula y sin tildes).
+  // Se busca como palabra completa dentro de tipoInmueble; ante varias
+  // coincidencias gana la palabra más larga, así que el orden de los grupos no importa.
+  var TIPO_INMUEBLE_EMOJI = [
+    { '🏡': ['casa'] },
+    { '🏢': ['departamento', 'apartment', 'monoambiente', 'penthouse', 'duplex'] },
+    { '🌳': ['lote', 'terreno'] },
+    { '💼': ['oficina'] },
+    { '🏬': ['local comercial', 'local', 'tienda'] },
+    { '🏛️': ['edificio'] },
+    { '🏞️': ['quinta'] },
+    { '🏘️': ['ph', 'condominio'] },
+    { '🏭': ['deposito', 'galpon'] },
+    { '🛏️': ['habitacion', 'cuarto'] }
+  ];
   var EMOJI_DEFECTO = '📍';
-  var TIPOS_ORDENADOS = Object.keys(TIPO_INMUEBLE_EMOJI).sort(function (a, b) {
-    return b.length - a.length;
+
+  // Índice plano armado una sola vez al cargar la página.
+  var TIPOS_INDEX = [];
+  TIPO_INMUEBLE_EMOJI.forEach(function (grupo) {
+    Object.keys(grupo).forEach(function (emoji) {
+      grupo[emoji].forEach(function (clave) {
+        TIPOS_INDEX.push({
+          clave: clave,
+          emoji: emoji,
+          re: new RegExp('(^|[^a-z])' + clave + '([^a-z]|$)')
+        });
+      });
+    });
   });
+  TIPOS_INDEX.sort(function (a, b) { return b.clave.length - a.clave.length; });
 
   function emojiTipo(tipo) {
     var t = String(tipo == null ? '' : tipo).toLowerCase().trim()
       .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
     if (!t) return EMOJI_DEFECTO;
-    for (var i = 0; i < TIPOS_ORDENADOS.length; i++) {
-      var k = TIPOS_ORDENADOS[i];
-      if (new RegExp('(^|[^a-z])' + k + '([^a-z]|$)').test(t)) return TIPO_INMUEBLE_EMOJI[k];
+    for (var i = 0; i < TIPOS_INDEX.length; i++) {
+      if (TIPOS_INDEX[i].re.test(t)) return TIPOS_INDEX[i].emoji;
     }
     return EMOJI_DEFECTO;
   }
