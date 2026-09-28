@@ -22,12 +22,19 @@ image:              mapa.png
 <style>
   /* .header es position:fixed con 64px: el mapa arranca debajo. */
   #mapid { width: 100%; height: calc(100vh - 64px); margin-top: 64px; }
+  /* Posiciones de la caja (fixed = relativa a la pantalla visible):
+     inicio: centro vertical | .con-resultados: top 66% | .abajo: pegada a la base. */
   #caja {
-    position: absolute; top: 66%; left: 50%; transform: translate(-50%, -50%);
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
     z-index: 1100; width: min(92vw, 520px); background: #fff;
     border-radius: 12px; padding: 14px;
     box-shadow: 0 6px 24px rgba(0, 0, 0, .25);
+    transition: top .5s ease, transform .5s ease;
   }
+  #caja.con-resultados { top: 66%; }
+  /* 28px de margen para no tapar la atribución de OpenStreetMap */
+  #caja.abajo { top: calc(100% - 28px); transform: translate(-50%, -100%); }
+  @media (prefers-reduced-motion: reduce) { #caja { transition: none; } }
   #caja form { display: flex; gap: 8px; }
   #caja input {
     flex: 1; min-width: 0; padding: 10px 12px; font-size: 1rem;
@@ -84,7 +91,20 @@ image:              mapa.png
   var input = document.getElementById('texto');
   var boton = document.getElementById('btn-buscar');
   var estado = document.getElementById('estado');
+  var caja = document.getElementById('caja');
   var markers = [];
+
+  // Posición de la caja. zoomRef es el zoom "de reposo": si el usuario supera ese
+  // zoom la caja baja a la base; si vuelve a él (o menos) regresa a su posición.
+  var zoomRef = map.getZoom();
+  var respondio = false;   // true tras la primera respuesta válida del servidor
+
+  function colocarCaja() {
+    caja.className = map.getZoom() > zoomRef
+      ? 'abajo'
+      : (respondio ? 'con-resultados' : '');
+  }
+  map.on('zoomend', colocarCaja);
 
   // Los nombres vienen de portales externos: siempre como textContent.
   function esc(s) {
@@ -131,11 +151,16 @@ image:              mapa.png
       m.bindPopup(popup(r));
       markers.push(m);
     });
-    if (!markers.length) return;
+    if (!markers.length) { zoomRef = map.getZoom(); return; }
+    // zoomRef = zoom que dejará el encuadre automático, para que ese zoom
+    // programático no cuente como "zoom in" del usuario.
     if (markers.length === 1) {
+      zoomRef = 15;
       map.setView(markers[0].getLatLng(), 15);
     } else {
-      map.fitBounds(L.featureGroup(markers).getBounds().pad(0.15));
+      var b = L.featureGroup(markers).getBounds().pad(0.15);
+      zoomRef = Math.min(map.getBoundsZoom(b), map.getMaxZoom());
+      map.fitBounds(b);
     }
   }
 
@@ -160,7 +185,9 @@ image:              mapa.png
         avisar('No se pudo interpretar la búsqueda. Probá con otra frase.', true);
         return;
       }
+      respondio = true;
       pintar(res.data.resultados);
+      colocarCaja();
       avisar(res.data.total
         ? res.data.total + (res.data.total === 1 ? ' inmueble encontrado' : ' inmuebles encontrados')
         : 'Sin resultados. Probá con menos filtros o otra zona.', !res.data.total);
