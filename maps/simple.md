@@ -198,6 +198,7 @@ image:              mapa.png
   // zoom la caja baja a la base; si vuelve a él (o menos) regresa a su posición.
   var zoomRef = map.getZoom();
   var respondio = false;   // true tras la primera respuesta válida del servidor
+  var cajaFija = false;    // true tras usar lápiz o pin: la caja queda abajo hasta recargar
 
   // Header: se oculta al superar zoomRef y vuelve cuando el zoom baja hasta
   // zoomRef - MARGEN_HEADER. Con 0 vuelve al zoom de reposo; con 1 exige
@@ -207,7 +208,7 @@ image:              mapa.png
 
   function colocarCaja() {
     var z = map.getZoom();
-    caja.className = z > zoomRef
+    caja.className = (cajaFija || z > zoomRef)
       ? 'abajo'
       : (respondio ? 'con-resultados' : '');
     if (!headerOculto && z > zoomRef) headerOculto = true;
@@ -315,9 +316,11 @@ image:              mapa.png
   }
 
   btnLapiz.addEventListener('click', function () {
+    cajaFija = true; colocarCaja();
     activar(herramienta === 'poligono' ? null : 'poligono');
   });
   btnPin.addEventListener('click', function () {
+    cajaFija = true; colocarCaja();
     activar(herramienta === 'circunferencia' ? null : 'circunferencia');
   });
   btnDeshacer.addEventListener('click', function () {
