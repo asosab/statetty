@@ -17,6 +17,7 @@
         {% if clean == '/404/' or clean == '/404.html' %}{% assign skip = true %}{% endif %}
         {% if clean contains '/maps/find/index_old' %}{% assign skip = true %}{% endif %}
         {% if clean contains '/maps/findb/' %}{% assign skip = true %}{% endif %}
+        {% if clean contains '/maps/simple/' %}{% assign skip = true %}{% endif %}
         {% if clean contains '/graficas/palabras-requerimiento-whatsapp' %}{% assign skip = true %}{% endif %}
         {% if clean == '/tags/' %}{% assign skip = true %}{% endif %}
         {% if page.layout != nil and page.layout != 'feed' and skip == false %}

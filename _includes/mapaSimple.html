@@ -1,0 +1,502 @@
+<!-- La home es el mapa (/); las secciones viven en la landing (/ai/).
+     Un fragmento nunca llega al servidor, así que el reenvío tiene que ser
+     del lado del cliente. Va primero en el include para ejecutarse antes de
+     que se inicialice el mapa. -->
+<script>
+(function () {
+  var SECCIONES = { inicio: 1, problema: 1, testimonios: 1, funciones: 1,
+                    planes: 1, prensa: 1, faq: 1, blog: 1, contacto: 1 };
+  var ID = { contacto: 'Contacto' };
+  function aLaLanding() {
+    var h = location.hash.slice(1).toLowerCase();
+    if (SECCIONES[h] !== 1) return;      // !== 1 evita heredar Object.prototype
+    location.replace('/ai/#' + (ID[h] || h));
+  }
+  addEventListener('hashchange', aLaLanding);   // clics en la nav del header
+  aLaLanding();                                 // altas con /#planes pegado
+})();
+</script>
+
+<!-- CSS del header (site) que usa _includes/header.html. Va en la página, no en
+     _includes/headMaps.html, para no cambiar las otras 3 páginas de mapa. -->
+<link href='https://fonts.googleapis.com/css?family=Lato:300,400,300italic,400italic' rel='stylesheet' type='text/css'>
+<link href='https://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>
+<link rel="stylesheet" href="/assets/plugins/bootstrap/css/bootstrap.min.css">
+<link rel="stylesheet" href="/assets/css/theme-1.css">
+<link rel="stylesheet" href="/assets/css/statettyAccesibilidad.css">
+
+{% include header.html %}
+
+<style>
+  /* .header es position:fixed con 64px: el mapa arranca debajo. */
+  /* Mapa fijo a pantalla completa: llega siempre al borde inferior visible.
+     El header (fixed) flota encima y se oculta subiendo al hacer zoom in. */
+  html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
+  #mapid {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    width: auto; height: auto; margin: 0; z-index: 1;
+  }
+  #header { z-index: 1200; transition: transform .35s ease; }
+  body.header-oculto #header { transform: translateY(-110%); }
+  /* Controles de Leaflet (zoom +/-) bajan 64px mientras el header está visible */
+  .leaflet-top { margin-top: 64px; transition: margin-top .35s ease; }
+  body.header-oculto .leaflet-top { margin-top: 0; }
+  @media (prefers-reduced-motion: reduce) {
+    #header, .leaflet-top { transition: none; }
+  }
+
+  /* Posiciones de la caja (fixed = relativa a la pantalla visible):
+     inicio: centro vertical | .con-resultados: top 70% | .abajo: pegada a la base. */
+  #caja {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    z-index: 1100; width: min(92vw, 520px); background: #fff;
+    border-radius: 12px; padding: 14px;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, .25);
+    transition: top .5s ease, transform .5s ease;
+  }
+  #caja.con-resultados { top: 70%; }
+  /* 28px de margen para no tapar la atribución de OpenStreetMap */
+  #caja.abajo { top: calc(100% - 28px); transform: translate(-50%, -100%); }
+  @media (prefers-reduced-motion: reduce) { #caja { transition: none; } }
+  #caja form { display: flex; gap: 8px; }
+  #caja input {
+    flex: 1; min-width: 0; padding: 10px 12px; font-size: 1rem;
+    border: 1px solid #ccc; border-radius: 8px;
+  }
+  #caja input:focus { outline: 2px solid #17baef; outline-offset: 1px; }
+  #caja form { flex-wrap: wrap; }
+  #btn-buscar {
+    padding: 10px 18px; font-size: 1rem; font-weight: 700; cursor: pointer;
+    color: #04364a; background: #ffd54a; border: 0; border-radius: 8px;
+  }
+  #btn-buscar:disabled { opacity: .6; cursor: wait; }
+  @media (max-width: 440px) { #caja input { flex-basis: 100%; } }
+
+  /* Herramientas de área (lápiz, pin, deshacer) */
+  .herr {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 42px; padding: 0; cursor: pointer; color: #04364a;
+    background: #e8f7fd; border: 1px solid #b7e3f4; border-radius: 8px;
+  }
+  .herr:hover:not(:disabled) { background: #d2f0fb; }
+  .herr[aria-pressed="true"] { background: #17baef; color: #fff; border-color: #17baef; }
+  .herr:disabled { opacity: .4; cursor: not-allowed; }
+  .herr:focus-visible { outline: 2px solid #17baef; outline-offset: 1px; }
+  #mapid.dibujando, #mapid.dibujando .leaflet-interactive { cursor: crosshair !important; }
+  #mapid.dibujando { touch-action: none; }
+  #estado { margin-top: 8px; min-height: 1.2em; font-size: .9rem; color: #04364a; }
+  #estado.error { color: #b3261e; }
+
+  /* Pin con insignia de tipo de inmueble */
+  .pin-tipo { background: none; border: 0; }
+  .pin-tipo .pin-img {
+    display: block; width: 40px; height: 60px;
+    filter: drop-shadow(0 2px 2px rgba(0, 0, 0, .35));
+  }
+  .pin-tipo .pin-emoji {
+    position: absolute; top: -4px; left: -6px;
+    width: 22px; height: 22px; line-height: 22px; text-align: center;
+    font-size: 14px; background: #fff; border-radius: 50%;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, .35); pointer-events: none;
+  }
+
+
+  /* buddy: en esta página solo va el mapa. Estos elementos los crea el JS al vuelo
+     con estilos inline, así que el !important es necesario para ganarle. */
+  #buddy-chat-toggle, #buddy-chat, #buddy-character, #buddy-close, #buddy-backgrounds {
+    display: none !important;
+  }
+</style>
+
+<div id="mapid"></div>
+
+<div id="caja">
+  <form id="form-buscar" autocomplete="off">
+    <input type="text" id="texto" name="texto" placeholder="escribe lo que estás buscando" aria-label="Qué inmueble estás buscando">
+    <button type="button" class="herr" id="btn-lapiz" aria-pressed="false" title="Dibujar un polígono" aria-label="Dibujar un polígono">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+    </button>
+    <button type="button" class="herr" id="btn-pin" aria-pressed="false" title="Dibujar una circunferencia" aria-label="Dibujar una circunferencia">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-6-5.6-6-10a6 6 0 0 1 12 0c0 4.4-6 10-6 10z"/><circle cx="12" cy="11" r="2"/></svg>
+    </button>
+    <button type="button" class="herr" id="btn-deshacer" title="Borrar la última figura" aria-label="Borrar la última figura" disabled>
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>
+    </button>
+    <button type="submit" id="btn-buscar">Buscar</button>
+  </form>
+  <div id="estado" role="status" aria-live="polite"></div>
+</div>
+
+<!-- config.js no lo carga _includes/headMaps.html -->
+<script src="/assets/js/config.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  var CENTRO = [-17.7833281, -63.1821673];
+  var PIN = '/assets/images/pointers/pointer_statetty.png';
+
+  var map = L.map('mapid').setView(CENTRO, 12);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>',
+  }).addTo(map);
+  setTimeout(function () { map.invalidateSize(); }, 300);
+
+    // Cada grupo: un emoji y las palabras que lo activan (en minúscula y sin tildes).
+  // Se busca como palabra completa dentro de tipoInmueble; ante varias
+  // coincidencias gana la palabra más larga, así que el orden de los grupos no importa.
+  var TIPO_INMUEBLE_EMOJI = [
+    { '🏡': ['casa'] },
+    { '🏢': ['departamento', 'apartment', 'monoambiente', 'penthouse', 'duplex'] },
+    { '🌳': ['lote', 'terreno'] },
+    { '💼': ['oficina'] },
+    { '🏬': ['local comercial', 'local', 'tienda'] },
+    { '🏛️': ['edificio'] },
+    { '🏞️': ['quinta'] },
+    { '🏘️': ['ph', 'condominio'] },
+    { '🏭': ['tinglado','deposito', 'galpon'] },
+    { '🛏️': ['habitacion', 'cuarto'] },
+    { '🚗': ['garaje', 'cochera'] }
+  ];
+  var EMOJI_DEFECTO = '📍';
+
+  // Índice plano armado una sola vez al cargar la página.
+  var TIPOS_INDEX = [];
+  TIPO_INMUEBLE_EMOJI.forEach(function (grupo) {
+    Object.keys(grupo).forEach(function (emoji) {
+      grupo[emoji].forEach(function (clave) {
+        TIPOS_INDEX.push({
+          clave: clave,
+          emoji: emoji,
+          re: new RegExp('(^|[^a-z])' + clave + '([^a-z]|$)')
+        });
+      });
+    });
+  });
+  TIPOS_INDEX.sort(function (a, b) { return b.clave.length - a.clave.length; });
+
+  function emojiTipo(tipo) {
+    var t = String(tipo == null ? '' : tipo).toLowerCase().trim()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    if (!t) return EMOJI_DEFECTO;
+    for (var i = 0; i < TIPOS_INDEX.length; i++) {
+      if (TIPOS_INDEX[i].re.test(t)) return TIPOS_INDEX[i].emoji;
+    }
+    return EMOJI_DEFECTO;
+  }
+
+  function iconoPara(tipo) {
+    return L.divIcon({
+      className: 'pin-tipo',
+      html: '<img class="pin-img" src="' + PIN + '" alt="">' +
+            '<span class="pin-emoji" aria-hidden="true">' + emojiTipo(tipo) + '</span>',
+      iconSize: [40, 60], iconAnchor: [20, 60], popupAnchor: [1, -54],
+    });
+  }
+
+  var form = document.getElementById('form-buscar');
+  var input = document.getElementById('texto');
+  var boton = document.getElementById('btn-buscar');
+  var estado = document.getElementById('estado');
+  var caja = document.getElementById('caja');
+  var markers = [];
+
+  // Posición de la caja. zoomRef es el zoom "de reposo": si el usuario supera ese
+  // zoom la caja baja a la base; si vuelve a él (o menos) regresa a su posición.
+  var zoomRef = map.getZoom();
+  var respondio = false;   // true tras la primera respuesta válida del servidor
+  var cajaFija = false;    // true tras usar lápiz o pin: la caja queda abajo hasta recargar
+
+  // Header: se oculta al superar zoomRef y vuelve cuando el zoom baja hasta
+  // zoomRef - MARGEN_HEADER. Con 0 vuelve al zoom de reposo; con 1 exige
+  // alejar un nivel más antes de que reaparezca.
+  var MARGEN_HEADER = 0;
+  var headerOculto = false;
+
+  function colocarCaja() {
+    var z = map.getZoom();
+    caja.className = (cajaFija || z > zoomRef)
+      ? 'abajo'
+      : (respondio ? 'con-resultados' : '');
+    if (!headerOculto && z > zoomRef) headerOculto = true;
+    else if (headerOculto && z <= zoomRef - MARGEN_HEADER) headerOculto = false;
+    document.body.classList.toggle('header-oculto', headerOculto);
+  }
+  map.on('zoomend', colocarCaja);
+
+  // Los nombres vienen de portales externos: siempre como textContent.
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function num(v) { return v == null || v === '' ? null : Number(v); }
+  function miles(v) { return Number(v).toLocaleString('es-BO'); }
+
+  function avisar(txt, esError) {
+    estado.textContent = txt;
+    estado.className = esError ? 'error' : '';
+  }
+
+  function linea(txt) { return txt ? '<div>' + txt + '</div>' : ''; }
+
+  function popup(r) {
+    var cuerpo = '';
+    cuerpo += linea(esc(r.tipoInmueble || '') + (r.tipoNegocio ? ' · ' + esc(r.tipoNegocio) : ''));
+    cuerpo += linea('<strong>USD ' + miles(r.precio || 0) + '</strong>');
+    cuerpo += linea(esc(r.nombre || ''));
+    var det = [];
+    if (r.dormitorios) det.push(r.dormitorios + ' dorm.');
+    if (r.banos) det.push(r.banos + ' baños');
+    if (r.m2c) det.push(r.m2c + ' m² construc.');
+    if (r.m2t) det.push(r.m2t + ' m² terreno');
+    cuerpo += linea(esc(det.join(' · ')));
+    cuerpo += linea('<a href="' + esc(r.url) + '" target="_blank" rel="noopener">Ver ficha</a>');
+    return cuerpo;
+  }
+
+  function limpiar() {
+    markers.forEach(function (m) { map.removeLayer(m); });
+    markers = [];
+  }
+
+  function pintar(resultados) {
+    limpiar();
+    (resultados || []).forEach(function (r) {
+      var lat = num(r.lat), lng = num(r.lng);
+      if (!isFinite(lat) || !isFinite(lng)) return;   // sin coordenadas no hay pin
+      var m = L.marker([lat, lng], { icon: iconoPara(r.tipoInmueble) }).addTo(map);
+      m.bindPopup(popup(r));
+      markers.push(m);
+    });
+    if (!markers.length) { zoomRef = map.getZoom(); return; }
+    // zoomRef = zoom que dejará el encuadre automático, para que ese zoom
+    // programático no cuente como "zoom in" del usuario.
+    if (markers.length === 1) {
+      zoomRef = 15;
+      map.setView(markers[0].getLatLng(), 15);
+    } else {
+      var b = L.featureGroup(markers).getBounds().pad(0.15);
+      zoomRef = Math.min(map.getBoundsZoom(b), map.getMaxZoom());
+      map.fitBounds(b);
+    }
+  }
+
+  // ---------- Figuras de área (polígono / circunferencia) ----------
+  // Máximo de figuras por tipo (cada una es independiente y se envía en su arreglo).
+  // Mientras no se llegue al máximo, la herramienta activa sigue dibujando figuras
+  // nuevas; al alcanzarlo se apaga y su botón se deshabilita hasta borrar alguna.
+  var LIMITE = { poligono: 10, circunferencia: 10 };
+  var RADIO_MIN = 20;        // metros; un círculo menor se descarta
+  var PUNTOS_MIN = 3;
+  var PUNTOS_MAX = 2000;     // tope de vértices por polígono enviado
+  var TOLERANCIA_PX = 1.5;   // Douglas-Peucker: puntos que se desvían menos se eliminan
+
+  // Deja el mínimo de vértices que conserva la forma dibujada; si aun así
+  // pasan de PUNTOS_MAX, los reparte equitativamente a lo largo del contorno.
+  function simplificar(pts) {
+    var n = pts.length, z = map.getZoom();
+    if (n <= PUNTOS_MIN) return pts;
+    var P = pts.map(function (p) { return map.project(p, z); });
+    var keep = new Uint8Array(n);
+    keep[0] = keep[n - 1] = 1;
+    var pila = [[0, n - 1]];
+    while (pila.length) {
+      var seg = pila.pop(), a = seg[0], b = seg[1], maxd = 0, idx = -1;
+      for (var i = a + 1; i < b; i++) {
+        var d = L.LineUtil.pointToSegmentDistance(P[i], P[a], P[b]);
+        if (d > maxd) { maxd = d; idx = i; }
+      }
+      if (idx > -1 && maxd > TOLERANCIA_PX) {
+        keep[idx] = 1;
+        pila.push([a, idx], [idx, b]);
+      }
+    }
+    var res = pts.filter(function (_, i) { return keep[i]; });
+    if (res.length > PUNTOS_MAX) {
+      var m = res.length, out = [];
+      for (var k = 0; k < PUNTOS_MAX; k++) {
+        out.push(res[Math.round(k * (m - 1) / (PUNTOS_MAX - 1))]);
+      }
+      res = out;
+    }
+    return res;
+  }
+  var ESTILO_AREA = { color: '#17baef', weight: 2, fillColor: '#17baef', fillOpacity: 0.22 };
+
+  var contenedor = map.getContainer();
+  var btnLapiz = document.getElementById('btn-lapiz');
+  var btnPin = document.getElementById('btn-pin');
+  var btnDeshacer = document.getElementById('btn-deshacer');
+  var figuras = [];          // pila: la más antigua primero, la más nueva al final
+  var herramienta = null;    // 'poligono' | 'circunferencia' | null
+  var trazo = null;          // figura en curso mientras el puntero está presionado
+  var HANDLERS = ['dragging', 'touchZoom', 'doubleClickZoom', 'boxZoom'];
+
+  function contar(tipo) {
+    return figuras.filter(function (f) { return f.tipo === tipo; }).length;
+  }
+  function redondear(n, d) { return Number(n.toFixed(d)); }
+
+  function activar(tipo) {
+    if (tipo && contar(tipo) >= LIMITE[tipo]) return;
+    herramienta = tipo;
+    btnLapiz.setAttribute('aria-pressed', tipo === 'poligono');
+    btnPin.setAttribute('aria-pressed', tipo === 'circunferencia');
+    contenedor.classList.toggle('dibujando', !!tipo);
+    HANDLERS.forEach(function (h) { map[h][tipo ? 'disable' : 'enable'](); });
+    if (tipo === 'poligono') avisar('Mantén presionado y arrastra para dibujar el área.', false);
+    else if (tipo === 'circunferencia') avisar('Presiona el centro y arrastra para definir el radio.', false);
+  }
+
+  function refrescarBotones() {
+    btnLapiz.disabled = contar('poligono') >= LIMITE.poligono;
+    btnPin.disabled = contar('circunferencia') >= LIMITE.circunferencia;
+    btnDeshacer.disabled = !figuras.length;
+    if (herramienta && contar(herramienta) >= LIMITE[herramienta]) activar(null);
+  }
+
+  btnLapiz.addEventListener('click', function () {
+    cajaFija = true; colocarCaja();
+    activar(herramienta === 'poligono' ? null : 'poligono');
+  });
+  btnPin.addEventListener('click', function () {
+    cajaFija = true; colocarCaja();
+    activar(herramienta === 'circunferencia' ? null : 'circunferencia');
+  });
+  btnDeshacer.addEventListener('click', function () {
+    var f = figuras.pop();
+    if (!f) return;
+    map.removeLayer(f.capa);
+    refrescarBotones();
+    avisar('', false);
+  });
+
+  function iniciarTrazo(e) {
+    if (!herramienta || trazo || e.button !== 0) return;
+    if (e.target.closest('.leaflet-control')) return;
+    e.preventDefault();
+    e.stopPropagation();
+    contenedor.setPointerCapture(e.pointerId);
+    var ll = map.mouseEventToLatLng(e);
+    trazo = { id: e.pointerId, tipo: herramienta };
+    if (herramienta === 'poligono') {
+      trazo.pts = [ll];
+      trazo.capa = L.polyline([ll], { color: ESTILO_AREA.color, weight: 2, interactive: false }).addTo(map);
+    } else {
+      trazo.centro = ll;
+      trazo.circulo = L.circle(ll, L.extend({ radius: 1, interactive: false }, ESTILO_AREA));
+      var centro = L.circleMarker(ll, {
+        radius: 4, color: '#04364a', weight: 2, fillColor: '#ffd54a', fillOpacity: 1, interactive: false
+      });
+      trazo.capa = L.featureGroup([trazo.circulo, centro]).addTo(map);
+    }
+  }
+
+  function moverTrazo(e) {
+    if (!trazo || e.pointerId !== trazo.id) return;
+    var ll = map.mouseEventToLatLng(e);
+    if (trazo.tipo === 'poligono') {
+      var ult = map.latLngToContainerPoint(trazo.pts[trazo.pts.length - 1]);
+      if (ult.distanceTo(map.latLngToContainerPoint(ll)) < 3) return;   // filtra ruido
+      trazo.pts.push(ll);
+      trazo.capa.setLatLngs(trazo.pts);
+    } else {
+      trazo.circulo.setRadius(trazo.centro.distanceTo(ll));
+    }
+  }
+
+  function terminarTrazo(e, ok) {
+    if (!trazo || e.pointerId !== trazo.id) return;
+    var t = trazo;
+    trazo = null;
+    if (contenedor.hasPointerCapture(e.pointerId)) contenedor.releasePointerCapture(e.pointerId);
+    var figura = null;
+    var pts = (ok && t.tipo === 'poligono') ? simplificar(t.pts) : null;
+    if (pts && pts.length >= PUNTOS_MIN) {
+      map.removeLayer(t.capa);
+      // L.polygon cierra el trazo solo: rellena la superficie completa.
+      figura = {
+        tipo: 'poligono',
+        capa: L.polygon(pts, ESTILO_AREA).addTo(map),
+        datos: { puntos: pts.map(function (p) {
+          return { lat: redondear(p.lat, 6), lng: redondear(p.lng, 6) };
+        }) }
+      };
+    } else if (ok && t.tipo === 'circunferencia' && t.circulo.getRadius() >= RADIO_MIN) {
+      figura = {
+        tipo: 'circunferencia',
+        capa: t.capa,
+        datos: {
+          lat: redondear(t.centro.lat, 6),
+          lng: redondear(t.centro.lng, 6),
+          radio: Math.round(t.circulo.getRadius())   // metros
+        }
+      };
+    }
+    if (!figura) {
+      map.removeLayer(t.capa);
+      if (ok) avisar('El trazo fue muy corto. Intenta de nuevo.', true);
+      return;
+    }
+    figuras.push(figura);
+    avisar('', false);
+    refrescarBotones();
+  }
+
+  // Captura: se atiende antes que Leaflet para que no arrastre el mapa ni abra popups.
+  contenedor.addEventListener('pointerdown', iniciarTrazo, true);
+  contenedor.addEventListener('pointermove', moverTrazo);
+  contenedor.addEventListener('pointerup', function (e) { terminarTrazo(e, true); });
+  contenedor.addEventListener('pointercancel', function (e) { terminarTrazo(e, false); });
+
+  function datosDe(tipo) {
+    return figuras.filter(function (f) { return f.tipo === tipo; })
+                  .map(function (f) { return f.datos; });
+  }
+
+  function buscar() {
+    var texto = input.value.trim();
+    if (!texto) {
+      avisar('debes escribir algo para iniciar una búsqueda', true);
+      return;
+    }
+    boton.disabled = true;
+    avisar('Buscando...', false);
+    var base = (window.STATETTY_CONFIG && STATETTY_CONFIG.WS_API_BASE) || '';
+    fetch(base + 'statetty/buscarMapa', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        texto: texto,
+        poligono: datosDe('poligono'),              // [{ puntos: [{lat, lng}, ...] }]
+        circunferencia: datosDe('circunferencia'),  // [{ lat, lng, radio }] radio en metros
+      }),
+    }).then(function (r) {
+      return r.json().then(function (d) { return { status: r.status, data: d }; });
+    }).then(function (res) {
+      if (res.status === 429) { avisar('Hiciste demasiadas búsquedas. Esperá un minuto e intentá de nuevo.', true); return; }
+      if (res.status !== 200 || !res.data || !res.data.ok) {
+        avisar('No se pudo interpretar la búsqueda. Probá con otra frase.', true);
+        return;
+      }
+      respondio = true;
+      pintar(res.data.resultados);
+      colocarCaja();
+      avisar(res.data.total
+        ? res.data.total + (res.data.total === 1 ? ' inmueble encontrado' : ' inmuebles encontrados')
+        : 'Sin resultados. Probá con menos filtros o otra zona.', !res.data.total);
+    }).catch(function () {
+      avisar('Falló la búsqueda. Revisá tu conexión e intentá de nuevo.', true);
+    }).then(function () {
+      boton.disabled = false;
+    });
+  }
+
+  form.addEventListener('submit', function (e) { e.preventDefault(); buscar(); });
+  input.addEventListener('input', function () {
+    if (estado.className === 'error') avisar('', false);
+  });
+})();
+</script>

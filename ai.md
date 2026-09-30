@@ -2,4 +2,3 @@
 layout: landing
 title: La navaja suiza del asesor inmobiliario
 ---
-
