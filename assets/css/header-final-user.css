@@ -37,6 +37,7 @@
 .header .container {
   display: flex; align-items: center;
   justify-content: space-between; height: 64px;
+  max-width: none;   /* barra a sangre: el logo se queda pegado a la izquierda */
 }
 .header-logo {
   display: flex; align-items: center; gap: 10px;

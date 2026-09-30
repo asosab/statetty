@@ -566,6 +566,11 @@ a:hover { color: var(--blue-dark); }
 .header .container {
   display: flex; align-items: center;
   justify-content: space-between; height: 64px;
+  /* La barra va a sangre: sin esto el .container se limita a 1160px y se centra,
+     así que en pantallas anchas el logo queda flotando en el medio en vez de
+     pegado a la izquierda. El contenido de las secciones no se toca: solo el
+     contenedor del header. */
+  max-width: none;
 }
 .header-logo {
   display: flex; align-items: center; gap: 10px;
