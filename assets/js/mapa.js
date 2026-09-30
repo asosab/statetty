@@ -517,6 +517,8 @@ function getBrand(input) {
   url = (url || '').toLowerCase();
 
 
+  if (url.includes("houstyle")) {return 'houstyle';}
+
   // --------------------------------------------------------------------------------------------------- Marcas pequeñas
   if ( /el-?faro/i.test(url) || agentPhone.replace(/\D/g,'').includes("71035001") || agentName.includes("el faro")
      ) {return 'elfaro';}
@@ -1026,6 +1028,24 @@ function mostrarAvisoLogin() {
   mostrarAvisoSinSesion();
 }
 
+// Usuario autenticado pero con cutoffDate vencido (`usuario.hasTime === false`).
+// Se avisa y se detiene la carga de resultados: sin tiempo de uso no hay mapa.
+function mostrarAvisoSinTiempo(usuario) {
+  var nombre = (usuario && (usuario.first_name || usuario.buddyName)) || '';
+  var texto = 'Hola ' + nombre + ', no tienes tiempo de uso disponible, por favor, compra más tiempo';
+  if (window.Buddy && window.Buddy.ui && typeof window.Buddy.ui.box === 'function') {
+    window.Buddy.ui.box({
+      title: nombre || 'Statetty',
+      message: texto,
+      submitText: 'Entendido',
+      cancelText: 'Cerrar'
+    });
+    return;
+  }
+  console.log('[WebScrap] [log] mostrarAvisoSinTiempo: ' + texto);
+  alert(texto);
+}
+
 $(document).ready(function () {
   // Tooltips del toolbox "📊 Estadísticas & 🔍 Buscar": a diferencia de los
   // popups de los markers (que se regeneran cada apertura), estos elementos
@@ -1113,6 +1133,7 @@ $(document).ready(function () {
     "laenc":  "La encontré",
     "nexoi":  "Nexo Inmobiliario",
     "kw":     "Keller Williams",
+    "houstyle": "HouStyle",
   };
 
   function renderMap(locs, centerLat, centerLng, circleRadius, avgPrice, na, ag) {
@@ -1414,7 +1435,17 @@ $(document).ready(function () {
 
     if (!isBuddyAuth) {
       $('#loading-indicator').hide();
-      mostrarAvisoLogin();
+      // Se espera a que la página termine de cargar antes de pedir el correo, para
+      // no abrir la caja encima del mapa todavía en painted/loading.
+      if (document.readyState === 'complete') mostrarAvisoLogin();
+      else window.addEventListener('load', mostrarAvisoLogin, { once: true });
+      return;
+    }
+
+    // Autenticado pero sin tiempo de uso (cutoffDate vencido): no se buscan resultados.
+    if (usuario && usuario._id && !usuario.hasTime) {
+      $('#loading-indicator').hide();
+      mostrarAvisoSinTiempo(usuario);
       return;
     }
 

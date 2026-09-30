@@ -772,16 +772,17 @@ window.Buddy = window.Buddy || {};
     });
   }
 
-  // ── Autologin por publicKey legacy de Telegram (?k=) ──────────────────────
-  // El backend valida la publicKey (método paralelo de autenticación de
-  // Telegram, con TTL y renovación) y, si el email del tgUser coincide con un
-  // BuddyUser, emite una sesión Buddy (JWT) sin pedir verificación de correo.
-  // Si no hay BuddyUser con ese email (BUDDY_NOT_FOUND) o el backend falla,
-  // devuelve false sin autenticar (el frontend cae al login normal).
+  // ── Autologin con ticket web de Buddy (?k=) ──────────────────────────────
+  // El link que manda el bot de Telegram trae un ticket emitido por el
+  // servicio Buddy (un solo uso, TTL corto, guardado solo como SHA-256 en el
+  // buddyUser). El backend lo canjea por una sesión Buddy (JWT) sin pedir
+  // verificación de correo, porque el link ya es la prueba.
+  // Si el ticket no existe, ya se usó o venció (INVALID_TICKET), devuelve
+  // false sin autenticar y el frontend cae al login normal por correo.
   // Se llama desde statetty.com/assets/js/auth.js cuando no hay sesión y la URL
-  // contiene ?k={publicKey}.
-  function loginWithTelegramKey(publicKey) {
-    var value = normalizeText(publicKey);
+  // contiene ?k={ticket}.
+  function loginWithTelegramKey(token) {
+    var value = normalizeText(token);
     if (!value || state.busy) return Promise.resolve(false);
 
     state.busy = true;
@@ -794,7 +795,7 @@ window.Buddy = window.Buddy || {};
     return apiRequest('tgKey', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ publicKey: value, siteId: siteId })
+      body: JSON.stringify({ token: value, siteId: siteId })
     }).then(function (data) {
       if (!data || data.ok === false || data.authenticated === false) {
         debugLog('loginWithTelegramKey: sin sesión emitida', data);

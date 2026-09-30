@@ -10,10 +10,10 @@
   //   1. Espera a que Buddy esté listo (window.Buddy.readyPromise / buddy:ready).
   //   2. Si Buddy tiene accessToken → GET statetty/auth/me con Bearer JWT.
   //   3. La respuesta trae { buddy, tg, linked } → expone usuario combinado.
-  //   4. Difficulty: mantiene fallback legacy `?k=` publicKey durante transición.
+  //   4. Sin sesión previa: canjea el ticket web `?k=` (emitido por Buddy) por una.
   //
   // API pública (compat):
-  //   window.STT.getKey()          → JWT Buddy (o publicKey legacy)
+  //   window.STT.getKey()          → JWT Buddy
   //   window.STT.getToken()        → JWT Buddy (alias explícito)
   //   window.STT.getUsuario()      → usuario combinado (buddy+tg)
   //   window.STT.getBuddy()        → datos BuddyUser
@@ -38,9 +38,9 @@
   }
   function getApiBase(){return (window.STATETTY_CONFIG&&STATETTY_CONFIG.WS_API_BASE)||'https://api.statetty.com/api/';}
 
-  // Elimina del URL (query string) los parámetros legados que ya no deben
-  // propagarse a otras páginas ni quedar expuestos a ser copiados: `k`
-  // (publicKey de Telegram, deprecado - Fase 4) y `auth` (hash de magic link,
+  // Elimina del URL (query string) los parámetros que ya no deben propagarse a
+  // otras páginas ni quedar expuestos a ser copiados: `k` (ticket de acceso web
+  // emitido por Buddy, de un solo uso) y `auth` (hash del magic link, también
   // de un solo uso). Se hace en su lugar (history.replaceState, sin recargar).
   function stripLegacyParams(){
     try{
@@ -213,10 +213,11 @@
   // ── flujo de sesión ────────────────────────────────────────────────────────
 
   async function initAuth(){
-    // Capturar el parámetro legacy `?k=` (publicKey de Telegram) ANTES de
-    // limpiarlo del URL: si no hay sesión Buddy, se intercambia por una (JWT).
-    var legacyKey=null;
-    try{ legacyKey=new URL(window.location.href).searchParams.get('k'); }catch(e){}
+    // Capturar el ticket web de Buddy (`?k=`, de un solo uso) ANTES de limpiarlo
+    // del URL: si NO hay sesión Buddy, se canjea por una. Con sesión ya abierta
+    // el ticket se descarta: nada suplanta una sesión autenticada.
+    var webTicket=null;
+    try{ webTicket=new URL(window.location.href).searchParams.get('k'); }catch(e){}
     stripLegacyParams();
     var token=null;
     var buddyUser=getBuddyUser();
@@ -224,17 +225,17 @@
     // 1) Ruta principal: JWT Buddy
     token=getBuddyAccessToken();
 
-    // 1b) Método viejo: publicKey de Telegram → sesión Buddy (JWT)
-    //     Si no hay JWT pero hay ?k=, intentar el intercambio. El backend valida
-    //     la publicKey y, si el email del tgUser coincide con un BuddyUser, emite
-    //     tokens sin pedir verificación de correo. Si no hay BuddyUser, se cae
-    //     al flujo normal (sin sesión / login por correo).
-    if(!token && legacyKey){
+    // 1b) Ticket web de Buddy (?k=) → sesión Buddy (JWT).
+    //     El ticket lo emitió el bot de Telegram para este buddyUser; el backend
+    //     lo valida (un solo uso, TTL corto) y emite tokens sin pedir verificación
+    //     de correo. Si el ticket no sirve (vencido, ya usado, o el usuario no
+    //     tiene cuenta Buddy), se cae al flujo normal (sin sesión / login por correo).
+    if(!token && webTicket){
       var a=buddyAuth();
       if(a && typeof a.loginWithTelegramKey==='function'){
         try{
-          console.log('[Statetty] [info] initAuth: intercambiando publicKey legacy por sesión Buddy');
-          await a.loginWithTelegramKey(legacyKey);
+          console.log('[Statetty] [info] initAuth: canjeando ticket web de Buddy por sesión');
+          await a.loginWithTelegramKey(webTicket);
         }catch(e){
           console.log('[Statetty] [warn] initAuth: loginWithTelegramKey:', e.message);
         }

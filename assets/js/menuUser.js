@@ -78,6 +78,40 @@
   var SUPER_ADMIN_EMAIL = 'asosab@gmail.com';
   var LOGGED_USER = null;
 
+  // ------------------------------------------------------------------
+  // Ítems de administración de Buddy
+  // ------------------------------------------------------------------
+  // Mismos comandos que ofrece el menú de usuario del chat de Buddy
+  // (declarados en assets/buddy/modules/*/config.js → `menu: []`), pero
+  // accesibles desde el menú del sitio, sin depender del chat.
+  //
+  // La autorización se lee SIEMPRE de Buddy ( Buddy es la única verificación):
+  //   - role 'admin'      → Buddy.admin.isAdmin()
+  //   - role 'superadmin' → Buddy.configToolbox.isSuperuser()
+  //   - role 'auth'       → Buddy.auth.isAuthenticated()
+  //   - siteModule        → además exige Buddy.modules.isActive(siteModule),
+  //                         para que un módulo ausente en este sitio no offerte
+  //                         un comando que no puede abrir nada.
+  var BUDDY_ADMIN_ITEMS = [
+    { module: 'admin', action: 'open', label: 'Administrador del sitio', icon: '🛡️', role: 'admin' },
+    { module: 'dashboard', action: 'open', label: 'Dashboard', icon: '📊', role: 'admin' },
+    { module: 'configToolbox', action: 'open', label: 'Toolbox de configuración', icon: '⚙️', role: 'superadmin' },
+    { module: 'archerySchool', action: 'renderAdmin', label: 'Administrar arquería', icon: '🛠️', role: 'admin', siteModule: 'archerySchool' },
+    { module: 'archeryGame', action: 'top10Mostrar', label: 'Top 10', icon: '🏆', role: 'auth', siteModule: 'archeryGame' }
+  ];
+
+  var ADMIN_BLOCK_CLASS = 'stt-admin-menu-block';
+  // Eventos con los que Buddy avisa que el estado de sesión/admin cambió. El
+  // bloque se repinta en sitio (sin rehacer el menú entero) cuando el rol se
+  // resuelve más tarde que la primera carga.
+  var ADMIN_REPAINT_EVENTS = [
+    'buddy:ready',
+    'buddy:auth-ready',
+    'buddy:auth-state-changed',
+    'buddy:auth-verified',
+    'buddy:admin-visibility-changed'
+  ];
+
   // Selector de el/los botón(es) del header a reemplazar por el ícono (modo cta).
   var CTA_SELECTOR = window.STT_MENU_USER_SELECTOR || '.btn-nav-cta';
 
@@ -154,6 +188,15 @@
       'transition:background .15s ease, color .15s ease;}' +
       '.stt-user-dropdown a:hover,.stt-user-dropdown a:focus-visible{' +
       'background:rgba(23,186,239,.1);color:var(--blue-dark,#074f66);}' +
+      // Ítems de admin de Buddy: son <button> (disparan una acción, no navegan),
+      // por eso llevan su propio estilo replicando el de los <a>.
+      '.' + ADMIN_BLOCK_CLASS + '{padding:2px 0;}' +
+      '.' + ADMIN_BLOCK_CLASS + ' button{display:block;width:100%;border:0;background:none;cursor:pointer;' +
+      'padding:10px 12px;border-radius:var(--radius-sm,6px);text-align:left;white-space:nowrap;' +
+      'font-size:.92rem;font-family:var(--font-body,\'Lato\',sans-serif);color:#2b3a42;' +
+      'transition:background .15s ease, color .15s ease;}' +
+      '.' + ADMIN_BLOCK_CLASS + ' button:hover,' + ADMIN_BLOCK_CLASS + ' button:focus-visible{' +
+      'background:rgba(23,186,239,.1);color:var(--blue-dark,#074f66);}' +
       '.stt-user-dropdown-sep{height:1px;background:rgba(0,0,0,.08);margin:4px 0;}' +
       '.stt-user-logout{display:block;width:100%;padding:10px 12px;border:0;border-radius:var(--radius-sm,6px);' +
       'font-size:.92rem;font-family:var(--font-body,\'Lato\',sans-serif);color:#999;text-decoration:none;text-align:left;' +
@@ -179,6 +222,9 @@
       'color:inherit;text-decoration:none;border-radius:6px;}' +
       '#' + TOOLBOX_LINKS_ID + ' a:hover,' +
       '#' + TOOLBOX_LINKS_ID + ' a:focus-visible{background:rgba(0,0,0,.06);}' +
+      '.' + ADMIN_BLOCK_CLASS + ' button{display:block;width:100%;border:0;background:none;cursor:pointer;' +
+      'padding:8px 6px;text-align:left;color:inherit;font-family:inherit;font-size:inherit;border-radius:6px;}' +
+      '.' + ADMIN_BLOCK_CLASS + ' button:hover,' + ADMIN_BLOCK_CLASS + ' button:focus-visible{background:rgba(0,0,0,.06);}' +
       '#' + TOOLBOX_LINKS_ID + ' .stt-user-toolbox-sep{height:1px;background:rgba(0,0,0,.08);margin:4px 0;}' +
       '#' + TOOLBOX_LINKS_ID + ' .stt-user-logout{width:100%;padding:8px 6px;border:0;' +
       'font-family:inherit;font-size:inherit;color:#999;background:none;cursor:pointer;text-align:left;' +
@@ -194,49 +240,27 @@
   // ------------------------------------------------------------------
   // Cerrar sesión
   // ------------------------------------------------------------------
+  // El cierre de sesión es de Buddy: revoca el refresh token en el servidor y
+  // limpia los tokens locales. Nada más lo puede cerrar (ni una "?k=" nueva ni
+  // una llave de Telegram), así que no hay nada que rotar del lado Statetty.
 
   function clearSession() {
     document.cookie = 'stt_pk=; Max-Age=0; Path=/; Domain=.statetty.com; Secure';
     localStorage.removeItem('stt_pk');
     window.publicKey = null;
     if (window.STT) window.STT.usuario = null;
-    // Si hay sesión Buddy, cerrarla también (auth.js delega en Buddy.auth.logout).
-    if (window.STT && typeof window.STT.logout === 'function') {
-      try { window.STT.logout(); } catch (_) {}
-    }
     window.location.href = '/';
   }
 
   function handleLogout(e) {
-    e.preventDefault();
-    var key = window.STT && window.STT.getKey();
-    if (!key) { clearSession(); return; }
-    var isJwt = typeof key === 'string' && key.split('.').length === 3 && key.indexOf(' ') === -1;
-    var base = window.STATETTY_CONFIG ? STATETTY_CONFIG.WS_API_BASE : '';
-    var headers = { 'Content-Type': 'application/json' };
-    var body;
-    if (isJwt) {
-      headers['Authorization'] = 'Bearer ' + key;
-      body = {};
-    } else {
-      body = { publicKey: key };
+    if (e && e.preventDefault) e.preventDefault();
+    var p = Promise.resolve();
+    if (window.STT && typeof window.STT.logout === 'function') {
+      p = Promise.resolve(window.STT.logout());
     }
-    fetch(base + 'statetty/changePublicKey', {
-      method: 'POST',
-      headers: headers,
-      body: JSON.stringify(body)
-    }).then(function (res) {
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      return res.json();
-    }).then(function (data) {
-      if (data && data.ok === true) {
-        clearSession();
-      } else {
-        alert('No se pudo cerrar sesión. Intenta de nuevo.');
-      }
-    }).catch(function () {
-      alert('No se pudo cerrar sesión. Intenta de nuevo.');
-    });
+    // Se espera el cierre de Buddy para no cortar la revocación del refresh con
+    // la navegación; si falla, se limpia igual (el logout es local también).
+    p.catch(function () {}).then(function () { clearSession(); });
   }
 
   // ------------------------------------------------------------------
@@ -278,6 +302,176 @@
         return true;
       }
     });
+  }
+
+  // ------------------------------------------------------------------
+  // Bloque de administración de Buddy
+  // ------------------------------------------------------------------
+
+  // Los ítems visibles según el estado actual de Buddy (rol + módulos activos).
+  // Se recalcula en cada repintado porque el rol puede resolverse después del
+  // primer render (p. ej. el admin se confirma cuando llega la sesión maestra).
+  function getBuddyAdminItems() {
+    var b = window.Buddy;
+    if (!b) return [];
+
+    return BUDDY_ADMIN_ITEMS.filter(function (item) {
+      if (item.siteModule) {
+        var mods = b.modules;
+        if (!mods || typeof mods.isActive !== 'function') return false;
+        if (!mods.isActive(item.siteModule)) return false;
+      }
+      if (item.role === 'superadmin') {
+        var ct = b.configToolbox;
+        if (!ct || typeof ct.isSuperuser !== 'function' || !ct.isSuperuser()) return false;
+        return true;
+      }
+      if (item.role === 'admin') {
+        var ad = b.admin;
+        if (!ad || typeof ad.isAdmin !== 'function' || !ad.isAdmin()) return false;
+        return true;
+      }
+      if (item.role === 'auth') {
+        var au = b.auth;
+        if (!au || typeof au.isAuthenticated !== 'function' || !au.isAuthenticated()) return false;
+        return true;
+      }
+      return true;
+    });
+  }
+
+  function buildAdminButton(item) {
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.setAttribute('role', 'menuitem');
+    btn.textContent = item.icon + ' ' + item.label;
+    btn.addEventListener('click', function () {
+      runBuddyAction(item);
+      // Cierra el desplegable: el click sintético en document es detectado por
+      // el listener de cierre que cada menú registró (solo cierra si el click
+      // cae fuera de él, y document siempre cae fuera).
+      try { document.dispatchEvent(new MouseEvent('click', { bubbles: false })); } catch (e) {}
+    });
+    return btn;
+  }
+
+  function buildAdminBlock() {
+    var block = document.createElement('div');
+    block.className = ADMIN_BLOCK_CLASS;
+    getBuddyAdminItems().forEach(function (item) {
+      block.appendChild(buildAdminButton(item));
+    });
+    return block;
+  }
+
+  // Inserta el bloque al final del host (antes del separador de logout) si hay
+  // ítems visibles. Devuelve el bloque o null.
+  function renderAdminBlock(host) {
+    var items = getBuddyAdminItems();
+    if (!items.length) return null;
+    var block = buildAdminBlock();
+    host.appendChild(block);
+    return block;
+  }
+
+  // Repinta los bloques ya montados. Si el rol se perdió, el bloque se retira.
+  // Reemplaza nodo por nodo para no depender de innerHTML.
+  //
+  // El rol puede resolverse DESPUÉS del primer render (la sesión maestra o la
+  // confirmación de admin llegan más tarde que el evento statetty:key-ready), y
+  // en ese momento no hay ningún bloque montado: por eso, si hay ítems visibles
+  // y aún no existe bloque, se inserta en los contenedores conocidos.
+  function updateAdminBlock() {
+    var hayItems = getBuddyAdminItems().length > 0;
+    var blocks = document.querySelectorAll('.' + ADMIN_BLOCK_CLASS);
+
+    for (var i = 0; i < blocks.length; i++) {
+      var parent = blocks[i].parentNode;
+      if (!parent) continue;
+      if (hayItems) {
+        parent.replaceChild(buildAdminBlock(), blocks[i]);
+      } else {
+        parent.removeChild(blocks[i]);
+      }
+    }
+
+    if (!hayItems || blocks.length) return;
+    adminHosts().forEach(function (h) {
+      if (h.host.querySelector('.' + ADMIN_BLOCK_CLASS)) return;
+      var block = buildAdminBlock();
+      if (h.sep) {
+        h.host.insertBefore(block, h.sep);
+      } else {
+        h.host.appendChild(block);
+      }
+    });
+  }
+
+  // Contenedores donde vive el bloque: el desplegable del usuario (modo cta) y
+  // el panel del engranaje (modo toolbox). El separador marca dónde insertar.
+  function adminHosts() {
+    var hosts = [];
+    document.querySelectorAll('.stt-user-dropdown').forEach(function (dropdown) {
+      hosts.push({ host: dropdown, sep: dropdown.querySelector('.stt-user-dropdown-sep') });
+    });
+    var toolbox = document.getElementById(TOOLBOX_LINKS_ID);
+    if (toolbox) hosts.push({ host: toolbox, sep: toolbox.querySelector('.stt-user-toolbox-sep') });
+    return hosts;
+  }
+
+  // Ejecuta la acción de un ítem de admin sobre el módulo de Buddy.
+  // Las acciones `render*` exigen un contenedor: se les da un modal propio,
+  // igual que hace el módulo `menu` de Buddy, para no duplicar UI.
+  function runBuddyAction(item) {
+    var b = window.Buddy || {};
+    var api = b[item.module];
+    if (!api || typeof api[item.action] !== 'function') {
+      console.log('[Statetty] [warn] menuUser: acción no disponible en el módulo ' + item.module + ': ' + item.action);
+      return;
+    }
+    try {
+      if (/^render/.test(item.action)) {
+        var host = openActionModal();
+        var res = api[item.action](host, item.arg || {});
+        if (res && typeof res.catch === 'function') {
+          res.catch(function (e) {
+            console.log('[Statetty] [error] menuUser: la vista de ' + item.module + ' falló al montarse.', e);
+          });
+        }
+      } else {
+        api[item.action](item.arg);
+      }
+    } catch (e) {
+      console.log('[Statetty] [error] menuUser: la acción de ' + item.module + ' falló.', e);
+    }
+  }
+
+  var ACTION_MODAL_ID = 'stt-admin-action-modal';
+  function openActionModal() {
+    var overlay = document.getElementById(ACTION_MODAL_ID);
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = ACTION_MODAL_ID;
+      overlay.setAttribute('role', 'dialog');
+      overlay.style.cssText = 'position:fixed;inset:0;z-index:2147483003;background:rgba(7,52,63,.55);' +
+        'display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto;';
+      document.body.appendChild(overlay);
+    }
+    var box = document.createElement('div');
+    box.style.cssText = 'position:relative;background:#fff;border-radius:14px;max-width:960px;width:100%;' +
+      'max-height:88vh;overflow:auto;padding:20px;box-shadow:0 18px 50px rgba(0,0,0,.28);';
+    var close = document.createElement('button');
+    close.type = 'button';
+    close.setAttribute('aria-label', 'Cerrar');
+    close.textContent = '×';
+    close.style.cssText = 'position:absolute;right:10px;top:8px;background:none;border:0;font-size:22px;' +
+      'color:#7b8f99;cursor:pointer;line-height:1;';
+    close.addEventListener('click', function () { overlay.remove(); });
+    var target = document.createElement('div');
+    box.appendChild(close);
+    box.appendChild(target);
+    overlay.appendChild(box);
+    return target;
   }
 
   // ------------------------------------------------------------------
@@ -336,6 +530,9 @@
       a.setAttribute('role', 'menuitem');
       dropdown.appendChild(a);
     });
+
+    // Administración de Buddy (roles de admin/superadmin), sobre el separador.
+    renderAdminBlock(dropdown);
 
     var sep = document.createElement('div');
     sep.className = 'stt-user-dropdown-sep';
@@ -428,6 +625,9 @@
       a.textContent = item.label;
       container.appendChild(a);
     });
+
+    // Administración de Buddy (roles de admin/superadmin), sobre el separador.
+    renderAdminBlock(container);
 
     var sep = document.createElement('div');
     sep.className = 'stt-user-toolbox-sep';
@@ -627,6 +827,11 @@
 
   function init() {
     document.addEventListener('statetty:key-ready', handleKeyReady);
+    // El rol de admin puede resolverse después del primer render (sesión maestra
+    // o confirmación de admin): se repinta solo el bloque, no el menú entero.
+    ADMIN_REPAINT_EVENTS.forEach(function (evt) {
+      window.addEventListener(evt, updateAdminBlock);
+    });
   }
 
   if (document.readyState === 'loading') {
