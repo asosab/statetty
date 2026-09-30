@@ -1,0 +1,85 @@
+/* ============================================================================
+ * header-final-user.css — barra de navegación de las páginas `final-user`.
+ *
+ * COPIA DEL BLOQUE DEL HEADER DE `assets/css/theme-1.css` (líneas 561-604 y
+ * 990-995). Existe como archivo propio, y no como `theme-1.css`, a propósito:
+ * el tema entero pesa 45 KB y estiliza la landing (`.Inicio`, `.faq`, `.card`,
+ * `h1..h6`, `.btn`, `table`…), así que cargarlo acá cambiaría el diseño de la
+ * página (títulos en cian, links sin subrayado, foco invisible en botones
+ * secundarios). Con este subconjunto el header es visualmente idéntico al de
+ * `/ai/` y no toca nada más.
+ *
+ * Si cambia el header del tema, copiar acá el diff de esas líneas.
+ * ========================================================================== */
+
+/* Vars del tema que usa el header. `--font-body` apunta a la fuente que ya carga
+   la página (no a Lato) para que el menú de sesión no cambie de tipografía. */
+:root {
+  --blue:        #17baef;
+  --blue-dark:   #074f66;
+  --yellow:      #eebf3f;
+  --yellow-pale: #f4d67a;
+
+  --font-head:   'Montserrat', sans-serif;
+  --font-body:   'Source Sans 3', sans-serif;
+  --radius-sm:   6px;
+  --radius-md:   12px;
+  --transition:  0.25s cubic-bezier(.4,0,.2,1);
+}
+
+.container { max-width: 1160px; margin: 0 auto; padding: 0 24px; }
+
+.header {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+  background: var(--blue); transition: var(--transition);
+}
+.header.scrolled { background: rgba(7,79,102,.97); backdrop-filter: blur(8px); box-shadow: 0 2px 20px rgba(0,0,0,.12); }
+.header .container {
+  display: flex; align-items: center;
+  justify-content: space-between; height: 64px;
+}
+.header-logo {
+  display: flex; align-items: center; gap: 10px;
+  font-family: var(--font-head); font-weight: 800;
+  font-size: 1.25rem; color: #fff;
+}
+.header-logo:hover { color: var(--yellow); }
+.header-logo img { width: 28px; height: 28px; object-fit: contain; }
+.header-nav { display: flex; align-items: center; gap: 8px; }
+.header-nav a {
+  font-family: var(--font-head); font-weight: 600;
+  font-size: .82rem; text-transform: uppercase; letter-spacing: .04em;
+  color: rgba(255,255,255,.80); padding: 8px 14px; border-radius: var(--radius-sm);
+  transition: var(--transition);
+}
+.header-nav a:hover,
+.header-nav a.active { color: #fff; background: rgba(255,255,255,.12); }
+.header-nav .btn-nav-cta {
+  background: var(--yellow); color: var(--blue-dark);
+  padding: 8px 20px; border-radius: 50px; font-weight: 700;
+}
+.header-nav .btn-nav-cta:hover { background: var(--yellow-pale); color: var(--blue-dark); }
+.header-nav .stt-login-cta {
+  font-family: var(--font-head); font-weight: 700;
+  font-size: .82rem; text-transform: uppercase; letter-spacing: .04em;
+  background: var(--yellow); color: var(--blue-dark);
+  padding: 8px 20px; border: none; border-radius: 50px; cursor: pointer;
+  transition: var(--transition);
+}
+.header-nav .stt-login-cta:hover { background: var(--yellow-pale); color: var(--blue-dark); }
+.nav-toggle {
+  display: none; flex-direction: column; gap: 5px;
+  background: none; border: none; cursor: pointer; padding: 6px;
+}
+.nav-toggle span { display: block; width: 24px; height: 2px; background: #fff; border-radius: 2px; transition: var(--transition); }
+
+/* Slot del menú de sesión: vacío hasta que lo llena `menuUser.js` con el avatar
+   (o con el botón "Ingresar"). El CTA de la barra NO va aquí: se reemplaza solo. */
+#stt-user-slot { display: inline-flex; align-items: center; }
+
+@media (max-width: 768px) {
+  .nav-toggle { display: flex; }
+  .header-nav { position: fixed; top: 64px; left: 0; right: 0; flex-direction: column; background: var(--blue); padding: 16px 24px; gap: 4px; transform: translateY(-120%); opacity: 0; pointer-events: none; transition: var(--transition); border-bottom: 1px solid rgba(255,255,255,.10); }
+  .header-nav.open { transform: translateY(0); opacity: 1; pointer-events: auto; }
+  .header-nav a { width: 100%; padding: 12px 14px; }
+}

@@ -8,7 +8,7 @@ description: Busca inmuebles en venta, alquiler o anticrético en el mapa y deja
 :root{--tinta:#0e2238;--azul:#1d5fd0;--azul-osc:#164aa6;--fondo:#f6f8fb;--pizarra:#5a6b7d;--linea:#d9e1ea;--verde:#e3efe9;--ambar:#f2a33a;--blanco:#fff}
 *{box-sizing:border-box}
 html{scroll-behavior:smooth;scroll-padding-top:5rem}
-body{margin:0;font:400 1.0625rem/1.65 "Source Sans 3",system-ui,sans-serif;color:var(--tinta);background:var(--fondo)}
+body{margin:0;padding-top:calc(64px + env(safe-area-inset-top,0px));font:400 1.0625rem/1.65 "Source Sans 3",system-ui,sans-serif;color:var(--tinta);background:var(--fondo)}
 h1,h2,h3{font-family:"Bricolage Grotesque","Source Sans 3",sans-serif;line-height:1.12;margin:0 0 .6em;letter-spacing:-.01em}
 h1{font-size:clamp(2.2rem,5.5vw,3.8rem);font-weight:700}
 h2{font-size:clamp(1.7rem,3.6vw,2.5rem);font-weight:700}
@@ -18,38 +18,10 @@ a{color:var(--azul)}
 :focus-visible{outline:3px solid var(--ambar);outline-offset:2px}
 .wrap{width:min(1120px,100% - 2.5rem);margin-inline:auto}
 section{padding:clamp(3rem,7vw,5.5rem) 0}
-
-/* menu */
-header.top{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.96);border-bottom:1px solid var(--linea);padding-top:env(safe-area-inset-top,0px)}
-.barra{display:flex;align-items:center;gap:1.25rem;min-height:4rem}
-.marca{display:flex;align-items:center;gap:.5rem;font:700 1.3rem "Bricolage Grotesque",sans-serif;color:var(--tinta);text-decoration:none}
-.marca svg{width:1.5rem;height:1.5rem}
-nav#menu{display:flex;align-items:center;gap:1.4rem;margin-left:auto}
-nav#menu a{color:var(--tinta);text-decoration:none;font-weight:600;font-size:.98rem}
-nav#menu a:hover{color:var(--azul)}
-nav#menu a[aria-current="page"]{border-bottom:2px solid var(--azul)}
 .btn{display:inline-block;padding:.75rem 1.3rem;border-radius:.5rem;font-weight:600;text-decoration:none;border:2px solid var(--azul);background:var(--azul);color:var(--blanco)}
 .btn:hover{background:var(--azul-osc);border-color:var(--azul-osc)}
 .btn.sec{background:transparent;color:var(--azul)}
 .btn.sec:hover{background:var(--azul);color:var(--blanco)}
-nav#menu a.btn{color:var(--blanco);padding:.55rem 1rem}
-nav#menu a.asesor{border:2px solid var(--tinta);border-radius:.5rem;padding:.5rem .9rem;font-size:.92rem}
-nav#menu a.asesor:hover{background:var(--tinta);color:var(--blanco)}
-#btnMenu{display:none;margin-left:auto;background:none;border:2px solid var(--tinta);border-radius:.5rem;padding:.45rem .7rem;font:600 .95rem "Source Sans 3",sans-serif;color:var(--tinta)}
-@media(max-width:860px){
-  #btnMenu{display:block}
-  nav#menu{display:none;position:absolute;left:0;right:0;top:100%;flex-direction:column;align-items:stretch;gap:0;background:var(--blanco);border-bottom:1px solid var(--linea);padding:.5rem 1.25rem 1.25rem;margin:0}
-  nav#menu.abierto{display:flex}
-  nav#menu a{padding:.8rem 0;border-bottom:1px solid var(--linea)}
-  nav#menu a.btn,nav#menu a.asesor{margin-top:.75rem;text-align:center;border-bottom:2px solid}
-  nav#menu #stt-user-slot{width:100%}
-  nav#menu .stt-login-cta{width:100%;margin-top:.75rem;text-align:center}
-}
-
-/* menu de usuario (menuUser.js): avatar+dropdown con sesion, boton Ingresar sin ella */
-#stt-user-slot{display:inline-flex;align-items:center}
-nav#menu .stt-login-cta{font:inherit;font-weight:600;font-size:.95rem;color:var(--azul);background:none;border:2px solid var(--azul);border-radius:.5rem;padding:.5rem .9rem;cursor:pointer}
-nav#menu .stt-login-cta:hover{background:var(--azul);color:var(--blanco)}
 
 /* hero */
 .hero{padding-top:clamp(2.5rem,6vw,4.5rem)}
@@ -113,26 +85,6 @@ footer h4{margin:0 0 .6rem;color:var(--blanco);font:500 1rem "Bricolage Grotesqu
 @media(max-width:860px){footer .wrap{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 </style>
-<header class="top">
-  <div class="wrap barra">
-    <a class="marca" href="/" aria-label="Statetty, ir al mapa de inmuebles">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#1d5fd0" d="M12 1.5a7.5 7.5 0 0 0-7.5 7.5c0 5.4 7.5 13.5 7.5 13.5S19.5 14.4 19.5 9A7.5 7.5 0 0 0 12 1.5Z"/><circle cx="12" cy="9" r="3" fill="#fff"/></svg>
-      Statetty
-    </a>
-    <button id="btnMenu" type="button" aria-expanded="false" aria-controls="menu" onclick="toggleMenu()">Menú</button>
-    <nav id="menu" aria-label="Principal">
-      <a href="/">Buscar inmuebles</a>
-      <a href="/como-funciona/" aria-current="page">Cómo funciona</a>
-      <a href="/como-funciona/#por-que-un-agente">¿Por qué un agente?</a>
-      <a href="/blog/">Blog</a>
-      <a class="btn" href="https://wa.me/59178447518?text=Hola%20Statetty%2C%20quiero%20que%20un%20agente%20me%20ayude%20a%20buscar%20un%20inmueble">Hablar con un agente</a>
-      <a class="asesor" href="/ai/">¿Eres asesor inmobiliario?</a>
-      <!-- Slot de sesion: menuUser.js lo reemplaza por el avatar si hay sesion,
-           o lo deja vacio y agrega el boton "Ingresar" al lado. -->
-      <span id="stt-user-slot"></span>
-    </nav>
-  </div>
-</header>
 <main>
 
 <section class="hero">
@@ -271,16 +223,3 @@ footer h4{margin:0 0 .6rem;color:var(--blanco);font:500 1rem "Bricolage Grotesqu
 </section>
 
 </main>
-<script>
-/** --------------------------------------------------------------------------------------------------- toggleMenu
- * Abre o cierra el menú principal en móvil y actualiza aria-expanded
- *
- * @returns {Object}
- */
-  const toggleMenu=()=>{try{
-    let t0=Date.now();
-    let nav=document.getElementById('menu'),btn=document.getElementById('btnMenu');
-    let abierto=nav.classList.toggle('abierto');btn.setAttribute('aria-expanded',String(abierto));
-    return {tiempo:(Date.now()-t0)/1000,succes:true,error:null,value:abierto};
-  } catch(e){console.log('[Statetty] [Web] toggleMenu:',e.message);return {tiempo:0,succes:false,error:e.message,value:null};}}
-</script>

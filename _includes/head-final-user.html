@@ -9,6 +9,12 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
 
+  <!-- Barra de navegación: mismo include que /ai/ (header.html), con los links
+       propios de final-user. Su CSS va aparte y no theme-1.css a propósito: el
+       tema entero cambiaría el diseño de la página (ver el archivo). -->
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="{{ '/assets/css/header-final-user.css?v=1' | prepend: site.url }}">
+
   <script src="/assets/js/config.js"></script>
   <!-- Menú de usuario: este include carga buddy.js -> auth.js -> menuUser.js, que
        reemplazan #stt-user-slot por el avatar (con sesión) o agregan el botón
