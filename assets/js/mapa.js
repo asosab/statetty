@@ -1030,6 +1030,7 @@ function mostrarAvisoLogin() {
 
 // Usuario autenticado pero con cutoffDate vencido (`usuario.hasTime === false`).
 // Se avisa y se detiene la carga de resultados: sin tiempo de uso no hay mapa.
+// Único botón "Planes" → abre la sección de planes en una pestaña nueva.
 function mostrarAvisoSinTiempo(usuario) {
   var nombre = (usuario && (usuario.first_name || usuario.buddyName)) || '';
   var texto = 'Hola ' + nombre + ', no tienes tiempo de uso disponible, por favor, compra más tiempo';
@@ -1037,13 +1038,18 @@ function mostrarAvisoSinTiempo(usuario) {
     window.Buddy.ui.box({
       title: nombre || 'Statetty',
       message: texto,
-      submitText: 'Entendido',
-      cancelText: 'Cerrar'
+      submitText: 'Planes',
+      cancelText: 'Cerrar',
+      onSubmit: function () { window.open('https://statetty.com/#planes', '_blank', 'noopener'); }
     });
+    // uiBox siempre pinta un botón secundario (cancelar): acá solo queremos "Planes".
+    var ov = document.querySelector('.buddy-ui-overlay');
+    var btnCancel = ov && ov.querySelector('.buddy-ui-box__btn--secondary');
+    if (btnCancel) btnCancel.style.display = 'none';
     return;
   }
   console.log('[WebScrap] [log] mostrarAvisoSinTiempo: ' + texto);
-  alert(texto);
+  alert(texto + ' — https://statetty.com/#planes');
 }
 
 $(document).ready(function () {
