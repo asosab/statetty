@@ -18,9 +18,8 @@
   <script src="/assets/js/config.js"></script>
   <!-- Menú de usuario: este include carga buddy.js -> auth.js -> menuUser.js, que
        reemplazan #stt-user-slot por el avatar (con sesión) o agregan el botón
-       "Ingresar" (sin sesión). El selector se fija acá porque menuUser.js lo lee
-       al evaluarse (menuUser.js:116) y esos scripts van diferidos. -->
-  <script>window.STT_MENU_USER_SELECTOR = '#stt-user-slot';</script>
+       "Ingresar" (sin sesión). El selector `#stt-user-slot` lo fija la rama del
+       header en _includes/header.html (así también lo tiene la home `/`). -->
   {% include headBuddy.html %}
 
   {% include analytics.html %}

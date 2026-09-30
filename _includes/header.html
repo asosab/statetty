@@ -1,6 +1,6 @@
 <header class="header" id="header">
   <div class="container">
-{% if page.layout == 'landing' or page.url == '/' %}
+{% if page.layout == 'landing' %}
     <a class="header-logo" href="#inicio">
 {% else %}
     <a class="header-logo" href="/">
@@ -10,7 +10,7 @@
     </a>
     <button class="nav-toggle" id="navToggle" aria-label="Menú"><span></span><span></span><span></span></button>
     <nav class="header-nav" id="headerNav">
-{% if page.layout == 'landing' or page.url == '/' %}
+{% if page.layout == 'landing' %}
       <a href="#funciones">Funciones</a>
       <a href="#planes">Planes</a>
       <a href="#prensa">Prensa</a>
@@ -18,14 +18,26 @@
       <a href="#blog">Blog</a>
       <a href="/manual/">Manual</a>
       <a href="#Contacto" class="btn-nav-cta">Empezá ahora</a>
-{% elsif page.layout == 'final-user' %}
+{% elsif page.layout == 'final-user' or page.url == '/' %}
+{% comment %} Barra de usuario final: la usan las páginas `final-user` y la home `/`
+    (el mapa). Cada link se oculta en la página a la que apunta, para que el menú
+    nunca ofrezca un enlace a sí misma. {% endcomment %}
+{% unless page.url == '/' %}
       <a href="/">Buscar inmuebles</a>
-      <a href="/como-funciona/" class="active">Cómo funciona</a>
+{% endunless %}
+{% unless page.url == '/como-funciona/' %}
+      <a href="/como-funciona/">Cómo funciona</a>
+{% endunless %}
       <a href="/como-funciona/#por-que-un-agente">¿Por qué un agente?</a>
       <a href="/blog/">Blog</a>
       <a href="https://wa.me/59178447518?text=Hola%20Statetty%2C%20quiero%20que%20un%20agente%20me%20ayude%20a%20buscar%20un%20inmueble" class="btn-nav-cta">Hablar con un agente</a>
       <a href="/ai/">¿Eres asesor inmobiliario?</a>
       <span id="stt-user-slot"></span>
+      {% comment %} menuUser.js lee este selector al evaluarse y sus scripts van diferidos,
+          así que alcanza con fijarlo en el cuerpo. Con `#stt-user-slot` el avatar
+          reemplaza el slot (y no el CTA "Hablar con un agente", que siempre se ve).
+          Las demás páginas no lo fijan y siguen reemplazando su `.btn-nav-cta`. {% endcomment %}
+      <script>window.STT_MENU_USER_SELECTOR = '#stt-user-slot';</script>
 {% else %}
       <a href="/">Inicio</a>
       <a href="/#planes">Planes</a>
