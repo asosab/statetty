@@ -1,20 +1,9 @@
 ---
-layout: null
+layout: final-user
 permalink: /como-funciona/
 title: Cómo funciona Statetty | Encuentra tu inmueble con un agente a tu lado
 description: Busca inmuebles en venta, alquiler o anticrético en el mapa y deja que un agente inmobiliario te acompañe hasta cerrar el trato. Bolivia y Perú.
 ---
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>{{ page.title }}</title>
-<meta name="description" content="{{ page.description }}">
-<link rel="canonical" href="https://statetty.com/como-funciona/">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
 <style>
 :root{--tinta:#0e2238;--azul:#1d5fd0;--azul-osc:#164aa6;--fondo:#f6f8fb;--pizarra:#5a6b7d;--linea:#d9e1ea;--verde:#e3efe9;--ambar:#f2a33a;--blanco:#fff}
 *{box-sizing:border-box}
@@ -53,7 +42,14 @@ nav#menu a.asesor:hover{background:var(--tinta);color:var(--blanco)}
   nav#menu.abierto{display:flex}
   nav#menu a{padding:.8rem 0;border-bottom:1px solid var(--linea)}
   nav#menu a.btn,nav#menu a.asesor{margin-top:.75rem;text-align:center;border-bottom:2px solid}
+  nav#menu #stt-user-slot{width:100%}
+  nav#menu .stt-login-cta{width:100%;margin-top:.75rem;text-align:center}
 }
+
+/* menu de usuario (menuUser.js): avatar+dropdown con sesion, boton Ingresar sin ella */
+#stt-user-slot{display:inline-flex;align-items:center}
+nav#menu .stt-login-cta{font:inherit;font-weight:600;font-size:.95rem;color:var(--azul);background:none;border:2px solid var(--azul);border-radius:.5rem;padding:.5rem .9rem;cursor:pointer}
+nav#menu .stt-login-cta:hover{background:var(--azul);color:var(--blanco)}
 
 /* hero */
 .hero{padding-top:clamp(2.5rem,6vw,4.5rem)}
@@ -112,12 +108,11 @@ footer .wrap{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:2rem}
 footer a{color:#e8eef5;text-decoration:none;display:block;margin-bottom:.4rem}
 footer a:hover{text-decoration:underline}
 footer h4{margin:0 0 .6rem;color:var(--blanco);font:500 1rem "Bricolage Grotesque",sans-serif}
+.credito{margin:1.5rem 0 0;font-size:.9rem;color:#9fb0c2}
+.credito a{color:#e8eef5;display:inline;margin:0}
 @media(max-width:860px){footer .wrap{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 </style>
-</head>
-<body>
-
 <header class="top">
   <div class="wrap barra">
     <a class="marca" href="/" aria-label="Statetty, ir al mapa de inmuebles">
@@ -132,10 +127,12 @@ footer h4{margin:0 0 .6rem;color:var(--blanco);font:500 1rem "Bricolage Grotesqu
       <a href="/blog/">Blog</a>
       <a class="btn" href="https://wa.me/59178447518?text=Hola%20Statetty%2C%20quiero%20que%20un%20agente%20me%20ayude%20a%20buscar%20un%20inmueble">Hablar con un agente</a>
       <a class="asesor" href="/ai/">¿Eres asesor inmobiliario?</a>
+      <!-- Slot de sesion: menuUser.js lo reemplaza por el avatar si hay sesion,
+           o lo deja vacio y agrega el boton "Ingresar" al lado. -->
+      <span id="stt-user-slot"></span>
     </nav>
   </div>
 </header>
-
 <main>
 
 <section class="hero">
@@ -274,32 +271,6 @@ footer h4{margin:0 0 .6rem;color:var(--blanco);font:500 1rem "Bricolage Grotesqu
 </section>
 
 </main>
-
-<footer>
-  <div class="wrap">
-    <div>
-      <h4>Statetty</h4>
-      <p>Encuentra inmuebles en el mapa y conecta con agentes inmobiliarios en Bolivia y Perú.</p>
-      <p>Charcas 168, Santa Cruz de la Sierra, Bolivia<br>+591 78447518<br>info@statetty.com</p>
-    </div>
-    <div>
-      <h4>Para ti</h4>
-      <a href="/">Buscar inmuebles</a>
-      <a href="/como-funciona/">Cómo funciona</a>
-      <a href="/como-funciona/#por-que-un-agente">¿Por qué un agente?</a>
-      <a href="/blog/">Blog</a>
-    </div>
-    <div>
-      <h4>Para asesores</h4>
-      <a href="/ai/">¿Eres asesor inmobiliario?</a>
-      <a href="/ai/#planes">Planes</a>
-      <a href="https://t.me/statettybot">Statetty en Telegram</a>
-      <a href="https://statetty.com/politica_de_privacidad.html">Política de privacidad</a>
-      <a href="https://statetty.com/terminos_y_condiciones.html">Términos y condiciones</a>
-    </div>
-  </div>
-</footer>
-
 <script>
 /** --------------------------------------------------------------------------------------------------- toggleMenu
  * Abre o cierra el menú principal en móvil y actualiza aria-expanded
@@ -313,5 +284,3 @@ footer h4{margin:0 0 .6rem;color:var(--blanco);font:500 1rem "Bricolage Grotesqu
     return {tiempo:(Date.now()-t0)/1000,succes:true,error:null,value:abierto};
   } catch(e){console.log('[Statetty] [Web] toggleMenu:',e.message);return {tiempo:0,succes:false,error:e.message,value:null};}}
 </script>
-</body>
-</html>

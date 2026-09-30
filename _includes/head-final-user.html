@@ -1,0 +1,21 @@
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>{{ page.title }}</title>
+  {% include favicon.html %}
+  {% include seo.html %}
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+
+  <script src="/assets/js/config.js"></script>
+  <!-- Menú de usuario: este include carga buddy.js -> auth.js -> menuUser.js, que
+       reemplazan #stt-user-slot por el avatar (con sesión) o agregan el botón
+       "Ingresar" (sin sesión). El selector se fija acá porque menuUser.js lo lee
+       al evaluarse (menuUser.js:116) y esos scripts van diferidos. -->
+  <script>window.STT_MENU_USER_SELECTOR = '#stt-user-slot';</script>
+  {% include headBuddy.html %}
+
+  {% include analytics.html %}
+</head>
