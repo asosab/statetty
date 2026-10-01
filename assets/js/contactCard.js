@@ -124,7 +124,7 @@
     }
 
     lineas.push('');
-    lineas.push('\n' + (intent === 'inmueble' ? 'Página: ' : 'Pagina: ') + paginaUrl);
+    lineas.push('\nEste mensaje fué enviado desde ' + paginaUrl);
 
     return lineas.join('\n');
   }
@@ -314,7 +314,7 @@
       }
 
       var paginaUrl = estado.paginaUrl ||
-        (estado.mode === 'embed' ? 'https://statetty.com/inmueble/' + encodeURIComponent(inmuebleId) : window.location.pathname);
+        (estado.mode === 'embed' ? 'https://statetty.com/inmueble/' + encodeURIComponent(inmuebleId) : (window.location.origin + window.location.pathname));
 
       persistCurrentValues();
 
@@ -411,7 +411,7 @@
         if (ctx.titulo !== undefined) el.title.textContent = ctx.titulo;
         if (ctx.mensaje !== undefined) el.msg.value = ctx.mensaje;
         if (ctx.intent !== undefined) estado.intent = ctx.intent;
-        estado.paginaUrl = ctx.paginaUrl || window.location.pathname;
+        estado.paginaUrl = ctx.paginaUrl || (window.location.origin + window.location.pathname);
         setFormStatus();
         el.wa.classList.remove('show');
         el.wa.onclick = null;
@@ -464,8 +464,7 @@
     dlg.__sttInst.setContext({
       titulo: opts.titulo || 'Contactar a un asesor',
       mensaje: opts.mensaje || '',
-      intent: opts.intent || 'buscar',
-      paginaUrl: window.location.pathname
+      intent: opts.intent || 'buscar'
     });
 
     if (typeof dlg.showModal === 'function') {
