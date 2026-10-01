@@ -1,0 +1,295 @@
+/* ============================================================
+   Tarjeta de contacto (compartida)
+   La usan la página /inmueble/<id> (embebida) y el toolbox
+   <dialog> de statetty.com. Es autocontenida: cada var() lleva
+   fallback porque el layout `final-user` no carga theme-1.css.
+   ============================================================ */
+
+/* ---- Contact Card ---- */
+.inm-contact-card {
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: var(--radius-lg, 20px);
+  padding: clamp(18px, 5vw, 24px);
+  box-shadow: 0 4px 24px rgba(0,0,0,.06);
+}
+.inm-contact-card-title {
+  font-family: var(--font-head, 'Montserrat', sans-serif);
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: var(--blue-dark, #074f66);
+  margin: 0 0 16px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--yellow, #eebf3f);
+}
+
+/* ---- Contact Form Elements ---- */
+.inm-form-textarea,
+.inm-form-input,
+.inm-form-select {
+  width: 100%;
+  padding: 13px 14px;
+  border: 1px solid #ddd;
+  border-radius: var(--radius-sm, 6px);
+  font-family: var(--font-body, 'Lato', sans-serif);
+  font-size: 1rem;
+  color: #444;
+  background: #fafafa;
+  transition: var(--transition, 0.25s cubic-bezier(.4,0,.2,1));
+  outline: none;
+}
+.inm-form-textarea:focus,
+.inm-form-input:focus,
+.inm-form-select:focus {
+  border-color: var(--blue, #17baef);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(23,186,239,.12);
+}
+.inm-form-textarea {
+  resize: vertical;
+  min-height: 90px;
+  line-height: 1.6;
+}
+.inm-form-input,
+.inm-form-select {
+  margin-bottom: 12px;
+}
+.inm-form-phone-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.inm-form-phone-group .inm-form-select {
+  width: auto;
+  flex: 1 1 108px;
+  min-width: 100px;
+  margin-bottom: 12px;
+}
+.inm-form-phone-group .inm-form-input {
+  flex: 3 1 140px;
+  min-width: 140px;
+  margin-bottom: 12px;
+}
+.inm-form-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: .78rem;
+  color: #666;
+  margin-bottom: 16px;
+  cursor: pointer;
+  line-height: 1.4;
+}
+.inm-form-checkbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  flex-shrink: 0;
+  accent-color: var(--blue, #17baef);
+}
+.inm-form-submit {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  padding: 14px 24px;
+  border: none;
+  border-radius: 50px;
+  background: var(--yellow, #eebf3f);
+  color: var(--blue-dark, #074f66);
+  font-family: var(--font-head, 'Montserrat', sans-serif);
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: var(--transition, 0.25s cubic-bezier(.4,0,.2,1));
+}
+.inm-form-submit:hover {
+  background: var(--yellow-pale, #f4d67a);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(238,191,63,.35);
+}
+
+/* ============================================================
+   Estados del formulario
+   ============================================================ */
+
+.inm-form-status {
+  display: none;
+  margin-top: 14px;
+  padding: 14px 16px;
+  border-radius: var(--radius-md, 12px);
+  border: 1px solid transparent;
+  font-size: .92rem;
+  line-height: 1.5;
+  font-weight: 400;
+  animation: inmStatusFade .25s ease;
+}
+
+.inm-form-status.show {
+  display: block;
+}
+
+.inm-form-status.success {
+  background: #edfdf3;
+  color: #0f7a39;
+  border-color: #9de2b4;
+}
+
+.inm-form-status.warning {
+  background: #fff8e6;
+  color: #8a6500;
+  border-color: #f2d36b;
+}
+
+.inm-form-status.error {
+  background: #fff1f1;
+  color: #b42318;
+  border-color: #efb5b5;
+}
+
+@keyframes inmStatusFade {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================================
+   Campos con error
+   ============================================================ */
+
+.inm-form-input.error,
+.inm-form-select.error,
+.inm-form-textarea.error {
+  border-color: #d92d20 !important;
+  background: #fff5f5;
+  box-shadow: 0 0 0 3px rgba(217,45,32,.12);
+}
+
+.inm-form-input.error:focus,
+.inm-form-select.error:focus,
+.inm-form-textarea.error:focus {
+  border-color: #d92d20 !important;
+  box-shadow: 0 0 0 4px rgba(217,45,32,.15);
+}
+
+.inm-form-checkbox.error {
+  color: #b42318;
+}
+
+.inm-form-checkbox.error input[type="checkbox"] {
+  outline: 2px solid #d92d20;
+  outline-offset: 2px;
+}
+
+/* ============================================================
+   Botón enviando
+   ============================================================ */
+
+.inm-form-submit:disabled {
+  opacity: .7;
+  cursor: wait;
+  transform: none;
+  box-shadow: none;
+}
+
+.inm-form-submit:disabled:hover {
+  background: var(--yellow, #eebf3f);
+}
+
+/* ============================================================
+   Transiciones
+   ============================================================ */
+
+.inm-form-input,
+.inm-form-select,
+.inm-form-textarea,
+.inm-form-checkbox,
+.inm-form-status {
+  transition:
+    border-color .2s ease,
+    box-shadow .2s ease,
+    background-color .2s ease,
+    color .2s ease,
+    opacity .2s ease;
+}
+
+/* ============================================================
+   Toolbox flotante (<dialog>)
+   Solo aparece en statetty.com. La tarjeta de adentro es la
+   misma `.inm-contact-card`; acá vive únicamente el chrome.
+   ============================================================ */
+
+.stt-tb {
+  border: none;
+  padding: 0;
+  background: transparent;
+  width: min(440px, calc(100vw - 24px));
+  max-height: calc(100vh - 24px);
+  overflow: auto;
+}
+
+.stt-tb::backdrop {
+  background: rgba(4, 42, 54, .55);
+  backdrop-filter: blur(2px);
+}
+
+.stt-tb .inm-contact-card {
+  margin: 0;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .28);
+}
+
+.stt-tb .inm-contact-card-title {
+  padding-right: 36px;
+}
+
+.stt-tb-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: rgba(7, 79, 102, .06);
+  color: var(--blue-dark, #074f66);
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: var(--transition, 0.25s cubic-bezier(.4,0,.2,1));
+}
+
+.stt-tb-close:hover {
+  background: rgba(7, 79, 102, .14);
+}
+
+.stt-tb-wa {
+  display: none;
+  width: 100%;
+  min-height: 48px;
+  margin-top: 12px;
+  padding: 14px 24px;
+  border: none;
+  border-radius: 50px;
+  background: #25d366;
+  color: #fff;
+  font-family: var(--font-head, 'Montserrat', sans-serif);
+  font-weight: 700;
+  font-size: 1rem;
+  text-align: center;
+  cursor: pointer;
+}
+
+.stt-tb-wa.show {
+  display: block;
+}
+
+.stt-tb-wa:hover {
+  background: #1ebe5b;
+}

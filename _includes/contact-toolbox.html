@@ -1,0 +1,8 @@
+<!-- Toolbox de contacto: la ventana flotante que abren los disparadores
+     `[data-stt-intent]` (CTA del header y links de /como-funciona/). Va vacía;
+     `assets/js/contactCard.js` le monta la tarjeta y llama a showModal().
+     El cierre (×) queda como hijo del <dialog>, posicionado por contactCard.css. -->
+<dialog class="stt-tb" id="stt-tb">
+  <div id="stt-tb-mount"></div>
+  <button type="button" class="stt-tb-close" aria-label="Cerrar">&times;</button>
+</dialog>

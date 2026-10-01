@@ -18,7 +18,7 @@ a{color:var(--azul)}
 :focus-visible{outline:3px solid var(--ambar);outline-offset:2px}
 .wrap{width:min(1120px,100% - 2.5rem);margin-inline:auto}
 section{padding:clamp(3rem,7vw,5.5rem) 0}
-.btn{display:inline-block;padding:.75rem 1.3rem;border-radius:.5rem;font-weight:600;text-decoration:none;border:2px solid var(--azul);background:var(--azul);color:var(--blanco)}
+.btn{display:inline-block;padding:.75rem 1.3rem;border-radius:.5rem;font-weight:600;text-decoration:none;border:2px solid var(--azul);background:var(--azul);color:var(--blanco);font-family:inherit;font-size:inherit;cursor:pointer}
 .btn:hover{background:var(--azul-osc);border-color:var(--azul-osc)}
 .btn.sec{background:transparent;color:var(--azul)}
 .btn.sec:hover{background:var(--azul);color:var(--blanco)}
@@ -142,7 +142,7 @@ footer h4{margin:0 0 .6rem;color:var(--blanco);font:500 1rem "Bricolage Grotesqu
           <li>Recibes opciones filtradas y visitas coordinadas.</li>
         </ol>
         <p><strong>Esta búsqueda personalizada no tiene costo para ti.</strong></p>
-        <a class="btn" href="https://wa.me/59178447518?text=Hola%20Statetty%2C%20quiero%20que%20un%20agente%20me%20ayude%20a%20buscar%20un%20inmueble">Pedir mi búsqueda</a>
+        <button type="button" class="btn" data-stt-intent="buscar" data-stt-msg="Busco un inmueble para comprar o alquilar.">Pedir mi búsqueda</button>
       </article>
     </div>
   </div>
@@ -194,7 +194,7 @@ footer h4{margin:0 0 .6rem;color:var(--blanco);font:500 1rem "Bricolage Grotesqu
         <li>Te ayuda a fijar un precio acorde al mercado.</li>
         <li>Cuida la parte legal y la documentación del trato.</li>
       </ul>
-      <a class="btn" href="https://wa.me/59178447518?text=Hola%20Statetty%2C%20quiero%20que%20un%20agente%20me%20ayude%20a%20publicar%20mi%20inmueble">Hablar con un agente</a>
+      <button type="button" class="btn" data-stt-intent="publicar" data-stt-msg="Quiero publicar un inmueble.">Hablar con un agente</button>
     </div>
   </div>
 </section>
@@ -217,7 +217,7 @@ footer h4{margin:0 0 .6rem;color:var(--blanco);font:500 1rem "Bricolage Grotesqu
     <p>Explora el mapa ahora o cuéntale a un agente qué necesitas.</p>
     <div class="acciones">
       <a class="btn" href="/">Buscar en el mapa</a>
-      <a class="btn sec" href="https://wa.me/59178447518?text=Hola%20Statetty%2C%20quiero%20que%20un%20agente%20me%20ayude%20a%20buscar%20un%20inmueble">Hablar con un agente</a>
+      <button type="button" class="btn sec" data-stt-intent="buscar" data-stt-msg="Busco un inmueble para comprar o alquilar.">Hablar con un agente</button>
     </div>
   </div>
 </section>

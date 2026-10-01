@@ -56,8 +56,11 @@
 .header-nav a:hover,
 .header-nav a.active { color: #fff; background: rgba(255,255,255,.12); }
 .header-nav .btn-nav-cta {
+  font-family: var(--font-head); font-weight: 700;
+  font-size: .82rem; text-transform: uppercase; letter-spacing: .04em;
   background: var(--yellow); color: var(--blue-dark);
-  padding: 8px 20px; border-radius: 50px; font-weight: 700;
+  padding: 8px 20px; border: none; border-radius: 50px; cursor: pointer;
+  transition: var(--transition);
 }
 .header-nav .btn-nav-cta:hover { background: var(--yellow-pale); color: var(--blue-dark); }
 .header-nav .stt-login-cta {

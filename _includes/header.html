@@ -30,7 +30,7 @@
 {% endunless %}
       <a href="/como-funciona/#por-que-un-agente">¿Por qué un asesor?</a>
       <a href="/blog/">Blog</a>
-      <a href="https://wa.me/59178447518?text=Hola%20Statetty%2C%20quiero%20que%20un%20agente%20me%20ayude%20a%20buscar%20un%20inmueble" class="btn-nav-cta">Hablar con un asesor</a>
+      <button type="button" class="btn-nav-cta" data-stt-intent="buscar" data-stt-msg="Busco un inmueble para comprar o alquilar.">Hablar con un asesor</button>
       <a href="/ai/">¡Soy asesor!</a>
       <span id="stt-user-slot"></span>
       {% comment %} menuUser.js lee este selector al evaluarse y sus scripts van diferidos,
@@ -61,3 +61,8 @@
   }
 })();
 </script>
+
+{% comment %} La ventana del toolbox va acá para que exista en toda página donde
+    el header pueda mostrar el CTA `data-stt-intent` (final-user y la home `/`).
+    En el resto de layouts queda inerte: nadie llama a showModal(). {% endcomment %}
+{% include contact-toolbox.html %}

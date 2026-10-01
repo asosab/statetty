@@ -75,7 +75,10 @@
     DOM.mapContainer    = document.getElementById('inm-map');
     DOM.simCard         = document.getElementById('inm-sim-card');
     DOM.simList         = document.getElementById('inm-sim-list');
-    DOM.contactCard     = document.querySelector('.inm-contact-card');
+    // El ejs ahora monta la tarjeta con STTContact.mountInto() en #inm-contact-mount;
+    // el fallback .inm-contact-card mantiene viva la copia standalone
+    // statetty.com/inmueble/index.html (con su propio markup estático).
+    DOM.contactCard     = document.getElementById('inm-contact-mount') || document.querySelector('.inm-contact-card');
   }
 
   function getParam() {
