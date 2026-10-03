@@ -178,6 +178,81 @@
     }
   }
 
+  // ---------- prefill desde el usuario autenticado ----------
+
+  /**
+   * Parte un teléfono con prefijo internacional en {code, number} para el par
+   * #inm-phone-code (select) + #inm-phone (input). `waphone` se guarda completo
+   * (ej. '+59178447518'), así que hay que separar el prefijo del resto.
+   * Si el prefijo no está en PHONE_CODES se usa '+591' y el número tal cual.
+   */
+  function partirTelefono(tel) {
+    var raw = String(tel || '').trim();
+    // Normaliza a '+' inicial: los códigos de PHONE_CODES lo traen y así el
+    // match no depende de cómo se haya guardado el waphone.
+    var out = { code: PHONE_CODES[0][0], number: raw.indexOf('+') === 0 ? raw : '+' + raw };
+    // Compara contra PHONE_CODES con el '+' incluido (los códigos lo traen), y
+    // recién al final se saca. El único par donde un código es prefijo de otro
+    // es +58/+598, y +598 está antes en PHONE_CODES, así que gana el largo.
+    for (var i = 0; i < PHONE_CODES.length; i++) {
+      var code = PHONE_CODES[i][0];
+      if (out.number.indexOf(code) === 0) {
+        out.code = code;
+        out.number = out.number.slice(code.length);
+        break;
+      }
+    }
+    out.number = out.number.replace(/^\s*\+/, '').replace(/^\s+/, '');
+    return out;
+  }
+
+  /**
+   * Si hay un usuario Statetty autenticado, pasa nombre / email / teléfono /
+   * "soy asesor" a solo lectura y los llena con sus datos. Da igual si tiene
+   * tiempo de uso disponible (hasTime): si hay sesión, se usa la sesión.
+   * Los campos sin dato quedan editables: bloqueados y vacíos romperían el
+   * `required` y dejarían el formulario inservible.
+   */
+  async function aplicarUsuarioSesion(el, estado) {
+    try {
+      if (window.STT && window.STT.ready) await window.STT.ready;
+    } catch (err) { /* sin user.js/auth.js en la página: se sigue como anónimo */ }
+
+    var u = window.STT && window.STT.getUsuario ? window.STT.getUsuario() : null;
+    estado.usuario = u || null;
+
+    // Se corre en cada apertura del toolbox: primero se desarma el estado de la
+    // corrida anterior, así un logout con la página abierta no deja la tarjeta
+    // bloqueada con los datos de la cuenta que se acaba de cerrar.
+    [el.name, el.email, el.phone].forEach(function (n) { n.readOnly = false; });
+    el.phoneCode.disabled = false;
+    if (el.esAsesor) { el.esAsesor.disabled = false; el.esAsesor.checked = false; }
+
+    if (!u) return;
+
+    var nombre = (u.name || u.buddyName || '').trim();
+    var email = (u.email || '').trim();
+
+    if (nombre) { el.name.value = nombre; el.name.readOnly = true; }
+    if (email) { el.email.value = email; el.email.readOnly = true; }
+
+    var waphone = (u.waphone || '').trim();
+    if (waphone) {
+      var tel = partirTelefono(waphone);
+      el.phoneCode.value = tel.code;
+      el.phoneCode.disabled = true;
+      el.phone.value = tel.number;
+      el.phone.readOnly = true;
+    }
+
+    if (el.esAsesor) {
+      el.esAsesor.checked = true;
+      el.esAsesor.disabled = true;
+    }
+
+    console.log('[Statetty] [info] aplicarUsuarioSesion: prefill desde cuenta, esAsesor forzado a true');
+  }
+
   // ---------- montaje ----------
 
   function activar(root, cfg) {
@@ -187,7 +262,8 @@
       mode: cfg.mode || 'embed',
       inmuebleId: cfg.inmuebleId || null,
       intent: cfg.intent || 'inmueble',
-      paginaUrl: cfg.paginaUrl || ''
+      paginaUrl: cfg.paginaUrl || '',
+      usuario: null
     };
 
     el.title.textContent = cfg.titulo || 'Pregunta al asesor';
@@ -227,7 +303,13 @@
       if (el.esAsesor && saved.esAsesor === true) el.esAsesor.checked = true;
     }
 
+    // Después del restore: si hay sesión, la cuenta pisa lo guardado localmente.
+    aplicarUsuarioSesion(el, estado);
+
     function persistCurrentValues() {
+      // Con sesión iniciada los campos vienen de la cuenta, no del visitante: si
+      // se guardaran, el próximo anónimo del mismo navegador los heredaría.
+      if (estado.usuario) return;
       saveForm({
         email: el.email.value.trim(),
         phoneCode: el.phoneCode.value,
@@ -415,6 +497,9 @@
         setFormStatus();
         el.wa.classList.remove('show');
         el.wa.onclick = null;
+        // El toolbox reutiliza la instancia entre aperturas (dlg.__sttInst): sin
+        // esto un login o logout con la página abierta no se refleja al reabrir.
+        aplicarUsuarioSesion(el, estado);
       }
     };
   }
