@@ -1834,3 +1834,27 @@ function calculateDH(lat1, lng1, lat2, lng2) {
     if (map && map.getZoom) { zoomRef = map.getZoom(); colocarCaja(); }
   }, 0);
 })();
+
+// -------------------------------
+// Ajuste UI maps/find: marcar IC y ocultar Fuentes de datos
+// -------------------------------
+(function ajustarUImapsFind() {
+  try {
+    const isFind = location.pathname && location.pathname.includes('/maps/find');
+    if (!isFind) return;
+    // Marcar IC checked y disparar cambio
+    const chkIC = document.querySelector('#agency-filter input.chk-agency[data-agency="ic"], #agency-filter input[data-agency="ic"]');
+    if (chkIC && !chkIC.checked) {
+      chkIC.checked = true;
+      chkIC.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    // Ocultar Bloque 3: Fuentes de datos
+    const sections = document.querySelectorAll('#toolbox .section');
+    sections.forEach(function(s) {
+      const header = s.querySelector('.section-header');
+      if (header && header.textContent && header.textContent.includes('Fuentes de datos')) {
+        s.style.display = 'none';
+      }
+    });
+  } catch (e) {}
+})();
