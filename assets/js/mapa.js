@@ -977,7 +977,7 @@ function mostrarAvisoSinResultados() {
 }
 
 function initEmptyMap() {
-  map = L.map('mapid').setView([-17.7833, -63.1821], 12);
+  if (!map) { map = L.map('mapid').setView([-17.7833, -63.1821], 12); window.map = map; }
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap'
   }).addTo(map);
@@ -1144,10 +1144,11 @@ $(document).ready(function () {
 
   function renderMap(locs, centerLat, centerLng, circleRadius, avgPrice, na, ag) {
     locations = locs;
-    // Dispersar inmuebles con coordenadas solapadas ANTES de crear los markers,
-    // para que ningún puntero quede tapado (y por ende sin poder recibir clicks).
     dispersarCoordenadas();
-    map = L.map('mapid');
+    if (!map) {
+      map = L.map('mapid');
+      window.map = map;
+    }
     initACMMapClickMarker(map);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -1621,7 +1622,6 @@ function calculateDH(lat1, lng1, lat2, lng2) {
 // -------------------------------
 (function initCajaFind() {
   if (window.__cajaFindInit) return;
-  window.__cajaFindInit = true;
   const caja = document.getElementById('caja');
   if (!caja) return;
   let map = window.map;
@@ -1850,14 +1850,10 @@ function calculateDH(lat1, lng1, lat2, lng2) {
   setTimeout(function () {
     if (map && map.getZoom) { zoomRef = map.getZoom(); colocarCaja(); }
   }, 0);
-})();
-
-// -------------------------------
-// Ajuste UI maps/find: marcar IC y ocultar Fuentes de datos
-// -------------------------------
   }
   init();
 })();
+
 (function ajustarUImapsFind() {
   try {
     const isFind = location.pathname && location.pathname.includes('/maps/find');
