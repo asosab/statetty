@@ -1620,17 +1620,24 @@ function calculateDH(lat1, lng1, lat2, lng2) {
 // Caja #caja (estilo mapaSimple) en maps/find
 // -------------------------------
 (function initCajaFind() {
+  if (window.__cajaFindInit) return;
+  window.__cajaFindInit = true;
   const caja = document.getElementById('caja');
   if (!caja) return;
   let map = window.map;
-  if (!map && typeof L !== 'undefined') {
-    const mapid = document.getElementById('mapid');
-    if (mapid && L.map) {
-      map = L.map('mapid').setView([-17.7833281, -63.1821673], 13);
-      window.map = map;
+  let tries = 0;
+  function ensureMap() {
+    if (map) return true;
+    map = window.map;
+    if (!map && typeof L !== 'undefined' && document.getElementById('mapid')) {
+      try { map = L.map('mapid').setView([-17.7833281,-63.1821673],13); window.map = map; } catch(e){}
     }
+    return !!map;
   }
-  if (!map) return;
+  if (!ensureMap()) {
+    const iv = setInterval(function(){ tries++; if (ensureMap() || tries>40){ clearInterval(iv); if (map) init(); }},250); return;
+  }
+  function init(){
   const contenedor = document.getElementById('mapid');
   const form = document.getElementById('form-buscar');
   const input = document.getElementById('texto');
@@ -1848,6 +1855,9 @@ function calculateDH(lat1, lng1, lat2, lng2) {
 // -------------------------------
 // Ajuste UI maps/find: marcar IC y ocultar Fuentes de datos
 // -------------------------------
+  }
+  init();
+})();
 (function ajustarUImapsFind() {
   try {
     const isFind = location.pathname && location.pathname.includes('/maps/find');
