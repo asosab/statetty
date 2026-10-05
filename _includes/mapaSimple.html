@@ -464,9 +464,13 @@
     boton.disabled = true;
     avisar('Buscando...', false);
     var base = (window.STATETTY_CONFIG && STATETTY_CONFIG.WS_API_BASE) || '';
+    const token = window.STT && window.STT.getToken ? window.STT.getToken() : '';
     fetch(base + 'statetty/buscarMapa', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': 'Bearer ' + token } : {})
+      },
       body: JSON.stringify({
         texto: texto,
         poligono: datosDe('poligono'),              // [{ puntos: [{lat, lng}, ...] }]
