@@ -1622,12 +1622,15 @@ function calculateDH(lat1, lng1, lat2, lng2) {
 (function initCajaFind() {
   const caja = document.getElementById('caja');
   if (!caja) return;
-  const mapEl = L.map || window.L ? (window.mapid ? window.map : null) : null;
   let map = window.map;
-  if (!map) {
-    // intentar más tarde
-    if (document.readyState === 'complete') return;
+  if (!map && typeof L !== 'undefined') {
+    const mapid = document.getElementById('mapid');
+    if (mapid && L.map) {
+      map = L.map('mapid').setView([-17.7833281, -63.1821673], 13);
+      window.map = map;
+    }
   }
+  if (!map) return;
   const contenedor = document.getElementById('mapid');
   const form = document.getElementById('form-buscar');
   const input = document.getElementById('texto');
@@ -1816,10 +1819,17 @@ function calculateDH(lat1, lng1, lat2, lng2) {
         avisar('No se pudo interpretar la búsqueda. Probá con otra frase.', true);
         return;
       }
-      if (window.pintar) window.pintar(res.data.resultados);
+      if (window.pintar) {
+        window.pintar(res.data.resultados);
+      } else if (typeof renderMap === 'function') {
+        renderMap(res.data.resultados, null, null, null, null, null);
+      }
       colocarCaja();
-      const tot = res.data.total;
+      const tot = res.data.total || (res.data.resultados ? res.data.resultados.length : 0);
       avisar(tot ? tot + (tot === 1 ? ' inmueble encontrado' : ' inmuebles encontrados') : 'Sin resultados. Probá con menos filtros o otra zona.', !tot);
+      if (typeof actualizarEstadisticas === 'function') {
+        try { actualizarEstadisticas(window.getVisibleLocations ? window.getVisibleLocations() : (res.data.resultados||[])); } catch(e){}
+      }
     }).catch(function () {
       avisar('Falló la búsqueda. Revisá tu conexión e intentá de nuevo.', true);
     }).then(function () {
