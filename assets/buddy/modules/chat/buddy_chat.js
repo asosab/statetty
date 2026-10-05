@@ -61,6 +61,13 @@ window.Buddy = window.Buddy || {};
       window.Buddy.isCharacterHidden());
   }
 
+  // El sitio puede tener el módulo character desactivado desde el toolbox: en ese
+  // caso no hay nada que "volver a mostrar" y el botón sería un control muerto.
+  function isCharacterDisabled() {
+    return !!(window.Buddy && typeof window.Buddy.isCharacterDisabled === 'function' &&
+      window.Buddy.isCharacterDisabled());
+  }
+
   function ensureStyles() {
     if (document.getElementById('buddy-chat-style')) return;
     var style = document.createElement('style');
@@ -204,7 +211,7 @@ window.Buddy = window.Buddy || {};
 
   function syncShowCharButton() {
     if (!elements.showCharBtn) return;
-    elements.showCharBtn.hidden = !isCharacterHidden();
+    elements.showCharBtn.hidden = !isCharacterHidden() || isCharacterDisabled();
   }
 
   function focusInput(options) {

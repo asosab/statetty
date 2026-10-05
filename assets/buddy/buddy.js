@@ -635,6 +635,15 @@ window.Buddy = window.Buddy || {};
   var closeBtnEl = null;
   var CLOSE_BUTTON_OFFSET_PX = 6;
 
+  // El personaje puede desactivarse desde el toolbox (módulo `character` de la
+  // lista de módulos, campo "Activo"). Es una decisión de la CONFIG DEL SITIO, no
+  // del visitante: a diferencia del botón × (que se guarda en localStorage de
+  // cada navegador), desactiva el personaje en todas las páginas del sitio y
+  // para todo el mundo, y no se puede revertir desde la API pública
+  // Buddy.showCharacter(). Todo lo demás de Buddy (telemetría, registro/auth,
+  // menú, chat) sigue funcionando normal.
+  var characterDisabled = false;
+
   // El resize del personaje se registra AQUÍ (evaluación del script) y no
   // dentro de ensureCharacterElement(): los módulos (backgrounds, archery…)
   // registran sus propios handlers de resize tras buddy:ready, y si este
@@ -691,10 +700,11 @@ window.Buddy = window.Buddy || {};
   // que devuelven resolveAsset/resolveExpression/resolveExpressionByCategory.
   // ---------------------------------------------------------------------
   function showCharacterImage(datosImagen) {
-    // Si el usuario ocultó al personaje (botón ×), ningún módulo (says,
-    // archery, etc.) puede forzar su reaparición. La única vía es la API
-    // pública Buddy.showCharacter().
-    if (characterHidden === true) return;
+    // Si el usuario ocultó al personaje (botón ×) o el sitio lo tiene
+    // desactivado desde el toolbox, ningún módulo (says, archery, etc.) puede
+    // forzar su reaparición. La única vía es la API pública Buddy.showCharacter()
+    // (y esa, a su vez, no puede con el bloqueo del toolbox).
+    if (isCharacterHidden()) return;
     if (!datosImagen || !datosImagen.archivo) return;
 
     ensureCharacterElement();
@@ -766,6 +776,7 @@ window.Buddy = window.Buddy || {};
   }
 
   function showCharacter() {
+    if (characterDisabled === true) return false;
     if (!characterHidden) return false;
 
     characterHidden = false;
@@ -786,7 +797,14 @@ window.Buddy = window.Buddy || {};
   }
 
   function isCharacterHidden() {
-    return characterHidden === true;
+    return characterHidden === true || characterDisabled === true;
+  }
+
+  // ¿El sitio tiene el módulo character desactivado ("Activo" desmarcado en el
+  // toolbox)? Los módulos lo consultan para no ofrecer un "volver a mostrar"
+  // que no puede funcionar.
+  function isCharacterDisabled() {
+    return characterDisabled === true;
   }
 
   // ---------------------------------------------------------------------
@@ -951,6 +969,9 @@ window.Buddy = window.Buddy || {};
   function preloadCharacterAssets() {
     var charData = getCharData();
     if (!charData) return Promise.resolve();
+    // Personaje desactivado en el toolbox: no se precargan sus imágenes
+    // (nadie las va a ver). El resto de Buddy sigue igual.
+    if (characterDisabled === true) return Promise.resolve();
 
     var jobs = [];
     var expressions = charData.expresiones || {};
@@ -1336,6 +1357,15 @@ window.Buddy = window.Buddy || {};
       var runtimeChar = runtimeConfig && typeof runtimeConfig.character === 'object'
         ? runtimeConfig.character
         : {};
+
+      // Interruptor "Activo" del módulo character en el toolbox. Ese módulo NO
+      // se carga por el recorrido de módulos (se carga acá) y el endpoint de
+      // runtime filtra los módulos con enabled=false, así que su estado llega
+      // dentro de config.character (ver buddy runtime.js). Desactivado, el
+      // personaje no se muestra en ninguna página del sitio, pero Buddy sigue
+      // arrancando completo: módulos, telemetría, registro/auth y menú.
+      characterDisabled = runtimeChar.enabled === false;
+      debugLog('character: enabled = ' + (characterDisabled ? 'no' : 'si'));
       var requested = String(
         (runtimeChar.defaultCharacter != null ? runtimeChar.defaultCharacter : config.defaultCharacter) || ''
       ).trim().toLowerCase();
@@ -1577,6 +1607,7 @@ window.Buddy = window.Buddy || {};
   window.Buddy.hideCharacter = hideCharacter;
   window.Buddy.showCharacter = showCharacter;
   window.Buddy.isCharacterHidden = isCharacterHidden;
+  window.Buddy.isCharacterDisabled = isCharacterDisabled;
   window.Buddy.getCharacter = getCharData;
   window.Buddy.isReady = function () { return ready; };
   window.Buddy.preloadCharacterAssets = preloadCharacterAssets;
