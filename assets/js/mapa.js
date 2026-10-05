@@ -1616,3 +1616,221 @@ function calculateDH(lat1, lng1, lat2, lng2) {
     if(v<50)v=50;
     return Math.round(v*100)/100;
   } catch (e) {console.log('normalizarM2TDesdeURI error',e);} }
+// -------------------------------
+// Caja #caja (estilo mapaSimple) en maps/find
+// -------------------------------
+(function initCajaFind() {
+  const caja = document.getElementById('caja');
+  if (!caja) return;
+  const mapEl = L.map || window.L ? (window.mapid ? window.map : null) : null;
+  let map = window.map;
+  if (!map) {
+    // intentar más tarde
+    if (document.readyState === 'complete') return;
+  }
+  const contenedor = document.getElementById('mapid');
+  const form = document.getElementById('form-buscar');
+  const input = document.getElementById('texto');
+  const btnLapiz = document.getElementById('btn-lapiz');
+  const btnPin = document.getElementById('btn-pin');
+  const btnDeshacer = document.getElementById('btn-deshacer');
+  const botonBuscar = document.getElementById('btn-buscar');
+  const estado = document.getElementById('estado');
+  let figuras = [];
+  let trazoActual = null;
+  let cajaFija = false;
+  let zoomRef = map && map.getZoom ? map.getZoom() : 14;
+
+  function avisar(msg, error) {
+    if (!estado) return;
+    estado.textContent = msg || '';
+    estado.className = error ? 'error' : '';
+  }
+
+  function colocarCaja() {
+    if (!caja || !map || typeof map.getZoom !== 'function') return;
+    const z = map.getZoom();
+    caja.className = (cajaFija || z > zoomRef) ? 'abajo' : '';
+  }
+  if (map && map.on) map.on('zoomend', colocarCaja);
+
+  function refrescarBotones() {
+    if (btnDeshacer) btnDeshacer.disabled = figuras.length === 0;
+    if (btnLapiz) btnLapiz.setAttribute('aria-pressed', trazoActual && trazoActual.tipo === 'poligono' ? 'true' : 'false');
+    if (btnPin) btnPin.setAttribute('aria-pressed', trazoActual && trazoActual.tipo === 'circunferencia' ? 'true' : 'false');
+  }
+
+  function limpiarTrazoActual() {
+    trazoActual = null;
+    refrescarBotones();
+  }
+
+  function limpiarDibujo() {
+    figuras.forEach(function (f) { if (f.layer && map && map.removeLayer) map.removeLayer(f.layer); });
+    figuras = [];
+    limpiarTrazoActual();
+    avisar('', false);
+    refrescarBotones();
+  }
+
+  function eliminarUltimaFigura() {
+    const f = figuras.pop();
+    if (f && f.layer && map && map.removeLayer) map.removeLayer(f.layer);
+    limpiarTrazoActual();
+    refrescarBotones();
+    if (!figuras.length) avisar('', false);
+  }
+
+  function puntoEnPoligono(pt, poly) {
+    let inside = false;
+    for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+      const xi = poly[i].lat, yi = poly[i].lng;
+      const xj = poly[j].lat, yj = poly[j].lng;
+      const intersect = ((yi > pt.lng) !== (yj > pt.lng)) &&
+        (pt.lat < (xj - xi) * (pt.lng - yi) / ((yj - yi) || 1e-12) + xi);
+      if (intersect) inside = !inside;
+    }
+    return inside;
+  }
+
+  function distanciaKm(a, b) {
+    const R = 6371, toRad = x => x * Math.PI / 180;
+    const dLat = toRad(b.lat - a.lat), dLon = toRad(b.lng - a.lng);
+    const lat1 = toRad(a.lat), lat2 = toRad(b.lat);
+    const c = Math.sin(dLat / 2) ** 2 + Math.sin(dLon / 2) ** 2 * Math.cos(lat1) * Math.cos(lat2);
+    return R * 2 * Math.atan2(Math.sqrt(c), Math.sqrt(1 - c));
+  }
+
+  function iniciarTrazo(e) {
+    if (e && e.stopPropagation) e.stopPropagation();
+    if (e && e.preventDefault) e.preventDefault();
+    if (trazoActual) { avisar('Terminá el dibujo actual antes de empezar otro', true); return; }
+    const tipo = (this === btnLapiz || this.id === 'btn-lapiz') ? 'poligono' : (this === btnPin || this.id === 'btn-pin') ? 'circunferencia' : null;
+    if (!tipo) return;
+    if (!map || !map.latLngToContainerPoint || !map.containerPointToLatLng || !map.getMousePosition) return;
+    const latlng = map.containerPointToLatLng(map.mouseEventToContainerPoint(e));
+    trazoActual = { tipo, puntos: [latlng], layer: null };
+    refrescarBotones();
+    avisar('Dibujando... (clic para agregar / doble clic o soltar para terminar)', false);
+  }
+
+  if (btnLapiz) btnLapiz.addEventListener('click', iniciarTrazo, true);
+  if (btnPin) btnPin.addEventListener('click', iniciarTrazo, true);
+  if (btnDeshacer) btnDeshacer.addEventListener('click', eliminarUltimaFigura);
+  if (contenedor) {
+    contenedor.addEventListener('pointerdown', function (e) {
+      if (!(trazoActual && trazoActual.tipo === 'poligono')) return;
+      if (e && e.stopPropagation) e.stopPropagation();
+      const latlng = map.containerPointToLatLng(map.mouseEventToContainerPoint(e));
+      trazoActual.puntos.push(latlng);
+      if (trazoActual.puntos.length === 1) {
+        if (trazoActual.layer) map.removeLayer(trazoActual.layer);
+        trazoActual.layer = L.polyline(trazoActual.puntos, { color: '#17baef', dashArray: '4' }).addTo(map);
+      } else {
+        trazoActual.layer.setLatLngs(trazoActual.puntos);
+      }
+    }, true);
+  }
+
+  function moverTrazo(e) {
+    if (!trazoActual || !map) return;
+    const latlng = map.containerPointToLatLng(map.mouseEventToContainerPoint(e));
+    if (trazoActual.tipo === 'poligono' && trazoActual.layer && trazoActual.puntos.length) {
+      const tmp = trazoActual.puntos.slice();
+      tmp.push(latlng);
+      trazoActual.layer.setLatLngs(tmp);
+    } else if (trazoActual.tipo === 'circunferencia' && trazoActual.layer && trazoActual.puntos.length === 1) {
+      const centro = trazoActual.puntos[0];
+      const rKm = distanciaKm(centro, latlng);
+      trazoActual.radioM = Math.max(0, rKm * 1000);
+      trazoActual.layer.setRadius(trazoActual.radioM);
+    }
+  }
+  if (contenedor) contenedor.addEventListener('pointermove', moverTrazo);
+
+  function terminarTrazo(e, fueTrazo) {
+    if (!trazoActual) return;
+    if (trazoActual.tipo === 'poligono') {
+      const pts = trazoActual.puntos.filter(p => p);
+      if (pts.length >= 3) {
+        if (trazoActual.layer) map.removeLayer(trazoActual.layer);
+        const cerrado = pts.slice();
+        if (!puntoEnPoligono(cerrado[0], cerrado)) cerrado.push(cerrado[0]);
+        const layer = L.polygon(cerrado, { color: '#17baef', fillOpacity: 0.1 }).addTo(map);
+        figuras.push({ tipo: 'poligono', datos: { puntos: cerrado.map(p => ({ lat: p.lat, lng: p.lng })) }, layer });
+        avisar('', false);
+      } else if (trazoActual.layer) {
+        map.removeLayer(trazoActual.layer);
+      }
+    } else if (trazoActual.tipo === 'circunferencia') {
+      const centro = trazoActual.puntos[0];
+      const radioM = Math.max(1, trazoActual.radioM || 0);
+      if (radioM > 0 && centro) {
+        if (trazoActual.layer) map.removeLayer(trazoActual.layer);
+        const layer = L.circle([centro.lat, centro.lng], { radius: radioM, color: '#17baef', fillOpacity: 0.05 }).addTo(map);
+        figuras.push({ tipo: 'circunferencia', datos: { lat: centro.lat, lng: centro.lng, radio: Math.round(radioM) }, layer });
+        avisar('', false);
+      } else if (trazoActual.layer) {
+        map.removeLayer(trazoActual.layer);
+      }
+    }
+    trazoActual = null;
+    refrescarBotones();
+  }
+  if (contenedor) {
+    contenedor.addEventListener('pointerup', function (e) { terminarTrazo(e, true); });
+    contenedor.addEventListener('pointercancel', function (e) { terminarTrazo(e, false); });
+  }
+
+  function datosDe(tipo) {
+    return figuras.filter(function (f) { return f.tipo === tipo; }).map(function (f) { return f.datos; });
+  }
+
+  function buscar() {
+    const texto = input ? input.value.trim() : '';
+    if (!texto && !figuras.length) {
+      avisar('escribe algo o dibuja una superficie para buscar', true);
+      return;
+    }
+    cajaFija = true; colocarCaja();
+    if (botonBuscar) botonBuscar.disabled = true;
+    avisar('Buscando...', false);
+    const base = (window.STATETTY_CONFIG && STATETTY_CONFIG.WS_API_BASE) || '';
+    const token = window.STT && window.STT.getToken ? window.STT.getToken() : '';
+    fetch(base + 'statetty/buscarMapa', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': 'Bearer ' + token } : {})
+      },
+      body: JSON.stringify({
+        texto: texto,
+        poligono: datosDe('poligono'),
+        circunferencia: datosDe('circunferencia'),
+      }),
+    }).then(function (r) {
+      return r.json().then(function (d) { return { status: r.status, data: d }; });
+    }).then(function (res) {
+      if (res.status === 429) { avisar('Hiciste demasiadas búsquedas. Esperá un minuto e intentá de nuevo.', true); return; }
+      if (res.status !== 200 || !res.data || !res.data.ok) {
+        avisar('No se pudo interpretar la búsqueda. Probá con otra frase.', true);
+        return;
+      }
+      if (window.pintar) window.pintar(res.data.resultados);
+      colocarCaja();
+      const tot = res.data.total;
+      avisar(tot ? tot + (tot === 1 ? ' inmueble encontrado' : ' inmuebles encontrados') : 'Sin resultados. Probá con menos filtros o otra zona.', !tot);
+    }).catch(function () {
+      avisar('Falló la búsqueda. Revisá tu conexión e intentá de nuevo.', true);
+    }).then(function () {
+      if (botonBuscar) botonBuscar.disabled = false;
+    });
+  }
+
+  if (form) form.addEventListener('submit', function (e) { e.preventDefault(); buscar(); });
+  if (input) input.addEventListener('input', function () { if (estado && estado.className === 'error') avisar('', false); });
+
+  setTimeout(function () {
+    if (map && map.getZoom) { zoomRef = map.getZoom(); colocarCaja(); }
+  }, 0);
+})();

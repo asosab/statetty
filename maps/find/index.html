@@ -57,7 +57,105 @@ published:          true
     .stt-icon-full-text { display: none; } /* fallback; JS sets inline style */
   </style>
 
-  <div id="toolbox-btn">⚙</div>
+  
+  <!-- Caja de búsqueda estilo mapaSimple (agentes con cuenta activa) -->
+  <style>
+    #caja {
+      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      z-index: 1100; width: min(92vw, 520px); background: #fff;
+      border-radius: 12px; padding: 14px;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, .25);
+      transition: top .5s ease, transform .5s ease;
+    }
+    #caja.abajo { top: calc(100% - 28px); transform: translate(-50%, -100%); }
+    @media (prefers-reduced-motion: reduce) { #caja { transition: none; } }
+    #caja form { display: flex; gap: 8px; flex-wrap: wrap; }
+    #caja input { flex: 1; min-width: 0; padding: 10px 12px; font-size: 1rem;
+                   border: 1px solid #ccc; border-radius: 8px; }
+    #caja input:focus { outline: 2px solid #17baef; outline-offset: 1px; }
+    #caja form button.herr { flex-shrink: 0; padding: 8px 10px; border: 1px solid #ccc;
+                              border-radius: 8px; background: #fff; cursor: pointer; }
+    #caja form button.herr[disabled] { opacity: .4; cursor: not-allowed; }
+    #btn-buscar { padding: 10px 18px; font-size: 1rem; font-weight: 700; cursor: pointer;
+                   color: #04364a; background: #ffd54a; border: 0; border-radius: 8px; }
+    #btn-buscar:disabled { opacity: .6; cursor: wait; }
+    @media (max-width: 440px) { #caja input { flex-basis: 100%; } }
+    #estado { margin-top: 8px; font-size: 0.9rem; color: #333; min-height: 18px; }
+  </style>
+  <div id="caja">
+    <form id="form-buscar" autocomplete="off">
+      <input type="text" id="texto" name="texto" placeholder="escribe lo que estás buscando" aria-label="Qué inmueble estás buscando">
+      <button type="button" class="herr" id="btn-lapiz" aria-pressed="false" title="Dibujar un polígono" data-tippy-content="Dibujar un polígono">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 3v18M3 12h18M9 6l6 6M15 6l-6 6"/>
+        </svg>
+      </button>
+      <button type="button" class="herr" id="btn-pin" aria-pressed="false" title="Dibujar una circunferencia" data-tippy-content="Dibujar una circunferencia">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="8"></circle>
+          <circle cx="12" cy="12" r="2"></circle>
+        </svg>
+      </button>
+      <button type="button" class="herr" id="btn-deshacer" title="Borrar la última figura" data-tippy-content="Borrar la última figura" disabled>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="9 14 4 9 9 4"></polyline>
+          <path d="M20 20v-7a4 4 0 0 0-4-4H4"></path>
+        </svg>
+      </button>
+      <button type="submit" id="btn-buscar">Buscar</button>
+    </form>
+    <div id="estado" role="status" aria-live="polite"></div>
+  </div>
+
+  <!-- Caja de búsqueda estilo mapaSimple (agentes con cuenta activa) -->
+  <style>
+    #caja {
+      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      z-index: 1100; width: min(92vw, 520px); background: #fff;
+      border-radius: 12px; padding: 14px;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, .25);
+      transition: top .5s ease, transform .5s ease;
+    }
+    #caja.abajo { top: calc(100% - 28px); transform: translate(-50%, -100%); }
+    @media (prefers-reduced-motion: reduce) { #caja { transition: none; } }
+    #caja form { display: flex; gap: 8px; flex-wrap: wrap; }
+    #caja input { flex: 1; min-width: 0; padding: 10px 12px; font-size: 1rem;
+                   border: 1px solid #ccc; border-radius: 8px; }
+    #caja input:focus { outline: 2px solid #17baef; outline-offset: 1px; }
+    #caja form button.herr { flex-shrink: 0; padding: 8px 10px; border: 1px solid #ccc;
+                              border-radius: 8px; background: #fff; cursor: pointer; }
+    #caja form button.herr[disabled] { opacity: .4; cursor: not-allowed; }
+    #btn-buscar { padding: 10px 18px; font-size: 1rem; font-weight: 700; cursor: pointer;
+                   color: #04364a; background: #ffd54a; border: 0; border-radius: 8px; }
+    #btn-buscar:disabled { opacity: .6; cursor: wait; }
+    @media (max-width: 440px) { #caja input { flex-basis: 100%; } }
+    #estado { margin-top: 8px; font-size: 0.9rem; color: #333; min-height: 18px; }
+  </style>
+  <div id="caja">
+    <form id="form-buscar" autocomplete="off">
+      <input type="text" id="texto" name="texto" placeholder="escribe lo que estás buscando" aria-label="Qué inmueble estás buscando">
+      <button type="button" class="herr" id="btn-lapiz" aria-pressed="false" title="Dibujar un polígono" data-tippy-content="Dibujar un polígono">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 3v18M3 12h18M9 6l6 6M15 6l-6 6"/>
+        </svg>
+      </button>
+      <button type="button" class="herr" id="btn-pin" aria-pressed="false" title="Dibujar una circunferencia" data-tippy-content="Dibujar una circunferencia">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="8"></circle>
+          <circle cx="12" cy="12" r="2"></circle>
+        </svg>
+      </button>
+      <button type="button" class="herr" id="btn-deshacer" title="Borrar la última figura" data-tippy-content="Borrar la última figura" disabled>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="9 14 4 9 9 4"></polyline>
+          <path d="M20 20v-7a4 4 0 0 0-4-4H4"></path>
+        </svg>
+      </button>
+      <button type="submit" id="btn-buscar">Buscar</button>
+    </form>
+    <div id="estado" role="status" aria-live="polite"></div>
+  </div>
+<div id="toolbox-btn">⚙</div>
   <div id="toolbox">
     <!-- Bloque 1: Buscar + Estadísticas -->
     <div class="section">
