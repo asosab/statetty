@@ -1702,6 +1702,20 @@ function calculateDH(lat1, lng1, lat2, lng2) {
   const boton      = document.getElementById('btn-buscar');
   const estado     = document.getElementById('estado');
 
+  function sesionActiva() {
+    const token = window.STT && window.STT.getToken ? window.STT.getToken() : '';
+    const u = window.STT && window.STT.getUsuario ? window.STT.getUsuario() : null;
+    return !!(token && u && u.hasTime);
+  }
+  function aplicarGate() { caja.style.display = sesionActiva() ? '' : 'none'; }
+  aplicarGate();
+  if (window.STT && window.STT.ready && typeof window.STT.ready.then === 'function') {
+    window.STT.ready.then(aplicarGate);
+  } else {
+    document.addEventListener('statetty:key-ready', aplicarGate, { once: true });
+  }
+  document.addEventListener('statetty:auth-ready', aplicarGate);
+
   let mapa = null;            // lo publica renderMap/initEmptyMap; esta caja no lo crea
   let contenedor = null;
   let figuras = [];          // pila: la más antigua primero, la más nueva al final
@@ -1909,6 +1923,10 @@ function calculateDH(lat1, lng1, lat2, lng2) {
   }
 
   function buscar() {
+    if (!sesionActiva()) {
+      avisar('Tu cuenta no está activa o no tiene tiempo de uso disponible.', true);
+      return;
+    }
     const texto = input ? input.value.trim() : '';
     if (!texto && !figuras.length) {
       avisar('escribe algo o dibuja una superficie para buscar', true);
