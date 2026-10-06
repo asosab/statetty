@@ -5,6 +5,7 @@
 // ---------------------------------------------
 
 var map, locations = [], markers = [], seleccionados = [], ultimosFiltrados = [];
+var circuloBusqueda = null, cruzCentro = null;   // capa y cruz del centro; se rehacen en cada renderMap
 window.__backupLocalStorage = window.__backupLocalStorage || {};
 
 // Iconos
@@ -976,12 +977,41 @@ function mostrarAvisoSinResultados() {
   });
 }
 
+  // Capa de fondo y pin ACM: se agregan una sola vez por mapa. renderMap se puede
+// volver a llamar (búsqueda desde la #caja) y repetirlos duplicaría las capas.
+function addBaseLayers() {
+  if (!map.__baseLayers) {
+    map.__baseLayers = true;
+    initACMMapClickMarker(map);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap'
+    }).addTo(map);
+  }
+}
+
+/** Quita lo que dibujó la llamada anterior a renderMap (pines, círculo y cruz). */
+function limpiarRenderPrevio() {
+  markers.forEach(function (obj) {
+    if (obj.marker && map.hasLayer(obj.marker)) map.removeLayer(obj.marker);
+    if (obj.overlay && map.hasLayer(obj.overlay)) map.removeLayer(obj.overlay);
+    if (obj.nuevoOverlay && map.hasLayer(obj.nuevoOverlay)) map.removeLayer(obj.nuevoOverlay);
+  });
+  markers = [];
+  [circuloBusqueda, cruzCentro].forEach(function (c) {
+    if (c && map.hasLayer(c)) map.removeLayer(c);
+  });
+  circuloBusqueda = null;
+  cruzCentro = null;
+  seleccionados = [];
+  $('#agency-filter').empty();
+}
+
 function initEmptyMap() {
-  if (!map) { map = L.map('mapid').setView([-17.7833, -63.1821], 12); window.map = map; }
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap'
-  }).addTo(map);
-  initACMMapClickMarker(map);
+  if (!map) {
+    map = window.map || L.map('mapid').setView([-17.7833, -63.1821], 12);
+    window.map = map;
+  }
+  addBaseLayers();
 
   $('#toolbox').show();
 
@@ -1145,25 +1175,25 @@ $(document).ready(function () {
   function renderMap(locs, centerLat, centerLng, circleRadius, avgPrice, na, ag) {
     locations = locs;
     dispersarCoordenadas();
+    // El contenedor #mapid puede haberlo tomado antes otro bloque (la #caja espera
+    // mapa). Se adopta el existente: Leaflet rechaza L.map() sobre un contenedor ya
+    // inicializado, y eso tumbaba toda la página.
     if (!map) {
-      map = L.map('mapid');
+      map = window.map || L.map('mapid');
       window.map = map;
     }
-    initACMMapClickMarker(map);
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap'
-    }).addTo(map);
+    limpiarRenderPrevio();
+    addBaseLayers();
 
     var circleCenter = L.latLng(centerLat, centerLng);
-    var circle = L.circle(circleCenter, { color: 'green', weight: 1, fillOpacity: 0, radius: circleRadius }).addTo(map);
+    circuloBusqueda = L.circle(circleCenter, { color: 'green', weight: 1, fillOpacity: 0, radius: circleRadius }).addTo(map);
 
     var crossIcon = L.icon({
       iconUrl: '../../assets/images/cross_green.png',
       iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10]
     });
-    var crossMarker = L.marker(circleCenter, { icon: crossIcon }).addTo(map);
-    crossMarker.bindPopup('Coordenadas: ' + centerLat + ',' + centerLng + '<br>Valor promedio: USD' + formatNumber(avgPrice));
+    cruzCentro = L.marker(circleCenter, { icon: crossIcon }).addTo(map);
+    cruzCentro.bindPopup('Coordenadas: ' + centerLat + ',' + centerLng + '<br>Valor promedio: USD' + formatNumber(avgPrice));
 
     // markers
     var waphoneUsuario = (window.STT && window.STT.getUsuario && window.STT.getUsuario() || {}).waphone || '';
@@ -1343,7 +1373,9 @@ $(document).ready(function () {
     }
 
     // filtro por agencias
-    $(document).on('change', '.chk-agency', function () {
+    // Delegado en document: se registra una vez por mapa. renderMap se repite con
+    // cada búsqueda de la #caja y sin el .off cada cambio disparaba N veces.
+    $(document).off('change', '.chk-agency').on('change', '.chk-agency', function () {
       let ag = $(this).data('ag');
       let checked = this.checked;
       handleAgencyToggle(ag, checked);
@@ -1380,9 +1412,14 @@ $(document).ready(function () {
     ultimosFiltrados = getVisibleLocations();
     actualizarEstadisticas(ultimosFiltrados);
 
+    map.off("moveend", guardarMapa);
+    map.off("zoomend", guardarMapa);
     map.on("moveend", guardarMapa);
     map.on("zoomend", guardarMapa);
   }
+  // La #caja busca por texto y repinta con este mismo renderMap: sin este hook sus
+  // resultados se descartaban (window.pintar no existe y renderMap no era global).
+  window.renderMap = renderMap;
 
   var urlParams = new URLSearchParams(window.location.search);
   let pProm = Math.round(urlParams.get('p'));
@@ -1619,181 +1656,242 @@ function calculateDH(lat1, lng1, lat2, lng2) {
   } catch (e) {console.log('normalizarM2TDesdeURI error',e);} }
 // -------------------------------
 // Caja #caja (estilo mapaSimple) en maps/find
+// Mismo comportamiento que la de /: apretar y arrastrar para dibujar, figures
+// apiladas con deshacer, y búsqueda por POST a statetty/buscarMapa. Lo que cambia
+// es el destino: acá los resultados se pintan con el renderMap de la página
+// (pines por agencia, popups, selección, PDF) y no con el pintar() de mapaSimple.
 // -------------------------------
 (function initCajaFind() {
   if (window.__cajaFindInit) return;
   const caja = document.getElementById('caja');
   if (!caja) return;
-  let map = window.map;
-  let tries = 0;
-  function ensureMap() {
-    if (map) return true;
-    map = window.map;
-    if (!map && typeof L !== 'undefined' && document.getElementById('mapid')) {
-      try { map = L.map('mapid').setView([-17.7833281,-63.1821673],13); window.map = map; } catch(e){}
-    }
-    return !!map;
-  }
-  if (!ensureMap()) {
-    const iv = setInterval(function(){ tries++; if (ensureMap() || tries>40){ clearInterval(iv); if (map) init(); }},250); return;
-  }
-  function init(){
-  const contenedor = document.getElementById('mapid');
-  const form = document.getElementById('form-buscar');
-  const input = document.getElementById('texto');
-  const btnLapiz = document.getElementById('btn-lapiz');
-  const btnPin = document.getElementById('btn-pin');
-  const btnDeshacer = document.getElementById('btn-deshacer');
-  const botonBuscar = document.getElementById('btn-buscar');
-  const estado = document.getElementById('estado');
-  let figuras = [];
-  let trazoActual = null;
-  let cajaFija = false;
-  let zoomRef = map && map.getZoom ? map.getZoom() : 14;
+  window.__cajaFindInit = true;
 
-  function avisar(msg, error) {
+  const form    = document.getElementById('form-buscar');
+  const input   = document.getElementById('texto');
+  const btnLapiz   = document.getElementById('btn-lapiz');
+  const btnPin     = document.getElementById('btn-pin');
+  const btnDeshacer = document.getElementById('btn-deshacer');
+  const boton      = document.getElementById('btn-buscar');
+  const estado     = document.getElementById('estado');
+
+  let mapa = null;            // lo publica renderMap/initEmptyMap; esta caja no lo crea
+  let contenedor = null;
+  let zoomRef = 14;
+  let cajaFija = false;      // true tras buscar o usar lápiz/pin: la caja queda abajo
+  let figuras = [];          // pila: la más antigua primero, la más nueva al final
+  let herramienta = null;    // 'poligono' | 'circunferencia' | null
+  let trazo = null;          // figura en curso mientras el puntero está presionado
+
+  // Máximo de figuras por tipo (cada una es independiente y se envía en su arreglo).
+  // Mientras no se llegue al máximo, la herramienta activa sigue dibujando figuras
+  // nuevas; al alcanzarlo se apaga y su botón se deshabilita hasta borrar alguna.
+  const LIMITE = { poligono: 10, circunferencia: 10 };
+  const RADIO_MIN = 20;        // metros; un círculo menor se descarta
+  const PUNTOS_MIN = 3;
+  const PUNTOS_MAX = 2000;     // tope de vértices por polígono enviado
+  const TOLERANCIA_PX = 1.5;   // Douglas-Peucker: puntos que se desvían menos se eliminan
+  const ESTILO_AREA = { color: '#17baef', weight: 2, fillColor: '#17baef', fillOpacity: 0.22 };
+  const HANDLERS = ['dragging', 'touchZoom', 'doubleClickZoom', 'boxZoom'];
+
+  function avisar(txt, esError) {
     if (!estado) return;
-    estado.textContent = msg || '';
-    estado.className = error ? 'error' : '';
+    estado.textContent = txt || '';
+    estado.className = esError ? 'error' : '';
   }
 
   function colocarCaja() {
-    if (!caja || !map || typeof map.getZoom !== 'function') return;
-    const z = map.getZoom();
-    caja.className = (cajaFija || z > zoomRef) ? 'abajo' : '';
+    if (!caja || !mapa || typeof mapa.getZoom !== 'function') return;
+    caja.className = (cajaFija || mapa.getZoom() > zoomRef) ? 'abajo' : '';
   }
-  if (map && map.on) map.on('zoomend', colocarCaja);
 
   function refrescarBotones() {
-    if (btnDeshacer) btnDeshacer.disabled = figuras.length === 0;
-    if (btnLapiz) btnLapiz.setAttribute('aria-pressed', trazoActual && trazoActual.tipo === 'poligono' ? 'true' : 'false');
-    if (btnPin) btnPin.setAttribute('aria-pressed', trazoActual && trazoActual.tipo === 'circunferencia' ? 'true' : 'false');
+    if (btnLapiz) btnLapiz.disabled = contar('poligono') >= LIMITE.poligono;
+    if (btnPin) btnPin.disabled = contar('circunferencia') >= LIMITE.circunferencia;
+    if (btnDeshacer) btnDeshacer.disabled = !figuras.length;
+    if (btnLapiz) btnLapiz.setAttribute('aria-pressed', herramienta === 'poligono' ? 'true' : 'false');
+    if (btnPin) btnPin.setAttribute('aria-pressed', herramienta === 'circunferencia' ? 'true' : 'false');
+    if (herramienta && contar(herramienta) >= LIMITE[herramienta]) activar(null);
   }
 
-  function limpiarTrazoActual() {
-    trazoActual = null;
+  function activar(tipo) {
+    if (tipo && contar(tipo) >= LIMITE[tipo]) return;
+    herramienta = tipo;
     refrescarBotones();
+    if (contenedor) contenedor.classList.toggle('dibujando', !!tipo);
+    if (mapa) HANDLERS.forEach(function (h) { mapa[h][tipo ? 'disable' : 'enable'](); });
+    if (tipo === 'poligono') avisar('Mantén presionado y arrastra para dibujar el área.', false);
+    else if (tipo === 'circunferencia') avisar('Presiona el centro y arrastra para definir el radio.', false);
   }
 
-  function limpiarDibujo() {
-    figuras.forEach(function (f) { if (f.layer && map && map.removeLayer) map.removeLayer(f.layer); });
-    figuras = [];
-    limpiarTrazoActual();
+  function conectarMapa(m) {
+    mapa = m;
+    contenedor = m.getContainer ? m.getContainer() : document.getElementById('mapid');
+    m.on('zoomend', colocarCaja);
+    if (contenedor) {
+      // Captura: se atiende antes que Leaflet para que no arrastre el mapa ni abra popups.
+      contenedor.addEventListener('pointerdown', iniciarTrazo, true);
+      contenedor.addEventListener('pointermove', moverTrazo);
+      contenedor.addEventListener('pointerup', function (e) { terminarTrazo(e, true); });
+      contenedor.addEventListener('pointercancel', function (e) { terminarTrazo(e, false); });
+    }
+    // La herramienta pudo activarse antes de que existiera el mapa.
+    if (herramienta) HANDLERS.forEach(function (h) { mapa[h].disable(); });
+    zoomRef = mapa.getZoom ? mapa.getZoom() : zoomRef;
+    colocarCaja();
+  }
+
+  // ---------- Figuras de área (polígono / circunferencia) ----------
+  function contar(tipo) { return figuras.filter(function (f) { return f.tipo === tipo; }).length; }
+  function redondear(n, d) { return Number(n.toFixed(d)); }
+
+  // Deja el mínimo de vértices que conserva la forma dibujada; si aun así
+  // pasan de PUNTOS_MAX, los reparte equitativamente a lo largo del contorno.
+  function simplificar(pts) {
+    const n = pts.length, z = mapa.getZoom();
+    if (n <= PUNTOS_MIN) return pts;
+    const P = pts.map(function (p) { return mapa.project(p, z); });
+    const keep = new Uint8Array(n);
+    keep[0] = keep[n - 1] = 1;
+    const pila = [[0, n - 1]];
+    while (pila.length) {
+      const seg = pila.pop(), a = seg[0], b = seg[1];
+      let maxd = 0, idx = -1;
+      for (let i = a + 1; i < b; i++) {
+        const d = L.LineUtil.pointToSegmentDistance(P[i], P[a], P[b]);
+        if (d > maxd) { maxd = d; idx = i; }
+      }
+      if (idx > -1 && maxd > TOLERANCIA_PX) {
+        keep[idx] = 1;
+        pila.push([a, idx], [idx, b]);
+      }
+    }
+    const res = pts.filter(function (_, i) { return keep[i]; });
+    if (res.length > PUNTOS_MAX) {
+      const m = res.length, out = [];
+      for (let k = 0; k < PUNTOS_MAX; k++) out.push(res[Math.round(k * (m - 1) / (PUNTOS_MAX - 1))]);
+      return out;
+    }
+    return res;
+  }
+
+  function iniciarTrazo(e) {
+    if (!herramienta || trazo || !mapa || e.button !== 0) return;
+    if (e.target.closest && e.target.closest('.leaflet-control')) return;
+    e.preventDefault();
+    e.stopPropagation();
+    contenedor.setPointerCapture(e.pointerId);
+    const ll = mapa.mouseEventToLatLng(e);
+    trazo = { id: e.pointerId, tipo: herramienta };
+    if (herramienta === 'poligono') {
+      trazo.pts = [ll];
+      trazo.capa = L.polyline([ll], { color: ESTILO_AREA.color, weight: 2, interactive: false }).addTo(mapa);
+    } else {
+      trazo.centro = ll;
+      trazo.circulo = L.circle(ll, L.extend({ radius: 1, interactive: false }, ESTILO_AREA));
+      const centro = L.circleMarker(ll, {
+        radius: 4, color: '#04364a', weight: 2, fillColor: '#ffd54a', fillOpacity: 1, interactive: false
+      });
+      trazo.capa = L.featureGroup([trazo.circulo, centro]).addTo(mapa);
+    }
+  }
+
+  function moverTrazo(e) {
+    if (!trazo || !mapa || e.pointerId !== trazo.id) return;
+    const ll = mapa.mouseEventToLatLng(e);
+    if (trazo.tipo === 'poligono') {
+      const ult = mapa.latLngToContainerPoint(trazo.pts[trazo.pts.length - 1]);
+      if (ult.distanceTo(mapa.latLngToContainerPoint(ll)) < 3) return;   // filtra ruido
+      trazo.pts.push(ll);
+      trazo.capa.setLatLngs(trazo.pts);
+    } else {
+      trazo.circulo.setRadius(trazo.centro.distanceTo(ll));
+    }
+  }
+
+  function terminarTrazo(e, ok) {
+    if (!trazo || !mapa || e.pointerId !== trazo.id) return;
+    const t = trazo;
+    trazo = null;
+    if (contenedor.hasPointerCapture(e.pointerId)) contenedor.releasePointerCapture(e.pointerId);
+    let figura = null;
+    const pts = (ok && t.tipo === 'poligono') ? simplificar(t.pts) : null;
+    if (pts && pts.length >= PUNTOS_MIN) {
+      mapa.removeLayer(t.capa);
+      // L.polygon cierra el trazo solo: rellena la superficie completa.
+      figura = {
+        tipo: 'poligono',
+        capa: L.polygon(pts, ESTILO_AREA).addTo(mapa),
+        datos: { puntos: pts.map(function (p) { return { lat: redondear(p.lat, 6), lng: redondear(p.lng, 6) }; }) }
+      };
+    } else if (ok && t.tipo === 'circunferencia' && t.circulo.getRadius() >= RADIO_MIN) {
+      figura = {
+        tipo: 'circunferencia',
+        capa: t.capa,
+        datos: { lat: redondear(t.centro.lat, 6), lng: redondear(t.centro.lng, 6), radio: Math.round(t.circulo.getRadius()) }
+      };
+    }
+    if (!figura) {
+      mapa.removeLayer(t.capa);
+      if (ok) avisar('El trazo fue muy corto. Intenta de nuevo.', true);
+      return;
+    }
+    figuras.push(figura);
     avisar('', false);
     refrescarBotones();
   }
 
-  function eliminarUltimaFigura() {
-    const f = figuras.pop();
-    if (f && f.layer && map && map.removeLayer) map.removeLayer(f.layer);
-    limpiarTrazoActual();
-    refrescarBotones();
-    if (!figuras.length) avisar('', false);
-  }
-
-  function puntoEnPoligono(pt, poly) {
-    let inside = false;
-    for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
-      const xi = poly[i].lat, yi = poly[i].lng;
-      const xj = poly[j].lat, yj = poly[j].lng;
-      const intersect = ((yi > pt.lng) !== (yj > pt.lng)) &&
-        (pt.lat < (xj - xi) * (pt.lng - yi) / ((yj - yi) || 1e-12) + xi);
-      if (intersect) inside = !inside;
-    }
-    return inside;
-  }
-
-  function distanciaKm(a, b) {
-    const R = 6371, toRad = x => x * Math.PI / 180;
-    const dLat = toRad(b.lat - a.lat), dLon = toRad(b.lng - a.lng);
-    const lat1 = toRad(a.lat), lat2 = toRad(b.lat);
-    const c = Math.sin(dLat / 2) ** 2 + Math.sin(dLon / 2) ** 2 * Math.cos(lat1) * Math.cos(lat2);
-    return R * 2 * Math.atan2(Math.sqrt(c), Math.sqrt(1 - c));
-  }
-
-  function iniciarTrazo(e) {
-    if (e && e.stopPropagation) e.stopPropagation();
-    if (e && e.preventDefault) e.preventDefault();
-    if (trazoActual) { avisar('Terminá el dibujo actual antes de empezar otro', true); return; }
-    const tipo = (this === btnLapiz || this.id === 'btn-lapiz') ? 'poligono' : (this === btnPin || this.id === 'btn-pin') ? 'circunferencia' : null;
-    if (!tipo) return;
-    if (!map || !map.latLngToContainerPoint || !map.containerPointToLatLng || !map.getMousePosition) return;
-    const latlng = map.containerPointToLatLng(map.mouseEventToContainerPoint(e));
-    trazoActual = { tipo, puntos: [latlng], layer: null };
-    refrescarBotones();
-    avisar('Dibujando... (clic para agregar / doble clic o soltar para terminar)', false);
-  }
-
-  if (btnLapiz) btnLapiz.addEventListener('click', iniciarTrazo, true);
-  if (btnPin) btnPin.addEventListener('click', iniciarTrazo, true);
-  if (btnDeshacer) btnDeshacer.addEventListener('click', eliminarUltimaFigura);
-  if (contenedor) {
-    contenedor.addEventListener('pointerdown', function (e) {
-      if (!(trazoActual && trazoActual.tipo === 'poligono')) return;
-      if (e && e.stopPropagation) e.stopPropagation();
-      const latlng = map.containerPointToLatLng(map.mouseEventToContainerPoint(e));
-      trazoActual.puntos.push(latlng);
-      if (trazoActual.puntos.length === 1) {
-        if (trazoActual.layer) map.removeLayer(trazoActual.layer);
-        trazoActual.layer = L.polyline(trazoActual.puntos, { color: '#17baef', dashArray: '4' }).addTo(map);
-      } else {
-        trazoActual.layer.setLatLngs(trazoActual.puntos);
-      }
-    }, true);
-  }
-
-  function moverTrazo(e) {
-    if (!trazoActual || !map) return;
-    const latlng = map.containerPointToLatLng(map.mouseEventToContainerPoint(e));
-    if (trazoActual.tipo === 'poligono' && trazoActual.layer && trazoActual.puntos.length) {
-      const tmp = trazoActual.puntos.slice();
-      tmp.push(latlng);
-      trazoActual.layer.setLatLngs(tmp);
-    } else if (trazoActual.tipo === 'circunferencia' && trazoActual.layer && trazoActual.puntos.length === 1) {
-      const centro = trazoActual.puntos[0];
-      const rKm = distanciaKm(centro, latlng);
-      trazoActual.radioM = Math.max(0, rKm * 1000);
-      trazoActual.layer.setRadius(trazoActual.radioM);
-    }
-  }
-  if (contenedor) contenedor.addEventListener('pointermove', moverTrazo);
-
-  function terminarTrazo(e, fueTrazo) {
-    if (!trazoActual) return;
-    if (trazoActual.tipo === 'poligono') {
-      const pts = trazoActual.puntos.filter(p => p);
-      if (pts.length >= 3) {
-        if (trazoActual.layer) map.removeLayer(trazoActual.layer);
-        const cerrado = pts.slice();
-        if (!puntoEnPoligono(cerrado[0], cerrado)) cerrado.push(cerrado[0]);
-        const layer = L.polygon(cerrado, { color: '#17baef', fillOpacity: 0.1 }).addTo(map);
-        figuras.push({ tipo: 'poligono', datos: { puntos: cerrado.map(p => ({ lat: p.lat, lng: p.lng })) }, layer });
-        avisar('', false);
-      } else if (trazoActual.layer) {
-        map.removeLayer(trazoActual.layer);
-      }
-    } else if (trazoActual.tipo === 'circunferencia') {
-      const centro = trazoActual.puntos[0];
-      const radioM = Math.max(1, trazoActual.radioM || 0);
-      if (radioM > 0 && centro) {
-        if (trazoActual.layer) map.removeLayer(trazoActual.layer);
-        const layer = L.circle([centro.lat, centro.lng], { radius: radioM, color: '#17baef', fillOpacity: 0.05 }).addTo(map);
-        figuras.push({ tipo: 'circunferencia', datos: { lat: centro.lat, lng: centro.lng, radio: Math.round(radioM) }, layer });
-        avisar('', false);
-      } else if (trazoActual.layer) {
-        map.removeLayer(trazoActual.layer);
-      }
-    }
-    trazoActual = null;
-    refrescarBotones();
-  }
-  if (contenedor) {
-    contenedor.addEventListener('pointerup', function (e) { terminarTrazo(e, true); });
-    contenedor.addEventListener('pointercancel', function (e) { terminarTrazo(e, false); });
-  }
-
   function datosDe(tipo) {
     return figuras.filter(function (f) { return f.tipo === tipo; }).map(function (f) { return f.datos; });
+  }
+
+  if (btnLapiz) btnLapiz.addEventListener('click', function () {
+    cajaFija = true; colocarCaja();
+    activar(herramienta === 'poligono' ? null : 'poligono');
+  });
+  if (btnPin) btnPin.addEventListener('click', function () {
+    cajaFija = true; colocarCaja();
+    activar(herramienta === 'circunferencia' ? null : 'circunferencia');
+  });
+  if (btnDeshacer) btnDeshacer.addEventListener('click', function () {
+    const f = figuras.pop();
+    if (!f) return;
+    if (mapa) mapa.removeLayer(f.capa);
+    refrescarBotones();
+    avisar('', false);
+  });
+
+  // ---------- Búsqueda ----------
+  // buscarMapa devuelve el shape público del inmueble (_id, nombre, precio, lat, lng,
+  // url, …), no el de finderresult. apiItemToLocation (datos.js) hace la conversión y
+  // de ahí se alimenta el mismo renderMap que usa el resto de la página.
+  function aLocations(resultados) {
+    return (resultados || []).map(function (it) {
+      const loc = apiItemToLocation(it);
+      loc.Titulo = loc.Titulo || loc.Nombre || '';
+      loc.URL = loc.URL || it.url || '';        // buscarMapa manda 'url' en minúscula
+      loc.uid = normalizeURL(loc.URL);
+      loc.brand = getBrand({ dato: loc });
+      return loc;
+    }).filter(function (l) { return isFinite(l.lat) && isFinite(l.lng); });
+  }
+
+  function pintar(resultados) {
+    if (typeof window.renderMap !== 'function') return false;
+    const locs = aLocations(resultados);
+    if (!locs.length) return false;
+    const lat = locs.reduce(function (s, l) { return s + l.lat; }, 0) / locs.length;
+    const lng = locs.reduce(function (s, l) { return s + l.lng; }, 0) / locs.length;
+    let maxKm = 0;
+    locs.forEach(function (l) { maxKm = Math.max(maxKm, calculateDH(lat, lng, l.lat, l.lng)); });
+    const u = (window.STT && window.STT.getUsuario && window.STT.getUsuario()) || {};
+    const na = ((u.first_name || '') + ' ' + (u.last_name || '')).trim();
+    // El popup calcula el % contra el promedio: con 0 daría Infinity.
+    const prom = Math.max(1, calcularPromedio(locs, 'precio'));
+    window.renderMap(locs, lat, lng, Math.max(maxKm * 1000, 1), prom, na, u.agencia || '');
+    // El encuadre automático no debe leerse como "zoom in" del usuario.
+    zoomRef = mapa && mapa.getZoom ? mapa.getZoom() : zoomRef;
+    return true;
   }
 
   function buscar() {
@@ -1803,20 +1901,20 @@ function calculateDH(lat1, lng1, lat2, lng2) {
       return;
     }
     cajaFija = true; colocarCaja();
-    if (botonBuscar) botonBuscar.disabled = true;
+    if (boton) boton.disabled = true;
     avisar('Buscando...', false);
     const base = (window.STATETTY_CONFIG && STATETTY_CONFIG.WS_API_BASE) || '';
     const token = window.STT && window.STT.getToken ? window.STT.getToken() : '';
     fetch(base + 'statetty/buscarMapa', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { 'Authorization': 'Bearer ' + token } : {})
-      },
+      headers: Object.assign(
+        { 'Content-Type': 'application/json' },
+        token ? { 'Authorization': 'Bearer ' + token } : {}
+      ),
       body: JSON.stringify({
         texto: texto,
-        poligono: datosDe('poligono'),
-        circunferencia: datosDe('circunferencia'),
+        poligono: datosDe('poligono'),              // [{ puntos: [{lat, lng}, ...] }]
+        circunferencia: datosDe('circunferencia'),  // [{ lat, lng, radio }] radio en metros
       }),
     }).then(function (r) {
       return r.json().then(function (d) { return { status: r.status, data: d }; });
@@ -1826,32 +1924,37 @@ function calculateDH(lat1, lng1, lat2, lng2) {
         avisar('No se pudo interpretar la búsqueda. Probá con otra frase.', true);
         return;
       }
-      if (window.pintar) {
-        window.pintar(res.data.resultados);
-      } else if (typeof renderMap === 'function') {
-        renderMap(res.data.resultados, null, null, null, null, null);
-      }
+      const pintados = pintar(res.data.resultados);
       colocarCaja();
       const tot = res.data.total || (res.data.resultados ? res.data.resultados.length : 0);
-      avisar(tot ? tot + (tot === 1 ? ' inmueble encontrado' : ' inmuebles encontrados') : 'Sin resultados. Probá con menos filtros o otra zona.', !tot);
-      if (typeof actualizarEstadisticas === 'function') {
-        try { actualizarEstadisticas(window.getVisibleLocations ? window.getVisibleLocations() : (res.data.resultados||[])); } catch(e){}
+      if (!tot) { avisar('Sin resultados. Probá con menos filtros u otra zona.', true); return; }
+      if (!pintados) {
+        avisar(tot + (tot === 1 ? ' inmueble encontrado' : ' inmuebles encontrados') + ', pero el mapa no pudo pintarlos.', true);
+        return;
       }
+      avisar(tot + (tot === 1 ? ' inmueble encontrado' : ' inmuebles encontrados'), false);
     }).catch(function () {
       avisar('Falló la búsqueda. Revisá tu conexión e intentá de nuevo.', true);
     }).then(function () {
-      if (botonBuscar) botonBuscar.disabled = false;
+      if (boton) boton.disabled = false;
     });
   }
 
   if (form) form.addEventListener('submit', function (e) { e.preventDefault(); buscar(); });
   if (input) input.addEventListener('input', function () { if (estado && estado.className === 'error') avisar('', false); });
 
-  setTimeout(function () {
-    if (map && map.getZoom) { zoomRef = map.getZoom(); colocarCaja(); }
-  }, 0);
+  // El mapa lo crea la página (renderMap/initEmptyMap), no esta caja: L.map() sobre
+  // #mapid ya inicializado revienta y con eso caía toda la página. Se espera a que exista.
+  function esperarMapa() {
+    if (window.map) { conectarMapa(window.map); return; }
+    let intentos = 0;
+    const iv = setInterval(function () {
+      intentos++;
+      if (window.map) { clearInterval(iv); conectarMapa(window.map); }
+      else if (intentos > 80) clearInterval(iv);   // 20 s: la búsqueda por texto igual funciona
+    }, 250);
   }
-  init();
+  esperarMapa();
 })();
 
 (function ajustarUImapsFind() {
