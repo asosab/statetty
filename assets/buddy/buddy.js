@@ -1258,7 +1258,7 @@ window.Buddy = window.Buddy || {};
     // en lugar de depender del orden alfabético que devuelve BD (order=100).
     base = orderModulesByDependency(base);
 
-    return base.filter(function (item) {
+    var items = base.filter(function (item) {
       if (!item) return false;
       var id = item.toLowerCase();
       // character se carga aparte (loadCharacterConfig / short-circuit).
@@ -1270,6 +1270,27 @@ window.Buddy = window.Buddy || {};
     }).filter(function (item, index, array) {
       return array.indexOf(item) === index;
     });
+
+    // Con el personaje desactivado los globos jamás se muestran, así que si
+    // ningún consumidor de window.buddy_says está configurado (chat,
+    // archeryGame, archerySchool), says y hablar son peso muerto: no se
+    // descargan (~7 requests en prod) y no crece la cola de mensajes que
+    // nunca se entregan. Reactivar character (o chat) en el toolbox restaura
+    // la carga normal sin tocar código.
+    if (characterDisabled === true) {
+      var hayConsumidorDeSays = items.some(function (item) {
+        var id = item.toLowerCase();
+        return id === 'chat' || id === 'archerygame' || id === 'archeryschool';
+      });
+      if (!hayConsumidorDeSays) {
+        items = items.filter(function (item) {
+          var id = item.toLowerCase();
+          return id !== 'says' && id !== 'hablar';
+        });
+      }
+    }
+
+    return items;
   }
 
   // Reordena el listado de módulos según MODULE_LOAD_ORDER (orden estable):
