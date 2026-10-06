@@ -3,7 +3,7 @@
  */
 window.BuddyConfig = window.BuddyConfig || {};
 window.BuddyConfig = Object.assign({
-  debug: true,
+  debug: false,
   debugMode: false,
   app: {
     siteId: 'statetty',
