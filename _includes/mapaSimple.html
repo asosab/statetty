@@ -500,6 +500,13 @@
                   .map(function (f) { return f.datos; });
   }
 
+  // Figuras vivas para el resto de la página: mismo contrato que mapa.js (initCajaFind) —
+  // el form #fndInm (standalone en el menú de usuario) las adjunta a su POST para que la
+  // superficie dibujada mande siempre sobre lat/lng/dist (plan figuras-sobrescriben-geografia, D2/D3).
+  window.STT_MAP_FIGURAS = function () {
+    return { poligono: datosDe('poligono'), circunferencia: datosDe('circunferencia') };
+  };
+
   function buscar() {
     var texto = input.value.trim();
     if (!texto) {

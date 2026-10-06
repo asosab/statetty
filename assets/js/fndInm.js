@@ -1219,6 +1219,18 @@
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       var params = getParams();
+      // Superficie dibujada en el mapa (plan figuras-sobrescriben-geografia, D3): si hay
+      // figuras mandan ellas; las coords/radio del form no se envían ni se guardan.
+      var fig = (typeof window.STT_MAP_FIGURAS === 'function') ? window.STT_MAP_FIGURAS() : null;
+      var hayFiguras = !!(fig && ((fig.poligono && fig.poligono.length) ||
+                                  (fig.circunferencia && fig.circunferencia.length)));
+      if (hayFiguras) {
+        params.poligono = fig.poligono;
+        params.circunferencia = fig.circunferencia;
+        delete params.lat;
+        delete params.lng;
+        delete params.dist;
+      }
       var pk = window.STT && window.STT.getKey && window.STT.getKey();
       if (!pk) {
         showSaveStatus('error', 'Debes iniciar sesión para buscar.');
@@ -1286,7 +1298,8 @@
         if (!res.ok || !res.searchTs) {
           clearTimeout(slowTimer);
           overlay.remove();
-          showSaveStatus('error', 'Error al iniciar la búsqueda.');
+          // superficie_invalida (D5): el servidor explica por qué se descartó la figura.
+          showSaveStatus('error', (res.avisos && res.avisos[0]) || 'Error al iniciar la búsqueda.');
           return;
         }
         pollSearchReady(base, pk, res.searchTs, overlay, controller, isCancelled, function () { clearTimeout(slowTimer); });

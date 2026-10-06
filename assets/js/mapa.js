@@ -275,23 +275,6 @@ function cargarMapa() {
   return null;
 }
 
-function guardarAgencias() {
-  const seleccionadas = [];
-  $(".chk-agency").each(function () {
-    if (this.checked) seleccionadas.push($(this).data("ag"));
-  });
-  localStorage.setItem("agenciasSeleccionadas", JSON.stringify(seleccionadas));
-}
-
-function cargarAgencias() {
-  try {
-    const data = JSON.parse(localStorage.getItem("agenciasSeleccionadas")) || null;
-    return Array.isArray(data) ? data : null;
-  } catch (e) {
-    return null;
-  }
-}
-
 
 // -------------------------------
 // Utilidades
@@ -543,72 +526,12 @@ function getBrand(input) {
 }
 
 /**
- * ¿Está visible (habilitada) la agencia/marker actual en los filtros?
- * Usa las checkboxes de agencias para decidirlo.
- * @param {Object} m - objeto {marker, iconOriginal, dato, overlay}
- * @returns {boolean}
- */
-function isMarkerActive(m) {
-  const brand = getBrand(m);
-  if (brand === 'statetty') return true; // siempre operativo
-  const activas = agenciasActivas() || [];
-  return activas.includes(brand);
-}
-
-/**
- * Obtiene la lista de locations que actualmente están visibles/operativas
- * para búsquedas, selección masiva y generación de PDFs.
+ * Lista de inmuebles visibles para búsquedas, selección masiva y generación de
+ * PDFs. Sin filtro de agencias: se usa todo lo que manda el servidor.
  * @returns {Array}
  */
 function getVisibleLocations() {
-  const activas = agenciasActivas();
-  return locations.filter(loc => {
-    //let url = loc.uid || "";
-    //let brand = getBrand(url);
-    let brand = getBrand({ dato: loc });
-    if (brand === "statetty") return true;
-    return activas.includes(brand);
-  });
-}
-
-/**
- * Helper para sincronizar el DOM y el estado de seleccionados cuando se
- * deshabilita una agencia: elimina esos inmuebles de "seleccionados",
- * quita overlays y desmarca checkboxes; cuando se habilita, vuelve a
- * reactivar las checkboxes (sin seleccionarlas automáticamente).
- * @param {string} ag - clave de la agencia que cambió
- * @param {boolean} checked - nuevo estado
- */
-function handleAgencyToggle(ag, checked) {
-  markers.forEach(m => {
-    const brand = getBrand(m);
-    if (brand !== ag) return;
-
-    // sincronizar marcador en el mapa
-    if (checked) {
-      map.addLayer(m.marker);
-      if (m.nuevoOverlay) map.addLayer(m.nuevoOverlay);
-      // reactivar checkbox en popup si existe (no lo marcamos seleccionado)
-      $(`.chk-sel[data-id='${m.dato.uid}']`).prop('disabled', false);
-    } else {
-      map.removeLayer(m.marker);
-      if (m.nuevoOverlay) map.removeLayer(m.nuevoOverlay);
-      // quitar de seleccionados si estaba
-      if (seleccionados.some(s => s.uid === m.dato.uid)) {
-        // eliminar overlay
-        if (m.overlay) { map.removeLayer(m.overlay); m.overlay = null; }
-        seleccionados = seleccionados.filter(s => s.uid !== m.dato.uid);
-      }
-      // desmarcar y deshabilitar checkbox popup
-      $(`.chk-sel[data-id='${m.dato.uid}']`).prop('checked', false).prop('disabled', true);
-    }
-  });
-
-  // Persistir y recalcular estadísticas y toolbox
-  guardarAgencias();
-  actualizarEstadisticas(getVisibleLocations());
-  guardarSeleccionados();
-  actualizarToolbox();
+  return locations;
 }
 
 /**
@@ -850,8 +773,6 @@ function actualizarToolbox() {
   });
 
   if (true) {
-    $("#agency-filter").parent().prev(".section-header");
-
     $("#toolbox .section:nth-child(2) .section-body").html(`
       <div id="sel-box">
         <b>Seleccionados: ${seleccionados.length}</b>
@@ -941,14 +862,6 @@ function actualizarToolbox() {
   if (typeof actualizarACM === "function") {actualizarACM();}
 }
 
-function agenciasActivas() {
-  const activas = [];
-  $(".chk-agency").each(function () {
-    if (this.checked) activas.push($(this).data("ag"));
-  });
-  return activas;
-}
-
 function mostrarAvisoSinResultados() {
   if (document.getElementById('modal-sinresultados-overlay')) return; // evitar duplicados
 
@@ -1003,7 +916,6 @@ function limpiarRenderPrevio() {
   circuloBusqueda = null;
   cruzCentro = null;
   seleccionados = [];
-  $('#agency-filter').empty();
 }
 
 function initEmptyMap() {
@@ -1158,23 +1070,6 @@ $(document).ready(function () {
     actualizarBotonesCollapse();
   });
 
-  const agencyNames = {
-    "ic":     "Info Casas",
-    "UC":     "Ultra Casas",
-    "C21":    "Century 21",
-    "remax":  "RE/MAX",
-    "bieni":  "Bien Inmuebles",
-    "IDI":    "Inversionistas de Impacto",
-    "elfaro": "El Faro",
-    "si":     "Sin Intermediarios",
-    "capital":"Capital Corporación",
-    "sce":    "Santa Cruz Estate",
-    "laenc":  "La encontré",
-    "nexoi":  "Nexo Inmobiliario",
-    "kw":     "Keller Williams",
-    "houstyle": "HouStyle",
-  };
-
   function renderMap(locs, centerLat, centerLng, circleRadius, avgPrice, na, ag) {
     locations = locs;
     dispersarCoordenadas();
@@ -1215,7 +1110,7 @@ $(document).ready(function () {
         iconSize: [40, 60], iconAnchor: [20, 60], popupAnchor: [1, -54], shadowSize: [60, 60]
       });
 
-      var marker = L.marker([dato.lat, dato.lng], { icon }); if (brand !== "ic") {marker.addTo(map);}
+      var marker = L.marker([dato.lat, dato.lng], { icon }); marker.addTo(map);
 
       // Si el inmueble es "nuevo" (createdAt <= 1 semana), se agrega la capa
       // pointer_nuevo.png justo encima del pointer, en las mismas coordenadas.
@@ -1224,7 +1119,7 @@ $(document).ready(function () {
       var nuevoOverlay = null;
       if (esInmuebleNuevo(dato)) {
         nuevoOverlay = L.marker([dato.lat, dato.lng], { icon: nuevoOverlayIcon, interactive: false });
-        if (brand !== "ic") { nuevoOverlay.addTo(map); }
+        nuevoOverlay.addTo(map);
       }
 
       const nombreAgente = (dato.agentName || '').trim();
@@ -1338,10 +1233,6 @@ $(document).ready(function () {
         let chk = $(`.chk-sel[data-id='${dato.uid}']`);
         chk.prop("checked", seleccionados.some(s => s.uid === dato.uid));
 
-        const currentMarkerObj = markers.find(mm => mm.dato.uid === dato.uid);
-        if (!isMarkerActive(currentMarkerObj)) chk.prop('disabled', true);
-        else chk.prop('disabled', false);
-
         chk.off("change").on("change", function () {
           if (this.checked) {
             if (!seleccionados.some(s => s.uid === dato.uid)) seleccionados.push(dato);
@@ -1357,39 +1248,6 @@ $(document).ready(function () {
           actualizarToolbox();
         });
       });
-    });
-
-    // agencias únicas
-    let agencies = {};
-    markers.forEach(obj => {
-      let brand = getBrand(obj);
-      agencies[brand] = true;
-    });
-    localStorage.removeItem("agenciasSeleccionadas");
-    for (let ag in agencies) {
-      if (ag === "statetty") continue;
-      let label = agencyNames[ag] || ag;
-      let checked = ag !== "ic";
-      $('#agency-filter').append(
-        `<div><label><input type="checkbox" class="chk-agency" data-ag="${ag}" ${checked ? "checked" : ""}> ${label}</label></div>`
-      );
-    }
-
-    // filtro por agencias
-    // Delegado en document: se registra una vez por mapa. renderMap se repite con
-    // cada búsqueda de la #caja y sin el .off cada cambio disparaba N veces.
-    $(document).off('change', '.chk-agency').on('change', '.chk-agency', function () {
-      let ag = $(this).data('ag');
-      let checked = this.checked;
-      handleAgencyToggle(ag, checked);
-      const query = $('#search-input').val() || '';
-      if (query.trim()) {
-        $('#search-input').trigger('input');
-      } else {
-        ultimosFiltrados = getVisibleLocations();
-        actualizarEstadisticas(ultimosFiltrados);
-      }
-      resetLocalStoragePreservingState();
     });
 
     // restaurar seleccionados
@@ -1616,14 +1474,6 @@ $(document).ready(function () {
     let matchCount = 0, filtrados = [];
 
     markers.forEach(obj => {
-      // ignorar markers cuyas agencias estén desactivadas
-      if (!isMarkerActive(obj)) {
-        // restaurar icono original si era resultado
-        obj.marker.setIcon(obj.iconOriginal);
-        obj.marker.setZIndexOffset(0);
-        return;
-      }
-
       let texto = (
         obj.dato.des + ' ' + obj.dato.nombre + ' ' + obj.dato.Titulo + ' ' + obj.dato.dir + ' ' + obj.dato.broker + ' ' + 
         (obj.dato.agentName || '') + ' ' +
@@ -1650,8 +1500,6 @@ $(document).ready(function () {
       actualizarEstadisticas(visibles);
       ultimosFiltrados = visibles;
     }
-    resetLocalStoragePreservingState();
-
   });
   if (typeof initACMTools === "function") {initACMTools();}
 });
@@ -1876,6 +1724,13 @@ function calculateDH(lat1, lng1, lat2, lng2) {
     return figuras.filter(function (f) { return f.tipo === tipo; }).map(function (f) { return f.datos; });
   }
 
+  // Figuras vivas para el resto de la página: el form #fndInm del toolbox las adjunta a
+  // su POST para que la superficie dibujada mande SIEMPRE sobre lat/lng/dist, no solo en
+  // la búsqueda de la #caja (plan figuras-sobrescriben-geografia, D2/D3).
+  window.STT_MAP_FIGURAS = function () {
+    return { poligono: datosDe('poligono'), circunferencia: datosDe('circunferencia') };
+  };
+
   if (btnLapiz) btnLapiz.addEventListener('click', function () {
     activar(herramienta === 'poligono' ? null : 'poligono');
   });
@@ -1967,6 +1822,9 @@ function calculateDH(lat1, lng1, lat2, lng2) {
       // aplicarResultado() decide: sin filtros (búsqueda solo con figuras) no
       // toca nada, y sin form montado (sección asíncrona) devuelve 0.
       const filtros = res.data.filtros;
+      // Con figuras dibujadas mandan ellas (D6): el form no debe quedar mostrando coords
+      // o radio que la próxima búsqueda desde el form va a ignorar.
+      if (filtros && figuras.length) { delete filtros.lat; delete filtros.lng; delete filtros.dist; }
       if (filtros && typeof window.STT_FND_INM === 'object' &&
           typeof window.STT_FND_INM.aplicarResultado === 'function') {
         window.STT_FND_INM.aplicarResultado(filtros);
@@ -1998,25 +1856,4 @@ function calculateDH(lat1, lng1, lat2, lng2) {
     }, 250);
   }
   esperarMapa();
-})();
-
-(function ajustarUImapsFind() {
-  try {
-    const isFind = location.pathname && location.pathname.includes('/maps/find');
-    if (!isFind) return;
-    // Marcar IC checked y disparar cambio
-    const chkIC = document.querySelector('#agency-filter input.chk-agency[data-agency="ic"], #agency-filter input[data-agency="ic"]');
-    if (chkIC && !chkIC.checked) {
-      chkIC.checked = true;
-      chkIC.dispatchEvent(new Event('change', { bubbles: true }));
-    }
-    // Ocultar Bloque 3: Fuentes de datos
-    const sections = document.querySelectorAll('#toolbox .section');
-    sections.forEach(function(s) {
-      const header = s.querySelector('.section-header');
-      if (header && header.textContent && header.textContent.includes('Fuentes de datos')) {
-        s.style.display = 'none';
-      }
-    });
-  } catch (e) {}
 })();
