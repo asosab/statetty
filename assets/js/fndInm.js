@@ -414,17 +414,6 @@
       '#' + SECTION_ID + ' .fndinm-slots select{padding:5px 6px;border:1px solid rgba(0,0,0,.2);' +
       'border-radius:6px;font-size:.85rem;width:100%;box-sizing:border-box;}' +
       '#' + SECTION_ID + ' .fndinm-row-inline{flex-direction:row;align-items:center;gap:6px;}' +
-      // Fila "texto libre": label + input + botón en una sola línea.
-      // Necesita sus propias reglas porque la de inputs shared pone width:100%
-      // (rompe la fila de 2 columnas) y .fndinm-actions button trae flex:1.
-      '#' + SECTION_ID + ' .fndinm-tl{flex-wrap:wrap;}' +
-      '#' + SECTION_ID + ' .fndinm-tl label{flex:0 0 auto;white-space:nowrap;}' +
-      '#' + SECTION_ID + ' .fndinm-tl input[type="text"]{flex:1 1 120px;width:auto;min-width:0;}' +
-      '#' + SECTION_ID + ' .fndinm-tl button{flex:0 0 auto;padding:5px 12px;border:1px solid rgba(0,0,0,.2);' +
-      'border-radius:6px;font-size:.85rem;background:var(--blue,#17baef);color:#fff;cursor:pointer;}' +
-      '#' + SECTION_ID + ' .fndinm-tl button:hover{opacity:.9;}' +
-      '#' + SECTION_ID + ' .fndinm-tl button[disabled]{opacity:.6;cursor:wait;}' +
-      '#' + SECTION_ID + ' .fndinm-tl .fndinm-note{flex:0 0 100%;}' +
       '#' + SECTION_ID + ' .fndinm-note{font-size:.72rem;opacity:.65;margin-top:2px;}' +
       '#' + SECTION_ID + ' .fndinm-latlng-wrapper{display:flex;flex-direction:row;align-items:center;gap:4px;}' +
       '#' + SECTION_ID + ' .fndinm-latlng-wrapper input{flex:1;}' +
@@ -834,20 +823,8 @@
   }
 
   // ------------------------------------------------------------------
-  // Texto libre -> filtros (POST statetty/normalizarFiltro)
-  //
-  // El bloque vive FUERA de <form id="fndInm-form"> a propósito:
-  //  - así no entra en getParams() ni llega a buscarInmueble;
-  //  - no dispara el auto-save por campo (attachSaveListeners solo mira el form);
-  //  - Enter NO dispara la búsqueda (dentro del form, Enter = submit = 🔎 Buscar).
+  // Filtros -> formulario
   // ------------------------------------------------------------------
-  function setTextoLibreNota(state, msg) {
-    var el = document.getElementById('fndInm-texto-libre-nota');
-    if (!el) return;
-    el.textContent = msg;
-    el.style.color = state === 'error' ? '#dc3545' : (state === 'ok' ? '#28a745' : '');
-  }
-
   /**
    * Escribe los filtros que devuelve el servidor sobre el formulario.
    * NO despacha eventos: si los despachara, el auto-save guardaría el filtro en el
@@ -889,83 +866,49 @@
     return aplicados.length;
   }
 
-  function buildTextoLibre() {
-    var row = document.createElement('div');
-    row.className = 'fndinm-row fndinm-row-inline fndinm-tl';
+  /**
+   * Vacía el formulario y escribe los filtros encima. Es lo que usa la #caja
+   * de /maps/find/ cuando su búsqueda devuelve resultados: el formulario queda
+   * representando exactamente esa búsqueda.
+   *
+   * Se vacía a '' campo por campo y NO con form.reset(): el reset restauraría
+   * los defaults del formulario (antiguedad: 3, pMin: 1, pMax: 100000000,
+   * dist: 1, activos: '1') y esos valores filtrarían de más la próxima
+   * búsqueda hecha desde el propio form.
+   *
+   * Como aplicarFiltros, NO despacha eventos: el llenado no dispara el
+   * auto-save; recién una edición manual del usuario guarda en el slot.
+   * @returns {number} cantidad de campos llenados
+   */
+  function aplicarResultado(filtros) {
+    var form = document.getElementById(FORM_ID);
+    if (!form) return 0;
+    // Sin claves no hay nada que colocar (búsqueda solo con polígono/círculo):
+    // tampoco se vacía, para no destruir el trabajo del usuario.
+    if (!Object.keys(filtros || {}).length) return 0;
 
-    var AYUDA = 'Escribí lo que buscás con palabras ("casas en alquiler en Equipetrol de 3 dormitorios hasta 80.000 USD") y creá el filtro con un click. Después podés ajustarlo a mano y recién ahí presioná Buscar.';
-
-    var label = document.createElement('label');
-    label.setAttribute('for', 'fndInm-texto-libre');
-    label.textContent = 'Texto libre';
-    label.setAttribute('data-tippy-content', AYUDA);
-
-    var input = document.createElement('input');
-    input.type = 'text';
-    input.id = 'fndInm-texto-libre';
-    input.placeholder = 'ej: casas en Equipetrol, 3 dorm, hasta 80000';
-    input.setAttribute('data-tippy-content', AYUDA);
-
-    var btn = document.createElement('button');
-    btn.type = 'button';
-    btn.id = 'fndInm-btn-texto-libre';
-    btn.textContent = 'Crear';
-    btn.setAttribute('data-tippy-content', 'Interpreta el texto con el normalizador y llena los filtros de abajo.');
-
-    var note = document.createElement('div');
-    note.className = 'fndinm-note';
-    note.id = 'fndInm-texto-libre-nota';
-
-    function restaurar() { btn.disabled = false; btn.textContent = 'Crear'; }
-
-    function crear() {
-      var texto = input.value.trim();
-      if (!texto) { setTextoLibreNota('error', 'Escribí una descripción primero.'); return; }
-      var creds = authCredentials();
-      if (!creds.bearer && !creds.legacy) {
-        setTextoLibreNota('error', 'Debes iniciar sesión para usar el texto libre.');
-        return;
-      }
-      btn.disabled = true;
-      btn.textContent = 'Normalizando…';
-      setTextoLibreNota('info', 'Interpretando el texto…');
-
-      var body = { texto: texto };
-      var headers = { 'Content-Type': 'application/json' };
-      if (creds.bearer) headers['Authorization'] = 'Bearer ' + creds.bearer;
-      else body.publicKey = creds.legacy;
-      var base = window.STATETTY_CONFIG ? STATETTY_CONFIG.WS_API_BASE : '';
-
-      fetch(base + 'statetty/normalizarFiltro', {
-        method: 'POST',
-        headers: headers,
-        body: JSON.stringify(body)
-      }).then(function (r) { return r.json(); }).then(function (res) {
-        restaurar();
-        if (!res || res.ok !== true) throw new Error((res && res.error) || 'respuesta_invalida');
-        var n = aplicarFiltros(res.filtros);
-        var avisos = res.avisos || [];
-        if (!n) {
-          setTextoLibreNota('error', 'No se reconoció ningún filtro' + (avisos.length ? ': ' + avisos.join(' ') : '.'));
-          return;
-        }
-        setTextoLibreNota('ok', '✓ Filtro creado (' + n + ' campos)');
-      }).catch(function () {
-        restaurar();
-        setTextoLibreNota('error', 'No se pudo interpretar el texto. Probá de nuevo o usá los filtros a mano.');
-      });
-    }
-
-    btn.addEventListener('click', crear);
-    input.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter') { e.preventDefault(); crear(); }
+    Array.prototype.forEach.call(form.elements, function (el) {
+      if (el.id === 'fndInm-userID') return;   // identidad, no es un filtro
+      if (el.tagName === 'BUTTON') return;     // etiquetas de Buscar/Limpiar
+      if (el.type === 'checkbox') { el.checked = false; return; }
+      el.value = '';
     });
 
-    row.appendChild(label);
-    row.appendChild(input);
-    row.appendChild(btn);
-    row.appendChild(note);
-    return row;
+    // Al placeholder: si quedara seleccionado un slot guardado, la próxima
+    // edición manual lo sobreescribiría vía auto-save.
+    var sel = document.getElementById(SLOTS_SELECT_ID);
+    if (sel) sel.selectedIndex = 0;
+
+    var n = aplicarFiltros(filtros);
+
+    // Sin lat en el resultado, el input combinado debe quedar vacío (si no
+    // seguiría mostrando las coordenadas del vaciado, ", ").
+    var combinado = document.getElementById('fndInm-latlng');
+    if (combinado && (!form.elements['lat'] || form.elements['lat'].value === '')) {
+      combinado.value = '';
+    }
+    if (form._fieldsetRefs) refreshLegends(form, form._fieldsetRefs);
+    return n;
   }
 
   // ------------------------------------------------------------------
@@ -1433,7 +1376,6 @@
       var body = document.createElement('div');
       body.className = 'section-body';
       body.appendChild(buildSlotsControl(usuario));
-      body.appendChild(buildTextoLibre());
       body.appendChild(buildForm(usuario));
 
       section.appendChild(header);
@@ -1467,7 +1409,6 @@
       body.className = 'fndinm-standalone-body';
       body.id = SECTION_ID + '-standalone-body';
       body.appendChild(buildSlotsControl(usuario));
-      body.appendChild(buildTextoLibre());
       body.appendChild(buildForm(usuario));
 
       // Colapsado por defecto: en modo standalone no hay acordeón externo
@@ -1512,6 +1453,9 @@
   window.STT_FND_INM = window.STT_FND_INM || {};
   window.STT_FND_INM.mount = mount;
   window.STT_FND_INM.getParams = getParams;
+  // La #caja de /maps/find/ vacía el formulario y lo llena con los filtros de
+  // su resultado (mapa.js → initCajaFind.buscar). Ver aplicarResultado().
+  window.STT_FND_INM.aplicarResultado = aplicarResultado;
   window.STT_FND_INM.refreshACMPointer = function () {
     var el = document.getElementById('fndInm-acm-coord-text');
     var div = document.getElementById('fndInm-acm-pointer');

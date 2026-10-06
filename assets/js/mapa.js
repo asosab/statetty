@@ -1961,6 +1961,16 @@ function calculateDH(lat1, lng1, lat2, lng2) {
       const pintados = pintar(res.data.resultados);
       const tot = res.data.total || (res.data.resultados ? res.data.resultados.length : 0);
       if (!tot) { avisar('Sin resultados. Probá con menos filtros u otra zona.', true); return; }
+      // El formulario "Buscar Inmuebles" del toolbox (#fndInm-section) pasa a
+      // reflejar la búsqueda recién hecha: se vacía y se le escriben los filtros
+      // del resultado, para que el usuario pueda ajustarlos y re-buscar desde ahí.
+      // aplicarResultado() decide: sin filtros (búsqueda solo con figuras) no
+      // toca nada, y sin form montado (sección asíncrona) devuelve 0.
+      const filtros = res.data.filtros;
+      if (filtros && typeof window.STT_FND_INM === 'object' &&
+          typeof window.STT_FND_INM.aplicarResultado === 'function') {
+        window.STT_FND_INM.aplicarResultado(filtros);
+      }
       if (!pintados) {
         avisar(tot + (tot === 1 ? ' inmueble encontrado' : ' inmuebles encontrados') + ', pero el mapa no pudo pintarlos.', true);
         return;

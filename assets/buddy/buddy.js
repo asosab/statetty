@@ -1734,12 +1734,15 @@ window.Buddy = window.Buddy || {};
   // user) sin que Buddy "hable".
   //
   // config: { title, message, fields[], submitText, cancelText,
-  //           onSubmit(data), onCancel() }
+  //           onSubmit(data), onCancel(), redirectToHomeOnCancel }
   //   fields[]: { key, label, type, placeholder, readonly, required,
   //               autocomplete }
   //   onSubmit puede devolver una Promise: el botón se deshabilita mientras
   //   dura y, si rechaza o devuelve false, el error se muestra dentro de la
   //   caja sin cerrarla (mismo contrato que says.frmUsr).
+  //   redirectToHomeOnCancel: al clickear "cancelar", si la página NO es la
+  //   inicial del sitio ('' o '/' o '/index.html'), navega a '/'. Escape y
+  //   los cierres programáticos no redirigen.
   //
   // Devuelve { close(), setSubmitEnabled(bool) }. Solo hay una caja a la
   // vez: abrir otra cierra la anterior SIN disparar su onCancel.
@@ -1942,6 +1945,10 @@ window.Buddy = window.Buddy || {};
     cancel.addEventListener('click', function (event) {
       event.preventDefault();
       uiClose();
+      if (config.redirectToHomeOnCancel) {
+        var path = (window.location.pathname || '').toLowerCase();
+        if (path !== '' && path !== '/' && path !== '/index.html') window.location.assign('/');
+      }
     });
 
     box.addEventListener('submit', function (event) {

@@ -916,7 +916,8 @@ window.Buddy = window.Buddy || {};
       onCancel: function () {
         state.mode = 'idle';
         emitEvent('buddy:auth-mode-changed', { mode: state.mode });
-      }
+      },
+      redirectToHomeOnCancel: true
     });
 
     return true;
@@ -943,7 +944,8 @@ window.Buddy = window.Buddy || {};
         clearResendTimer();
         state.mode = 'idle';
         emitEvent('buddy:auth-mode-changed', { mode: state.mode });
-      }
+      },
+      redirectToHomeOnCancel: true
     });
 
     if (!box) return false;
