@@ -60,14 +60,12 @@ published:          true
   <!-- Caja de búsqueda estilo mapaSimple (agentes con cuenta activa) -->
   <style>
     #caja {
-      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      /* Siempre abajo: 28px de margen para no tapar la atribución de OpenStreetMap. */
+      position: fixed; top: calc(100% - 28px); left: 50%; transform: translate(-50%, -100%);
       z-index: 1100; width: min(92vw, 520px); background: #fff;
       border-radius: 12px; padding: 14px;
       box-shadow: 0 6px 24px rgba(0, 0, 0, .25);
-      transition: top .5s ease, transform .5s ease;
     }
-    #caja.abajo { top: calc(100% - 28px); transform: translate(-50%, -100%); }
-    @media (prefers-reduced-motion: reduce) { #caja { transition: none; } }
     #caja form { display: flex; gap: 8px; flex-wrap: wrap; }
     #caja input { flex: 1; min-width: 0; padding: 10px 12px; font-size: 1rem;
                    border: 1px solid #ccc; border-radius: 8px; }
@@ -196,7 +194,7 @@ published:          true
   <script src="../../assets/js/inmueblesPdf.js?v=7"></script>
   <script src="../../assets/js/acm.js?v=4"></script>
   <script src="../../assets/js/datos.js?v=2"></script>
-  <script src="../../assets/js/mapa.js?v=27"></script>
+  <script src="../../assets/js/mapa.js?v=28"></script>
   <!-- menuIcons.js: colapsa headers inactivos a solo ícono cuando una sección está abierta (display:contents + flex)   -->
   <script src="../../assets/js/menuIcons.js?v=5"></script>
 

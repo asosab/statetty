@@ -1685,6 +1685,7 @@ function calculateDH(lat1, lng1, lat2, lng2) {
 // Mismo comportamiento que la de /: apretar y arrastrar para dibujar, figures
 // apiladas con deshacer, y búsqueda por POST a statetty/buscarMapa. Lo que cambia
 // es el destino: acá los resultados se pintan con el renderMap de la página
+// (y la caja vive siempre abajo, anclada por CSS, sin centrarse).
 // (pines por agencia, popups, selección, PDF) y no con el pintar() de mapaSimple.
 // -------------------------------
 (function initCajaFind() {
@@ -1703,8 +1704,6 @@ function calculateDH(lat1, lng1, lat2, lng2) {
 
   let mapa = null;            // lo publica renderMap/initEmptyMap; esta caja no lo crea
   let contenedor = null;
-  let zoomRef = 14;
-  let cajaFija = false;      // true tras buscar o usar lápiz/pin: la caja queda abajo
   let figuras = [];          // pila: la más antigua primero, la más nueva al final
   let herramienta = null;    // 'poligono' | 'circunferencia' | null
   let trazo = null;          // figura en curso mientras el puntero está presionado
@@ -1724,11 +1723,6 @@ function calculateDH(lat1, lng1, lat2, lng2) {
     if (!estado) return;
     estado.textContent = txt || '';
     estado.className = esError ? 'error' : '';
-  }
-
-  function colocarCaja() {
-    if (!caja || !mapa || typeof mapa.getZoom !== 'function') return;
-    caja.className = (cajaFija || mapa.getZoom() > zoomRef) ? 'abajo' : '';
   }
 
   function refrescarBotones() {
@@ -1753,7 +1747,6 @@ function calculateDH(lat1, lng1, lat2, lng2) {
   function conectarMapa(m) {
     mapa = m;
     contenedor = m.getContainer ? m.getContainer() : document.getElementById('mapid');
-    m.on('zoomend', colocarCaja);
     if (contenedor) {
       // Captura: se atiende antes que Leaflet para que no arrastre el mapa ni abra popups.
       contenedor.addEventListener('pointerdown', iniciarTrazo, true);
@@ -1763,8 +1756,6 @@ function calculateDH(lat1, lng1, lat2, lng2) {
     }
     // La herramienta pudo activarse antes de que existiera el mapa.
     if (herramienta) HANDLERS.forEach(function (h) { mapa[h].disable(); });
-    zoomRef = mapa.getZoom ? mapa.getZoom() : zoomRef;
-    colocarCaja();
   }
 
   // ---------- Figuras de área (polígono / circunferencia) ----------
@@ -1872,11 +1863,9 @@ function calculateDH(lat1, lng1, lat2, lng2) {
   }
 
   if (btnLapiz) btnLapiz.addEventListener('click', function () {
-    cajaFija = true; colocarCaja();
     activar(herramienta === 'poligono' ? null : 'poligono');
   });
   if (btnPin) btnPin.addEventListener('click', function () {
-    cajaFija = true; colocarCaja();
     activar(herramienta === 'circunferencia' ? null : 'circunferencia');
   });
   if (btnDeshacer) btnDeshacer.addEventListener('click', function () {
@@ -1916,8 +1905,6 @@ function calculateDH(lat1, lng1, lat2, lng2) {
     // El popup calcula el % contra el promedio: con 0 daría Infinity.
     const prom = Math.max(1, calcularPromedio(locs, 'precio'));
     window.renderMap(locs, lat, lng, Math.max(maxKm * 1000, 1), prom, na, u.agencia || '');
-    // El encuadre automático no debe leerse como "zoom in" del usuario.
-    zoomRef = mapa && mapa.getZoom ? mapa.getZoom() : zoomRef;
     return true;
   }
 
@@ -1927,7 +1914,6 @@ function calculateDH(lat1, lng1, lat2, lng2) {
       avisar('escribe algo o dibuja una superficie para buscar', true);
       return;
     }
-    cajaFija = true; colocarCaja();
     if (boton) boton.disabled = true;
     avisar('Buscando...', false);
     const base = (window.STATETTY_CONFIG && STATETTY_CONFIG.WS_API_BASE) || '';
@@ -1955,7 +1941,6 @@ function calculateDH(lat1, lng1, lat2, lng2) {
       // vacía, acá es la única chance de tenerlo.
       if (res.data.filtros && res.data.filtros.userID) window.__mapUserid = res.data.filtros.userID;
       const pintados = pintar(res.data.resultados);
-      colocarCaja();
       const tot = res.data.total || (res.data.resultados ? res.data.resultados.length : 0);
       if (!tot) { avisar('Sin resultados. Probá con menos filtros u otra zona.', true); return; }
       if (!pintados) {

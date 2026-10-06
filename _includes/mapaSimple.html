@@ -137,6 +137,50 @@
   var CENTRO = [-17.7833281, -63.1821673];
   var PIN = '/assets/images/pointers/pointer_statetty.png';
 
+  // brocker (clave de la BD) → clave de la imagen del puntero.
+  // Con usuario activo buscarMapa manda el documento completo (con brocker); sin sesión
+  // o sin tiempo manda la shape pública, sin brocker → el gate es el dato (sin marca).
+  // Fuente de verdad de las reglas por URL: getBrand() en assets/js/mapa.js.
+  var PUNTEROS = {
+    bo_remax: 'remax', pe_remax: 'remax',
+    bo_c21: 'C21', pe_c21: 'C21',
+    bo_bien: 'bieni', bo_idi: 'IDI', bo_uc: 'UC',
+    bo_ic: 'ic', pe_ic: 'ic',
+    bo_capital: 'capital', bo_kw: 'kw', bo_sce: 'sce',
+    bo_si: 'si', pe_laenc: 'laenc', pe_nexoi: 'nexoi',
+    bo_houstyle: 'houstyle'
+  };
+
+  // ----- Marcas chicas: sin brocker propio en la BD, se reconocen por otros medios ----
+  // Para sumar una marca: subí assets/images/pointers/pointer_<clave>.png y agregá una
+  // línea acá. Cada prueba se evalúa contra "URL + nombre del agente + celular en dígitos"
+  // (todo en minúsculas) y basta que una matchee:
+  //   string  = substring, insensible a mayúsculas ('el faro', '71035001')
+  //   RegExp  = la que escribas (/el-?faro/i para el-faro / el_faro / elfaro)
+  // Ejemplo, El Faro: aparece por URL, por el celular 71035001 o por el nombre.
+  var MARCAS_EXTRA = {
+    elfaro: ['el faro', '71035001', /el-?faro/i]
+  };
+  function porTexto(r) {
+    if (!r) return null;
+    var hay = (String(r.URL || '') + ' ' + String(r.agentName || '') + ' ' +
+               String(r.agentPhon || r.agentPhone || '').replace(/\D/g, '')).toLowerCase();
+    var claves = Object.keys(MARCAS_EXTRA);
+    for (var i = 0; i < claves.length; i++) {
+      var pruebas = MARCAS_EXTRA[claves[i]];
+      for (var j = 0; j < pruebas.length; j++) {
+        var p = pruebas[j];
+        if (typeof p === 'string' ? hay.indexOf(p) > -1 : p.test(hay)) return claves[i];
+      }
+    }
+    return null;
+  }
+
+  // Orden: brocker propio > reglas por texto (marcas chicas) > Statetty.
+  function punteroDe(r) {
+    return PUNTEROS[String((r && r.brocker) || '').toLowerCase()] || porTexto(r) || 'statetty';
+  }
+
   var map = L.map('mapid').setView(CENTRO, 12);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
@@ -187,10 +231,12 @@
     return EMOJI_DEFECTO;
   }
 
-  function iconoPara(tipo) {
+  function iconoPara(tipo, marca) {
+    var src = '/assets/images/pointers/pointer_' + (marca || 'statetty') + '.png';
     return L.divIcon({
       className: 'pin-tipo',
-      html: '<img class="pin-img" src="' + PIN + '" alt="">' +
+      html: '<img class="pin-img" src="' + src + '" alt=""' +
+            ' onerror="this.onerror=null;this.src=\'' + PIN + '\'">' +
             '<span class="pin-emoji" aria-hidden="true">' + emojiTipo(tipo) + '</span>',
       iconSize: [40, 60], iconAnchor: [20, 60], popupAnchor: [1, -54],
     });
@@ -264,7 +310,7 @@
     (resultados || []).forEach(function (r) {
       var lat = num(r.lat), lng = num(r.lng);
       if (!isFinite(lat) || !isFinite(lng)) return;   // sin coordenadas no hay pin
-      var m = L.marker([lat, lng], { icon: iconoPara(r.tipoInmueble) }).addTo(map);
+      var m = L.marker([lat, lng], { icon: iconoPara(r.tipoInmueble, punteroDe(r)) }).addTo(map);
       m.bindPopup(popup(r));
       markers.push(m);
     });
@@ -464,18 +510,23 @@
     boton.disabled = true;
     avisar('Buscando...', false);
     var base = (window.STATETTY_CONFIG && STATETTY_CONFIG.WS_API_BASE) || '';
-    const token = window.STT && window.STT.getToken ? window.STT.getToken() : '';
-    fetch(base + 'statetty/buscarMapa', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { 'Authorization': 'Bearer ' + token } : {})
-      },
-      body: JSON.stringify({
-        texto: texto,
-        poligono: datosDe('poligono'),              // [{ puntos: [{lat, lng}, ...] }]
-        circunferencia: datosDe('circunferencia'),  // [{ lat, lng, radio }] radio en metros
-      }),
+    // getToken() devuelve null hasta que auth.js termina su flujo: esperar (lo mismo
+    // que datos.js) para no buscar en la shape pública sin brocker y ver todo Statetty.
+    var listo = (window.STT && window.STT.ready) ? window.STT.ready.catch(function () {}) : null;
+    Promise.resolve(listo).then(function () {
+      var token = window.STT && window.STT.getToken ? window.STT.getToken() : '';
+      return fetch(base + 'statetty/buscarMapa', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': 'Bearer ' + token } : {})
+        },
+        body: JSON.stringify({
+          texto: texto,
+          poligono: datosDe('poligono'),              // [{ puntos: [{lat, lng}, ...] }]
+          circunferencia: datosDe('circunferencia'),  // [{ lat, lng, radio }] radio en metros
+        }),
+      });
     }).then(function (r) {
       return r.json().then(function (d) { return { status: r.status, data: d }; });
     }).then(function (res) {

@@ -99,6 +99,13 @@ window.Buddy = window.Buddy || {};
   // sección 2): única con fallback garantizado.
   var EXPRESION_OBLIGATORIA = 'sereno';
 
+  // Perfil de texto por defecto del personaje. Se usa SOLO cuando el módulo
+  // character está desactivado en la BD (personaje no se carga: sin
+  // chars/*/buddy_char_*.js no hay perfil) para que says y la localización de
+  // los módulos puedan resolver locale/estilo de todos modos. Mismos valores
+  // que declaran los personajes actuales (alejito/raulito: es/zen).
+  var DEFAULT_TEXT_PROFILE = { idioma: 'es', estilo: 'zen' };
+
   // -------------------------------------------------------------------
   // Personaje activo. Se determina desde modules/character/config.js.
   // -------------------------------------------------------------------
@@ -966,16 +973,25 @@ window.Buddy = window.Buddy || {};
     });
   }
 
-  function preloadCharacterAssets() {
+  // Precarga la media del personaje. Opciones:
+  //   { soloPorDefecto: true } → SOLO la expresión obligatoria (sereno).
+  //      Es lo que se await-ea en initialize(): no bloquea buddy:ready con ~2,6 MB.
+  //   sin opciones → expresiones restantes + overrides de los módulos que
+  //      REALMENTE están configurados (los overrides de un módulo desactivado
+  //      no se descargan: nadie va a llamar resolveAsset por ese módulo).
+  // Se ejecuta diferida (tras buddy:ready) desde initialize().
+  function preloadCharacterAssets(opciones) {
     var charData = getCharData();
     if (!charData) return Promise.resolve();
     // Personaje desactivado en el toolbox: no se precargan sus imágenes
     // (nadie las va a ver). El resto de Buddy sigue igual.
     if (characterDisabled === true) return Promise.resolve();
 
+    var soloPorDefecto = !!(opciones && opciones.soloPorDefecto === true);
     var jobs = [];
     var expressions = charData.expresiones || {};
     Object.keys(expressions).forEach(function (key) {
+      if (soloPorDefecto && key !== EXPRESION_OBLIGATORIA) return;
       var entry = expressions[key];
       if (entry && entry.archivo && typeof entry.archivo === 'string') {
         jobs.push(preloadImage(charPath('images', 'expresiones', entry.archivo)));
@@ -983,32 +999,62 @@ window.Buddy = window.Buddy || {};
     });
 
     // Los overrides de módulo pertenecen al personaje y por eso también se
-    // precargan aquí. Los defaults del módulo se completan al cargar cada
-    // habilidad.
-    var overrides = charData.overridesPorModulo || {};
-    Object.keys(overrides).forEach(function (moduleId) {
-      var moduleOverrides = overrides[moduleId] || {};
-      var images = moduleOverrides.images || {};
-      Object.keys(images).forEach(function (key) {
-        var entry = images[key];
-        if (Array.isArray(entry)) {
-          entry.forEach(function (file) {
-            if (typeof file === 'string') jobs.push(preloadImage(charPath('images', moduleId, file)));
-          });
-        } else if (entry && typeof entry === 'object' && entry.archivo) {
-          jobs.push(preloadImage(charPath('images', moduleId, entry.archivo)));
-        } else if (typeof entry === 'string') {
-          jobs.push(preloadImage(charPath('images', moduleId, entry)));
-        }
+    // precargan aquí — pero SOLO si el módulo está configurado: precargar
+    // images/archeryGame (1,3 MB) con el juego desactivado es data muerta.
+    if (!soloPorDefecto) {
+      var configurados = getConfiguredModules().map(function (id) {
+        return String(id).toLowerCase();
       });
-      var sounds = moduleOverrides.sounds || {};
-      Object.keys(sounds).forEach(function (key) {
-        var file = sounds[key];
-        if (typeof file === 'string') jobs.push(preloadAudio(charPath('sounds', moduleId, file)));
+      var overrides = charData.overridesPorModulo || {};
+      Object.keys(overrides).forEach(function (moduleId) {
+        if (configurados.indexOf(String(moduleId).toLowerCase()) === -1) return;
+        var moduleOverrides = overrides[moduleId] || {};
+        var images = moduleOverrides.images || {};
+        Object.keys(images).forEach(function (key) {
+          var entry = images[key];
+          if (Array.isArray(entry)) {
+            entry.forEach(function (file) {
+              if (typeof file === 'string') jobs.push(preloadImage(charPath('images', moduleId, file)));
+            });
+          } else if (entry && typeof entry === 'object' && entry.archivo) {
+            jobs.push(preloadImage(charPath('images', moduleId, entry.archivo)));
+          } else if (typeof entry === 'string') {
+            jobs.push(preloadImage(charPath('images', moduleId, entry)));
+          }
+        });
+        var sounds = moduleOverrides.sounds || {};
+        Object.keys(sounds).forEach(function (key) {
+          var file = sounds[key];
+          if (typeof file === 'string') jobs.push(preloadAudio(charPath('sounds', moduleId, file)));
+        });
       });
-    });
+    }
 
     return Promise.all(jobs).then(function () { return undefined; });
+  }
+
+  // Difiere la precarga completa hasta después de buddy:ready (idealmente en
+  // idle): el visitante no espera ~2,6 MB de imágenes del personaje para que
+  // la página quede "lista". requestIdleCallback con fallback setTimeout.
+  function preloadCharacterAssetsDiferido() {
+    var correr = function () {
+      try {
+        preloadCharacterAssets().catch(function (error) {
+          debugLog('preloadCharacterAssets diferido falló', error);
+        });
+      } catch (error) {
+        debugLog('preloadCharacterAssets diferido falló', error);
+      }
+    };
+    try {
+      if (typeof window.requestIdleCallback === 'function') {
+        window.requestIdleCallback(correr);
+      } else {
+        setTimeout(correr, 0);
+      }
+    } catch (error) {
+      debugLog('no se pudo diferir el preload del personaje', error);
+    }
   }
 
   function preloadModuleAssets(moduleId) {
@@ -1213,8 +1259,14 @@ window.Buddy = window.Buddy || {};
     base = orderModulesByDependency(base);
 
     return base.filter(function (item) {
-      return item &&
-        item.toLowerCase() !== 'character';
+      if (!item) return false;
+      var id = item.toLowerCase();
+      // character se carga aparte (loadCharacterConfig / short-circuit).
+      if (id === 'character') return false;
+      // Las capas de backgrounds solo existen detrás del personaje: con el
+      // personaje desactivado el módulo no tiene sentido y no se carga.
+      if (id === 'backgrounds' && characterDisabled === true) return false;
+      return true;
     }).filter(function (item, index, array) {
       return array.indexOf(item) === index;
     });
@@ -1311,8 +1363,12 @@ window.Buddy = window.Buddy || {};
           }
 
           var charData = getCharData();
-          var locale = charData && charData.perfil && charData.perfil.idioma;
-          var style = charData && charData.perfil && charData.perfil.estilo;
+          // Con el personaje desactivado no hay chars/* ni perfil: se usa el
+          // perfil por defecto (es/zen) para que la localización siga cargando.
+          var perfil = (charData && charData.perfil) ||
+            (characterDisabled === true ? DEFAULT_TEXT_PROFILE : null);
+          var locale = perfil && perfil.idioma;
+          var style = perfil && perfil.estilo;
           if (!locale || !style) {
             debugLog('módulo ' + moduleId + ': localization habilitada pero falta idioma/estilo');
             return undefined;
@@ -1408,8 +1464,13 @@ window.Buddy = window.Buddy || {};
         .then(function () { return loadSaysSources(); })
         .then(function () {
           var charData = getCharData();
-          var locale = charData && charData.perfil && charData.perfil.idioma;
-          var style = charData && charData.perfil && charData.perfil.estilo;
+          // Sin personaje (desactivado en BD) se resuelve el perfil por
+          // defecto (es/zen): el locale de says no depende de que el
+          // personaje esté cargado, solo de su idioma/estilo.
+          var perfil = (charData && charData.perfil) ||
+            (characterDisabled === true ? DEFAULT_TEXT_PROFILE : null);
+          var locale = perfil && perfil.idioma;
+          var style = perfil && perfil.estilo;
           if (!locale || !style) {
             throw new Error('[BUDDY] El personaje "' + personajeActivo + '" no define perfil.idioma/perfil.estilo.');
           }
@@ -1501,18 +1562,35 @@ window.Buddy = window.Buddy || {};
         applyRuntimeSiteConfig();
       })
       .then(function () {
+        // Personaje desactivado en el toolbox (interruptor "Activo" del módulo
+        // character en BD): CERO requests de personaje — ni
+        // modules/character/config.js, ni chars/*/buddy_char_*.js, ni media.
+        // Fail-abierto: si el runtime no trae character (sin fila en BD o
+        // endpoint caído), se sigue el camino completo de loadCharacterConfig().
+        if (runtimeConfig && runtimeConfig.character && runtimeConfig.character.enabled === false) {
+          characterDisabled = true;
+          personajeActivo = null;
+          window.Buddy.characterId = null;
+          window.Buddy.character = null;
+          debugLog('character: desactivado en BD; se omiten config, script y media del personaje');
+          return null;
+        }
         return loadCharacterConfig();
       })
       .then(function (characterId) {
+        if (characterDisabled === true) return undefined;
         return loadScript(scriptUrlForCharacter(characterId));
       })
       .then(function () {
+        if (characterDisabled === true) return undefined;
         var charData = getCharData();
         if (!charData) {
           throw new Error('[BUDDY] El personaje "' + personajeActivo + '" no registró window.BuddyChars.' + personajeActivo + '.');
         }
         window.Buddy.character = charData;
-        return preloadCharacterAssets();
+        // Solo la expresión por defecto, sin await de todo el catálogo: la
+        // precarga completa corre diferida tras buddy:ready (ver al final).
+        return preloadCharacterAssets({ soloPorDefecto: true });
       })
       .then(function () {
         var modules = getConfiguredModules();
@@ -1574,6 +1652,10 @@ window.Buddy = window.Buddy || {};
         window.dispatchEvent(new CustomEvent('buddy:ready', {
           detail: { character: personajeActivo, modules: modulosActivos.slice() }
         }));
+        // Precarga completa del personaje (resto de expresiones + overrides de
+        // módulos configurados) FUERA del critical path: buddy:ready ya se
+        // emitió. No corre con el personaje desactivado (guard interno).
+        preloadCharacterAssetsDiferido();
       });
   }
 
