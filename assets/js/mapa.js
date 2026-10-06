@@ -1007,6 +1007,9 @@ function limpiarRenderPrevio() {
 }
 
 function initEmptyMap() {
+  // Re-carga dinámica (window.recargarMapa): si había un render anterior, sus pines
+  // no deben quedar detrás del mapa vacío. En la carga inicial `map` es null y no hace nada.
+  if (map) limpiarRenderPrevio();
   if (!map) {
     map = window.map || L.map('mapid').setView([-17.7833, -63.1821], 12);
     window.map = map;
@@ -1470,6 +1473,12 @@ $(document).ready(function () {
 
   async function init() {
     $('#loading-indicator').show();
+    // Re-carga dinámica tras una búsqueda de la toolbox: lo que una recarga de la
+    // página habría vaciado (filtro de texto y estado de la #caja) se vacía acá.
+    // En la carga inicial no cambia nada: ambos arrancan vacíos.
+    $('#search-input').val('');
+    $('#search-count').hide();
+    $('#estado').text('');
 
     await waitForKey();
     var usuario = window.STT && window.STT.getUsuario ? window.STT.getUsuario() : null;
@@ -1550,6 +1559,9 @@ $(document).ready(function () {
 
     if (!lat || !lng || !radius) {
       $('#loading-indicator').hide();
+      // Re-carga dinámica: saca los pines de la búsqueda anterior antes del aviso
+      // (con recarga habrían desaparecido). En la carga inicial no hay render previo.
+      if (map) limpiarRenderPrevio();
       mostrarAvisoSinResultados();
       return;
     }
@@ -1564,9 +1576,18 @@ $(document).ready(function () {
 
     $('#loading-indicator').hide();
     renderMap(locs, lat, lng, radius, pProm, na, ag);
+    // Re-carga dinámica: limpia la URL como haría navegar a /maps/find (sin
+    // ?lat=&r=&u=). Solo en re-carga: en la carga inicial esos params son la
+    // entrada desde el bot de Telegram y se respetan.
+    if (window.__mapaCargado) history.replaceState(null, '', window.location.pathname);
     window.__mapaCargado = true;
     $('#loading-indicator').hide();
   }
+
+  // Hook para fndInm.js: repinta el mapa con los resultados nuevos de una búsqueda
+  // de la toolbox sin recargar la página (en otras páginas no existe este hook y
+  // fndInm.js sigue navegando a /maps/find).
+  window.recargarMapa = init;
 
   init().catch(function(e) {
     console.error('Error al cargar datos del mapa', e);

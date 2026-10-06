@@ -1232,6 +1232,7 @@
     function pollSearchReady(base, pk, searchTs, overlay, controller, isCancelled, onDone) {
       var creds = authCredentials();
       var firstCred = pk || creds.legacy || creds.bearer;
+      var MAPA_URL = 'https://statetty.com/maps/find';
       function check() {
         if (isCancelled()) return;
         var url = base + 'statetty/buscarInmueble/status?searchTs=' + searchTs;
@@ -1248,8 +1249,19 @@
             if (isCancelled()) return;
             if (res.ready) {
               if (onDone) onDone();
+              // Página del mapa (/maps/find): mapa.js expone recargarMapa (init) y
+              // repinta con los resultados nuevos sin recargar. El overlay se mantiene
+              // tapando el mapa viejo hasta que el repintado termina; si falla, se
+              // cae a la navegación de siempre. El resto de páginas no tiene el hook.
+              if (typeof window.recargarMapa === 'function') {
+                window.recargarMapa().then(function () { overlay.remove(); }, function () {
+                  overlay.remove();
+                  window.location.href = MAPA_URL;
+                });
+                return;
+              }
               overlay.remove();
-              window.location.href = 'https://statetty.com/maps/find';
+              window.location.href = MAPA_URL;
             } else {
               setTimeout(check, 4000);
             }
