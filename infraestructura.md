@@ -297,7 +297,7 @@ Base URL: `https://api.statetty.com/api/statetty`
 
 | Endpoint            | Método | Propósito                            |
 | ------------------- | ------ | ------------------------------------ |
-| `/finderresult`     | GET    | Resultados de búsqueda de inmuebles  |
+| `/buscarMapa`       | POST   | Búsqueda de inmuebles para el mapa: por texto/superficie, o `{"ultima":true}` para la última búsqueda guardada del usuario |
 | `/inmueble`         | GET    | Detalle de un inmueble               |
 | `/inmobiliarias`    | GET    | Datos de agencias inmobiliarias      |
 | `/getuser`          | GET    | Verifica publicKey, devuelve datos del agente y vigencia |
@@ -330,7 +330,7 @@ Access-Control-Allow-Origin: https://statetty.com
 Access-Control-Allow-Credentials: true
 ```
 
-Esto aplica a todos los endpoints que consume el frontend (`getuser`, `/finderresult`, `/inmueble`, `/registro`, etc.) cuando incluyen `credentials:'include'` en el fetch.
+Esto aplica a todos los endpoints que consume el frontend (`getuser`, `/buscarMapa`, `/inmueble`, `/registro`, etc.) cuando incluyen `credentials:'include'` en el fetch.
 
 ---
 

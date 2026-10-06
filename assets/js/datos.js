@@ -1,86 +1,55 @@
-// datos.js - Consulta finderresult y transforma datos al formato del mapa
+// datos.js - Consulta la última búsqueda guardada y transforma los datos al formato del mapa
 // Dependencias: STATETTY_CONFIG (config.js)
+//
+// POST statetty/buscarMapa {ultima:true} -> { ok, total, resultados, filtros, usuario }.
+// `resultados` era `result` y `filtros` era `info` cuando existía GET /finderresult.
 
-async function fetchFinderResult(publicKey) {
-  // Si no se pasó publicKey, obtenerla de auth.js tras esperar que termine
-  if (!publicKey) {
+async function fetchBuscarMapa(token) {
+  // Si no se pasó token, esperar a que auth.js lo resuelva (STT.ready).
+  if (!token) {
     if (window.STT && window.STT.ready) {
       await window.STT.ready;
     }
-    publicKey = window.STT && window.STT.getKey ? window.STT.getKey() : null;
-  }
-
-  // Nuevo: JWT Buddy (Bearer) tiene prioridad sobre publicKey legacy.
-  var token = publicKey;
-  var isJwt = publicKey && publicKey.indexOf('.') !== -1 && publicKey.split('.').length === 3;
-
-  if (!isJwt && window.STT && typeof window.STT.getToken === 'function') {
-    var jwt = window.STT.getToken();
-    if (jwt) { token = jwt; isJwt = true; }
+    token = window.STT && window.STT.getToken ? window.STT.getToken() : null;
   }
 
   if (!token) {
-    console.warn('[fetchFinderResult] credencial vacía o no definida, se aborta la petición.');
+    console.warn('[fetchBuscarMapa] sin sesión, se aborta la petición.');
     return null;
   }
 
   var base = STATETTY_CONFIG.WS_API_BASE;
-  var url, options = { cache: 'no-store' };
-  if (isJwt) {
-    url = base + 'statetty/finderresult';
-    options.headers = { 'Authorization': 'Bearer ' + token };
-  } else {
-    url = base + 'statetty/finderresult?publicKey=' + encodeURIComponent(token);
-  }
-  console.log('[fetchFinderResult] Iniciando petición a:', url);
+  var url = base + 'statetty/buscarMapa';
+  console.log('[fetchBuscarMapa] Iniciando petición a:', url);
 
   var res;
   try {
-    res = await fetch(url, options);
+    res = await fetch(url, {
+      method: 'POST',
+      cache: 'no-store',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ ultima: true })
+    });
   } catch (e) {
-    console.error('[fetchFinderResult] Error de red al hacer fetch:', e);
+    console.error('[fetchBuscarMapa] Error de red al hacer fetch:', e);
     return null;
   }
 
-  console.log('[fetchFinderResult] Respuesta HTTP recibida. status=', res.status, 'ok=', res.ok, 'statusText=', res.statusText);
-
-  if (!res.ok) {
-    try {
-      var errorJson = await res.json();
-      console.error('[fetchFinderResult] API error:', errorJson);
-      return errorJson;
-    } catch (e2) {
-      var text = '';
-      try { text = await res.text(); } catch (e3) {}
-      console.error('[fetchFinderResult] HTTP', res.status, text);
-      return { error: 'HTTP ' + res.status };
-    }
-  }
-
-  var rawText;
-  try {
-    rawText = await res.text();
-  } catch (e) {
-    console.error('[fetchFinderResult] Error leyendo el body de la respuesta como texto:', e);
-    return null;
-  }
+  console.log('[fetchBuscarMapa] Respuesta HTTP recibida. status=', res.status, 'ok=', res.ok);
 
   var data;
   try {
-    data = JSON.parse(rawText);
+    data = await res.json();
   } catch (e) {
-    console.error('[fetchFinderResult] La respuesta no es JSON válido. Body crudo (primeros 500 chars):', rawText.substring(0, 500), 'Error:', e);
-    return null;
+    console.error('[fetchBuscarMapa] Respuesta no JSON. status=', res.status);
+    return { ok: false, error: 'HTTP ' + res.status };
   }
 
-  console.log('[fetchFinderResult] JSON parseado correctamente. Claves recibidas:', Object.keys(data || {}));
-
-  if (!data || !Array.isArray(data.result)) {
-    console.warn('[fetchFinderResult] La respuesta no tiene la forma esperada (falta "result" como array). data=', data);
-  } else {
-    console.log('[fetchFinderResult] Cantidad de items en result:', data.result.length);
+  console.log('[fetchBuscarMapa] JSON parseado. Claves recibidas:', Object.keys(data || {}));
+  if (!data || !Array.isArray(data.resultados)) {
+    console.warn('[fetchBuscarMapa] sin "resultados" como array (ok=', data && data.ok,
+      'error=', data && data.error, ')');
   }
-
   return data;
 }
 
@@ -189,44 +158,44 @@ function apiItemToLocation(item) {
   return loc;
 }
 
-function parseFinderResult(response) {
+function parseBuscarMapa(response) {
   if (!response) {
-    console.error('[parseFinderResult] response es null/undefined. No se puede parsear. Esto suele ocurrir cuando fetchFinderResult() falló silenciosamente antes.');
+    console.error('[parseBuscarMapa] response es null/undefined. Suele ocurrir cuando fetchBuscarMapa() falló antes.');
     return { locations: [], info: null, usuario: null };
   }
 
-  if (!Array.isArray(response.result)) {
-    console.error('[parseFinderResult] response.result no es un array. Tipo real:', typeof response.result, 'Valor:', response.result, 'Claves del response:', Object.keys(response));
+  if (!Array.isArray(response.resultados)) {
+    console.error('[parseBuscarMapa] response.resultados no es un array. Tipo real:', typeof response.resultados, 'Claves del response:', Object.keys(response));
     return { locations: [], info: null, usuario: null };
   }
 
-  console.log('[parseFinderResult] Parseando', response.result.length, 'items...');
+  console.log('[parseBuscarMapa] Parseando', response.resultados.length, 'items...');
 
-  var locations = response.result.map(function (item, index) {
+  var locations = response.resultados.map(function (item, index) {
     try {
       return apiItemToLocation(item);
     } catch (e) {
-      console.error('[parseFinderResult] Error al transformar item en índice', index, '. Item:', item, 'Error:', e);
+      console.error('[parseBuscarMapa] Error al transformar item en índice', index, '. Item:', item, 'Error:', e);
       return null;
     }
   }).filter(Boolean);
 
-  if (locations.length !== response.result.length) {
-    console.warn('[parseFinderResult] Se descartaron', response.result.length - locations.length, 'items por errores de transformación.');
+  if (locations.length !== response.resultados.length) {
+    console.warn('[parseBuscarMapa] Se descartaron', response.resultados.length - locations.length, 'items por errores de transformación.');
   }
 
-  if (!response.info) {
-    console.warn('[parseFinderResult] response.info no está presente.');
+  if (!response.filtros) {
+    console.warn('[parseBuscarMapa] response.filtros no está presente.');
   }
   if (!response.usuario) {
-    console.warn('[parseFinderResult] response.usuario no está presente.');
+    console.warn('[parseBuscarMapa] response.usuario no está presente.');
   }
 
-  console.log('[parseFinderResult] Resultado final: ', locations.length, 'ubicaciones listas para el mapa.');
+  console.log('[parseBuscarMapa] Resultado final: ', locations.length, 'ubicaciones listas para el mapa.');
 
   return {
     locations: locations,
-    info: response.info || null,
+    info: response.filtros || null,
     usuario: response.usuario || null
   };
 }

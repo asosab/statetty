@@ -1262,7 +1262,7 @@ $(document).ready(function () {
       const msj = `Hola${nombreCortito},${soyNa}${deAg}${sc}un gusto saludarte. Por favor, podría enviarme información sobre este inmueble, en caso de que siga disponible (${dato.Titulo})\n\nGracias de antemano\n\nlink: ${url}\n\n${foto}Mensaje creado con Statetty https://statetty.com`;
 
       const server = STATETTY_CONFIG.WS_API_BASE;
-      const linkSrv = `${server}statetty/usrClckWsInm?u=${encodeURIComponent(userid)}&i=${encodeURIComponent(dato._id)}`;
+      const linkSrv = `${server}statetty/usrClckWsInm?u=${encodeURIComponent(window.__mapUserid)}&i=${encodeURIComponent(dato._id)}`;
 
       const linkWA = celularValido
         ? `<br/><a href="#" onclick="openWsRedirect('${linkSrv}','https://wa.me/${cel}?text=${encodeURIComponent(msj)}');return false;">📱 Contactar a${nombreCorto}</a>`
@@ -1423,7 +1423,9 @@ $(document).ready(function () {
 
   var urlParams = new URLSearchParams(window.location.search);
   let pProm = Math.round(urlParams.get('p'));
-  let userid = urlParams.get('u');
+  // En global: initCajaFind (otro IIFE) lo reescribe tras una búsqueda por texto y
+  // el popup de arriba lo lee para armar usrClckWsInm?u=.
+  window.__mapUserid = urlParams.get('u');
   window.M2T = urlParams.get('M2T');
   window.M2T = normalizarM2TDesdeURI();
 
@@ -1493,31 +1495,34 @@ $(document).ready(function () {
       return;
     }
 
-    var response = await fetchFinderResult(window.STT.getToken());
+    var response = await fetchBuscarMapa(window.STT.getToken());
 
-    if (!response || response.error || !Array.isArray(response.result)) {
+    // `sin_sesion` (token vencido) y `sin_busqueda` (nunca buscó) caen al mapa vacío,
+    // igual que antes con finderresult.
+    if (!response || !response.ok || !Array.isArray(response.resultados)) {
       $('#loading-indicator').hide();
       initEmptyMap();
       return;
     }
 
     var locs = [];
-    if (Array.isArray(response.result) && response.result.length > 0) {
-      var parsed = parseFinderResult(response);
+    if (response.resultados.length > 0) {
+      var parsed = parseBuscarMapa(response);
       locs = parsed.locations;
       locs.forEach(function(loc) {
         loc.uid = normalizeURL(loc.URL);
         loc.brand = getBrand({ dato: loc });
-        // Respaldo: si parseFinderResult no propagó createdAt, se busca en el registro
-        // crudo de response.result (por _id) para no perder el dato de antigüedad.
+        // Respaldo: si parseBuscarMapa no propagó createdAt, se busca en el registro
+        // crudo de response.resultados (por _id) para no perder el dato de antigüedad.
         if (loc.createdAt === undefined && loc._id) {
-          var raw = response.result.find(function (r) { return r._id === loc._id; });
+          var raw = response.resultados.find(function (r) { return r._id === loc._id; });
           if (raw) loc.createdAt = raw.createdAt;
         }
       });
     }
 
-    var info = response.info || {};
+    // `filtros` era `info` en finderresult: lat/lng/dist, precioProm, promM2T, userID…
+    var info = response.filtros || {};
     window.ACM_INFO = info;
     try { autoSelectSlot(info); } catch (e) { console.warn('[autoSelectSlot]', e); }
 
@@ -1552,7 +1557,7 @@ $(document).ready(function () {
     var pProm = Math.round(info.precioProm) || (locs.length ? Math.round(urlParams.get('p')) : 0) || 0;
     if (isNaN(pProm) || pProm == 0) pProm = locs.length ? calcularPromedio(locs, 'precio') : 0;
 
-    if (info.userID) userid = info.userID;
+    if (info.userID) window.__mapUserid = info.userID;
 
     var na = usuario ? ((usuario.first_name || '') + ' ' + (usuario.last_name || '')).trim() : '';
     var ag = usuario ? (usuario.agencia || '') : '';
@@ -1863,8 +1868,9 @@ function calculateDH(lat1, lng1, lat2, lng2) {
 
   // ---------- Búsqueda ----------
   // buscarMapa devuelve el shape público del inmueble (_id, nombre, precio, lat, lng,
-  // url, …), no el de finderresult. apiItemToLocation (datos.js) hace la conversión y
-  // de ahí se alimenta el mismo renderMap que usa el resto de la página.
+  // url, …), no el documento completo de la búsqueda guardada (modo `ultima`).
+  // apiItemToLocation (datos.js) hace la conversión y de ahí se alimenta el mismo
+  // renderMap que usa el resto de la página.
   function aLocations(resultados) {
     return (resultados || []).map(function (it) {
       const loc = apiItemToLocation(it);
@@ -1924,6 +1930,9 @@ function calculateDH(lat1, lng1, lat2, lng2) {
         avisar('No se pudo interpretar la búsqueda. Probá con otra frase.', true);
         return;
       }
+      // El popup arma usrClckWsInm?u= con el id del usuario; si la página arrancó
+      // vacía, acá es la única chance de tenerlo.
+      if (res.data.filtros && res.data.filtros.userID) window.__mapUserid = res.data.filtros.userID;
       const pintados = pintar(res.data.resultados);
       colocarCaja();
       const tot = res.data.total || (res.data.resultados ? res.data.resultados.length : 0);
