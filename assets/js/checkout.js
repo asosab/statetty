@@ -38,7 +38,8 @@
   function inyectStyles() {
     if (document.getElementById(STYLE_ID)) return;
     var css =
-      '#' + DIALOG_ID + '{padding:0;border:0;border-radius:14px;width:min(560px,94vw);' +
+      '#' + DIALOG_ID + '{position:fixed;inset:0;margin:auto;padding:0;border:0;border-radius:14px;' +
+      'width:min(560px,94vw);' +
       'max-height:88vh;overflow:auto;box-shadow:0 16px 50px rgba(0,0,0,.28);' +
       'font:14px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}' +
       '#' + DIALOG_ID + '::backdrop{background:rgba(0,0,0,.45);}' +
