@@ -1161,7 +1161,7 @@ $(document).ready(function () {
       let sc = (na || ag) ? ' te escribe, ' : '';
       let foto = dato.foto ? `Foto: ${dato.foto}\n\n`:'';
 
-      const msj = `Hola${nombreCortito},${soyNa}${deAg}${sc}un gusto saludarte. Por favor, podría enviarme información sobre este inmueble, en caso de que siga disponible (${dato.Titulo})\n\nGracias de antemano\n\nlink: ${url}\n\n${foto}Mensaje creado con Statetty https://statetty.com`;
+      const msj = `Hola${nombreCortito},${soyNa}${deAg}${sc}un gusto saludarte. Por favor, podría enviarme información sobre este inmueble, en caso de que siga disponible (${dato.Titulo})\n\nGracias de antemano\n\nlink: ${url}\n\nMensaje creado con Statetty https://statetty.com`;
 
       const server = STATETTY_CONFIG.WS_API_BASE;
       const linkSrv = `${server}statetty/usrClckWsInm?u=${encodeURIComponent(window.__mapUserid)}&i=${encodeURIComponent(dato._id)}`;
