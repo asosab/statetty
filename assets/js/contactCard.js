@@ -4,8 +4,8 @@
    el toolbox <dialog> de statetty.com. Este archivo NO ejecuta nada
    solo: lo usa quien la monta.
 
-     STTContact.mountInto(el, { inmuebleId })        // embebida
-     STTContact.open({ titulo, mensaje, intent })    // flotante
+     STTContact.mountInto(el, { inmuebleId, contacto })  // embebida
+     STTContact.open({ titulo, mensaje, intent })        // flotante
 
    La identidad sale de window.STT.getKey() (assets/js/user.js) tras
    await window.STT.ready. Si la página no carga user.js, se envía
@@ -96,6 +96,31 @@
       status: q('#inm-form-status'),
       wa: q('#inm-wa')
     };
+  }
+
+  // ---------- texto de contacto a captadores (solo embebido + sesión con hasTime) ----------
+
+  /**
+   * Mismo template que mapa.js / mapa_link_directo.js: saludo al captador del
+   * inmueble, presentación del visitante (nombre + agencia) y datos del inmueble.
+   * `c` viene del mount (inmueble.ejs): { titulo, url, agente }.
+   */
+  function textoContactoCaptador(u, c) {
+    var agente = String(c.agente || '')
+      .replace(/\b(lic|ing|arq|dr|dra)\.?\s+/gi, '')
+      .replace(/[^\p{L}\s'-]/gu, '')
+      .trim();
+    var nombreCortito = agente ? ' ' + agente.split(/\s+/)[0] : '';
+    var na = ((u.first_name || '') + ' ' + (u.last_name || '')).trim();
+    var ag = (u.agencia || '').trim();
+    var soyNa = na ? ' ' + na : '';
+    var deAg = ag ? ' de ' + ag : '';
+    var sc = (na || ag) ? ' te escribe, ' : '';
+    return 'Hola' + nombreCortito + ',' + soyNa + deAg + sc +
+      'un gusto saludarte. Por favor, podría enviarme información sobre este inmueble, ' +
+      'en caso de que siga disponible (' + (c.titulo || '') + ')\n\n' +
+      'Gracias de antemano\n\nlink: ' + (c.url || '') + '\n\n' +
+      'Mensaje creado con Statetty https://statetty.com';
   }
 
   // ---------- texto de WhatsApp por intención ----------
@@ -220,6 +245,7 @@
 
     var u = window.STT && window.STT.getUsuario ? window.STT.getUsuario() : null;
     estado.usuario = u || null;
+    estado.msgCaptador = false;
 
     // Se corre en cada apertura del toolbox: primero se desarma el estado de la
     // corrida anterior, así un logout con la página abierta no deja la tarjeta
@@ -251,6 +277,14 @@
     }
 
     console.log('[Statetty] [info] aplicarUsuarioSesion: prefill desde cuenta, esAsesor forzado a true');
+
+    // Texto de contacto a captadores: solo en la tarjeta embebida de /inmueble/<id>
+    // y solo con sesión + hasTime. Pisa lo restaurado de localStorage (arriba).
+    if (estado.mode === 'embed' && estado.contacto && u.hasTime) {
+      estado.msgCaptador = true;
+      el.msg.value = textoContactoCaptador(u, estado.contacto);
+      console.log('[Statetty] [info] aplicarUsuarioSesion: inm-msg con texto de contacto a captador');
+    }
   }
 
   // ---------- montaje ----------
@@ -263,6 +297,8 @@
       inmuebleId: cfg.inmuebleId || null,
       intent: cfg.intent || 'inmueble',
       paginaUrl: cfg.paginaUrl || '',
+      contacto: cfg.contacto || null,
+      msgCaptador: false,
       usuario: null
     };
 
@@ -307,17 +343,19 @@
     aplicarUsuarioSesion(el, estado);
 
     function persistCurrentValues() {
-      // Con sesión iniciada los campos vienen de la cuenta, no del visitante: si
-      // se guardaran, el próximo anónimo del mismo navegador los heredaría.
-      if (estado.usuario) return;
+      // El texto de captador (sesión + hasTime) se regenera en cada carga: no se persiste.
+      if (estado.msgCaptador) return;
+      // Los campos que vinieron de la cuenta quedaron en solo lectura/deshabilitados:
+      // se guardan vacíos para que el próximo visitante anónimo del mismo navegador
+      // no herede los datos de la cuenta. Lo que escribió el visitante sí se guarda.
       saveForm({
-        email: el.email.value.trim(),
-        phoneCode: el.phoneCode.value,
-        phone: el.phone.value.trim(),
-        nombre: el.name.value.trim(),
+        email: el.email.readOnly ? '' : el.email.value.trim(),
+        phoneCode: el.phoneCode.disabled ? '' : el.phoneCode.value,
+        phone: el.phone.readOnly ? '' : el.phone.value.trim(),
+        nombre: el.name.readOnly ? '' : el.name.value.trim(),
         mensaje: el.msg.value,
         newsletter: !!(el.newsletter && el.newsletter.checked),
-        esAsesor: !!(el.esAsesor && el.esAsesor.checked)
+        esAsesor: (el.esAsesor && el.esAsesor.disabled) ? false : !!(el.esAsesor && el.esAsesor.checked)
       });
     }
 
@@ -448,7 +486,9 @@
           // destino (pool vacío, o el visitante es asesor y hay que orientarlo): en ese
           // caso no hay handoff de WhatsApp, solo el mensaje de estado.
           if (agentPhon) {
-            var textoWhatsapp = buildTextoWhatsapp({
+            // Con el texto de captador el mensaje ya trae saludo, link y cierre
+            // (igual que mapa.js): se manda tal cual, sin envolverlo de nuevo.
+            var textoWhatsapp = estado.msgCaptador ? mensaje : buildTextoWhatsapp({
               intent: estado.intent,
               agentNameCorto: agentNameCorto,
               nombre: nombre,
@@ -512,6 +552,7 @@
     return activar(root, {
       mode: 'embed',
       inmuebleId: opts.inmuebleId || null,
+      contacto: opts.contacto || null,
       intent: 'inmueble'
     });
   }
