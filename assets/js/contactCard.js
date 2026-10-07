@@ -206,6 +206,21 @@
   // ---------- prefill desde el usuario autenticado ----------
 
   /**
+   * Espera a que exista window.STT antes de leer la sesión. auth.js/user.js van
+   * con defer y el montaje de la tarjeta puede correr antes (inmueble.ejs monta
+   * en un inline durante el parseo): sin esto, `await STT.ready` ni siquiera se
+   * evalúa y la tarjeta se rinde como anónima. Los defer corren apenas termina
+   * el parseo, así que 5 s alcanzan; si la página no trae auth, se sigue como
+   * anónimo (igual que antes).
+   */
+  async function esperarSTT() {
+    for (var i = 0; i < 100 && !(window.STT && window.STT.ready); i++) {
+      await new Promise(function (r) { setTimeout(r, 50); });
+    }
+    if (window.STT && window.STT.ready) await window.STT.ready;
+  }
+
+  /**
    * Parte un teléfono con prefijo internacional en {code, number} para el par
    * #inm-phone-code (select) + #inm-phone (input). `waphone` se guarda completo
    * (ej. '+59178447518'), así que hay que separar el prefijo del resto.
@@ -240,7 +255,7 @@
    */
   async function aplicarUsuarioSesion(el, estado) {
     try {
-      if (window.STT && window.STT.ready) await window.STT.ready;
+      await esperarSTT();
     } catch (err) { /* sin user.js/auth.js en la página: se sigue como anónimo */ }
 
     var u = window.STT && window.STT.getUsuario ? window.STT.getUsuario() : null;
