@@ -1806,9 +1806,17 @@ function calculateDH(lat1, lng1, lat2, lng2) {
       return;
     }
     const texto = input ? input.value.trim() : '';
-    if (!texto && !figuras.length) {
-      avisar('escribe algo o dibuja una superficie para buscar', true);
-      return;
+    // #texto vacío (plan find-buscar-vacio-filtro-o-zona, D2): primero el filtro
+    // cargado en la toolbox (#fndInm-slots-select) → su botón; si no, las zonas
+    // dibujadas buscan con los defaults del server; si tampoco hay zonas, aviso.
+    if (!texto) {
+      const selSlot = document.getElementById('fndInm-slots-select');
+      const btnFndInm = document.getElementById('fndInm-btn-buscar');
+      if (selSlot && selSlot.value && btnFndInm) { btnFndInm.click(); return; }
+      if (!figuras.length) {
+        avisar('describe lo que buscas o dibuja una zona sobre el mapa para iniciar la búsqueda', true);
+        return;
+      }
     }
     // Con figuras dibujadas (btn-lapiz / btn-pin) el área la definen ellas: la
     // circunferencia de la búsqueda anterior ya no representa el filtro y se borra
