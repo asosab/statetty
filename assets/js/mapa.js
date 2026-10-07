@@ -1665,6 +1665,11 @@ function calculateDH(lat1, lng1, lat2, lng2) {
     contenedor.setPointerCapture(e.pointerId);
     const ll = mapa.mouseEventToLatLng(e);
     trazo = { id: e.pointerId, tipo: herramienta };
+    // Limpiar círculo vestigio de búsqueda al empezar a dibujar
+    if (typeof circuloBusqueda !== 'undefined' && circuloBusqueda && map.hasLayer(circuloBusqueda)) {
+      map.removeLayer(circuloBusqueda);
+      circuloBusqueda = null;
+    }
     if (herramienta === 'poligono') {
       trazo.pts = [ll];
       trazo.capa = L.polyline([ll], { color: ESTILO_AREA.color, weight: 2, interactive: false }).addTo(mapa);
@@ -1719,6 +1724,11 @@ function calculateDH(lat1, lng1, lat2, lng2) {
       return;
     }
     figuras.push(figura);
+    // Limpiar círculo vestigio de búsqueda al guardar figura dibujada
+    if (typeof circuloBusqueda !== 'undefined' && circuloBusqueda && map.hasLayer(circuloBusqueda)) {
+      map.removeLayer(circuloBusqueda);
+      circuloBusqueda = null;
+    }
     avisar('', false);
     refrescarBotones();
   }
@@ -1735,9 +1745,19 @@ function calculateDH(lat1, lng1, lat2, lng2) {
   };
 
   if (btnLapiz) btnLapiz.addEventListener('click', function () {
+    // Limpiar círculo vestigio al activar dibujo
+    if (typeof circuloBusqueda !== 'undefined' && circuloBusqueda && mapa && mapa.hasLayer(circuloBusqueda)) {
+      mapa.removeLayer(circuloBusqueda);
+      circuloBusqueda = null;
+    }
     activar(herramienta === 'poligono' ? null : 'poligono');
   });
   if (btnPin) btnPin.addEventListener('click', function () {
+    // Limpiar círculo vestigio al activar dibujo
+    if (typeof circuloBusqueda !== 'undefined' && circuloBusqueda && mapa && mapa.hasLayer(circuloBusqueda)) {
+      mapa.removeLayer(circuloBusqueda);
+      circuloBusqueda = null;
+    }
     activar(herramienta === 'circunferencia' ? null : 'circunferencia');
   });
   if (btnDeshacer) btnDeshacer.addEventListener('click', function () {
@@ -1793,7 +1813,7 @@ function calculateDH(lat1, lng1, lat2, lng2) {
     // Con figuras dibujadas (btn-lapiz / btn-pin) el área la definen ellas: la
     // circunferencia de la búsqueda anterior ya no representa el filtro y se borra
     // al iniciar (si la búsqueda falla, no debe quedar en pantalla — D2 del plan).
-    if (figuras.length && circuloBusqueda) {
+    if (figuras.length && typeof circuloBusqueda !== 'undefined' && circuloBusqueda) {
       if (map && map.hasLayer(circuloBusqueda)) map.removeLayer(circuloBusqueda);
       circuloBusqueda = null;
     }
