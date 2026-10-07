@@ -180,6 +180,7 @@
       u.isAdmin=tg.isAdmin||false;
       u.hasTime=tg.hasTime||false;
       u.dias=tg.dias||0;
+      u.cutoffDate=tg.cutoffDate||null;
       u.usrIconURL=tg.usrIconURL||'';
       u.activo=tg.activo;
       u.emailVerificado=tg.emailVerificado;

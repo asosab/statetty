@@ -69,7 +69,8 @@
         { label: 'Mis inmuebles', href: 'https://statetty.com/inmueble/registro' },
         { label: 'Mis datos', href: 'https://statetty.com/registro' },
         { label: 'Mapa', href: 'https://statetty.com/maps/find/' },
-        { label: 'Acortador', href: 'https://statetty.com/shortlinks', superuser: true }
+        { label: 'Acortador', href: 'https://statetty.com/shortlinks', superuser: true },
+        { label: 'Adquirir tiempo', action: 'stt-open-checkout' }
       ];
 
   var LOGOUT_LABEL = 'Cerrar sesión';
@@ -524,6 +525,21 @@
     }
 
     getMenuItems().forEach(function (item) {
+      if (item.action) {
+        var b = document.createElement('a');
+        b.href = '#';
+        b.textContent = item.label;
+        b.setAttribute('role', 'menuitem');
+        b.addEventListener('click', function (e) {
+          e.preventDefault();
+          close();
+          if (item.action === 'stt-open-checkout' && window.STTCheckout && window.STTCheckout.open) {
+            window.STTCheckout.open();
+          }
+        });
+        dropdown.appendChild(b);
+        return;
+      }
       var a = document.createElement('a');
       a.href = item.href;
       a.textContent = item.label;
@@ -620,6 +636,19 @@
     container.id = TOOLBOX_LINKS_ID;
 
     getMenuItems().forEach(function (item) {
+      if (item.action) {
+        var b = document.createElement('a');
+        b.href = '#';
+        b.textContent = item.label;
+        b.addEventListener('click', function (e) {
+          e.preventDefault();
+          if (item.action === 'stt-open-checkout' && window.STTCheckout && window.STTCheckout.open) {
+            window.STTCheckout.open();
+          }
+        });
+        container.appendChild(b);
+        return;
+      }
       var a = document.createElement('a');
       a.href = item.href;
       a.textContent = item.label;
