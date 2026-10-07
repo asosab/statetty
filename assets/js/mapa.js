@@ -6,6 +6,10 @@
 
 var map, locations = [], markers = [], seleccionados = [], ultimosFiltrados = [];
 var circuloBusqueda = null, cruzCentro = null;   // capa y cruz del centro; se rehacen en cada renderMap
+// Estilo único de áreas del mapa: figuras dibujadas (btn-pin / btn-lapiz, IIFE
+// initCajaFind más abajo) y el círculo de resultados de renderMap. Top-level
+// para que ambos scopes vean la misma definición (plan circulo-resultado-estilo-figuras, D1).
+const ESTILO_AREA = { color: '#17baef', weight: 2, fillColor: '#17baef', fillOpacity: 0.22 };
 window.__backupLocalStorage = window.__backupLocalStorage || {};
 
 // Iconos
@@ -1084,7 +1088,7 @@ $(document).ready(function () {
     addBaseLayers();
 
     var circleCenter = L.latLng(centerLat, centerLng);
-    circuloBusqueda = L.circle(circleCenter, { color: 'green', weight: 1, fillOpacity: 0, radius: circleRadius }).addTo(map);
+    circuloBusqueda = L.circle(circleCenter, L.extend({ radius: circleRadius }, ESTILO_AREA)).addTo(map);
 
     var crossIcon = L.icon({
       iconUrl: '../../assets/images/cross_green.png',
@@ -1578,7 +1582,6 @@ function calculateDH(lat1, lng1, lat2, lng2) {
   const PUNTOS_MIN = 3;
   const PUNTOS_MAX = 2000;     // tope de vértices por polígono enviado
   const TOLERANCIA_PX = 1.5;   // Douglas-Peucker: puntos que se desvían menos se eliminan
-  const ESTILO_AREA = { color: '#17baef', weight: 2, fillColor: '#17baef', fillOpacity: 0.22 };
   const HANDLERS = ['dragging', 'touchZoom', 'doubleClickZoom', 'boxZoom'];
 
   function avisar(txt, esError) {
@@ -1786,6 +1789,13 @@ function calculateDH(lat1, lng1, lat2, lng2) {
     if (!texto && !figuras.length) {
       avisar('escribe algo o dibuja una superficie para buscar', true);
       return;
+    }
+    // Con figuras dibujadas (btn-lapiz / btn-pin) el área la definen ellas: la
+    // circunferencia de la búsqueda anterior ya no representa el filtro y se borra
+    // al iniciar (si la búsqueda falla, no debe quedar en pantalla — D2 del plan).
+    if (figuras.length && circuloBusqueda) {
+      if (map && map.hasLayer(circuloBusqueda)) map.removeLayer(circuloBusqueda);
+      circuloBusqueda = null;
     }
     if (boton) boton.disabled = true;
     avisar('Buscando...', false);
