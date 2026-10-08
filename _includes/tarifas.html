@@ -265,7 +265,7 @@
     </div>
 
     <div class="precios-ctas">
-      <button class="calc-cta-btn" id="calc-cta-btn" onclick="tarifasIrAlFormulario()">
+      <button class="calc-cta-btn" id="calc-cta-btn" onclick="tarifasComprarPlan()">
         <span id="calc-cta-txt">Quiero este plan</span>
       </button>
       <a href="#" id="calc-wa-link" onclick="tarifasAbrirWhatsApp(event)" target="_blank" rel="noopener" class="btn-ghost">
@@ -377,6 +377,18 @@ function tarifasSetPais(btn) {
 function tarifasAbrirWhatsApp(evt) {
   evt.preventDefault();
   window.open('https://wa.me/59178447518?text=' + encodeURIComponent(TARIFAS_PLAN_MSG), '_blank');
+}
+
+/* ============================================================
+   Comprar el plan seleccionado: gate de sesión + checkout directo
+   ============================================================ */
+function tarifasComprarPlan() {
+  if (window.STTCheckout && typeof window.STTCheckout.open === 'function') {
+    window.STTCheckout.open({ dias: TARIFAS_DURACION });
+    return;
+  }
+  // Sin checkout.js disponible: fallback histórico (formulario de contacto).
+  tarifasIrAlFormulario();
 }
 
 /* ============================================================

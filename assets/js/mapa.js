@@ -981,6 +981,12 @@ function mostrarAvisoLogin() {
 // Se avisa y se detiene la carga de resultados: sin tiempo de uso no hay mapa.
 // Único botón "Planes" → abre la sección de planes en una pestaña nueva.
 function mostrarAvisoSinTiempo(usuario) {
+  // Pago directo: el usuario ya está autenticado en esta rama, así que el
+  // checkout abre su diálogo de inmediato (sin pasar por la landing de planes).
+  if (window.STTCheckout && typeof window.STTCheckout.open === 'function') {
+    window.STTCheckout.open();
+    return;
+  }
   var nombre = (usuario && (usuario.first_name || usuario.buddyName)) || '';
   var texto = 'Hola ' + nombre + ', no tienes tiempo de uso disponible, por favor, compra más tiempo';
   if (window.Buddy && window.Buddy.ui && typeof window.Buddy.ui.box === 'function') {

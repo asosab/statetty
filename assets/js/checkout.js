@@ -1,6 +1,8 @@
 // Toolbox transversal "Adquirir tiempo" (Statetty).
-// Invocable desde cualquier página que cargue este script: window.STTCheckout.open().
-// Requiere sesión autenticada (window.STT). Usa <dialog> nativo (sin dependencias).
+// Invocable desde cualquier página que cargue este script: window.STTCheckout.open([opts]).
+// Gate de pago: sin sesión primero se abre la toolbox de login (magic link de
+// Buddy) y el diálogo se muestra recién al autenticar. Usa <dialog> nativo.
+// opts: { dias } → marca el paquete de esa duración al abrir (CTA de tarifas).
 (function () {
   'use strict';
 
@@ -362,7 +364,7 @@
 
   // -------------------------------------------------- carga de planes
 
-  async function cargarPlanes() {
+  async function cargarPlanes(diasSel) {
     estado = ESTADOS.LOADING;
     var body = document.getElementById('stt-co-body');
     if (body) body.querySelector('#stt-co-plans').innerHTML = '<div style="grid-column:1/-1;color:#777">Cargando tarifas…</div>';
@@ -392,14 +394,122 @@
             '<div class="p-monto">Bs. ' + esc(p.monto) + '</div>' +
             '<div class="p-cuentas">' + esc(p.cuentas) + ' cuenta(s)</div>' +
             '</div>';
-        }).join('')
+          }).join('')
         : '<div style="grid-column:1/-1;color:#b03a2e">No se pudieron cargar las tarifas. Recarga la página o inténtalo más tarde.</div>';
+      if (estado === ESTADOS.READY) marcarPlan(diasSel);
     }
   }
 
+  // -------------------------------------------------- gate de autenticación
+
+  var ESPERA_KEY = 'stt-checkout-pend';
+  var esperando = false;
+  var esperaOpts = null;
+  var esperaPoll = null;
+  var esperaTimeout = null;
+
+  function haySesion() {
+    return !!(window.STT && typeof window.STT.getUsuario === 'function' && window.STT.getUsuario());
+  }
+
+  // Pago iniciado sin sesión: se recuerda en sessionStorage (por pestaña) para
+  // retomar el diálogo si el magic link recarga esta misma pestaña.
+  function leerPendiente() {
+    try {
+      var raw = sessionStorage.getItem(ESPERA_KEY);
+      if (!raw) return null;
+      var d = JSON.parse(raw);
+      if (!d || !d.t || (Date.now() - d.t) > 5 * 60 * 1000) { borrarPendiente(); return null; }
+      return d;
+    } catch (_) { return null; }
+  }
+  function guardarPendiente(opts) {
+    try { sessionStorage.setItem(ESPERA_KEY, JSON.stringify({ dias: (opts && opts.dias) || null, t: Date.now() })); } catch (_) {}
+  }
+  function borrarPendiente() {
+    try { sessionStorage.removeItem(ESPERA_KEY); } catch (_) {}
+  }
+
+  function mostrarDialogo(opts) {
+    opts = opts || {};
+    cancelarEspera();
+    borrarPendiente();
+    var dlg = document.getElementById(DIALOG_ID);
+    if (!dlg) return;
+    if (typeof dlg.showModal === 'function') {
+      if (!dlg.open) dlg.showModal();
+    } else {
+      dlg.setAttribute('open', '');
+    }
+    if (planes.length === 0) cargarPlanes(opts.dias);
+    else marcarPlan(opts.dias);
+  }
+
+  // Marca (clic) el paquete de la duración elegida, si existe en la grilla.
+  function marcarPlan(dias) {
+    if (dias === undefined || dias === null || dias === '') return;
+    var body = document.getElementById('stt-co-body');
+    var cont = body && body.querySelector('#stt-co-plans');
+    if (!cont) return;
+    var cards = cont.querySelectorAll('.stt-co-plan');
+    for (var i = 0; i < cards.length; i++) {
+      if (String(cards[i].getAttribute('data-dias')) === String(dias)) { cards[i].click(); return; }
+    }
+  }
+
+  function cancelarEspera() {
+    if (!esperando) return;
+    esperando = false;
+    if (esperaPoll) { clearInterval(esperaPoll); esperaPoll = null; }
+    if (esperaTimeout) { clearTimeout(esperaTimeout); esperaTimeout = null; }
+    window.removeEventListener('statetty:auth-ready', onAuthEspera);
+    window.removeEventListener('buddy:auth-mode-changed', onModeEspera);
+  }
+
+  function onAuthEspera() {
+    if (!haySesion()) return;
+    cancelarEspera();
+    mostrarDialogo(esperaOpts);
+  }
+
+  // El usuario cerró la caja de login de Buddy → se abandona la espera.
+  function onModeEspera(e) {
+    if (e && e.detail && e.detail.mode === 'idle' && !haySesion()) {
+      borrarPendiente();
+      cancelarEspera();
+    }
+  }
+
+  function esperarAutenticacion(opts) {
+    if (esperando) { esperaOpts = opts; return; }
+    var a = window.Buddy && window.Buddy.auth;
+    if (!window.STT || typeof window.STT.startLogin !== 'function' || !a || !a.enabled) {
+      // Sin toolbox de login no hay magic link: no se abre el diálogo (gate estricto).
+      borrarPendiente();
+      console.log('[Statetty] [warn] esperarAutenticacion: toolbox de login no disponible');
+      return;
+    }
+    esperaOpts = opts;
+    esperando = true;
+    window.addEventListener('statetty:auth-ready', onAuthEspera);
+    window.addEventListener('buddy:auth-mode-changed', onModeEspera);
+    // El magic link suele verificarse en OTRA pestaña: este tab retoma la sesión
+    // refrescando periódicamente (refresh token compartido en localStorage).
+    esperaPoll = setInterval(function () {
+      try {
+        if (haySesion()) { onAuthEspera(); return; }
+        a.checkSession().catch(function () {});
+      } catch (_) {}
+    }, 2500);
+    esperaTimeout = setTimeout(function () { cancelarEspera(); }, 120000);
+    Promise.resolve(window.STT.startLogin()).then(onAuthEspera).catch(function () { cancelarEspera(); });
+  }
+
+
   // -------------------------------------------------- API pública
 
-  function open() {
+  function open(opts) {
+    opts = opts || {};
     inyectStyles();
     var dlg = asegurarDialog();
     var body = dlg.querySelector('#stt-co-body');
@@ -409,20 +519,13 @@
     bindSeccionVerificar(dlg.querySelector('#stt-co-body'));
     actualizaBtn();
 
-    // Requisito: solo invocable con cuenta autenticada.
+    // Gate: primero autenticación (toolbox magic link); el diálogo se muestra
+    // recién cuando hay sesión, con la opción elegida marcada si vino en opts.
     var ready = window.STT && window.STT.ready ? window.STT.ready : Promise.resolve();
     ready.then(function () {
-      var u = window.STT && window.STT.usuario;
-      if (!u) {
-        mostrarResultado(false, 'Debes iniciar sesión para adquirir tiempo.');
-        return;
-      }
-      if (typeof dlg.showModal === 'function') {
-        if (!dlg.open) dlg.showModal();
-      } else {
-        dlg.setAttribute('open', '');
-      }
-      if (planes.length === 0) cargarPlanes();
+      if (haySesion()) { mostrarDialogo(opts); return; }
+      guardarPendiente(opts);
+      esperarAutenticacion(opts);
     });
   }
 
@@ -440,4 +543,15 @@
     e.preventDefault();
     open();
   });
+
+  // Magic link verificado en ESTA pestaña → la página se recarga con sesión:
+  // retomar el pago pendiente sin que el usuario tenga que volver a clickear.
+  (function () {
+    var pend = leerPendiente();
+    if (!pend) return;
+    var ready = window.STT && window.STT.ready ? window.STT.ready : Promise.resolve();
+    ready.then(function () {
+      if (haySesion()) mostrarDialogo({ dias: pend.dias });
+    });
+  })();
 })();
