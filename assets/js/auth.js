@@ -398,6 +398,33 @@
     if(el){el.textContent=msg||'';el.style.display=msg?'block':'none';}
   }
 
+  // Re-emite el estado completo (igual que initAuth) tras un create/link en
+  // caliente. menuUser.js se monta en `statetty:key-ready`: solo auth-ready
+  // dejaba el header sin el menú hasta recargar.
+  function _emitAuthState(){
+    dispatch({key:window.STT.getToken(),usuario:window.STT.usuario,error:null},'statetty:key-ready');
+    dispatch({token:window.STT.getToken(),buddy:window.STT.buddy,tg:window.STT.tg,linked:window.STT.linked,error:null},'statetty:auth-ready');
+  }
+
+  // Reemplaza la box de la pregunta por una de bienvenida cuando create-tg terminó
+  // de crear la cuenta. Mismo overlay + estilos; el usuario cierra con "Comenzar".
+  function _welcomeNew(ov,nombre){
+    var t=String(nombre||'').trim();
+    ov.innerHTML=
+      '<div id="stt-link-box" style="position:relative;">'+
+        '<button id="stt-link-close" type="button" aria-label="Cerrar">&times;</button>'+
+        '<h3>¡Bienvenido a Statetty'+(t?' · '+t:'')+'!</h3>'+
+        '<p>Tu cuenta quedó creada con tu correo y ya se vinculó. Ya podés buscar inmuebles, guardarlos y contactar a los captadores.</p>'+
+        '<div id="stt-link-actions">'+
+          '<button type="button" class="stt-link-new" id="stt-link-continue">Comenzar</button>'+
+        '</div>'+
+      '</div>';
+    var close=function(){_dismissLink();};
+    ov.querySelector('#stt-link-close').addEventListener('click',close);
+    ov.querySelector('#stt-link-continue').addEventListener('click',close);
+    ov.addEventListener('click',function(e){if(e.target===ov)close();});
+  }
+
   async function _flowNewUser(ov, form){
     _setLinkStatus(ov,'Creando tu cuenta…');
     var datos={};
@@ -409,8 +436,8 @@
     if(!datos.nombres&&bud&&(bud.name||bud.firstName)) datos.nombres=bud.name||bud.firstName;
     var res=await window.STT.createTg(datos);
     if(res&&res.ok){
-      _dismissLink();
-      dispatch({token:window.STT.getToken(),buddy:window.STT.buddy,tg:window.STT.tg,linked:window.STT.linked},'statetty:auth-ready');
+      _welcomeNew(ov,datos.nombres);
+      _emitAuthState();
     }else{
       _setLinkStatus(ov,'No se pudo crear tu cuenta: '+(res&&res.error||'error')+'.');
     }
@@ -429,7 +456,7 @@
       var link=await window.STT.link(wa);
       if(link&&link.ok){
         _dismissLink();
-        dispatch({token:window.STT.getToken(),buddy:window.STT.buddy,tg:window.STT.tg,linked:window.STT.linked},'statetty:auth-ready');
+        _emitAuthState();
       }else{
         _setLinkStatus(ov,(link&&link.msg)||'No se pudo vincular la cuenta.');
       }

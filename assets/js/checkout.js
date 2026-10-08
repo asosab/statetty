@@ -328,8 +328,6 @@
           'Nueva fecha de corte: <b>' + esc(fechatxt(data.fechaCorteISO)) + '</b>.');
       } else if (data && data.duplicado) {
         mostrarResultado(false, 'Este comprobante ya fue procesado anteriormente. Si crees que es un error, contacta por WhatsApp.');
-      } else if (res.status === 400 && data && data.error === 'sin_telegram') {
-        mostrarResultado(false, esc(data.mensaje || 'Tu cuenta debe estar vinculada a Telegram para acreditar tiempo.'));
       } else {
         mostrarResultado(false, esc((data && data.mensaje) || 'No se pudo validar el comprobante. Prueba con una imagen más nítida o contacta por WhatsApp.'));
       }
