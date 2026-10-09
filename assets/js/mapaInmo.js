@@ -1,5 +1,5 @@
 // ---------------------------------------------
-// mapaInmo.js - Lógica completa del mapa de agencias con UID e índice de columnas
+// mapaInmo.js - Mapa de agencias inmobiliarias (datos de la API, sesión admin)
 // ---------------------------------------------
 
 var map, locations = [], markers = [], seleccionados = [], ultimosFiltrados = [];
@@ -193,41 +193,49 @@ function actualizarToolbox() {
 
 
 // -------------------------------
-// Índice de columnas de la hoja Agencias_Bolivia
+// Carga de agencias desde la API Statetty (sesión Buddy, solo admin).
+// Reemplaza la antigua lectura de la hoja de Google (id/key en la URL).
 // -------------------------------
-const columnas = [
-  "lat",            // 0 latitud
-  "lng",            // 1 longitud
-  "agencia",         // 2 agencia
-  "nombre",         // 3 nombre de la agencia
-  "dir",            // 4 dirección
-  "pais",           // 5 país
-  "cantAg",         // 6 cantidad de agentes
-  "estado",         // 7 Estado (activa/inactiva)
-  "activos",        // 8 número de agentes activos
-  "inactivos",      // 9 número de agentes inactivos
-  "sinCuenta",      // 10 agentes sin cuenta
-  "URL",            // 11 sitio web
-  "phone",          // 12 teléfono
-  "region"          // 13 región
-];
-                      
-window.columnasConfig = {
-  "lat": false,
-  "lng": false,
-  "agencia": false,
-  "nombre": true,
-  "dir": true,
-  "pais": true,
-  "cantAg": true,
-  "estado": true,
-  "activos": true,
-  "inactivos": true,
-  "sinCuenta": true,
-  "URL": false,
-  "phone": false,
-  "region": true
-};
+function apiBase() {
+  return (window.STATETTY_CONFIG && STATETTY_CONFIG.WS_API_BASE) || 'https://api.statetty.com/api/';
+}
+
+// Espera a que auth.js resuelva la sesión (STT.ready) aunque mapaInmo.js corra
+// antes por no ser `defer`; si la página no monta auth.js, sondea window.STT.
+function sesionLista() {
+  return new Promise(function (resolve) {
+    function terminar() {
+      var t = (window.STT && typeof window.STT.getToken === 'function') ? window.STT.getToken() : null;
+      resolve(t);
+    }
+    if (window.STT && window.STT.ready && typeof window.STT.ready.then === 'function') {
+      window.STT.ready.then(terminar);
+      return;
+    }
+    var n = 0;
+    var iv = setInterval(function () {
+      if (window.STT) { clearInterval(iv); terminar(); }
+      else if (++n > 100) { clearInterval(iv); resolve(null); }
+    }, 50);
+  });
+}
+
+function cargarAgencias() {
+  return sesionLista().then(function (token) {
+    if (!token) throw new Error('Iniciá sesión con una cuenta administradora para ver el mapa de agencias.');
+    return fetch(apiBase() + 'statetty/inmobiliarias', {
+      cache: 'no-store',
+      headers: { 'Authorization': 'Bearer ' + token }
+    }).then(function (res) {
+      if (res.status === 403) throw new Error('Este mapa es solo para administradores.');
+      if (!res.ok) throw new Error('No se pudieron cargar las agencias (HTTP ' + res.status + ').');
+      return res.json();
+    }).then(function (data) {
+      if (!data || !Array.isArray(data.agencias)) throw new Error('Respuesta inválida del servidor.');
+      return data.agencias;
+    });
+  });
+}
 
 // -------------------------------
 // Inicialización del mapa
@@ -236,22 +244,13 @@ $(document).ready(function () {
   $('#toolbox-btn').on('click', () => $('#toolbox').toggle());
 
   var urlParams = new URLSearchParams(window.location.search);
-  let id = urlParams.get('id'), key = urlParams.get('key');
-  if (!id || !key) { throw new Error("ID o key no proporcionados en la URL"); }
-
-  var valores = 'Agencias_Bolivia!A2:N';
-  var url = 'https://sheets.googleapis.com/v4/spreadsheets/' + id + '/values/' + valores + '?key=' + key;
 
   $('#loading-indicator').show();
 
-  $.getJSON(url, function (data) {
+  cargarAgencias().then(function (rows) {
     $('#loading-indicator').hide();
 
-    (data.values || []).forEach(function (row) {
-      if (!row || row.length < columnas.length) return;
-      var a = {};
-      columnas.forEach((col, i) => a[col] = row[i] || "");
-
+    rows.forEach(function (a) {
       a.lat = parseFloat(a.lat);
       a.lng = parseFloat(a.lng);
       a.cantAg = parseInt(a.cantAg) || 0;
@@ -370,6 +369,8 @@ $(document).ready(function () {
     actualizarEstadisticas(locations);
     map.on("moveend", guardarMapa);
     map.on("zoomend", guardarMapa);
+  }).catch(function (err) {
+    $('#loading-indicator').text((err && err.message) || 'No se pudieron cargar las agencias.');
   });
 
   // búsqueda
