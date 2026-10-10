@@ -970,6 +970,12 @@ function mostrarAvisoSinSesion() {
 
 function mostrarAvisoLogin() {
   // Sin sesión Buddy: se abre el globo de login por correo para generar el magic link.
+  // Evitar abrir mientras Buddy aún está verificando (refresh de tokens)
+  try {
+    var ba = window.Buddy && window.Buddy.auth;
+    var bst = ba && typeof ba.getState === 'function' ? ba.getState() : null;
+    if (bst && bst.checking) return;
+  } catch (e) {}
   if (window.STT && typeof window.STT.startLogin === 'function') {
     try { window.STT.startLogin(); } catch (e) { console.warn('[mostrarAvisoLogin]', e); }
     return;
@@ -1471,6 +1477,13 @@ $(document).ready(function () {
   window.addEventListener('statetty:auth-ready', function (e) {
     var d = e && e.detail ? e.detail : {};
     var hasToken = window.STT && typeof window.STT.getToken === 'function' && !!window.STT.getToken();
+    if (hasToken) {
+      try {
+        if (window.Buddy && window.Buddy.ui && typeof window.Buddy.ui.closeBox === 'function') {
+          window.Buddy.ui.closeBox();
+        }
+      } catch (err) {}
+    }
     if (hasToken && d.token && !window.__mapaCargado) {
       init().catch(function (err) {
         console.error('Error al reintentar cargar el mapa', err);

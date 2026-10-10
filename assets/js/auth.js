@@ -116,7 +116,21 @@
     return waitBuddyReady(timeoutMs).then(function(buddyReady){
       if(!buddyReady) return false;
       var auth=buddyAuth();
-      // Ya hay accessToken accesible: no hay ventana de carrera, salimos.
+      var state=(auth&&typeof auth.getState==='function')?auth.getState():null;
+      // Si Buddy está aún verificando (p.ej. token vencido en sessionStorage,
+      // refrescando via refreshToken), esperar a que termine antes de decidir sesión.
+      if(state&&state.checking===true){
+        return new Promise(function(resolve){
+          var done=false;
+          var timer=null;
+          function settle(){ if(done) return; done=true; if(timer)clearTimeout(timer); window.removeEventListener('buddy:auth-ready',onSettled); resolve(true); }
+          function onSettled(){ settle(); }
+          window.addEventListener('buddy:auth-ready',onSettled);
+          if(auth&&typeof auth.checkSession==='function'){ try{ auth.checkSession().catch(function(){}); }catch(e){} }
+          timer=setTimeout(settle,timeoutMs);
+        });
+      }
+      // Ya hay accessToken accesible y no está verificando: no hay ventana de carrera, salimos.
       if(auth&&typeof auth.getAccessToken==='function'&&auth.getAccessToken()) return true;
       return new Promise(function(resolve){
         var done=false;
