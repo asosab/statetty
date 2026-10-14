@@ -389,7 +389,8 @@
       '#stt-link-close{position:absolute;right:12px;top:12px;background:none;border:none;font-size:22px;color:#7b8f99;cursor:pointer;}'+
       '#stt-link-extra{margin-top:14px;display:none;}'+
       '#stt-link-extra label{display:block;font-size:13px;font-weight:700;color:#43555d;margin-bottom:6px;}'+
-      '#stt-link-extra input{width:100%;padding:11px 12px;border:1px solid #c4d4da;border-radius:8px;font:15px Lato,Arial,sans-serif;}'+
+      '#stt-link-extra input{width:100%;padding:11px 12px;border:1px solid #c4d4da;border-radius:8px;font:15px Lato,Arial,sans-serif;box-sizing:border-box;}'+
+      '#stt-link-extra button{width:100%;margin-top:14px;font:600 15px/1 Lato,Arial,sans-serif;padding:13px 14px;border-radius:9px;border:1px solid #17baef;background:#17baef;color:#fff;cursor:pointer;}'+
       '#stt-link-status{margin-top:12px;font-size:13px;color:#43555d;display:none;}';
     document.head.appendChild(css);
   }
@@ -491,8 +492,9 @@
         '<button type="button" class="stt-link-new" id="stt-link-new">No, soy nuevo</button>'+
       '</div>'+
       '<div id="stt-link-extra"><form id="stt-link-form">'+
-        '<label>Tu nombre</label><input type="text" data-stt-nombre placeholder="Nombre y apellido">'+
-        '<label>Tu WhatsApp</label><input type="tel" data-stt-wa placeholder="+591…">'+
+        '<label>Tu nombre<input type="text" data-stt-nombre placeholder="Nombre y apellido"></label>'+
+        '<label>Tu WhatsApp<input type="tel" data-stt-wa placeholder="+591…"></label>'+
+        '<button type="submit">Continuar</button>'+
       '</form></div>'+
       '<div id="stt-link-status"></div>'
     );
