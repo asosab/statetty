@@ -154,6 +154,11 @@
       '.stt-user-menu{position:relative;display:inline-flex;align-items:center;gap:8px;}' +
       '.stt-user-greeting{font-family:var(--font-body,\'Lato\',sans-serif);font-size:.92rem;' +
       'color:#2b3a42;white-space:nowrap;}' +
+      '.stt-user-hello{display:inline-flex;flex-direction:column;align-items:flex-end;line-height:1.15;}' +
+      '.stt-user-dias{font-size:.75rem;white-space:nowrap;}' +
+      '.stt-user-dias.is-alto{color:#1a7f37;}' +
+      '.stt-user-dias.is-medio{color:#9a6700;}' +
+      '.stt-user-dias.is-bajo{color:#c62828;}' +
       '.stt-user-trigger{background:none;border:0;padding:0;cursor:pointer;' +
       'display:inline-flex;line-height:0;border-radius:50%;' +
       'transition:box-shadow .2s ease, transform .2s ease;}' +
@@ -272,6 +277,14 @@
     var nombre = usuario && (usuario.first_name || usuario.nombre || usuario.name);
     if (!nombre) return '';
     return String(nombre).trim().split(/\s+/)[0];
+  }
+
+  // Color de "N días de uso" según los días que le quedan: verde (>10),
+  // ámbar (3-10) y rojo (<3). Ver injectStyles() para los colores.
+  function diasClass(dias) {
+    if (dias > 10) return 'is-alto';
+    if (dias >= 3) return 'is-medio';
+    return 'is-bajo';
   }
 
   // Normaliza un pathname para comparar ubicaciones de forma robusta:
@@ -485,10 +498,26 @@
 
     var firstName = getFirstName(usuario);
     if (firstName) {
+      var hello = document.createElement('div');
+      hello.className = 'stt-user-hello';
+
       var greeting = document.createElement('span');
       greeting.className = 'stt-user-greeting';
       greeting.textContent = '¡Hola ' + firstName + '!';
-      wrap.appendChild(greeting);
+      hello.appendChild(greeting);
+
+      // Días de uso restantes: vienen de auth.js (tg.dias de statetty/auth/me,
+      // mapeado en buildUsuario()). Se montan aquí, ya con el usuario cargado
+      // (handleKeyReady llega tras el me). Sin dato → no se muestra.
+      var dias = Number(usuario && usuario.dias);
+      if (isFinite(dias)) {
+        var diasEl = document.createElement('span');
+        diasEl.className = 'stt-user-dias ' + diasClass(dias);
+        diasEl.textContent = dias + (dias === 1 ? ' día de uso' : ' días de uso');
+        hello.appendChild(diasEl);
+      }
+
+      wrap.appendChild(hello);
     }
 
     var trigger = document.createElement('button');
