@@ -207,6 +207,24 @@
       gap: 8px;
     }
     .inm-wa-item.oculto { display: none; }
+    /* 1 sola columna (celular): el panel "Mis inmuebles" va antes que el formulario.
+       En >=900px no se declara nada -> orden actual (form a la izquierda, sidebar a la derecha). */
+    @media (max-width: 899px) {
+      .registro-section .inm-sidebar { order: -1; margin-top: 0; }
+      .registro-section .inmueble-main { margin-top: 32px; }
+    }
+    /* Título de la caja plegable "Mis inmuebles". */
+    .inm-sim-toggle { display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; }
+    .inm-sim-caret { transition: transform .2s; }
+    .inm-sim-caret.plegado { transform: rotate(180deg); }
+    .inm-sim-card.plegado > *:not(.inm-sim-card-title) { display: none; }
+    /* Lista "Mis inmuebles": 10 filas visibles como máximo, scroll propio (patrón .inm-wa-list). */
+    .inm-panel-row { min-height: 32px; }
+    #panel-mis-list {
+      max-height: calc(10 * 32px + 9 * 12px); /* 10 filas + 9 huecos = 428px */
+      overflow-y: auto;
+      padding-right: 4px;
+    }
     .inm-wa-controles {
       display: flex;
       align-items: center;
@@ -1168,8 +1186,11 @@
     </div>
 
     <aside class="inm-sidebar" id="inm-sidebar">
-      <div class="inm-sim-card">
-        <h3 class="inm-sim-card-title">Mis inmuebles</h3>
+      <div class="inm-sim-card" id="panel-mis-card">
+        <h3 class="inm-sim-card-title inm-sim-toggle" id="panel-mis-title" role="button" tabindex="0"
+            aria-expanded="true" aria-controls="panel-mis-list">
+          Mis inmuebles <i class="fa-solid fa-chevron-down inm-sim-caret" aria-hidden="true"></i>
+        </h3>
         <div class="inm-sim-list" id="panel-mis-list"></div>
         <p class="inm-no-data hidden" id="panel-mis-empty">No tenés inmuebles cargados todavía.</p>
       </div>
@@ -1417,6 +1438,8 @@
       DOM.photoUploadPrev = document.getElementById('photo-upload-preview');
       DOM.photoUploadStat = document.getElementById('photo-upload-status');
       DOM.inmSidebar           = document.getElementById('inm-sidebar');
+      DOM.panelMisCard         = document.getElementById('panel-mis-card');
+      DOM.panelMisTitle        = document.getElementById('panel-mis-title');
       DOM.panelMisList         = document.getElementById('panel-mis-list');
       DOM.panelMisEmpty        = document.getElementById('panel-mis-empty');
       DOM.panelWaCard          = document.getElementById('panel-wa-card');
@@ -2834,7 +2857,18 @@
     }
 
     /* ---- Events ---- */
+    /* Plegar/desplegar la caja "Mis inmuebles" desde su título (patrón accordion mínimo). */
+    function toggleMisInmuebles() {
+      var plegado = DOM.panelMisCard.classList.toggle('plegado');
+      DOM.panelMisTitle.setAttribute('aria-expanded', String(!plegado));
+      DOM.panelMisTitle.querySelector('.inm-sim-caret').classList.toggle('plegado', plegado);
+    }
+
     function bindEvents() {
+      DOM.panelMisTitle.addEventListener('click', toggleMisInmuebles);
+      DOM.panelMisTitle.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleMisInmuebles(); }
+      });
       DOM.form.addEventListener('submit', handleSubmit);
       DOM.successCloseBtn.addEventListener('click', hideSuccessToast);
       DOM.photoUploadBtn.addEventListener('click', triggerFileInput);
