@@ -74,6 +74,7 @@ function apiItemToLocation(item) {
     m2c: 'm2construccion',
     m2t: 'm2terreno',
     brocker: 'broker',
+    pais: 'pais',
     precio: 'precio',
     agentName: 'agentName',
     agentPhon: 'agentPhone',

@@ -486,6 +486,44 @@ function detectarPais(lat, lng) {
 }
 
 /**
+ * Normaliza el teléfono de un inmueble para armar el link de WhatsApp.
+ * Si el número no trae `+` y tiene entre 8 y 10 dígitos limpios, le antepone
+ * el código de llamada del país del inmueble (campo `pais`, con fallback al
+ * prefijo de `broker`, p. ej. `BO_remax`). Devuelve `{cel, valido}`: `cel` sin
+ * el `+`, listo para `wa.me`.
+ * @param {Object} dato - inmueble (usa `agentPhone`, `pais`, `broker`)
+ * @param {Array} paises - catálogo PAISES (code/callingCode)
+ * @param {Object|null} lib - libphonenumber (o null si no cargó)
+ */
+function telefonoConPais(dato, paises, lib) {
+  var raw = (dato && dato.agentPhone ? dato.agentPhone : '').toString().trim();
+  var digits = raw.replace(/\D/g, '');
+  var paisCode = String((dato && dato.pais) || '').toUpperCase();
+  if (!paisCode && dato && dato.broker) {
+    paisCode = String(dato.broker).split('_')[0].toUpperCase();
+  }
+  var cfg = null;
+  for (var i = 0; i < (paises || []).length; i++) {
+    if (paises[i].code === paisCode) { cfg = paises[i]; break; }
+  }
+  var callingCode = cfg ? cfg.callingCode : null;
+  var cel = '';
+  var valido = false;
+  if (lib) {
+    var pn = null;
+    if (raw.includes('+')) {
+      pn = lib.parsePhoneNumberFromString(raw);
+    } else if (callingCode && digits.length >= 8 && digits.length < 11) {
+      pn = lib.parsePhoneNumberFromString('+' + callingCode + digits);
+    } else if (digits.length >= 8) {
+      pn = lib.parsePhoneNumberFromString('+' + digits);
+    }
+    if (pn && pn.isValid()) { cel = pn.number.slice(1); valido = true; }
+  }
+  return { cel: cel, valido: valido };
+}
+
+/**
  * Devuelve el "brand" (clave de agencia) a partir de una URL o de un marker.
  * @param {Object|string} input - Puede ser un marker objeto o una URL/uid string
  * @returns {string} brand clave como 'remax','C21','ic','statetty', etc.
@@ -1151,22 +1189,11 @@ $(document).ready(function () {
 
       var cel = '';
       var celularValido = false;
-      var rawPhone = (dato.agentPhone || '').toString().trim();
-      if (typeof libphonenumber !== 'undefined') {
-        var pn = null;
-        if (rawPhone.includes('+')) {
-          pn = libphonenumber.parsePhoneNumberFromString(rawPhone);
-        } else {
-          var digits = rawPhone.replace(/\D/g, '');
-          if (digits.length >= 8) {
-            pn = libphonenumber.parsePhoneNumberFromString('+' + digits);
-          }
-        }
-        if (pn && pn.isValid()) {
-          cel = pn.number.slice(1);
-          celularValido = true;
-        }
-      }
+      // Teléfono listo para wa.me: completa el prefijo del país del inmueble
+      // (8-10 dígitos sin +) para que el link "📱 Contactar a..." aparezca.
+      var tlf = telefonoConPais(dato, PAISES, typeof libphonenumber !== 'undefined' ? libphonenumber : null);
+      cel = tlf.cel;
+      celularValido = tlf.valido;
 
       let soyNa = na ? ` ${na}` : '';
       let deAg = ag ? ` de ${ag}` : '';
