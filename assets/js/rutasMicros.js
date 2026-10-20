@@ -10,7 +10,7 @@
  *   igual que la #caja de mapa.js.
  * - Punto inicial: ubicación del navegador (solo bajo click) o click en el mapa.
  *   Punto final: click en el mapa.
- * - POST statetty/rutasMicros {origen, destino} → hasta 3 opciones
+ * - POST statetty/rutasMicros {origen, destino} → hasta 7 opciones
  *   (máx 2 líneas / 1 trasbordo, ≤1500 m a pie). Cada tarjeta pinta la ruta.
  *
  * No modifica mapa.js, menuUser.js ni fndInm.js. Cache-bust en
