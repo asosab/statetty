@@ -941,6 +941,11 @@ function addBaseLayers() {
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap'
     }).addTo(map);
+    // Regla de mapa.js: el zoom del usuario esconde el toolbox (que no tape el mapa).
+    // Se registra por instancia (junto al flag), no en document.ready, porque cada
+    // renderMap puede crear un mapa nuevo. reactivarToolbox() no lo vuelve a mostrar
+    // hasta que el usuario lo abra con #toolbox-btn.
+    map.on('zoomstart', function () { $('#toolbox').hide(); });
   }
 }
 
