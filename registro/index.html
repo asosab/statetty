@@ -556,7 +556,6 @@ tags: [registro, formulario, Statetty, real state, inmuebles]
 
     var el = function(id) { return document.getElementById(id); };
     if (el('f-usricon') && user.usrIconURL) {
-      el('f-usricon').value = user.usrIconURL;
       actualizarIconoUsuario(user.usrIconURL);
     }
     if (el('f-email') && user.email) el('f-email').value = user.email;
@@ -619,7 +618,6 @@ tags: [registro, formulario, Statetty, real state, inmuebles]
             el('f-agencia').value = ag.agenciaActivaNombre || ag.agencias[0].nombre;
           }
           if (faltaIcono && ag.foto) {
-            el('f-usricon').value = ag.foto;
             actualizarIconoUsuario(ag.foto);
           }
         })
@@ -691,8 +689,7 @@ tags: [registro, formulario, Statetty, real state, inmuebles]
     if (usrIconInput.files && usrIconInput.files[0]) {
       formData.append('fotoPerfil', usrIconInput.files[0]);
     }
-    // Agregar los campos de texto (compatibilidad con flujo JSON antiguo)
-    formData.append('usrIconURL', usrIconInput.value.trim() || '');
+    // Agregar los campos de texto
     formData.append('email', email);
     formData.append('nombres', nombres);
     formData.append('apellidos', apellidos);
