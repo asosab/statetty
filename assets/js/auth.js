@@ -365,14 +365,23 @@
     }
     return data;
   };
+  /** tg-invite: deep-link t.me/<bot>?start=web_<ticket> para conectar Telegram. */
+  window.STT.tgInvite=async function(){
+    var base=getApiBase();var t=window.STT.getToken();
+    if(!t) return {ok:false,error:'sin_sesion'};
+    var res=await fetch(base+'statetty/auth/tg-invite',{
+      method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+t},
+      body:'{}'
+    });
+    return await res.json();
+  };
 
-  // ── Pantalla de vinculación obligatoria (Fase 1.4) ────────────────────────
-  // Después del primer login Buddy, si el usuario no tiene cuenta tgUser
-  // vinculada, se muestra "¿Ya usaste statetty desde Telegram?":
-  //   - "No, soy nuevo"          → check-tg-exists + create-tg (respaldo) → listo.
-  //   - "Sí, ya usé Telegram"    → se le pide su WhatsApp/email; si existe un
-  //                                tgUser verificado se linkea, si no se le
-  //                                indica verificar desde @statettybot.
+  // ── Unificación de cuenta (sin preguntas: el correo verificado decide) ────
+  // Después del login Buddy, si no hay tgUser vinculado se decide por email:
+  //   - existe tgUser con ese correo → link silencioso (check/link solo por email).
+  //   - no existe → create-tg con los datos del buddy → bienvenida + invitación
+  //     opcional a Telegram (deep-link /start web_<token>).
+  // El teléfono nunca se pide ni se usa para cruzar cuentas.
 
   var STT_LINK_CSS_ID='stt-link-css';
   function injectLinkStyles(){
@@ -421,96 +430,72 @@
     dispatch({token:window.STT.getToken(),buddy:window.STT.buddy,tg:window.STT.tg,linked:window.STT.linked,error:null},'statetty:auth-ready');
   }
 
-  // Reemplaza la box de la pregunta por una de bienvenida cuando create-tg terminó
-  // de crear la cuenta. Mismo overlay + estilos; el usuario cierra con "Comenzar".
+  // Bienvenida tras crear la cuenta (alta nueva). Incluye la invitación
+  // opcional a conectar Telegram: abre el deep-link /start web_<token> que el
+  // backend emite en statetty/auth/tg-invite.
   function _welcomeNew(ov,nombre){
     var t=String(nombre||'').trim();
     ov.innerHTML=
       '<div id="stt-link-box" style="position:relative;">'+
         '<button id="stt-link-close" type="button" aria-label="Cerrar">&times;</button>'+
         '<h3>¡Bienvenido a Statetty'+(t?' · '+t:'')+'!</h3>'+
-        '<p>Tu cuenta quedó creada con tu correo y ya se vinculó. Ya podés buscar inmuebles, guardarlos y contactar a los captadores.</p>'+
+        '<p>Tu cuenta quedó creada con tu correo. Ya podés buscar inmuebles, guardarlos y contactar a los captadores.</p>'+
+        '<p style="font-size:13px;color:#5b7079;">Si también usás Telegram, conectalo y te llegan avisos de oportunidades en tiempo real.</p>'+
         '<div id="stt-link-actions">'+
+          '<button type="button" class="stt-link-note" id="stt-link-tg">Conectar Telegram</button>'+
           '<button type="button" class="stt-link-new" id="stt-link-continue">Comenzar</button>'+
         '</div>'+
+        '<div id="stt-link-status"></div>'+
       '</div>';
     var close=function(){_dismissLink();};
     ov.querySelector('#stt-link-close').addEventListener('click',close);
     ov.querySelector('#stt-link-continue').addEventListener('click',close);
+    ov.querySelector('#stt-link-tg').addEventListener('click',function(){
+      var st=ov.querySelector('#stt-link-status');
+      window.STT.tgInvite().then(function(r){
+        if(r&&r.ok&&r.url){
+          window.open(r.url,'_blank');
+          if(st){st.textContent='Se abrió Telegram: tocá "Iniciar" para terminar la conexión.';st.style.display='block';}
+        }else if(st){st.textContent='No pudimos generar el enlace ahora. Podés hacerlo después desde tu cuenta.';st.style.display='block';}
+      }).catch(function(){if(st){st.textContent='No pudimos generar el enlace ahora.';st.style.display='block';}});
+    });
     ov.addEventListener('click',function(e){if(e.target===ov)close();});
   }
 
-  async function _flowNewUser(ov, form){
-    _setLinkStatus(ov,'Creando tu cuenta…');
-    var datos={};
-    var inp=form&&form.querySelector('[data-stt-nombre]');
-    var inpWa=form&&form.querySelector('[data-stt-wa]');
-    if(inp&&inp.value) datos.nombres=inp.value.trim();
-    if(inpWa&&inpWa.value) datos.whatsapp=inpWa.value.trim();
-    var bud=window.STT.getBuddy&&window.STT.getBuddy();
-    if(!datos.nombres&&bud&&(bud.name||bud.firstName)) datos.nombres=bud.name||bud.firstName;
-    var res=await window.STT.createTg(datos);
+  // Flujo de cuenta sin preguntas: el correo verificado decide. Si ya existe
+  // tgUser con ese email se vincula en silencio; si no existe se crea la
+  // cuenta. Solo aparece UI para la bienvenida del alta nueva o para un error.
+  async function _autoLinkFlow(){
+    var exists=null;
+    try{ exists=await window.STT.checkTgExists(); }catch(e){}
+    var res=null;
+    if(exists&&exists.exists){ res=await window.STT.link(); }
+    else{ res=await window.STT.createTg({}); }
     if(res&&res.ok){
-      _welcomeNew(ov,datos.nombres);
       _emitAuthState();
-    }else{
-      _setLinkStatus(ov,'No se pudo crear tu cuenta: '+(res&&res.error||'error')+'.');
+      if(!(exists&&exists.exists)){
+        var ov=_linkBox('');_welcomeNew(ov,(res.tg&&res.tg.first_name)||'');
+      }
+      return;
     }
+    if(res&&res.error==='ya_linkeado'){ _dismissLink(); await initAuth(); return; }
+    var msg=(res&&(res.msg||res.error))||'error inesperado';
+    var ovErr=_linkBox(
+      '<button id="stt-link-close" type="button" aria-label="Cerrar">&times;</button>'+
+      '<h3>No pudimos terminar tu cuenta</h3>'+
+      '<p>Ocurrió un problema ('+String(msg).replace(/[<>&"]/g,'')+'). Probá de nuevo.</p>'+
+      '<div id="stt-link-actions">'+
+        '<button type="button" class="stt-link-new" id="stt-link-retry">Reintentar</button>'+
+      '</div>'
+    );
+    ovErr.querySelector('#stt-link-close').addEventListener('click',_dismissLink);
+    ovErr.querySelector('#stt-link-retry').addEventListener('click',function(){_dismissLink();setTimeout(_autoLinkFlow,300);});
   }
 
-  async function _flowExisting(ov, form){
-    var inpWa=form&&form.querySelector('[data-stt-wa]');
-    var wa=inpWa&&inpWa.value?inpWa.value.trim():'';
-    _setLinkStatus(ov,'Buscando tu cuenta…');
-    var exists=await window.STT.checkTgExists(wa);
-    if(exists&&exists.exists){
-      if(exists.requiresEmailVerification){
-        _setLinkStatus(ov,'Encontramos tu cuenta, pero tu email todavía no está verificado. Entrá a @statettybot en Telegram y verificá tu correo. Después volvé a intentar.');
-        return;
-      }
-      var link=await window.STT.link(wa);
-      if(link&&link.ok){
-        _dismissLink();
-        _emitAuthState();
-      }else{
-        _setLinkStatus(ov,(link&&link.msg)||'No se pudo vincular la cuenta.');
-      }
-    }else{
-      _setLinkStatus(ov,'No encontramos una cuenta de Telegram con esos datos. Si sos nuevo, elegí "No, soy nuevo".');
-    }
-  }
-
-  /** Muestra la pantalla de vinculación si hace falta. Returns true si se mostró. */
+  /** Decide la cuenta por email, sin preguntar. Returns true si lanzó el flujo. */
   window.STT.ensureLink=function(){
     if(!window.STT.needsLink()) return false;
-    var ov=_linkBox(
-      '<button id="stt-link-close" type="button" aria-label="Cerrar">&times;</button>'+
-      '<h3>¿Ya usaste statetty desde Telegram?</h3>'+
-      '<p>Para terminar de crear tu cuenta con tu correo, contanos si tenés una cuenta previa en statetty.</p>'+
-      '<div id="stt-link-actions">'+
-        '<button type="button" class="stt-link-note" id="stt-link-existing">Sí, ya usé statetty desde Telegram</button>'+
-        '<button type="button" class="stt-link-new" id="stt-link-new">No, soy nuevo</button>'+
-      '</div>'+
-      '<div id="stt-link-extra"><form id="stt-link-form">'+
-        '<label>Tu nombre<input type="text" data-stt-nombre placeholder="Nombre y apellido"></label>'+
-        '<label>Tu WhatsApp<input type="tel" data-stt-wa placeholder="+591…"></label>'+
-        '<button type="submit">Continuar</button>'+
-      '</form></div>'+
-      '<div id="stt-link-status"></div>'
-    );
-    var extra=ov.querySelector('#stt-link-extra');
-    var form=ov.querySelector('#stt-link-form');
-    ov.querySelector('#stt-link-close').addEventListener('click',_dismissLink);
-    ov.addEventListener('click',function(e){if(e.target===ov)_dismissLink();});
-    ov.querySelector('#stt-link-new').addEventListener('click',function(){_flowNewUser(ov,form);});
-    ov.querySelector('#stt-link-existing').addEventListener('click',function(){
-      extra.style.display='block';ov.querySelector('#stt-link-new').style.display='none';
-      ov.querySelector('#stt-link-existing').style.display='none';
-      ov.querySelector('#stt-link-status').textContent='';
-    });
-    form.addEventListener('submit',function(e){e.preventDefault();_flowExisting(ov,form);});
-    // En el flujo "sí existente" el form pide solo WhatsApp + nombre (nombre se ignora aquí).
-    form.querySelector('[data-stt-nombre]').closest('label').style.display='none';
+    _autoLinkFlow();
     return true;
   };
 
