@@ -11,7 +11,7 @@
   <link rel="icon" type="image/png" sizes="16x16" href="/assets/images/favicon/favicon-16x16.png">
 
   <!-- Buddy embebible (login por correo) — detecta ?auth= y autentica en el browser -->
-  <script src="https://statetty.com/assets/buddy/buddy.js?v=a17" defer></script>
+  <script src="https://statetty.com/assets/buddy/buddy.js?v=a18" defer></script>
   <script src="/assets/js/auth.js?v=19" defer></script>
   <script src="/assets/js/config.js"></script>
 
@@ -66,6 +66,11 @@
       border-radius: 9px;
     }
     .hidden { display: none; }
+    .codeform { text-align: left; }
+    .codeform label { display:block; font-size:13px; font-weight:700; color:#43555d; margin:10px 0 4px; }
+    .codeform input { width:100%; box-sizing:border-box; padding:11px 12px; border:1px solid #c4d4da; border-radius:8px; font-size:15px; }
+    .codeform button { margin-top:14px; width:100%; background:#17baef; color:#fff; border:0; border-radius:9px; padding:13px; font-size:15px; font-weight:700; cursor:pointer; }
+    .codeform .err { color:#c0392b; font-size:13px; margin-top:10px; min-height:1.2em; }
   </style>
 </head>
 <body>
@@ -85,6 +90,18 @@
       <h1>No se pudo verificar</h1>
       <p id="stt-msg-fail">El enlace es inválido o venció. Pedí uno nuevo desde @statettybot en Telegram.</p>
       <a class="btn" href="/">Volver a Statetty</a>
+    </div>
+    <div id="stt-code" class="hidden">
+      <h1>Escribe tu código</h1>
+      <p>Si te llegó un correo con un código de 5 dígitos, escríbelo aquí junto a tu correo.</p>
+      <div class="codeform">
+        <label for="stt-code-email">Correo:</label>
+        <input id="stt-code-email" type="email" autocomplete="email">
+        <label for="stt-code-value">Código:</label>
+        <input id="stt-code-value" type="text" inputmode="numeric" maxlength="5" autocomplete="one-time-code" placeholder="12345">
+        <button id="stt-code-btn" type="button">Entrar</button>
+        <div class="err" id="stt-code-err"></div>
+      </div>
     </div>
   </div>
 
@@ -130,16 +147,41 @@
       if (e.detail && e.detail.token) success();
     });
 
-    // Timeout de seguridad: si no hay ?auth= y ya hay sesión, mostrar OK igual.
+    // Entrada manual del código de 5 dígitos (correo + código) para cuando el
+    // usuario llega aquí sin link de verificación.
+    var codeBox = document.getElementById('stt-code');
+    var codeBtn = document.getElementById('stt-code-btn');
+    var codeErr = document.getElementById('stt-code-err');
+    function showCode() {
+      if (done) return;
+      loading.classList.add('hidden');
+      codeBox.classList.remove('hidden');
+    }
+    codeBtn.addEventListener('click', function () {
+      codeErr.textContent = '';
+      var email = document.getElementById('stt-code-email').value.trim();
+      var code = document.getElementById('stt-code-value').value.trim();
+      if (!email || !/^\d{5}$/.test(code)) { codeErr.textContent = 'Escribe tu correo y el código de 5 dígitos.'; return; }
+      codeBtn.disabled = true;
+      var auth = window.Buddy && window.Buddy.auth;
+      if (!auth || typeof auth.verifyCode !== 'function') { codeErr.textContent = 'El verificador no está disponible todavía.'; codeBtn.disabled = false; return; }
+      auth.verifyCode(email, code).then(function () { success(); }).catch(function (e) {
+        codeErr.textContent = (e && e.message) || 'El código no pudo validarse.';
+        codeBtn.disabled = false;
+      });
+    });
+
+    // Timeout de seguridad: si no hay ?auth= y ya hay sesión, mostrar OK igual;
+    // si no hay sesión, ofrecer la entrada manual del código.
     setTimeout(function () {
       var hasAuth = new URLSearchParams(location.search).has('auth');
-      if (!hasAuth) {
-        // Sin token de verificación en la URL: sesión ya existente o página directa.
-        document.addEventListener('buddy:auth-ready', function () { success(); }, { once: true });
-        // Si Buddy ya autenticó antes, forzar éxito.
-        var stt = window.STT;
-        if (stt && stt.getToken && stt.getToken()) success();
-      }
+      if (hasAuth) return;
+      var stt = window.STT;
+      if (stt && stt.getToken && stt.getToken()) { success(); return; }
+      document.addEventListener('buddy:auth-ready', function (e) {
+        if (e && e.detail && e.detail.authenticated) { success(); } else { showCode(); }
+      }, { once: true });
+      setTimeout(function () { if (!done) showCode(); }, 6000);
     }, 3000);
   })();
   </script>

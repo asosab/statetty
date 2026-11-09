@@ -207,3 +207,22 @@ Body URL-encoded: `name=NuevoNombre&phone=+59170000000`
 - `refreshToken` es string aleatorio criptográfico, almacenado solo como SHA-256 en MongoDB
 - Rotación con detección de reuso: si un token ya revocado se reutiliza, se revoca toda la cadena
 - Sin cookies, sin `SameSite`, sin CORS credentials — solo `Authorization: Bearer`
+
+## Verificar código de 5 dígitos (2026-11-09)
+
+Reemplaza al magic link como método principal. El correo lleva un código
+numérico de 5 dígitos que el usuario escribe en el sitio.
+
+`POST /api/buddy/auth/verify` — body JSON `{ "email": "...", "code": "12345" }`
+
+- El código solo vale junto a su email (lookup `email + sha256(code)`).
+- TTL: `BUDDY_AUTH_TOKEN_TTL_MINUTES` (10 min). Un solo uso.
+- 5 fallos por correo → bloqueo `BUDDY_AUTH_LOCKOUT_MINUTES` (15 min);
+  rate limit por IP: 20 intentos / 10 min.
+- Respuesta exitosa: misma carga que el verify por link
+  (`accessToken`, `refreshToken`, `masterRefresh`, `user`, `needsName`).
+- Errores: `INVALID_CODE` (401, con `attemptsLeft`), `EXPIRED` (401),
+  `LOCKED`/`RATE_LIMITED` (429), `INVALID_EMAIL` (400), `MAX_SESSIONS` (403).
+
+`GET /auth/verify?auth=TOKEN` queda para magic links ya emitidos
+(solo acepta tokens de 64 hex; los códigos no pasan por esa vía).

@@ -772,6 +772,77 @@ window.Buddy = window.Buddy || {};
     });
   }
 
+  // ── Verificación por código de 5 dígitos ─────────────────────────────────
+  // Reemplaza al magic link: POST /auth/verify con {email, code}. El servidor
+  // valida el código junto al correo, cuenta los intentos y bloquea tras 5
+  // fallos. El camino de éxito es idéntico al del magic link: access+refresh
+  // del sitio, master al bridge y eventos de sesión.
+  function verifyCode(email, code) {
+    var value = normalizeText(code);
+    if (!/^\d{5}$/.test(value)) {
+      return Promise.reject(new Error(CONFIG.codeInvalidMessage || 'El código debe tener 5 dígitos.'));
+    }
+    if (state.busy) return Promise.reject(new Error('Auth ocupado.'));
+
+    state.busy = true;
+    state.checking = true;
+    configureTelemetryApi();
+
+    return getAuthApi().request(CONFIG.apiService || 'auth', CONFIG.endpoints.verify, {
+      method: 'POST',
+      cache: 'no-store',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: normalizeEmail(email), code: value })
+    }).then(function (data) {
+      if (!data || data.ok === false || data.authenticated === false) {
+        var msg = (data && data.error) || 'El código no pudo validarse.';
+        if (data && data.code === 'EXPIRED') msg = CONFIG.codeExpiredMessage || msg;
+        else if (data && (data.code === 'LOCKED' || data.code === 'RATE_LIMITED')) msg = CONFIG.codeLockedMessage || msg;
+        else if (data && data.attemptsLeft != null && data.attemptsLeft > 0) msg = (CONFIG.codeInvalidMessage || msg) + ' (' + data.attemptsLeft + ' restantes)';
+        var e = new Error(msg);
+        e.response = data;
+        throw e;
+      }
+
+      if (data.accessToken && data.refreshToken) {
+        saveTokens(data.accessToken, data.refreshToken);
+      }
+
+      clearLocalLogout();
+      sendMasterToBridge(data.masterRefresh || null);
+
+      var user = normalizeUser(data);
+      var authNeedsName = data.needsName === true;
+      var isNewUser = data.newUser === true || data.isNewUser === true;
+      setAuthenticated(user, authNeedsName, (isNewUser || authNeedsName) ? 'new' : 'existing');
+
+      emitEvent('buddy:auth-verified', {
+        authenticated: true,
+        user: state.user,
+        needsName: state.needsName
+      });
+      emitEvent('buddy:auth-ready', {
+        authenticated: state.authenticated,
+        user: state.user,
+        needsName: state.needsName,
+        welcomeType: state.welcomeType,
+        sessionOk: true
+      });
+      return true;
+    }).catch(function (error) {
+      debugLog('No se pudo verificar el código.', error);
+      // Error de red/CORS o 5xx: el código no se tocó; avisar sin tumbar sesión.
+      if (!error || !error.response) {
+        setUnauthenticated();
+        emitEvent('buddy:auth-verify-failed', { error: error });
+      }
+      throw error;
+    }).finally(function () {
+      state.busy = false;
+      state.checking = false;
+    });
+  }
+
   // ── Autologin con ticket web de Buddy (?k=) ──────────────────────────────
   // El link que manda el bot de Telegram trae un ticket emitido por el
   // servicio Buddy (un solo uso, TTL corto, guardado solo como SHA-256 en el
@@ -909,7 +980,7 @@ window.Buddy = window.Buddy || {};
       cancelText: CONFIG.cancelText,
       onSubmit: function (data) {
         return requestLogin(data.email).then(function () {
-          openEmailSentBox(data.email);
+          openCodeBox(data.email);
           return true;
         });
       },
@@ -923,47 +994,39 @@ window.Buddy = window.Buddy || {};
     return true;
   }
 
-  // Estado "revisa tu correo": la caja se reenvía a sí misma con un botón de
-  // reenviar en cooldown. El magic link abre otra pestaña; esta queda aquí con
-  // el correo enviado y la opción de pedirlo de nuevo.
-  function openEmailSentBox(email) {
-    var segundos = Number(CONFIG.resendCooldownSeconds) || 60;
+  // Estado "revisa tu correo": el correo trae un código de 5 dígitos que el
+  // usuario escribe aquí. El submit verifica contra POST /auth/verify; si el
+  // código no sirve, la caja muestra el error y sigue abierta. "volver" regresa
+  // a la caja del correo, donde se puede pedir un código nuevo (el cooldown del
+  // servidor lo frena si se pide demasiado seguido).
+  function openCodeBox(email) {
+    state.mode = 'waiting-code';
 
     var box = window.Buddy.ui.box({
-      title: CONFIG.emailSentTitle,
-      message: CONFIG.emailSentMessage,
-      submitText: CONFIG.resendText,
-      cancelText: CONFIG.cancelText,
-      onSubmit: function () {
-        return requestLogin(email).then(function () {
-          openEmailSentBox(email);
-          return true;
-        });
+      title: CONFIG.codeSentTitle || CONFIG.emailSentTitle,
+      message: (CONFIG.emailSentMessage || '') + ' (' + email + ')',
+      fields: [{
+        key: 'code',
+        type: 'text',
+        required: true,
+        autocomplete: 'one-time-code',
+        label: CONFIG.codeLabel || 'Código:',
+        placeholder: CONFIG.codePlaceholder || '12345'
+      }],
+      submitText: CONFIG.verifyText || 'Entrar',
+      cancelText: CONFIG.backText || 'volver',
+      onSubmit: function (data) {
+        return verifyCode(email, data.code);
       },
       onCancel: function () {
-        clearResendTimer();
         state.mode = 'idle';
         emitEvent('buddy:auth-mode-changed', { mode: state.mode });
+        openLoginBox();
       },
-      redirectToHomeOnCancel: true
+      redirectToHomeOnCancel: false
     });
 
-    if (!box) return false;
-
-    var restantes = segundos;
-    box.setSubmitEnabled(false);
-    clearResendTimer();
-    resendTimer = setInterval(function () {
-      restantes--;
-      if (restantes > 0) {
-        box.setSubmitEnabled(false);
-        return;
-      }
-      clearResendTimer();
-      box.setSubmitEnabled(true);
-    }, 1000);
-
-    return true;
+    return !!box;
   }
 
   function startAuthenticationPrompt() {
@@ -1112,6 +1175,7 @@ window.Buddy = window.Buddy || {};
     requestLogin: requestLogin,
     startAuthenticationPrompt: startAuthenticationPrompt,
     verifyHash: verifyHash,
+    verifyCode: verifyCode,
     loginWithTelegramKey: loginWithTelegramKey,
     logout: logout,
     enterLoginMode: enterLoginMode,

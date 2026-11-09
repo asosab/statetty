@@ -41,8 +41,16 @@ window.BuddyAuthConfig = Object.assign({
   /* Debe coincidir con BUDDY_AUTH_RESEND_COOLDOWN_SECONDS del backend. */
   resendCooldownSeconds: 60,
 
-  loginMessage: 'Escribe tu correo y te enviaremos un enlace de acceso a esa dirección.',
-  emailSentMessage: 'Revisa tu correo y haz clic en el enlace para iniciar sesión.',
+  loginMessage: 'Escribe tu correo y te enviaremos un código de acceso a esa dirección.',
+  emailSentMessage: 'Revisa tu correo y escribe aquí el código de 5 dígitos que te enviamos.',
+  codeSentTitle: 'Revisa tu correo',
+  codeLabel: 'Código de verificación:',
+  codePlaceholder: '12345',
+  verifyText: 'Entrar',
+  backText: 'volver',
+  codeInvalidMessage: 'El código no coincide. Revísalo e inténtalo de nuevo.',
+  codeExpiredMessage: 'El código venció. Vuelve y pide uno nuevo.',
+  codeLockedMessage: 'Demasiados intentos. Espera unos minutos y pide un código nuevo.',
   existingWelcomeTemplate: '¡Hola {name}!',
   newUserWelcomeMessage: '¡Bienvenido! Para continuar, necesitamos algunos datos.',
   nameSavedTemplate: '¡Mucho gusto, {name}!' ,
