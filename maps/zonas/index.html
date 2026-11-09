@@ -1,0 +1,92 @@
+---
+layout:             map
+title:              "Zonas de búsqueda (admin)"
+date:               2026-11-09
+categories:         mapas,admin
+description:        "Administración de las zonas nombradas del buscador: coordenadas y palabras por zona geopolítica."
+tags:               [mapa,admin,zonas]
+published:          true
+image:              mapa.png
+---
+
+<style>
+  #panel{position:absolute;top:10px;right:10px;bottom:10px;width:min(92vw,380px);z-index:1000;
+    background:#fff;border:1px solid #ccc;border-radius:8px;display:flex;flex-direction:column;
+    font-size:13px;box-shadow:0 2px 10px rgba(0,0,0,.2);}
+  #panel .cab{padding:8px 10px;border-bottom:1px solid #eee;font-weight:700;display:flex;justify-content:space-between;align-items:center;}
+  #panel .cab button{font-size:11px;padding:3px 8px;cursor:pointer;}
+  #filtros{padding:8px 10px;border-bottom:1px solid #eee;display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+  #filtros select,#filtros input{width:100%;padding:4px;font-size:12px;box-sizing:border-box;}
+  #lista{flex:1;overflow-y:auto;padding:4px 0;}
+  #lista .item{padding:5px 10px;cursor:pointer;border-bottom:1px solid #f0f0f0;}
+  #lista .item:hover{background:#f0f8ff;}
+  #lista .item.sel{background:#e3f2fd;}
+  #lista .item .sub{color:#777;font-size:11px;}
+  #forma{padding:8px 10px;border-top:1px solid #ddd;display:none;}
+  #forma label{display:block;font-size:11px;color:#555;margin-top:5px;}
+  #forma input,#forma select,#forma textarea{width:100%;padding:4px;font-size:12px;box-sizing:border-box;}
+  #forma .fila{display:flex;gap:5px;}
+  #forma .fila>div{flex:1;}
+  #forma .acciones{display:flex;gap:6px;margin-top:8px;}
+  #forma .acciones button{flex:1;padding:6px;font-size:12px;cursor:pointer;}
+  #btn-borrar{background:#c62828;color:#fff;border:0;}
+  #btn-guardar{background:#04364a;color:#ffd54a;border:0;font-weight:700;}
+  #estado{padding:5px 10px;font-size:11px;color:#555;border-top:1px solid #eee;}
+  #estado.error{color:#b3261e;}
+  .chip{display:inline-block;background:#e8f7fd;border:1px solid #b7e3f4;border-radius:8px;padding:0 5px;margin:1px;font-size:10px;}
+  @media (max-width:640px){#panel{left:10px;width:auto;}}
+</style>
+
+<div id="mapid"></div>
+
+<div id="panel">
+  <div class="cab">
+    <span>🗺️ Zonas de búsqueda <span id="cnt">0</span></span>
+    <button id="btn-nueva" type="button">+ Nueva</button>
+  </div>
+  <div id="filtros">
+    <select id="f-pais"><option value="">País…</option></select>
+    <select id="f-region"><option value="">Región…</option></select>
+    <select id="f-ciudad"><option value="">Ciudad…</option></select>
+    <select id="f-tipo"><option value="">Tipo…</option></select>
+    <input type="text" id="f-q" placeholder="Buscar nombre o palabra…" style="grid-column:1/3;">
+  </div>
+  <div id="lista"></div>
+  <div id="forma">
+    <div class="fila">
+      <div><label>Nombre *</label><input id="g-nombre"></div>
+      <div><label>Tipo *</label><select id="g-tipo"></select></div>
+    </div>
+    <label>Palabras (separadas por coma, la primera es el nombre)</label>
+    <textarea id="g-palabras" rows="2"></textarea>
+    <div class="fila">
+      <div><label>Lat *</label><input id="g-lat" type="number" step="any"></div>
+      <div><label>Lng *</label><input id="g-lng" type="number" step="any"></div>
+      <div><label>Radio km</label><input id="g-radio" type="number" step="0.1" min="0"></div>
+    </div>
+    <div class="fila">
+      <div><label>País</label><select id="g-pais"></select></div>
+      <div><label>Región</label><select id="g-region"></select></div>
+      <div><label>Ciudad</label><select id="g-ciudad"></select></div>
+    </div>
+    <div class="fila">
+      <div><label>Ancla (palabra ambigua)</label>
+        <select id="g-ancla"><option value="">—</option><option value="zona">zona</option><option value="calle">calle</option></select>
+      </div>
+      <div><label>Activa</label><select id="g-activo"><option value="1">sí</option><option value="0">no</option></select></div>
+    </div>
+    <label>Notas</label><input id="g-notas">
+    <div class="acciones">
+      <button id="btn-fijar" type="button">📍 Fijar en el mapa</button>
+      <button id="btn-borrar" type="button">Eliminar</button>
+      <button id="btn-guardar" type="button">Guardar</button>
+    </div>
+  </div>
+  <div id="estado">Cargando…</div>
+</div>
+
+<script src="/assets/js/config.js"></script>
+<script src="/assets/js/ubigeo/paises.js"></script>
+<script src="/assets/js/ubigeo/BO.js"></script>
+<script src="/assets/js/ubigeo/PE.js"></script>
+<script src="/assets/js/zonasAdmin.js?v=1"></script>
