@@ -51,6 +51,7 @@ window.BuddyAuthConfig = Object.assign({
   codeInvalidMessage: 'El código no coincide. Revísalo e inténtalo de nuevo.',
   codeExpiredMessage: 'El código venció. Vuelve y pide uno nuevo.',
   codeLockedMessage: 'Demasiados intentos. Espera unos minutos y pide un código nuevo.',
+  loginCooldownMessage: 'Espera unos segundos antes de pedir otro código.',
   existingWelcomeTemplate: '¡Hola {name}!',
   newUserWelcomeMessage: '¡Bienvenido! Para continuar, necesitamos algunos datos.',
   nameSavedTemplate: '¡Mucho gusto, {name}!' ,

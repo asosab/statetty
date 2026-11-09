@@ -699,9 +699,19 @@ window.Buddy = window.Buddy || {};
       method: 'POST',
       body: params
     }).then(function (data) {
+      if (data && data.ok === false) {
+        throw new Error((CONFIG.loginCooldownMessage) || (data.error) || 'No se pudo enviar el correo.');
+      }
       debugLog('requestLogin: respuesta del servidor', data);
       emitEvent('buddy:auth-login-sent', { email: normalized });
       return data;
+    }).catch(function (error) {
+      // 429 = cooldown de reenvío (LOGIN_COOLDOWN) o rate limit: traducir a
+      // mensaje amable en vez del "HTTP 429" crudo.
+      if (error && (error.status === 429 || (error.message || '').indexOf('429') !== -1)) {
+        throw new Error(CONFIG.loginCooldownMessage || 'Espera unos segundos antes de pedir otro código.');
+      }
+      throw error;
     }).finally(function () {
       state.busy = false;
     });
