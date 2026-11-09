@@ -131,10 +131,141 @@
 <script src="/assets/js/config.js"></script>
 <script src="/assets/js/contactCard.js?v=4"></script>
 <script>
+// ---------- Centro inicial del mapa: URL > localStorage > geo IP > SCZ ----------
+// Bloque aparte (mismo patrón que el shim de arriba): la lógica de resolución es
+// pura y se prueba con stubs en scripts/mapa-home-geo.test.js.
+var STT_GEO = (function () {
+  var CENTRO_DEF = [-17.7833281, -63.1821673];   // Santa Cruz de la Sierra
+  var ZOOM_DEF = 12;
+
+  // Portada por país: espejo de paises.defaultCiudad del backend (config.js).
+  var PAISES = {
+    bo: { lat: -17.7833281, lng: -63.1821673, z: 12 },   // Santa Cruz de la Sierra
+    pe: { lat: -12.09533,   lng: -77.05398,   z: 12 }    // Lima
+  };
+  var ALIAS_PAIS = { bolivia: 'bo', peru: 'pe' };
+
+  // Tabla corta para ?ciudad=<slug>: links legibles para campañas y compartidos.
+  var CIUDADES = {
+    'santa-cruz':  { lat: -17.7833, lng: -63.1821, z: 12 },
+    'la-paz':      { lat: -16.4897, lng: -68.1193, z: 12 },
+    'el-alto':     { lat: -16.5047, lng: -68.1864, z: 12 },
+    'cochabamba':  { lat: -17.3895, lng: -66.1568, z: 12 },
+    'sucre':       { lat: -19.0196, lng: -65.2619, z: 13 },
+    'oruro':       { lat: -17.9833, lng: -67.1500, z: 13 },
+    'potosi':      { lat: -19.5836, lng: -65.7531, z: 13 },
+    'tarija':      { lat: -21.5355, lng: -64.7296, z: 13 },
+    'trinidad':    { lat: -14.8333, lng: -64.9000, z: 13 },
+    'cobija':      { lat: -11.0267, lng: -68.7692, z: 13 },
+    'montero':     { lat: -17.3386, lng: -63.2550, z: 13 },
+    'quillacollo': { lat: -17.3922, lng: -66.2783, z: 13 },
+    'lima':        { lat: -12.0464, lng: -77.0428, z: 12 },
+    'arequipa':    { lat: -16.4090, lng: -71.5375, z: 12 },
+    'trujillo':    { lat:  -8.1116, lng: -79.0287, z: 12 },
+    'chiclayo':    { lat:  -6.7714, lng: -79.8410, z: 12 },
+    'cusco':       { lat: -13.5320, lng: -71.9675, z: 13 },
+    'piura':       { lat:  -5.1945, lng: -80.6328, z: 12 },
+    'iquitos':     { lat:  -3.7437, lng: -73.2516, z: 12 },
+    'huancayo':    { lat: -12.0653, lng: -75.2049, z: 12 },
+    'tacna':       { lat: -18.0146, lng: -70.2536, z: 12 }
+  };
+  var ALIAS_CIUDAD = {
+    'santa-cruz-de-la-sierra': 'santa-cruz', scz: 'santa-cruz', lpz: 'la-paz',
+    cbb: 'cochabamba', tja: 'tarija', oru: 'oruro', lim: 'lima',
+    aqp: 'arequipa', cuzco: 'cusco'
+  };
+
+  function slug(s) {
+    return String(s == null ? '' : s).toLowerCase().trim()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[\s_]+/g, '-');
+  }
+  function zoomOk(z) {
+    z = parseInt(z, 10);
+    return isFinite(z) ? Math.min(Math.max(z, 1), 19) : ZOOM_DEF;
+  }
+  function pais(sl) {
+    sl = ALIAS_PAIS[sl] || sl;
+    return PAISES[sl] || null;
+  }
+  function ciudad(sl) {
+    sl = ALIAS_CIUDAD[sl] || sl;
+    return CIUDADES[sl] || null;
+  }
+
+  // ?lat&lng(&z|zoom) > ?ciudad > ?pais. Pais sin cobertura → vista de los
+  // dos mercados con inventario (cobertura). Devuelve null si nada aplica.
+  function porQuery(search) {
+    var q;
+    try { q = new URLSearchParams(search || ''); } catch (e) { return null; }
+    var lat = parseFloat(q.get('lat')), lng = parseFloat(q.get('lng'));
+    if (isFinite(lat) && isFinite(lng)) {
+      return { centro: [lat, lng], zoom: zoomOk(q.get('z') || q.get('zoom')), fuente: 'url' };
+    }
+    var c = ciudad(slug(q.get('ciudad')));
+    if (c) return { centro: [c.lat, c.lng], zoom: c.z, fuente: 'url' };
+    var p = slug(q.get('pais'));
+    if (!p) return null;
+    var g = pais(p);
+    return g ? { centro: [g.lat, g.lng], zoom: g.z, fuente: 'url' }
+             : { cobertura: true, fuente: 'url' };
+  }
+
+  // Mismas keys que assets/js/mapa.js: / y /maps/find/ comparten posición.
+  function guardado(storage) {
+    try {
+      var c = JSON.parse(storage.getItem('mapCenter'));
+      var z = parseInt(storage.getItem('mapZoom'), 10);
+      if (Array.isArray(c) && isFinite(c[0]) && isFinite(c[1]) && isFinite(z)) {
+        return { centro: c, zoom: z, fuente: 'local' };
+      }
+    } catch (e) {}
+    return null;
+  }
+
+  // Respuesta de GET /api/statetty/geo → destino del mapa (o null → probar trace).
+  function desdeGeo(g) {
+    if (!g || typeof g !== 'object') return null;
+    var lat = parseFloat(g.lat), lng = parseFloat(g.lng);
+    if (isFinite(lat) && isFinite(lng)) return { centro: [lat, lng], zoom: ZOOM_DEF, fuente: 'geo' };
+    var p = slug(g.pais);
+    if (!p) return null;
+    var c = pais(p);
+    return c ? { centro: [c.lat, c.lng], zoom: c.z, fuente: 'geo' }
+             : { cobertura: true, fuente: 'geo' };
+  }
+
+  // Texto plano de /cdn-cgi/trace (loc=XX) → mismo destino que desdeGeo.
+  function desdeTrace(texto) {
+    var m = /loc=([A-Za-z]{2})/.exec(String(texto || ''));
+    if (!m) return null;
+    var c = pais(slug(m[1]));
+    return c ? { centro: [c.lat, c.lng], zoom: c.z, fuente: 'geo' }
+             : { cobertura: true, fuente: 'geo' };
+  }
+
+  // Resolución síncrona al cargar: URL > localStorage > default.
+  function inicial(search, storage) {
+    var r = porQuery(search) || (storage && guardado(storage));
+    if (r) return r;
+    return { centro: CENTRO_DEF, zoom: ZOOM_DEF, fuente: 'default' };
+  }
+
+  // Las dos ciudades con inventario: encuadre para visitantes de otros países.
+  function cobertura() {
+    return [[PAISES.bo.lat, PAISES.bo.lng], [PAISES.pe.lat, PAISES.pe.lng]];
+  }
+
+  return {
+    porQuery: porQuery, guardado: guardado, desdeGeo: desdeGeo,
+    desdeTrace: desdeTrace, inicial: inicial, cobertura: cobertura
+  };
+})();
+</script>
+<script>
 (function () {
   'use strict';
 
-  var CENTRO = [-17.7833281, -63.1821673];
   var PIN = '/assets/images/pointers/pointer_statetty.png';
 
   // brocker (clave de la BD) → clave de la imagen del puntero.
@@ -181,12 +312,58 @@
     return PUNTEROS[String((r && r.brocker) || '').toLowerCase()] || porTexto(r) || 'statetty';
   }
 
-  var map = L.map('mapid').setView(CENTRO, 12);
+  var inicial = STT_GEO.inicial(location.search, localStorage);
+  var map = L.map('mapid').setView(inicial.centro, inicial.zoom);
+  // fitBounds al crear, no un setView animado: el país pedido por URL debe
+  // verse completo desde el primer paint.
+  if (inicial.cobertura) map.fitBounds(STT_GEO.cobertura(), { padding: [24, 24], animate: false });
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>',
   }).addTo(map);
   setTimeout(function () { map.invalidateSize(); }, 300);
+
+  // Posición persistente: mismo contrato que mapa.js (mapCenter/mapZoom). Solo
+  // se guarda cuando el usuario mueve el mapa — los saltos del geo no cuentan.
+  var saltoAuto = false;
+  function guardarPosicion() {
+    if (saltoAuto) return;
+    try {
+      var c = map.getCenter();
+      localStorage.setItem('mapCenter', JSON.stringify([c.lat, c.lng]));
+      localStorage.setItem('mapZoom', map.getZoom());
+    } catch (e) {}
+  }
+  map.on('moveend', guardarPosicion);
+  map.on('zoomend', guardarPosicion);
+
+  // Centro por IP del visitante — solo si ni la URL ni localStorage decidieron.
+  // API /geo primero (ciudad + lat/lng vía headers CF); si sale vacío, país por
+  // /cdn-cgi/trace del mismo origen. País sin cobertura → encuadre SCZ+LIM.
+  if (inicial.fuente === 'default') {
+    var saltar = function (destino) {
+      saltoAuto = true;
+      if (destino.cobertura) {
+        map.fitBounds(STT_GEO.cobertura(), { padding: [24, 24], animate: false });
+      } else {
+        map.setView(destino.centro, destino.zoom, { animate: false });
+      }
+      saltoAuto = false;
+    };
+    var porTrace = function () {
+      return fetch('/cdn-cgi/trace').then(function (r) { return r.text(); })
+        .then(function (t) {
+          var d = STT_GEO.desdeTrace(t);
+          if (d) saltar(d);
+        }).catch(function () {});
+    };
+    var baseGeo = (window.STATETTY_CONFIG && STATETTY_CONFIG.WS_API_BASE) || '';
+    fetch(baseGeo + 'statetty/geo').then(function (r) { return r.json(); })
+      .then(function (g) {
+        var d = STT_GEO.desdeGeo(g);
+        if (d) saltar(d); else return porTrace();
+      }).catch(porTrace);
+  }
 
     // Cada grupo: un emoji y las palabras que lo activan (en minúscula y sin tildes).
   // Se busca como palabra completa dentro de tipoInmueble; ante varias
