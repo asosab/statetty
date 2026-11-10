@@ -69,7 +69,11 @@ function fetchBuscarMapaStream(token, body, cb) {
   var abort = new AbortController();
   var reader = null;
   var cancelled = false;
-  var soportado = typeof ReadableStream !== 'undefined' && typeof TextDecoder !== 'undefined';
+  // Stream desactivado (decisión del dueño 2026-11-10): NDJSON resultó varias
+  // veces más lento de punta a punta que el JSON de siempre. Con `soportado`
+  // en false no se manda `stream:true` y toda respuesta cae al fallback JSON
+  // de abajo (mismos callbacks → misma pintada). La maquinaria queda dormida.
+  var soportado = false;
 
   async function run() {
     if (!token && window.STT && window.STT.ready) {
