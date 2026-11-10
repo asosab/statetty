@@ -411,8 +411,7 @@ function actualizarToolbox() {
 
   if (true) {
     // #sel-section: la .section "Seleccionados & PDF" del toolbox (id fijo en
-    // mapaToolbox.html; antes se buscaba por posición :nth-child(2), que se
-    // movió al agregarse la cabecera .tb-head del panel).
+    // mapaToolbox.html; antes se buscaba por posición :nth-child(2)).
     $("#sel-section .section-body").html(`
       <div id="sel-box">
         <b>Seleccionados: ${seleccionados.length}</b>

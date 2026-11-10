@@ -157,10 +157,6 @@ window.STT_TOOLBOX = {
 function _initToolboxHandlers() {
   initPopupTooltips(document.getElementById('toolbox'));
 
-  // El ✕ del header propio del panel (delegado: el markup vive en el include).
-  $(document).on('click', '#toolbox .tb-close', function () {
-    _toolboxCerrar();
-  });
   // Backdrop móvil: mismo cierre que el click-fuera, pero con affordance.
   $(document).on('click', '#toolbox-backdrop', function () {
     _toolboxCerrar(false);
@@ -274,7 +270,7 @@ function _cargandoMostrar(msg) {
 }
 function _cargandoOcultar() {
   if (_cargandoTimer) { clearTimeout(_cargandoTimer); _cargandoTimer = null; }
-  _cargandoOcultar();
+  $('#loading-indicator').hide();
 }
 
 async function init() {

@@ -1,12 +1,9 @@
 <!-- Panel del modo agente: el DOM existe siempre en la página del mapa
-     unificado pero solo se abre con usuario.hasTime. No hay botón propio: el
-     trigger es el avatar del menú de usuario (menuUser.js → STT_TOOLBOX). La
-     cabecera solo lleva el ✕: el saludo vive en el header, no se duplica. -->
+     unificado pero solo se abre con usuario.hasTime. No hay botón ni
+     cabecera propia: el avatar del menú de usuario (menuUser.js →
+     STT_TOOLBOX) abre y cierra el panel; Esc y tap-fuera también cierran. -->
 <div id="toolbox-backdrop" aria-hidden="true"></div>
 <div id="toolbox" role="dialog" aria-label="Menú del mapa">
-  <div class="tb-head">
-    <button type="button" class="tb-close" aria-label="Cerrar panel" title="Cerrar">×</button>
-  </div>
   <!-- Bloque 1: Buscar + Estadísticas -->
   <div class="section">
     <div class="section-header" data-tippy-content="Filtra los resultados visibles en el mapa por texto y mira estadísticas de precio de la búsqueda actual.">📊 Estadísticas & 🔍 Buscar</div>

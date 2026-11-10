@@ -144,26 +144,8 @@
   /* En celular el panel deja una franja de mapa visible y clicable. */
   @media (max-width: 767px) { #toolbox { width: min(320px, 86vw); } }
 
-  /* Cabecera propia del panel, sticky: el ✕ queda a mano con scroll. */
-  #toolbox .tb-head {
-    position: sticky; top: 0; z-index: 2;
-    display: flex; align-items: center; gap: 8px;
-    padding: 10px 8px 10px 16px; background: #fff;
-    border-bottom: 1px solid #e9eef1;
-  }
-  #toolbox .tb-head h2 {
-    margin: 0; font-size: .95rem; font-weight: 700; color: #074f66;
-  }
-  #toolbox .tb-close {
-    margin-left: auto; width: 40px; height: 40px; padding: 0;
-    border: 0; border-radius: 8px; background: none; cursor: pointer;
-    font-size: 20px; line-height: 1; color: #5a6b74;
-    display: flex; align-items: center; justify-content: center;
-  }
-  #toolbox .tb-close:hover { background: #f0f4f6; color: #074f66; }
-  #toolbox .tb-close:focus-visible { outline: 2px solid #17baef; }
-
-  @media (prefers-reduced-motion: reduce) {
+  /* Sin cabecera propia: el avatar del header abre/cierra (y Esc/backdrop),
+     así que el panel arranca directo con las secciones. */  @media (prefers-reduced-motion: reduce) {
     #toolbox, #toolbox-backdrop { transition: none; }
   }
 
@@ -308,7 +290,7 @@
 <script src="/assets/js/acm.js?v=5"></script>
 <script src="/assets/js/mapaAgente.js?v=5"></script>
 <script src="/assets/js/mapaCaja.js?v=2"></script>
-<script src="/assets/js/mapa.js?v=48"></script>
+<script src="/assets/js/mapa.js?v=49"></script>
 <!-- rutasMicros.js: toolbox de rutas de micros (slot al final de #toolbox) -->
 <script src="/assets/js/rutasMicros.js?v=2"></script>
 <!-- menuIcons.js: colapsa headers inactivos a solo ícono cuando una sección está abierta -->
