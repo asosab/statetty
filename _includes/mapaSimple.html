@@ -225,17 +225,21 @@
     display: flex; align-items: center; gap: 6px;
     padding: 4px 0; border-bottom: 1px dashed #eef2f4;
   }
-  #toolbox #acm-container .acm-prom-label { flex: 0 0 auto; }
+  /* Etiqueta de ancho fijo: Terrenos/Casas/Deptos quedan como un bloque
+     con los inputs USD/m² arrancando todos en la misma columna. */
+  #toolbox #acm-container .acm-prom-label { flex: 0 0 17ch; white-space: nowrap; }
   #toolbox #acm-container .acm-prom-val {
     flex: 1; display: flex; align-items: center; gap: 4px;
-    justify-content: flex-end; min-width: 0;
+    justify-content: flex-start; min-width: 0;
   }
+  #toolbox #acm-container .acm-prom-val input { min-width: 0; }
   #toolbox #acm-container .acm-count { flex: 0 0 auto; color: #5a6b74; }
   #toolbox #acm-container input.acm-num { max-width: 8ch; }
   #toolbox #acm-container input.acm-num-sm { max-width: 5ch; }
   /* El numerito del ajuste venta-rápida va con su % para que se entienda. */
   #toolbox #acm-container .acm-ajw {
     display: inline-flex; align-items: baseline; gap: 2px;
+    margin-left: auto;
     color: #7b8f99; font-size: 12px; white-space: nowrap;
   }
   #toolbox #acm-container .acm-ajw::after { content: '%'; }
@@ -245,6 +249,14 @@
     display: flex; align-items: center; gap: 8px; margin-top: 6px;
   }
   #toolbox #acm-container .acm-f-label { flex: 0 0 auto; white-space: nowrap; }
+  /* Primera etiqueta de cada fila con ancho fijo: Tipo, m² T., Subtipo y
+     Dorm. arrancan sus inputs/selects en la misma columna izquierda.
+     El +4px de margin compensa el gap interno de .acm-field (4px vs 8px
+     del .acm-row) para que la columna caiga en el mismo x. */
+  #toolbox #acm-container .acm-row > .acm-f-label { flex-basis: 8ch; }
+  #toolbox #acm-container .acm-row > .acm-field:first-child > .acm-f-label {
+    flex-basis: 8ch; margin-right: 4px;
+  }
   #toolbox #acm-container .acm-grow { flex: 1; min-width: 0; max-width: 100%; }
   #toolbox #acm-container .acm-field {
     flex: 1; display: flex; align-items: center; gap: 4px; min-width: 0;
