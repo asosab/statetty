@@ -231,12 +231,15 @@
     display: flex; align-items: center; gap: 8px; margin-top: 6px;
   }
   #toolbox #acm-container .acm-f-label { flex: 0 0 auto; white-space: nowrap; }
-  /* Primera etiqueta de cada fila con ancho fijo: Tipo, m² T., Subtipo y
-     Dorm. arrancan sus inputs/selects en la misma columna izquierda.
-     El +4px de margin compensa el gap interno de .acm-field (4px vs 8px
-     del .acm-row) para que la columna caiga en el mismo x. */
+  /* Etiquetas de ancho fijo: Tipo, m² T./C., Subtipo y Dorm./Baños
+     arrancan sus inputs/selects en columnas parejas. Se aplica a TODAS
+     las etiquetas de .acm-field (no solo la primera) porque acm.js oculta
+     campos según el tipo (m² T. se esconde en Depto, m² C. en Terreno) y
+     el que queda visible debe seguir alineado. El +4px de margin compensa
+     el gap interno de .acm-field (4px vs 8px del .acm-row) para que la
+     columna caiga en el mismo x. */
   #toolbox #acm-container .acm-row > .acm-f-label { flex-basis: 8ch; }
-  #toolbox #acm-container .acm-row > .acm-field:first-child > .acm-f-label {
+  #toolbox #acm-container .acm-field > .acm-f-label {
     flex-basis: 8ch; margin-right: 4px;
   }
   #toolbox #acm-container .acm-grow { flex: 1; min-width: 0; max-width: 100%; }
