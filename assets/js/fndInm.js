@@ -1175,7 +1175,7 @@
     function pollSearchReady(base, pk, searchTs, overlay, controller, isCancelled, onDone) {
       var creds = authCredentials();
       var firstCred = pk || creds.legacy || creds.bearer;
-      var MAPA_URL = 'https://statetty.com/maps/find';
+      var MAPA_URL = 'https://statetty.com/';
       function check() {
         if (isCancelled()) return;
         var url = base + 'statetty/buscarInmueble/status?searchTs=' + searchTs;
@@ -1299,7 +1299,10 @@
           clearTimeout(slowTimer);
           overlay.remove();
           // superficie_invalida (D5): el servidor explica por qué se descartó la figura.
-          showSaveStatus('error', (res.avisos && res.avisos[0]) || 'Error al iniciar la búsqueda.');
+          // sin_tiempo: la cuenta perdió su tiempo activo con la página abierta.
+          var msg = (res.avisos && res.avisos[0]) || 'Error al iniciar la búsqueda.';
+          if (res.error === 'sin_tiempo') msg = 'Tu cuenta no tiene tiempo activo. Adquiere más tiempo para buscar con datos completos.';
+          showSaveStatus('error', msg);
           return;
         }
         pollSearchReady(base, pk, res.searchTs, overlay, controller, isCancelled, function () { clearTimeout(slowTimer); });

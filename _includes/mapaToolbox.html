@@ -1,0 +1,70 @@
+<!-- Toolbox del modo agente (⚙): el DOM existe siempre en la página del mapa
+     unificado pero el botón queda oculto hasta que la sesión resuelve con
+     usuario.hasTime (mapa.js → activarModoAgente). -->
+<div id="toolbox-btn" style="display:none;">⚙</div>
+<div id="toolbox">
+  <!-- Bloque 1: Buscar + Estadísticas -->
+  <div class="section">
+    <div class="section-header" data-tippy-content="Filtra los resultados visibles en el mapa por texto y mira estadísticas de precio de la búsqueda actual.">📊 Estadísticas & 🔍 Buscar</div>
+      <div class="section-body">
+        <div class="search-container">
+          <span data-tippy-content="Filtra los inmuebles del mapa por texto (título, dirección, descripción, etc.)">🔍</span>
+          <div style="position: relative; flex: 1;">
+            <input type="text" id="search-input" placeholder="Buscar..." style="width: 98%;" data-tippy-content="Escribe para filtrar los inmuebles visibles en el mapa; las estadísticas de abajo se recalculan según el filtro.">
+            <span id="search-count" style="position:absolute; right:0; top:50%; transform:translateY(-50%); font-size:12px; color:#555; pointer-events:none; display:none;" data-tippy-content="Cantidad de inmuebles que coinciden con el texto buscado."></span>
+          </div>
+        </div>
+        <div id="stats-container" style="font-size: 14px; line-height: 1.4; margin-top:6px;">
+          <span data-tippy-content="Cantidad total de inmuebles visibles en el mapa (o que coinciden con la búsqueda, si hay un filtro activo).">🏙 Total inmuebles: <span id="total-inmuebles">0</span></span><br>
+          <span data-tippy-content="Precio promedio (USD) de los inmuebles visibles en el mapa, o del resultado filtrado.">💲 Precio promedio: USD<span id="precio-promedio">0</span></span><br>
+          <span data-tippy-content="El inmueble con el precio más bajo entre los visibles o filtrados.">🏷️ Más económico: <span id="mas-barato">-</span></span><br>
+          <span data-tippy-content="El inmueble con el precio más alto entre los visibles o filtrados.">💎 Más costoso: <span id="mas-caro">-</span></span><br>
+
+        </div>
+      </div>
+  </div>
+
+  <!-- Bloque 2: Seleccionados + PDF -->
+  <div class="section">
+    <div class="section-header">✅ Seleccionados & 📄 PDF</div>
+    <div class="section-body">
+      <div id="sel-box"><!-- generado dinámicamente por mapaAgente.js --></div>
+    </div>
+  </div>
+
+  <!-- Bloque 3: ACM -->
+  <div class="section">
+    <div class="section-header" data-tippy-content="Análisis Comparativo de Mercado: estima el valor de un inmueble usando el USD/m² promedio de tus inmuebles seleccionados.">📈 ACM</div>
+    <div class="section-body" id="acm-container" style="font-size:14px; line-height:1.6;">
+      <div id="acm-prom-precio">Promedio de precios: 0</div>
+      <div id="acm-prom-m2t"> Promedio USD/m² terrenos</div>
+      <div id="acm-prom-m2c-construccion"> Promedio USD/m² casas</div>
+      <div id="acm-prom-m2d"> Promedio USD/m² departamentos</div>
+      <div id="acm-rango">Rango de precios: -</div>
+    </div>
+  </div>
+
+
+</div>
+
+<div id="loading-indicator">Cargando...</div>
+
+<div id="img-fullscreen"
+     style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.9);z-index:99999;justify-content:center;align-items:center;cursor:pointer;">
+  <img id="img-fullscreen-img" style="max-width:95vw;max-height:95vh;object-fit:contain;">
+</div>
+
+<script>
+  // Cerrar fullscreen al hacer click
+  document.getElementById("img-fullscreen").addEventListener("click", function () {
+    this.style.display = "none";
+  });
+
+  // Función para abrir la imagen fullscreen
+  window.showFullImage = function (src) {
+    const cont = document.getElementById("img-fullscreen");
+    const img  = document.getElementById("img-fullscreen-img");
+    img.src = src;
+    cont.style.display = "flex";
+  };
+</script>

@@ -68,7 +68,7 @@
     : [
         { label: 'Mis inmuebles', href: 'https://statetty.com/inmueble/registro' },
         { label: 'Mis datos', href: 'https://statetty.com/registro' },
-        { label: 'Mapa', href: 'https://statetty.com/maps/find/' },
+        { label: 'Mapa', href: 'https://statetty.com/' },
         { label: 'Acortador', href: 'https://statetty.com/shortlinks', superuser: true },
         { label: 'Adquirir tiempo', action: 'stt-open-checkout' }
       ];
@@ -780,6 +780,9 @@
   // página (ver reserveFndInmSlot() y buildUserMenu()).
   function mountFndInm(usuario, mode) {
     if (!usuario) return;
+    // "Buscar Inmuebles" es función de asesor: sin tiempo, el backend
+    // responde 403 sin_tiempo en buscarInmueble y updtUsrBusqueda.
+    if (!usuario.hasTime) return;
 
     loadFndInmScript(function () {
       if (!window.STT_FND_INM || typeof window.STT_FND_INM.mount !== 'function') return;
@@ -794,13 +797,15 @@
   // Inicialización
   // ------------------------------------------------------------------
 
-  function resolveMode() {
+  function resolveMode(usuario) {
     if (MODE === 'cta' || MODE === 'toolbox') return MODE;
-    // auto: si hay un botón CTA visible en el header, se usa ese modo;
-    // si no, pero existe el panel del engranaje, se usa modo toolbox.
+    // auto: el toolbox del mapa solo existe para quien tiene tiempo de uso;
+    // sin tiempo, el menú va siempre en el dropdown del header (cta).
+    var tieneToolbox = !!document.getElementById(TOOLBOX_BOX_ID);
+    if (usuario && usuario.hasTime && tieneToolbox) return 'toolbox';
     var hasCta = document.querySelectorAll(CTA_SELECTOR).length > 0;
     if (hasCta) return 'cta';
-    if (document.getElementById(TOOLBOX_BOX_ID)) return 'toolbox';
+    if (tieneToolbox) return 'toolbox';
     return 'cta'; // default: sin CTA ni toolbox, no hay nada que hacer igual
   }
 
@@ -819,7 +824,7 @@
 
     LOGGED_USER = detail.usuario;
 
-    var mode = resolveMode();
+    var mode = resolveMode(detail.usuario);
     var n = 0;
 
     if (mode === 'toolbox') {
@@ -852,7 +857,7 @@
     if (!(window.Buddy && window.Buddy.auth)) return;
     if (document.body.dataset[READY_FLAG]) return; // ya hay usuario, no login
     if (document.body.dataset[LOGIN_CTA_FLAG]) return; // ya montado
-    if (resolveMode() !== 'cta') return;
+    if (resolveMode(null) !== 'cta') return;
 
     var ctaEls = document.querySelectorAll(CTA_SELECTOR);
     if (ctaEls.length === 0) return;
