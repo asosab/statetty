@@ -139,9 +139,9 @@
     var listo = (window.STT && window.STT.ready) ? window.STT.ready.catch(function () {}) : null;
     var lanzarBusqueda = function () {
       var token = window.STT && window.STT.getToken ? window.STT.getToken() : '';
-      // Modo agente: stream NDJSON — los pines llegan en tandas de 50 y se
-      // pintan apenas llegan (plan busqueda-streaming-tandas).
-      if (esAgente() && typeof fetchBuscarMapaStream === 'function' && window.STT_RENDER) {
+      // Stream NDJSON apagado (decisión del dueño 2026-11-10): más lento y
+      // rompió el arranque — se vuelve al fetch JSON de siempre (abajo).
+      if (false) {
         var pintados = 0, metaRef = null;
         if (_busquedaActiva) { try { _busquedaActiva.cancel(); } catch (e) {} }
         _busquedaActiva = fetchBuscarMapaStream(token, {

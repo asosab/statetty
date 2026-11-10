@@ -286,9 +286,9 @@ async function init() {
 
   if (!_esAgente()) { $('#loading-indicator').hide(); return; }
 
-  // Stream NDJSON (agente): la última búsqueda llega en tandas y los pines
-  // caen al mapa apenas llegan — misma información que el JSON de siempre.
-  if (typeof fetchBuscarMapaStream === 'function' && window.STT_RENDER) {
+  // Stream NDJSON apagado (decisión del dueño 2026-11-10): era más lento y
+  // rompió el arranque — se vuelve al JSON único de fetchBuscarMapa.
+  if (false) {
     var na0 = ((usuario.first_name || '') + ' ' + (usuario.last_name || '')).trim();
     var ag0 = usuario.agencia || '';
     var urlParams0 = new URLSearchParams(window.location.search);
