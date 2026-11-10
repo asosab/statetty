@@ -608,176 +608,262 @@ function initEmptyMap() {
 }
 
 /**
- * renderMap — pinta resultados enriquecidos (documento completo del backend)
- * sobre el mapa. Se vuelve global porque la #caja repinta con él.
+ * Render enriquecido en 3 pasos (streaming NDJSON, plan
+ * opencode/nodelab/PLAN/busqueda-streaming-tandas.md):
+ *   renderMapStreamInit({centerLat,centerLng,circleRadius,avgPrice,na,ag})
+ *   renderMapAdd(locs)   — por cada tanda que llega
+ *   renderMapFin()       — cierre: círculo, seleccionados, fitBounds, stats
+ * renderMap(locs,...) queda como wrapper de los tres para los llamadores
+ * que traen todo el resultado de una vez.
  */
-function renderMap(locs, centerLat, centerLng, circleRadius, avgPrice, na, ag) {
-  // Solo inmuebles con coordenadas válidas: un lat/lng NaN revienta
-  // L.marker y se lleva el render entero (y con él la re-carga dinámica
-  // del buscador de la toolbox, que cae a recargar la página).
-  locations = (locs || []).filter(function (l) { return isFinite(l.lat) && isFinite(l.lng); });
-  dispersarCoordenadas();
-  // El contenedor #mapid puede haberlo tomado antes otro bloque (la #caja espera
-  // mapa). Se adopta el existente: Leaflet rechaza L.map() sobre un contenedor ya
-  // inicializado, y eso tumbaba toda la página.
-  if (!map) {
-    map = window.map || L.map('mapid');
-    window.map = map;
-  }
-  limpiarRenderPrevio();
-  addBaseLayers();
+var _renderCtx = null;
 
-  var circleCenter = L.latLng(centerLat, centerLng);
-  circuloBusqueda = L.circle(circleCenter, L.extend({ radius: circleRadius }, ESTILO_AREA)).addTo(map);
+/** HTML del popup enriquecido, construido recién cuando el pin se abre
+ *  (antes se armaban los 400 de entrada: bloqueo largo de hilo principal). */
+function _popupDeDato(dato) {
+  var ctx = _renderCtx || {};
+  var na = ctx.na || '', ag = ctx.ag || '', avgPrice = ctx.avgPrice || 0;
+  var waphoneUsuario = (window.STT && window.STT.getUsuario && window.STT.getUsuario() || {}).waphone || '';
+  let url = dato.uid;
+
+  const nombreAgente = (dato.agentName || '').trim();
+  const limpio = nombreAgente
+    ? nombreAgente
+        .replace(/\b(lic|ing|arq|dr|dra)\.?\s+/gi,'')
+        .replace(/[^\p{L}\s'-]/gu,'')
+        .trim()
+    : '';
+
+  const nombreCorto   = limpio ? ' ' + limpio.split(/\s+/).slice(0,2).join(' ') : '';
+  const nombreCortito = limpio ? ' ' + limpio.split(/\s+/).slice(0,1).join(' ') : '';
+
+  var cel = '';
+  var celularValido = false;
+  // Teléfono listo para wa.me: completa el prefijo del país del inmueble
+  // (8-10 dígitos sin +) para que el link "📱 Contactar a..." aparezca.
+  var tlf = telefonoConPais(dato, PAISES, typeof libphonenumber !== 'undefined' ? libphonenumber : null);
+  cel = tlf.cel;
+  celularValido = tlf.valido;
+
+  let soyNa = na ? ` ${na}` : '';
+  let deAg = ag ? ` de ${ag}` : '';
+  let sc = (na || ag) ? ' te escribe, ' : '';
+  let foto = dato.foto ? `Foto: ${dato.foto}\n\n`:'';
+
+  const msj = `Hola${nombreCortito},${soyNa}${deAg}${sc}un gusto saludarte. Por favor, podría enviarme información sobre este inmueble, en caso de que siga disponible (${dato.Titulo})\n\nGracias de antemano\n\nlink: ${url}\n\nMensaje creado con Statetty https://statetty.com`;
+
+  const server = STATETTY_CONFIG.WS_API_BASE;
+  const linkSrv = `${server}statetty/usrClckWsInm?u=${encodeURIComponent(window.__mapUserid)}&i=${encodeURIComponent(dato._id)}`;
+
+  const linkWA = celularValido
+    ? `<br/><a href="#" onclick="openWsRedirect('${linkSrv}','https://wa.me/${cel}?text=${encodeURIComponent(msj)}');return false;">📱 Contactar a${nombreCorto}</a>`
+    : '';
+
+  var circleCenter = (circuloBusqueda && circuloBusqueda.getLatLng())
+    || (isFinite(ctx.centerLat) && isFinite(ctx.centerLng) ? { lat: ctx.centerLat, lng: ctx.centerLng } : null);
+  var distance = circleCenter ? Math.round(calculateDH(circleCenter.lat, circleCenter.lng, dato.lat, dato.lng) * 1000) : null;
+  let fotoHTML = dato.foto
+    ? `<div style="width:200px;height:200px;overflow:hidden;border-radius:8px;margin:6px 0;cursor:pointer;"
+           onclick="showFullImage('${dato.foto}')">
+         <img src="${dato.foto}"
+              style="width:100%;height:100%;object-fit:cover;object-position:center;">
+       </div>`
+    : "";
+
+  var priceDiffPercent = avgPrice ? ((dato.precio - avgPrice) / avgPrice) * 100 : 0;
+  var priceArrow = priceDiffPercent > 0 ? '↑' : '↓';
+  var priceColor = priceDiffPercent > 0 ? 'red' : 'green';
+  var priceComparisonTexto = priceArrow + Math.ceil(Math.abs(priceDiffPercent)) + '%';
+  let descripcion = dato.des ? `<b>Descripción:</b> ${dato.des}<br>`:'';
+  let direccion = dato.dir ? `<b>Dirección:</b> ${dato.dir}<br>`:'';
+  let listaMicros = [];
+  if (dato.micros && dato.micros !== '') {
+    listaMicros = dato.micros.split(',').map(m => m.trim()).filter(m => m !== '');
+  }
+
+  // Línea compacta de detalles: 🏡 💰$300K | 📐353 | 🏗️175 | 🛏️3 | 🛁2 | 🚗3 | 📍910m | ⚖️↓10% | 🚌8
+  var tipoEmoji = getTipoEmoji(dato.tipoInmueble);
+  var precioCompacto = formatCompactPrice(dato.precio);
+  var detalles = [];
+  detalles.push(`<span data-tippy-content="Tipo de inmueble: ${dato.tipoInmueble || 'No especificado'}">${tipoEmoji}</span>`);
+  detalles.push(`<span data-tippy-content="Precio: USD ${formatNumber(dato.precio)}">💰${precioCompacto}</span>`);
+  if (dato.m2terreno) detalles.push(`<span data-tippy-content="Superficie de terreno: ${dato.m2terreno} m²">📐${dato.m2terreno}</span>`);
+  if (dato.m2construccion) detalles.push(`<span data-tippy-content="Superficie construida: ${dato.m2construccion} m²">🏗️${dato.m2construccion}</span>`);
+  if (dato.dormitorios) detalles.push(`<span data-tippy-content="Dormitorios: ${dato.dormitorios}">🛏️${dato.dormitorios}</span>`);
+  if (dato['baños']) detalles.push(`<span data-tippy-content="Baños: ${dato['baños']}">🛁${dato['baños']}</span>`);
+  if (dato.estacionamientos) detalles.push(`<span data-tippy-content="Estacionamientos: ${dato.estacionamientos}">🚗${dato.estacionamientos}</span>`);
+  if (distance !== null) detalles.push(`<span data-tippy-content="Distancia al centro del área de búsqueda">📍${distance}m</span>`);
+  detalles.push(`<span data-tippy-content="Comparación de precio respecto al promedio de los resultados de esta búsqueda"><span style="color:${priceColor}">⚖️${priceComparisonTexto}</span></span>`);
+  if (listaMicros.length) detalles.push(`<span data-tippy-content="Micros que pasan a menos de 250m del inmueble">🚌${listaMicros.length}</span>`);
+  var detallesLine = detalles.join(' | ');
+
+  var esNuevo = esInmuebleNuevo(dato);
+  var nuevoTag = esNuevo
+    ? ` <span style="color:#e63946;font-weight:bold;" data-tippy-content="Publicado hace 15 días o menos">¡Nuevo!</span>`
+    : '';
+  var antiguedadTexto = formatAntiguedad(dato);
+  var antiguedadLine = antiguedadTexto
+    ? `<div style="font-size:11px;color:#666;" data-tippy-content="Fecha de publicación estimada del inmueble">${antiguedadTexto}</div>`
+    : '';
+
+  return "<b>" + dato.Titulo + "</b>" + nuevoTag + "<br>" +
+    detallesLine + "<br>" +
+    antiguedadLine +
+    `${descripcion}` +
+    `${direccion}` +
+    fotoHTML +
+    '<a href="' + url + '" target="_blank" style="text-decoration:none;">🔗 Página oficial</a>' +
+    '&nbsp;|&nbsp;<a href="https://statetty.com/inmueble/' + encodeURIComponent(dato._id) + '?t=' + encodeURIComponent(waphoneUsuario) + '" target="_blank" style="text-decoration:none;">🔗 Página Statetty</a>' +
+    '<br><a href="#" style="text-decoration:none;" data-tippy-content="Copy para usar en WhatsApp" onclick="return copyFichaWhatsApp(\'' + encodeURIComponent(dato._id) + '\', this);">🗨️ Copy</a>' +
+    linkWA +
+    `<br><label><input type="checkbox" class="chk-sel" data-id="${dato.uid}"> Seleccionar</label>`;
+}
+
+/** Pin + overlays + popup perezoso de un solo inmueble. */
+function _pintarLoc(dato) {
+  // RE/MAX BO guarda a veces la foto como ruta relativa "listings/..."
+  // → completar con el dominio para que el popup/WhatsApp/PDF no la rompan.
+  if (/^\s*listings\//.test(dato.foto || '') && /remax/i.test(dato.broker || '')) {
+    dato.foto = 'https://intramax.bo/storage/' + dato.foto.trim();
+  }
+  var brand = dato.brand;
+
+  var icon = new L.Icon({
+    iconUrl: '/assets/images/pointers/pointer_' + brand + '.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+    iconSize: [40, 60], iconAnchor: [20, 60], popupAnchor: [1, -54], shadowSize: [60, 60]
+  });
+
+  var marker = L.marker([dato.lat, dato.lng], { icon }); marker.addTo(map);
+
+  // Si el inmueble es "nuevo" (createdAt <= 1 semana), se agrega la capa
+  // pointer_nuevo.png justo encima del pointer, en las mismas coordenadas.
+  var nuevoOverlay = null;
+  if (esInmuebleNuevo(dato)) {
+    nuevoOverlay = L.marker([dato.lat, dato.lng], { icon: nuevoOverlayIcon, interactive: false });
+    nuevoOverlay.addTo(map);
+  }
+
+  // Popup perezoso: Leaflet evalúa la función en cada apertura — así el Δ% usa
+  // el promedio vigente (completo una vez cerrado el stream).
+  marker.bindPopup(function () { return _popupDeDato(dato); });
+  markers.push({ marker, iconOriginal: icon, dato, overlay: null, nuevoOverlay });
+
+  marker.on("popupopen", function (e) {
+    initPopupTooltips(e.popup.getElement());
+    let chk = $(`.chk-sel[data-id='${dato.uid}']`);
+    chk.prop("checked", seleccionados.some(s => s.uid === dato.uid));
+
+    chk.off("change").on("change", function () {
+      if (this.checked) {
+        if (!seleccionados.some(s => s.uid === dato.uid)) seleccionados.push(dato);
+        let overlay = L.marker([dato.lat, dato.lng], { icon: checkOverlayIcon, interactive: false }).addTo(map);
+        let obj = markers.find(m => m.dato.uid === dato.uid);
+        if (obj) obj.overlay = overlay;
+      } else {
+        seleccionados = seleccionados.filter(s => s.uid !== dato.uid);
+        let obj = markers.find(m => m.dato.uid === dato.uid);
+        if (obj && obj.overlay) { map.removeLayer(obj.overlay); obj.overlay = null; }
+      }
+      guardarSeleccionados();
+      actualizarToolbox();
+    });
+  });
+}
+
+/** Círculo + cruz del área de búsqueda (una sola vez por render). */
+function _dibujarAreaBusqueda() {
+  var ctx = _renderCtx;
+  if (!ctx || ctx.areaPintada) return;
+  var circleCenter = L.latLng(ctx.centerLat, ctx.centerLng);
+  circuloBusqueda = L.circle(circleCenter, L.extend({ radius: ctx.circleRadius }, ESTILO_AREA)).addTo(map);
 
   var crossIcon = L.icon({
     iconUrl: '/assets/images/cross_green.png',
     iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10]
   });
   cruzCentro = L.marker(circleCenter, { icon: crossIcon }).addTo(map);
-  cruzCentro.bindPopup('Coordenadas: ' + centerLat + ',' + centerLng + '<br>Valor promedio: USD' + formatNumber(avgPrice));
-
-  // markers
-  var waphoneUsuario = (window.STT && window.STT.getUsuario && window.STT.getUsuario() || {}).waphone || '';
-  locations.forEach(function (dato) {
-    // RE/MAX BO guarda a veces la foto como ruta relativa "listings/..."
-    // → completar con el dominio para que el popup/WhatsApp/PDF no la rompan.
-    if (/^\s*listings\//.test(dato.foto || '') && /remax/i.test(dato.broker || '')) {
-      dato.foto = 'https://intramax.bo/storage/' + dato.foto.trim();
-    }
-    let url = dato.uid;
-    var brand = dato.brand;
-
-    var icon = new L.Icon({
-      iconUrl: '/assets/images/pointers/pointer_' + brand + '.png',
-      shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-      iconSize: [40, 60], iconAnchor: [20, 60], popupAnchor: [1, -54], shadowSize: [60, 60]
-    });
-
-    var marker = L.marker([dato.lat, dato.lng], { icon }); marker.addTo(map);
-
-    // Si el inmueble es "nuevo" (createdAt <= 1 semana), se agrega la capa
-    // pointer_nuevo.png justo encima del pointer, en las mismas coordenadas.
-    var nuevoOverlay = null;
-    if (esInmuebleNuevo(dato)) {
-      nuevoOverlay = L.marker([dato.lat, dato.lng], { icon: nuevoOverlayIcon, interactive: false });
-      nuevoOverlay.addTo(map);
-    }
-
-    const nombreAgente = (dato.agentName || '').trim();
-    const limpio = nombreAgente
-      ? nombreAgente
-          .replace(/\b(lic|ing|arq|dr|dra)\.?\s+/gi,'')
-          .replace(/[^\p{L}\s'-]/gu,'')
-          .trim()
-      : '';
-
-    const nombreCorto   = limpio ? ' ' + limpio.split(/\s+/).slice(0,2).join(' ') : '';
-    const nombreCortito = limpio ? ' ' + limpio.split(/\s+/).slice(0,1).join(' ') : '';
-
-    var cel = '';
-    var celularValido = false;
-    // Teléfono listo para wa.me: completa el prefijo del país del inmueble
-    // (8-10 dígitos sin +) para que el link "📱 Contactar a..." aparezca.
-    var tlf = telefonoConPais(dato, PAISES, typeof libphonenumber !== 'undefined' ? libphonenumber : null);
-    cel = tlf.cel;
-    celularValido = tlf.valido;
-
-    let soyNa = na ? ` ${na}` : '';
-    let deAg = ag ? ` de ${ag}` : '';
-    let sc = (na || ag) ? ' te escribe, ' : '';
-    let foto = dato.foto ? `Foto: ${dato.foto}\n\n`:'';
-
-    const msj = `Hola${nombreCortito},${soyNa}${deAg}${sc}un gusto saludarte. Por favor, podría enviarme información sobre este inmueble, en caso de que siga disponible (${dato.Titulo})\n\nGracias de antemano\n\nlink: ${url}\n\nMensaje creado con Statetty https://statetty.com`;
-
-    const server = STATETTY_CONFIG.WS_API_BASE;
-    const linkSrv = `${server}statetty/usrClckWsInm?u=${encodeURIComponent(window.__mapUserid)}&i=${encodeURIComponent(dato._id)}`;
-
-    const linkWA = celularValido
-      ? `<br/><a href="#" onclick="openWsRedirect('${linkSrv}','https://wa.me/${cel}?text=${encodeURIComponent(msj)}');return false;">📱 Contactar a${nombreCorto}</a>`
-      : '';        
-
-    var distance = Math.round(calculateDH(circleCenter.lat, circleCenter.lng, dato.lat, dato.lng) * 1000);
-    let fotoHTML = dato.foto
-      ? `<div style="width:200px;height:200px;overflow:hidden;border-radius:8px;margin:6px 0;cursor:pointer;"
-             onclick="showFullImage('${dato.foto}')">
-           <img src="${dato.foto}"
-                style="width:100%;height:100%;object-fit:cover;object-position:center;">
-         </div>`
-      : "";
-
-    var priceDiffPercent = ((dato.precio - avgPrice) / avgPrice) * 100;
-    var priceArrow = priceDiffPercent > 0 ? '↑' : '↓';
-    var priceColor = priceDiffPercent > 0 ? 'red' : 'green';
-    var priceComparisonTexto = priceArrow + Math.ceil(Math.abs(priceDiffPercent)) + '%';
-    let descripcion = dato.des ? `<b>Descripción:</b> ${dato.des}<br>`:'';
-    let direccion = dato.dir ? `<b>Dirección:</b> ${dato.dir}<br>`:'';
-    let listaMicros = [];
-    if (dato.micros && dato.micros !== '') {
-      listaMicros = dato.micros.split(',').map(m => m.trim()).filter(m => m !== '');
-    }
-
-    // Línea compacta de detalles: 🏡 💰$300K | 📐353 | 🏗️175 | 🛏️3 | 🛁2 | 🚗3 | 📍910m | ⚖️↓10% | 🚌8
-    var tipoEmoji = getTipoEmoji(dato.tipoInmueble);
-    var precioCompacto = formatCompactPrice(dato.precio);
-    var detalles = [];
-    detalles.push(`<span data-tippy-content="Tipo de inmueble: ${dato.tipoInmueble || 'No especificado'}">${tipoEmoji}</span>`);
-    detalles.push(`<span data-tippy-content="Precio: USD ${formatNumber(dato.precio)}">💰${precioCompacto}</span>`);
-    if (dato.m2terreno) detalles.push(`<span data-tippy-content="Superficie de terreno: ${dato.m2terreno} m²">📐${dato.m2terreno}</span>`);
-    if (dato.m2construccion) detalles.push(`<span data-tippy-content="Superficie construida: ${dato.m2construccion} m²">🏗️${dato.m2construccion}</span>`);
-    if (dato.dormitorios) detalles.push(`<span data-tippy-content="Dormitorios: ${dato.dormitorios}">🛏️${dato.dormitorios}</span>`);
-    if (dato['baños']) detalles.push(`<span data-tippy-content="Baños: ${dato['baños']}">🛁${dato['baños']}</span>`);
-    if (dato.estacionamientos) detalles.push(`<span data-tippy-content="Estacionamientos: ${dato.estacionamientos}">🚗${dato.estacionamientos}</span>`);
-    detalles.push(`<span data-tippy-content="Distancia al centro del área de búsqueda">📍${distance}m</span>`);
-    detalles.push(`<span data-tippy-content="Comparación de precio respecto al promedio de los resultados de esta búsqueda"><span style="color:${priceColor}">⚖️${priceComparisonTexto}</span></span>`);
-    if (listaMicros.length) detalles.push(`<span data-tippy-content="Micros que pasan a menos de 250m del inmueble">🚌${listaMicros.length}</span>`);
-    var detallesLine = detalles.join(' | ');
-
-    var esNuevo = esInmuebleNuevo(dato);
-    var nuevoTag = esNuevo
-      ? ` <span style="color:#e63946;font-weight:bold;" data-tippy-content="Publicado hace 15 días o menos">¡Nuevo!</span>`
-      : '';
-    var antiguedadTexto = formatAntiguedad(dato);
-    var antiguedadLine = antiguedadTexto
-      ? `<div style="font-size:11px;color:#666;" data-tippy-content="Fecha de publicación estimada del inmueble">${antiguedadTexto}</div>`
-      : '';
-
-    var popupContent = "<b>" + dato.Titulo + "</b>" + nuevoTag + "<br>" +
-      detallesLine + "<br>" +
-      antiguedadLine +
-      `${descripcion}` +
-      `${direccion}` +
-      fotoHTML +                                     
-      '<a href="' + url + '" target="_blank" style="text-decoration:none;">🔗 Página oficial</a>' +
-      '&nbsp;|&nbsp;<a href="https://statetty.com/inmueble/' + encodeURIComponent(dato._id) + '?t=' + encodeURIComponent(waphoneUsuario) + '" target="_blank" style="text-decoration:none;">🔗 Página Statetty</a>' +
-      '<br><a href="#" style="text-decoration:none;" data-tippy-content="Copy para usar en WhatsApp" onclick="return copyFichaWhatsApp(\'' + encodeURIComponent(dato._id) + '\', this);">🗨️ Copy</a>' +
-      linkWA +
-      `<br><label><input type="checkbox" class="chk-sel" data-id="${dato.uid}"> Seleccionar</label>`;
-
-    marker.bindPopup(popupContent);
-    markers.push({ marker, iconOriginal: icon, dato, overlay: null, nuevoOverlay });
-
-    marker.on("popupopen", function (e) {
-      initPopupTooltips(e.popup.getElement());
-      let chk = $(`.chk-sel[data-id='${dato.uid}']`);
-      chk.prop("checked", seleccionados.some(s => s.uid === dato.uid));
-
-      chk.off("change").on("change", function () {
-        if (this.checked) {
-          if (!seleccionados.some(s => s.uid === dato.uid)) seleccionados.push(dato);
-          let overlay = L.marker([dato.lat, dato.lng], { icon: checkOverlayIcon, interactive: false }).addTo(map);
-          let obj = markers.find(m => m.dato.uid === dato.uid);
-          if (obj) obj.overlay = overlay;
-        } else {
-          seleccionados = seleccionados.filter(s => s.uid !== dato.uid);
-          let obj = markers.find(m => m.dato.uid === dato.uid);
-          if (obj && obj.overlay) { map.removeLayer(obj.overlay); obj.overlay = null; }
-        }
-        guardarSeleccionados();
-        actualizarToolbox();
-      });
-    });
+  // Perezoso también: el promedio definitivo llega con el fin del stream.
+  cruzCentro.bindPopup(function () {
+    var c = _renderCtx || {};
+    return 'Coordenadas: ' + c.centerLat + ',' + c.centerLng + '<br>Valor promedio: USD' + formatNumber(c.avgPrice || 0);
   });
+  ctx.areaPintada = true;
+}
+
+/** Paso 1: prepara mapa y contexto de una búsqueda nueva. */
+function renderMapStreamInit(opts) {
+  opts = opts || {};
+  locations = [];
+  _renderCtx = {
+    centerLat: opts.centerLat, centerLng: opts.centerLng,
+    circleRadius: opts.circleRadius, avgPrice: opts.avgPrice || 0,
+    na: opts.na || '', ag: opts.ag || '',
+    promSum: 0, promN: 0, areaPintada: false,
+  };
+  // El contenedor #mapid puede haberlo tomado antes otro bloque. Se adopta el
+  // existente: Leaflet rechaza L.map() sobre un contenedor ya inicializado.
+  if (!map) {
+    map = window.map || L.map('mapid');
+    window.map = map;
+  }
+  limpiarRenderPrevio();
+  addBaseLayers();
+  if (isFinite(_renderCtx.centerLat) && isFinite(_renderCtx.centerLng) && _renderCtx.circleRadius) {
+    _dibujarAreaBusqueda();
+  }
+}
+
+/** Paso 2: una tanda de inmuebles -> pines (sin tocar lo ya pintado). */
+function renderMapAdd(locs) {
+  var ctx = _renderCtx;
+  if (!ctx) return 0;
+  var nuevos = (locs || []).filter(function (l) { return isFinite(l.lat) && isFinite(l.lng); });
+  if (!nuevos.length) return 0;
+  locations.push.apply(locations, nuevos);
+  nuevos.forEach(function (d) {
+    var p = parseFloat(d.precio) || 0;
+    if (p > 0) { ctx.promSum += p; ctx.promN++; }
+  });
+  if (ctx.promN) ctx.avgPrice = Math.round(ctx.promSum / ctx.promN);
+  dispersarCoordenadas(20, locations);
+  // La dispersión de la tanda pudo mover pines ya pintados: re-ubicarlos.
+  markers.forEach(function (obj) {
+    var d = obj && obj.dato;
+    if (!d || !obj.marker) return;
+    var ll = obj.marker.getLatLng();
+    if (Math.abs(ll.lat - d.lat) > 1e-9 || Math.abs(ll.lng - d.lng) > 1e-9) {
+      obj.marker.setLatLng([d.lat, d.lng]);
+      if (obj.nuevoOverlay) obj.nuevoOverlay.setLatLng([d.lat, d.lng]);
+      if (obj.overlay) obj.overlay.setLatLng([d.lat, d.lng]);
+    }
+  });
+  nuevos.forEach(_pintarLoc);
+  return nuevos.length;
+}
+
+/** Paso 3: cierre — círculo si faltaba, seleccionados, encuadre y stats. */
+function renderMapFin() {
+  var ctx = _renderCtx || {};
+  if (!map) return;
+  if (!ctx.areaPintada) {
+    if (!isFinite(ctx.centerLat) || !isFinite(ctx.centerLng)) {
+      if (locations.length) {
+        var latSum = 0, lngSum = 0;
+        locations.forEach(function (l) { latSum += l.lat; lngSum += l.lng; });
+        ctx.centerLat = latSum / locations.length;
+        ctx.centerLng = lngSum / locations.length;
+      }
+    }
+    if ((!ctx.circleRadius || ctx.circleRadius <= 0) && isFinite(ctx.centerLat) && locations.length) {
+      var maxKm = 0;
+      locations.forEach(function (l) {
+        maxKm = Math.max(maxKm, calculateDH(ctx.centerLat, ctx.centerLng, l.lat, l.lng));
+      });
+      ctx.circleRadius = Math.max(maxKm * 1000, 1);
+    }
+    if (isFinite(ctx.centerLat) && isFinite(ctx.centerLng) && ctx.circleRadius) _dibujarAreaBusqueda();
+  }
 
   // restaurar seleccionados
   const prevSel = cargarSeleccionados();
@@ -797,7 +883,8 @@ function renderMap(locs, centerLat, centerLng, circleRadius, avgPrice, na, ag) {
 
   const visibles = getVisibleLocations();
   const calc = calcularBoundsDesdeLocations(visibles);
-  if (calc && calc.bounds) { map.fitBounds(calc.bounds.pad(0.1)); } else { map.setView([centerLat, centerLng], 13); }
+  if (calc && calc.bounds) { map.fitBounds(calc.bounds.pad(0.1)); }
+  else if (isFinite(ctx.centerLat) && isFinite(ctx.centerLng)) { map.setView([ctx.centerLat, ctx.centerLng], 13); }
 
   ultimosFiltrados = getVisibleLocations();
   actualizarEstadisticas(ultimosFiltrados);
@@ -807,9 +894,20 @@ function renderMap(locs, centerLat, centerLng, circleRadius, avgPrice, na, ag) {
   map.on("moveend", guardarMapa);
   map.on("zoomend", guardarMapa);
 }
+
+/** Wrapper de una sola llamada (compat): equivale a init + add + fin. */
+function renderMap(locs, centerLat, centerLng, circleRadius, avgPrice, na, ag) {
+  renderMapStreamInit({
+    centerLat: centerLat, centerLng: centerLng, circleRadius: circleRadius,
+    avgPrice: avgPrice, na: na, ag: ag
+  });
+  renderMapAdd(locs);
+  renderMapFin();
+}
 // La #caja busca por texto y repinta con este mismo renderMap: sin este hook sus
 // resultados se descartaban (window.pintar no existe y renderMap no era global).
 window.renderMap = renderMap;
+window.STT_RENDER = { streamInit: renderMapStreamInit, add: renderMapAdd, fin: renderMapFin };
 
 // búsqueda por texto sobre los pines visibles (📊 Estadísticas & 🔍 Buscar del
 // toolbox): resalta los que coinciden y recalcula las estadísticas.

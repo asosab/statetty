@@ -270,6 +270,72 @@ async function init() {
 
   if (!_esAgente()) { $('#loading-indicator').hide(); return; }
 
+  // Stream NDJSON (agente): la última búsqueda llega en tandas y los pines
+  // caen al mapa apenas llegan — misma información que el JSON de siempre.
+  if (typeof fetchBuscarMapaStream === 'function' && window.STT_RENDER) {
+    var na0 = ((usuario.first_name || '') + ' ' + (usuario.last_name || '')).trim();
+    var ag0 = usuario.agencia || '';
+    var urlParams0 = new URLSearchParams(window.location.search);
+    var handle = fetchBuscarMapaStream(window.STT.getToken(), { ultima: true }, {
+      onMeta: function (meta) {
+        var info = meta.filtros || {};
+        window.ACM_INFO = info;
+        try { autoSelectSlot(info); } catch (e) { console.warn('[autoSelectSlot]', e); }
+        if (info.userID) window.__mapUserid = info.userID;
+        var lat = parseFloat(info.lat), lng = parseFloat(info.lng);
+        var radius = (info.dist !== undefined && info.dist !== null) ? info.dist * 1000 : null;
+        var pProm = Math.round(info.precioProm) || (parseFloat(urlParams0.get('p')) || 0);
+        window.STT_RENDER.streamInit({
+          centerLat: isFinite(lat) ? lat : undefined,
+          centerLng: isFinite(lng) ? lng : undefined,
+          circleRadius: radius || undefined,
+          avgPrice: pProm || undefined,
+          na: na0, ag: ag0
+        });
+      },
+      onItems: function (items) {
+        var locs = items.map(function (it) {
+          var loc = apiItemToLocation(it);
+          loc.Titulo = loc.Titulo || loc.Nombre || '';
+          loc.uid = normalizeURL(loc.URL);
+          loc.brand = marcaDe({ dato: loc });
+          if (loc.createdAt === undefined && loc._id) {
+            var raw = items.find(function (r) { return r._id === loc._id; });
+            if (raw) loc.createdAt = raw.createdAt;
+          }
+          return loc;
+        }).filter(function (l) { return isFinite(l.lat) && isFinite(l.lng); });
+        window.STT_RENDER.add(locs);
+      },
+      onFin: function () {
+        if (!locations.length) {
+          if (map) limpiarRenderPrevio();
+          mostrarAvisoSinResultados();
+          return;
+        }
+        window.STT_RENDER.fin();
+        // Re-carga dinámica: limpia la URL como haría navegar a / (sin ?lat=&r=&u=).
+        if (window.__mapaCargado) history.replaceState(null, '', window.location.pathname);
+        window.__mapaCargado = true;
+      },
+      onError: function () {
+        // Corte a mitad de stream: se queda lo pintado y se cierra como si
+        // hubiera terminado (círculo, seleccionados, stats).
+        if (locations.length) window.STT_RENDER.fin();
+      }
+    });
+    var res = await handle.promise;
+    $('#loading-indicator').hide();
+    if (res && res.ok === false) {
+      var err = (res.data && res.data.error) || res.error || '';
+      if (res.status === 403 || err === 'sin_tiempo') { _degradarAPublico(); return; }
+      if (res.cancelled) return;          // se re-busco: la nueva búsqueda sigue
+      // sin_sesion / sin_busqueda / red: el mapa queda en modo agente vacío.
+      initEmptyMap();
+    }
+    return;
+  }
+
   var response = await fetchBuscarMapa(window.STT.getToken());
 
   // `sin_sesion` (token vencido), `sin_tiempo` y `sin_busqueda` (nunca buscó)

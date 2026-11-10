@@ -53,6 +53,111 @@ async function fetchBuscarMapa(token) {
   return data;
 }
 
+// ------------------------------------------------------------------
+// fetchBuscarMapaStream — búsqueda con entrega progresiva (agente).
+// POST statetty/buscarMapa {..., stream:true} -> NDJSON por líneas:
+//   {"meta":{filtros,avisos,usuario,superficie}}
+//   {"items":[...≤50...]}  ×N
+//   {"fin":{"total":N}}    | {"error":"..."}
+// cb: {onMeta(meta), onItems(items,totalParcial), onFin(fin), onError(err)}.
+// Si el navegador no soporta streaming no se pide el flag: el server
+// responde el JSON de siempre y se reparte por los mismos callbacks.
+// Devuelve {promise, cancel()}: cancel() corta la lectura (re-búsqueda).
+// ------------------------------------------------------------------
+function fetchBuscarMapaStream(token, body, cb) {
+  cb = cb || {};
+  var abort = new AbortController();
+  var reader = null;
+  var cancelled = false;
+  var soportado = typeof ReadableStream !== 'undefined' && typeof TextDecoder !== 'undefined';
+
+  async function run() {
+    if (!token && window.STT && window.STT.ready) {
+      try { await window.STT.ready; } catch (e) {}
+      token = window.STT && window.STT.getToken ? window.STT.getToken() : null;
+    }
+    if (!token) return { ok: false, error: 'sin_sesion' };
+
+    var base = STATETTY_CONFIG.WS_API_BASE;
+    var payload = Object.assign({}, body);
+    if (soportado) payload.stream = true;
+    var res;
+    try {
+      res = await fetch(base + 'statetty/buscarMapa', {
+        method: 'POST',
+        cache: 'no-store',
+        signal: abort.signal,
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify(payload)
+      });
+    } catch (e) {
+      if (cancelled) return { ok: false, cancelled: true };
+      return { ok: false, error: 'red' };
+    }
+
+    if (res.status !== 200) {
+      var errData = null;
+      try { errData = await res.json(); } catch (e) {}
+      return { ok: false, status: res.status, data: errData };
+    }
+
+    var total = 0;
+    var procesarLinea = function (linea) {
+      linea = linea.trim();
+      if (!linea) return;
+      var msg;
+      try { msg = JSON.parse(linea); } catch (e) { return; }
+      if (cancelled) return;
+      if (msg.meta && cb.onMeta) cb.onMeta(msg.meta);
+      else if (msg.items) { total += msg.items.length; if (cb.onItems) cb.onItems(msg.items, total); }
+      else if (msg.fin && cb.onFin) cb.onFin(msg.fin);
+      else if (msg.error && cb.onError) cb.onError(msg.error);
+    };
+
+    // Fallback: respuesta JSON normal (sin flag o sin soporte) -> mismos callbacks.
+    if (!soportado || !res.body || typeof res.body.getReader !== 'function') {
+      var data = null;
+      try { data = await res.json(); } catch (e) {}
+      if (!data) { if (cb.onError) cb.onError('json'); return { ok: false, error: 'json' }; }
+      if (cb.onMeta) cb.onMeta({ filtros: data.filtros || {}, avisos: data.avisos || [], usuario: data.usuario || {}, superficie: data.superficie });
+      if (cb.onItems && Array.isArray(data.resultados)) { total = data.resultados.length; cb.onItems(data.resultados, total); }
+      if (cb.onFin) cb.onFin({ total: data.total !== undefined ? data.total : total });
+      return { ok: true, stream: false };
+    }
+
+    reader = res.body.getReader();
+    var dec = new TextDecoder();
+    var buf = '';
+    try {
+      while (true) {
+        var r = await reader.read();
+        if (r.done) break;
+        buf += dec.decode(r.value, { stream: true });
+        var idx;
+        while ((idx = buf.indexOf('\n')) >= 0) {
+          var linea = buf.slice(0, idx);
+          buf = buf.slice(idx + 1);
+          procesarLinea(linea);
+        }
+        if (cancelled) break;
+      }
+      procesarLinea(buf);   // resto sin \n final
+    } catch (e) {
+      if (!cancelled && cb.onError) cb.onError('stream');
+    }
+    return { ok: !cancelled, stream: true, cancelled: cancelled };
+  }
+
+  return {
+    promise: run(),
+    cancel: function () {
+      cancelled = true;
+      try { abort.abort(); } catch (e) {}
+      try { if (reader) reader.cancel(); } catch (e) {}
+    }
+  };
+}
+
 function apiItemToLocation(item) {
   if (!item || typeof item !== 'object') {
     console.error('[apiItemToLocation] item inválido recibido:', item);

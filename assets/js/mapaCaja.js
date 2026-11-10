@@ -24,6 +24,7 @@
   var headerOculto = false;
   var MARGEN_HEADER = 0; // niveles por debajo de zoomRef para que vuelva el header
   var _mapInit = false;
+  var _busquedaActiva = null; // handle del stream en curso: se cancela al re-buscar
 
   function avisar(txt, esError) {
     if (!estado) return;
@@ -138,6 +139,61 @@
     var listo = (window.STT && window.STT.ready) ? window.STT.ready.catch(function () {}) : null;
     var lanzarBusqueda = function () {
       var token = window.STT && window.STT.getToken ? window.STT.getToken() : '';
+      // Modo agente: stream NDJSON — los pines llegan en tandas de 50 y se
+      // pintan apenas llegan (plan busqueda-streaming-tandas).
+      if (esAgente() && typeof fetchBuscarMapaStream === 'function' && window.STT_RENDER) {
+        var pintados = 0, metaRef = null;
+        if (_busquedaActiva) { try { _busquedaActiva.cancel(); } catch (e) {} }
+        _busquedaActiva = fetchBuscarMapaStream(token, {
+          texto: texto,
+          poligono: fig ? fig.poligono : [],
+          circunferencia: fig ? fig.circunferencia : [],
+          lat: centro ? centro.lat : undefined,
+          lng: centro ? centro.lng : undefined,
+        }, {
+          onMeta: function (meta) {
+            metaRef = meta;
+            if (meta.filtros && meta.filtros.userID) window.__mapUserid = meta.filtros.userID;
+            var u = (window.STT && window.STT.getUsuario && window.STT.getUsuario()) || {};
+            var na = ((u.first_name || '') + ' ' + (u.last_name || '')).trim();
+            window.STT_RENDER.streamInit({ na: na, ag: u.agencia || '' });
+          },
+          onItems: function (items, totalParcial) {
+            pintados += window.STT_RENDER.add(aLocations(items));
+            if (pintados) avisar(totalParcial + ' inmuebles...', false);
+          },
+          onFin: function (fin) {
+            window.STT_RENDER.fin();
+            var filtros = metaRef && metaRef.filtros;
+            if (filtros && hayFiguras) { delete filtros.lat; delete filtros.lng; delete filtros.dist; }
+            if (filtros && typeof window.STT_FND_INM === 'object' &&
+                typeof window.STT_FND_INM.aplicarResultado === 'function') {
+              window.STT_FND_INM.aplicarResultado(filtros);
+            }
+            var tot = (fin && fin.total) || pintados;
+            if (!tot) { avisar('Sin resultados. Probá con menos filtros u otra zona.', true); return; }
+            avisar(tot + (tot === 1 ? ' inmueble encontrado' : ' inmuebles encontrados'), false);
+          },
+          onError: function () {
+            if (pintados) { window.STT_RENDER.fin(); avisar(pintados + ' inmuebles (la búsqueda se cortó).', true); }
+            else avisar('Falló la búsqueda. Revisá tu conexión e intentá de nuevo.', true);
+          },
+        });
+        return _busquedaActiva.promise.then(function (r) {
+          if (!r) return;
+          if (r.status === 429) { avisar('Hiciste demasiadas búsquedas. Esperá un minuto e intentá de nuevo.', true); return; }
+          if (r.status === 403 || (r.data && r.data.error === 'sin_tiempo')) {
+            avisar('Tu cuenta no tiene tiempo activo: ves la vista pública.', true);
+            if (window.STT_MAPA && typeof window.STT_MAPA.degradarAPublico === 'function') STT_MAPA.degradarAPublico();
+            return;
+          }
+          if (r.ok === false && !r.cancelled && !pintados && r.error !== 'sin_sesion') {
+            avisar('No se pudo interpretar la búsqueda. Probá con otra frase.', true);
+          }
+        }).then(function () {
+          if (boton) boton.disabled = false;
+        });
+      }
       return fetch(base + 'statetty/buscarMapa', {
         method: 'POST',
         headers: {
