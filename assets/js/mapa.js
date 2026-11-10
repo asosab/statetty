@@ -261,8 +261,24 @@ function autoSelectSlot(searchParams) {
 
 // ---------- Carga de la última búsqueda (modo agente) ----------
 
+// El cartel solo aparece si la carga realmente tarda: la página ya es usable
+// mientras llega la última búsqueda (mapa público, caja y panel funcionan),
+// así que un "Cargando..." genérico al centro mintiendo que la página no
+// sirve se reemplaza por un aviso honesto con retardo (~1.5 s).
+var _cargandoTimer = null;
+function _cargandoMostrar(msg) {
+  var li = document.getElementById('loading-indicator');
+  if (li && msg) li.textContent = msg;
+  if (_cargandoTimer) clearTimeout(_cargandoTimer);
+  _cargandoTimer = setTimeout(function () { $('#loading-indicator').show(); }, 1500);
+}
+function _cargandoOcultar() {
+  if (_cargandoTimer) { clearTimeout(_cargandoTimer); _cargandoTimer = null; }
+  _cargandoOcultar();
+}
+
 async function init() {
-  $('#loading-indicator').show();
+  _cargandoMostrar('Recuperando tu última búsqueda…');
   // Re-carga dinámica tras una búsqueda de la toolbox: lo que una recarga de la
   // página habría vaciado (filtro de texto y estado de la #caja) se vacía acá.
   $('#search-input').val('');
@@ -329,7 +345,7 @@ async function init() {
       }
     });
     var res = await handle.promise;
-    $('#loading-indicator').hide();
+    _cargandoOcultar();
     if (res && res.ok === false) {
       var err = (res.data && res.data.error) || res.error || '';
       if (res.status === 403 || err === 'sin_tiempo') { _degradarAPublico(); return; }
@@ -345,7 +361,7 @@ async function init() {
   // `sin_sesion` (token vencido), `sin_tiempo` y `sin_busqueda` (nunca buscó)
   // caen al mapa vacío en modo agente (toolbox disponible, sin resultados).
   if (!response || !response.ok || !Array.isArray(response.resultados)) {
-    $('#loading-indicator').hide();
+    _cargandoOcultar();
     if (response && response.error === 'sin_tiempo') { _degradarAPublico(); return; }
     initEmptyMap();
     return;
@@ -405,7 +421,7 @@ async function init() {
   }
 
   if (!lat || !lng || !radius) {
-    $('#loading-indicator').hide();
+    _cargandoOcultar();
     // Re-carga dinámica: saca los pines de la búsqueda anterior antes del aviso.
     if (map) limpiarRenderPrevio();
     mostrarAvisoSinResultados();
@@ -420,14 +436,14 @@ async function init() {
   var na = usuario ? ((usuario.first_name || '') + ' ' + (usuario.last_name || '')).trim() : '';
   var ag = usuario ? (usuario.agencia || '') : '';
 
-  $('#loading-indicator').hide();
+  _cargandoOcultar();
   renderMap(locs, lat, lng, radius, pProm, na, ag);
   // Re-carga dinámica: limpia la URL como haría navegar a / (sin ?lat=&r=&u=).
   // Solo en re-carga: en la carga inicial esos params son la entrada desde el
   // bot de Telegram y se respetan.
   if (window.__mapaCargado) history.replaceState(null, '', window.location.pathname);
   window.__mapaCargado = true;
-  $('#loading-indicator').hide();
+  _cargandoOcultar();
 }
 
 // ---------- Activación del modo agente ----------
@@ -443,7 +459,7 @@ function activarModoAgente() {
   }
   init().catch(function(e) {
     console.error('Error al cargar datos del mapa', e);
-    $('#loading-indicator').hide();
+    _cargandoOcultar();
   });
 }
 
