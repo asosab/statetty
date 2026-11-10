@@ -143,15 +143,15 @@
       }
 
       $("#acm-prom-m2t").html(
-        `<input type="number" step="0.01" value="${valT>0?valT.toFixed(2):""}" data-tippy-content="${tipTerreno}" style="max-width:12ch;"> `+
+        `<input class="acm-num" type="number" step="0.01" value="${valT>0?valT.toFixed(2):""}" data-tippy-content="${tipTerreno}"> `+
         (terrenoAjustadoPorTamano ? `<span data-tippy-content="${tipTerreno}">📐</span> ` : ``) +
-        `<input id="acm-ajuste-t" type="number" value="${ajT}" style="max-width:5ch;" data-tippy-content="% de descuento aplicado a terrenos cuando se activa 'V. Rápida'.">`
+        `<span class="acm-ajw"><input id="acm-ajuste-t" class="acm-aj" type="number" value="${ajT}" data-tippy-content="% de descuento aplicado a terrenos cuando se activa 'V. Rápida'."></span>`
       );
 
       $("#acm-prom-m2c-construccion").html(
-        `<input type="number" step="0.01" value="${valC>0?valC.toFixed(2):""}" data-tippy-content="${tipCasa}" style="max-width:12ch;"> `+
+        `<input class="acm-num" type="number" step="0.01" value="${valC>0?valC.toFixed(2):""}" data-tippy-content="${tipCasa}"> `+
         `<span data-tippy-content="${tipCasa}">${casaNeta ? "🧮" : "⚠️"}</span> `+
-        `<input id="acm-ajuste-c" type="number" value="${ajC}" style="max-width:5ch;" data-tippy-content="% de descuento aplicado a casas cuando se activa 'V. Rápida'.">`
+        `<span class="acm-ajw"><input id="acm-ajuste-c" class="acm-aj" type="number" value="${ajC}" data-tippy-content="% de descuento aplicado a casas cuando se activa 'V. Rápida'."></span>`
       );
 
       const subtipoLabel = { todos:"departamentos, oficinas y locales/tiendas", departamento:"departamentos", oficina:"oficinas", comercial:"locales/tiendas" };
@@ -172,9 +172,9 @@
         : (resultadoConstruido.mezclado && subtipoElegido!=="todos" ? "⚠️" : "");
 
       $("#acm-prom-m2d").html(
-        `<input type="number" step="0.01" value="${valD>0?valD.toFixed(2):""}" data-tippy-content="${tipDepto}" style="max-width:12ch;"> `+
+        `<input class="acm-num" type="number" step="0.01" value="${valD>0?valD.toFixed(2):""}" data-tippy-content="${tipDepto}"> `+
         (iconoDepto ? `<span data-tippy-content="${tipDepto}">${iconoDepto}</span> ` : ``) +
-        `<input id="acm-ajuste-d" type="number" value="${ajD}" style="max-width:5ch;" data-tippy-content="% de descuento aplicado a departamentos/oficinas/locales cuando se activa 'V. Rápida'.">`
+        `<span class="acm-ajw"><input id="acm-ajuste-d" class="acm-aj" type="number" value="${ajD}" data-tippy-content="% de descuento aplicado a departamentos/oficinas/locales cuando se activa 'V. Rápida'."></span>`
       );
 
       $("#acm-count-t").text(terrenos.length?`[${terrenos.length}]`:"[-]");
@@ -648,20 +648,18 @@ function detectarTipoInmueble_old(loc) {
  */
   function toggleSubtipoRow(tipo){
     try {
-      $("#acm-subtipo-row").css("display", tipo==="departamento" ? "contents" : "none");
+      $("#acm-subtipo-row").css("display", tipo==="departamento" ? "flex" : "none");
     } catch (e) {console.log('toggleSubtipoRow error',e);}
   }
 
 /** ----------------------------------------------------------------------------------------------- toggleDormBanioRow
- * Muestra/oculta la fila de Dormitorios y Baños (grid-column:1 a 4) según el
- * tipo de inmueble elegido: los terrenos no tienen dormitorios ni baños.
- * Se usa display:contents (no "none" directo en los hijos) para que, al
- * mostrarse de nuevo, los hijos sigan comportándose como ítems del grid
- * padre y no se desalinee la grilla.
+ * Muestra/oculta la fila de Dormitorios y Baños según el tipo de inmueble
+ * elegido: los terrenos no tienen dormitorios ni baños. La fila es flex
+ * (layout por filas del formulario).
  */
   function toggleDormBanioRow(tipo){
     try {
-      $("#acm-dormbanio-row").css("display", tipo==="terreno" ? "none" : "contents");
+      $("#acm-dormbanio-row").css("display", tipo==="terreno" ? "none" : "flex");
     } catch (e) {console.log('toggleDormBanioRow error',e);}
   }
 
@@ -705,52 +703,54 @@ function detectarTipoInmueble_old(loc) {
           <div id="acm-rango" data-tippy-content="Rango de precios (mínimo y máximo) entre los inmuebles seleccionados.">Rango de precios: -</div>
           <div id="acm-prom-precio" data-tippy-content="Precio promedio (USD) de los inmuebles seleccionados.">Promedio de precios: USD 0 [0]</div>
 
-          <div style="margin-top:6px;">
+          <div class="acm-prom-head">
             <b data-tippy-content="Promedio de USD por metro cuadrado, calculado sobre los inmuebles seleccionados de cada tipo.">Promedio USD/m²</b>
-            <button type="button" id="acm-info-btn" style="margin-left:8px;background:none;border:1px solid #ccc;border-radius:10px;padding:1px 8px;font-size:12px;cursor:pointer;color:#2563eb;" data-tippy-content="Ver cómo se calculan estos valores paso a paso.">ℹ️ ¿Cómo se calcula?</button>
-            <label style="margin-left:12px;" data-tippy-content="Aplica el % de ajuste de cada tipo (columna derecha) para simular una venta rápida a precio más bajo.">
+            <button type="button" id="acm-info-btn" data-tippy-content="Ver cómo se calculan estos valores paso a paso.">ℹ️ ¿Cómo se calcula?</button>
+            <label data-tippy-content="Aplica el % de ajuste de cada fila (el numerito con %) para simular una venta rápida a precio más bajo.">
               <input type="checkbox" id="acm-venta-rapida"> V. Rápida
             </label>
           </div>
 
-          <div style="display:grid;grid-template-columns:auto 1fr 1fr auto;gap:4px 8px;align-items:center;margin-top:6px;">
-            <div data-tippy-content="Promedio USD/m² de terreno, calculado con los terrenos seleccionados. El segundo campo es el % de descuento para venta rápida.">Terrenos:</div>
-            <div id="acm-prom-m2t"></div>
-            <div></div>
-            <div id="acm-count-t" data-tippy-content="Cantidad de terrenos seleccionados usados para este promedio.">[-]</div>
-
-            <div data-tippy-content="Promedio USD/m² de construcción de casas, calculado con las casas seleccionadas. El segundo campo es el % de descuento para venta rápida.">Casas:</div>
-            <div id="acm-prom-m2c-construccion"></div>
-            <div></div>
-            <div id="acm-count-c" data-tippy-content="Cantidad de casas seleccionadas usadas para este promedio.">[-]</div>
-
-            <div data-tippy-content="Promedio USD/m² de construcción de departamentos, oficinas y locales/tiendas (inmuebles sin terreno propio). El segundo campo es el % de descuento para venta rápida.">Deptos/Ofic/Local:</div>
-            <div id="acm-prom-m2d"></div>
-            <div></div>
-            <div id="acm-count-d" data-tippy-content="Cantidad de departamentos/oficinas/locales seleccionados usados para este promedio.">[-]</div>
+          <div class="acm-prom-row">
+            <span class="acm-prom-label" data-tippy-content="Promedio USD/m² de terreno, calculado con los terrenos seleccionados. El campo con % es el descuento para venta rápida.">Terrenos:</span>
+            <span id="acm-prom-m2t" class="acm-prom-val"></span>
+            <span id="acm-count-t" class="acm-count" data-tippy-content="Cantidad de terrenos seleccionados usados para este promedio.">[-]</span>
+          </div>
+          <div class="acm-prom-row">
+            <span class="acm-prom-label" data-tippy-content="Promedio USD/m² de construcción de casas, calculado con las casas seleccionadas. El campo con % es el descuento para venta rápida.">Casas:</span>
+            <span id="acm-prom-m2c-construccion" class="acm-prom-val"></span>
+            <span id="acm-count-c" class="acm-count" data-tippy-content="Cantidad de casas seleccionadas usadas para este promedio.">[-]</span>
+          </div>
+          <div class="acm-prom-row">
+            <span class="acm-prom-label" data-tippy-content="Promedio USD/m² de construcción de departamentos, oficinas y locales/tiendas (inmuebles sin terreno propio). El campo con % es el descuento para venta rápida.">Deptos/Ofic/Local:</span>
+            <span id="acm-prom-m2d" class="acm-prom-val"></span>
+            <span id="acm-count-d" class="acm-count" data-tippy-content="Cantidad de departamentos/oficinas/locales seleccionados usados para este promedio.">[-]</span>
           </div>
 
         </div>
 
-        <div style="display:grid;grid-template-columns:auto auto auto auto;gap:4px 8px;align-items:center;">
-          <div data-tippy-content="Tipo de inmueble a estimar: define qué promedios USD/m² se usan y qué campos aplican.">Tipo:</div>
-          <select id="acm-tipo" data-tippy-content="Elegí el tipo de inmueble a estimar (departamento/oficina/local, casa o terreno).">
-            <option value="departamento">Depto/Ofic/Local</option>
-            <option value="casa">Casa</option>
-            <option value="terreno">Terreno</option>
-          </select>
-
-          <div id="acm-m2t-wrap" data-tippy-content="Superficie de terreno (m²) del inmueble a estimar.">
-            m² T.: <input type="number" id="acm-m2t" style="max-width:10ch;">
+        <div class="acm-form">
+          <div class="acm-row">
+            <span class="acm-f-label" data-tippy-content="Tipo de inmueble a estimar: define qué promedios USD/m² se usan y qué campos aplican.">Tipo:</span>
+            <select id="acm-tipo" class="acm-grow" data-tippy-content="Elegí el tipo de inmueble a estimar (departamento/oficina/local, casa o terreno).">
+              <option value="departamento">Depto/Ofic/Local</option>
+              <option value="casa">Casa</option>
+              <option value="terreno">Terreno</option>
+            </select>
           </div>
 
-          <div id="acm-m2c-wrap" data-tippy-content="Superficie construida (m²) del inmueble a estimar.">
-            m² C.: <input type="number" id="acm-m2c" style="max-width:10ch;">
+          <div class="acm-row">
+            <div id="acm-m2t-wrap" class="acm-field" data-tippy-content="Superficie de terreno (m²) del inmueble a estimar.">
+              <span class="acm-f-label">m² T.:</span><input type="number" id="acm-m2t" class="acm-num">
+            </div>
+            <div id="acm-m2c-wrap" class="acm-field" data-tippy-content="Superficie construida (m²) del inmueble a estimar.">
+              <span class="acm-f-label">m² C.:</span><input type="number" id="acm-m2c" class="acm-num">
+            </div>
           </div>
 
-          <div id="acm-subtipo-row" style="display:contents;">
-            <div style="grid-column:1;" data-tippy-content="Subtipo dentro de 'sin terreno': si elegís uno específico, se usa el promedio USD/m² propio de ese subtipo (si hay suficientes comparables); si no, cae automáticamente al combinado.">Subtipo:</div>
-            <select id="acm-subtipo-construido" style="grid-column:2;" data-tippy-content="Departamento, oficina y local/tienda valen distinto por m² construido, aunque los tres sean 'sin terreno'.">
+          <div class="acm-row" id="acm-subtipo-row">
+            <span class="acm-f-label" data-tippy-content="Subtipo dentro de 'sin terreno': si elegís uno específico, se usa el promedio USD/m² propio de ese subtipo (si hay suficientes comparables); si no, cae automáticamente al combinado.">Subtipo:</span>
+            <select id="acm-subtipo-construido" class="acm-grow" data-tippy-content="Departamento, oficina y local/tienda valen distinto por m² construido, aunque los tres sean 'sin terreno'.">
               <option value="todos">Todos (mezclado)</option>
               <option value="departamento">Departamento</option>
               <option value="oficina">Oficina</option>
@@ -758,19 +758,19 @@ function detectarTipoInmueble_old(loc) {
             </select>
           </div>
 
-          <div id="acm-dormbanio-row" style="display:contents;">
-            <div style="grid-column:1;" data-tippy-content="Dormitorios promedio de los inmuebles similares seleccionados (se completa automáticamente, se puede ajustar).">Dormitorios:</div>
-            <input type="number" id="acm-dorm" style="max-width:6ch;grid-column:2;" data-tippy-content="Cantidad de dormitorios del inmueble a estimar.">
-
-            <div id="acm-banio-wrap" style="grid-column:3;" data-tippy-content="Cantidad de baños del inmueble a estimar (baños promedio de los inmuebles similares seleccionados).">
-              Baños: <input type="number" id="acm-banio" style="max-width:6ch;">
+          <div class="acm-row" id="acm-dormbanio-row">
+            <div class="acm-field" data-tippy-content="Dormitorios promedio de los inmuebles similares seleccionados (se completa automáticamente, se puede ajustar).">
+              <span class="acm-f-label">Dorm.:</span><input type="number" id="acm-dorm" class="acm-num-sm" data-tippy-content="Cantidad de dormitorios del inmueble a estimar.">
+            </div>
+            <div id="acm-banio-wrap" class="acm-field" data-tippy-content="Cantidad de baños del inmueble a estimar (baños promedio de los inmuebles similares seleccionados).">
+              <span class="acm-f-label">Baños:</span><input type="number" id="acm-banio" class="acm-num-sm">
             </div>
           </div>
         </div>
 
-        <div style="margin-top:6px;"> 
-          <span id="acm-estimado" data-tippy-content="Valor estimado del inmueble, calculado con los promedios USD/m² y los m² ingresados arriba.">Estimado: -</span> 
-          <span id="acm-tiempo-ofertado" data-tippy-content="Tiempo aproximado de venta según inmuebles similares seleccionados."> | Tiempo ofertado aprox: -</span> 
+        <div class="acm-resumen">
+          <span id="acm-estimado" data-tippy-content="Valor estimado del inmueble, calculado con los promedios USD/m² y los m² ingresados arriba.">Estimado: -</span>
+          <span id="acm-tiempo-ofertado" data-tippy-content="Tiempo aproximado de venta según inmuebles similares seleccionados."> | Tiempo ofertado aprox: -</span>
         </div>
 
       `;

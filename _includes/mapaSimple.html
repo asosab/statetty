@@ -163,13 +163,6 @@
   #toolbox .tb-close:hover { background: #f0f4f6; color: #074f66; }
   #toolbox .tb-close:focus-visible { outline: 2px solid #17baef; }
 
-  /* El saludo del usuario ocupa el lugar del viejo título "Herramientas"
-     (lo inyecta menuUser.js): alineado a la izquierda dentro del panel. */
-  #toolbox .tb-head .stt-user-hello { align-items: flex-start; }
-  #toolbox .tb-head .stt-user-greeting {
-    font-size: .95rem; font-weight: 700; color: #074f66;
-  }
-
   @media (prefers-reduced-motion: reduce) {
     #toolbox, #toolbox-backdrop { transition: none; }
   }
@@ -216,6 +209,50 @@
   }
   #toolbox .section.active .section-collapse { transform: rotate(180deg); }
 
+  /* --- ACM: layout por filas flex que entre en el ancho del drawer
+     (≈290px útiles en móvil). Antes eran dos grids de 4 columnas que
+     desbordaban: inputs apilados y etiquetas cortadas al borde derecho. */
+  #toolbox #acm-container { font-size: 14px; line-height: 1.5; overflow-x: hidden; }
+  #toolbox #acm-container .acm-prom-head {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px;
+    margin-top: 6px;
+  }
+  #toolbox #acm-container #acm-info-btn {
+    background: none; border: 1px solid #ccc; border-radius: 10px;
+    padding: 1px 8px; font-size: 12px; cursor: pointer; color: #2563eb;
+  }
+  #toolbox #acm-container .acm-prom-row {
+    display: flex; align-items: center; gap: 6px;
+    padding: 4px 0; border-bottom: 1px dashed #eef2f4;
+  }
+  #toolbox #acm-container .acm-prom-label { flex: 0 0 auto; }
+  #toolbox #acm-container .acm-prom-val {
+    flex: 1; display: flex; align-items: center; gap: 4px;
+    justify-content: flex-end; min-width: 0;
+  }
+  #toolbox #acm-container .acm-count { flex: 0 0 auto; color: #5a6b74; }
+  #toolbox #acm-container input.acm-num { max-width: 8ch; }
+  #toolbox #acm-container input.acm-num-sm { max-width: 5ch; }
+  /* El numerito del ajuste venta-rápida va con su % para que se entienda. */
+  #toolbox #acm-container .acm-ajw {
+    display: inline-flex; align-items: baseline; gap: 2px;
+    color: #7b8f99; font-size: 12px; white-space: nowrap;
+  }
+  #toolbox #acm-container .acm-ajw::after { content: '%'; }
+  #toolbox #acm-container input.acm-aj { max-width: 4ch; font-size: 12px; }
+  #toolbox #acm-container .acm-form { margin-top: 10px; }
+  #toolbox #acm-container .acm-row {
+    display: flex; align-items: center; gap: 8px; margin-top: 6px;
+  }
+  #toolbox #acm-container .acm-f-label { flex: 0 0 auto; white-space: nowrap; }
+  #toolbox #acm-container .acm-grow { flex: 1; min-width: 0; max-width: 100%; }
+  #toolbox #acm-container .acm-field {
+    flex: 1; display: flex; align-items: center; gap: 4px; min-width: 0;
+  }
+  #toolbox #acm-container .acm-field input { min-width: 0; }
+  #toolbox #acm-container select { max-width: 100%; }
+  #toolbox #acm-container .acm-resumen { margin-top: 10px; }
+
   /* --- menuIcons.js: icon-row flex mode --- */
   #toolbox.stt-icons-mode { display: flex; flex-wrap: wrap; align-items: flex-start; }
   #toolbox.stt-icons-mode > .section { display: contents; }
@@ -256,7 +293,7 @@
 <script src="/assets/js/mapaFiguras.js?v=1"></script>
 <script src="/assets/js/mapaPublico.js?v=1"></script>
 <script src="/assets/js/inmueblesPdf.js?v=7"></script>
-<script src="/assets/js/acm.js?v=4"></script>
+<script src="/assets/js/acm.js?v=5"></script>
 <script src="/assets/js/mapaAgente.js?v=5"></script>
 <script src="/assets/js/mapaCaja.js?v=2"></script>
 <script src="/assets/js/mapa.js?v=46"></script>

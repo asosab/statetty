@@ -20,8 +20,8 @@
  *        que es donde vive el menú completo. Dentro del panel van las
  *        herramientas del mapa (las que antes abría el engranaje, ya eliminado)
  *        y, al final, los ítems del menú de usuario (MENU_ITEMS) como links
- *        sueltos — sin acordeón ni título propio. Además inyecta una copia
- *        del saludo (¡Hola ...! + días) en la cabecera del panel (#tb-greeting).
+ *        sueltos — sin acordeón ni título propio. El saludo NO se duplica:
+ *        vive solo en el header (la cabecera del panel queda solo con el ✕).
  *
  *   3. Si no hay usuario (no logueado / error), no toca nada.
  *
@@ -122,7 +122,6 @@
   // IDs del panel de herramientas (mapa.js). El trigger ya no es un ⚙ propio:
   // es el avatar que este mismo script monta en el header.
   var TOOLBOX_BOX_ID = 'toolbox';
-  var TOOLBOX_GREETING_ID = 'tb-greeting';
   // Ya no es una ".section" con título propio: es solo el contenedor de
   // links que se suma al final del panel, sin acordeón ni encabezado.
   var TOOLBOX_LINKS_ID = 'stt-user-toolbox-links';
@@ -692,14 +691,7 @@
     return wrap;
   }
 
-  // Copia del saludo dentro de la cabecera del panel (#tb-greeting): el
-  // panel ya no dice "Herramientas", muestra ¡Hola X! + días.
-  function mountPanelGreeting(usuario) {
-    var host = document.getElementById(TOOLBOX_GREETING_ID);
-    if (!host || host.firstChild) return;
-    var hello = buildHello(usuario);
-    if (hello) host.appendChild(hello);
-  }
+  // ------------------------------------------------------------------
 
   // ------------------------------------------------------------------
   // MODO TOOLBOX: links sueltos al final del panel del engranaje
@@ -887,7 +879,6 @@
       var slot = document.querySelectorAll(CTA_SELECTOR)[0];
       if (slot) {
         slot.replaceWith(buildPanelMenu(detail.usuario));
-        mountPanelGreeting(detail.usuario);
         n++;
       }
     } else {
