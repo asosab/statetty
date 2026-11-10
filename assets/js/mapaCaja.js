@@ -25,6 +25,8 @@
   var MARGEN_HEADER = 0; // niveles por debajo de zoomRef para que vuelva el header
   var _mapInit = false;
   var _busquedaActiva = null; // handle del stream en curso: se cancela al re-buscar
+  var slotAvatar = null;     // #avatar-flotante: refugio de la foto cuando sube el header
+  var avatarObserver = null;
 
   function avisar(txt, esError) {
     if (!estado) return;
@@ -39,6 +41,35 @@
     if (!headerOculto && z > zoomRef) headerOculto = true;
     else if (headerOculto && z <= zoomRef - MARGEN_HEADER) headerOculto = false;
     if (document.body) document.body.classList.toggle('header-oculto', headerOculto);
+    reubicarAvatar();
+  }
+
+  // El header se lleva la foto de perfil (única puerta al menú lateral) al
+  // esconderse. Con el header oculto, el botón-avatar se muda al flotante de
+  // la esquina superior derecha; al volver el header, regresa a su
+  // .stt-user-menu. Es el mismo nodo: sus listeners y el aria-expanded del
+  // panel viajan con él.
+  function reubicarAvatar() {
+    if (!slotAvatar) return;
+    var enHeader = document.querySelector('.header-right .stt-user-trigger');
+    var flotante = slotAvatar.querySelector('.stt-user-trigger');
+    if (headerOculto) {
+      if (enHeader) slotAvatar.appendChild(enHeader);
+    } else if (flotante) {
+      var wrap = document.querySelector('.header-right .stt-user-menu');
+      if (wrap) wrap.appendChild(flotante);
+    }
+    slotAvatar.hidden = !slotAvatar.querySelector('.stt-user-trigger');
+  }
+
+  // El avatar lo monta menuUser.js cuando resuelve la sesión: si eso ocurre
+  // con el header ya escondido, hay que moverlo al flotante apenas aparezca.
+  function observarAvatar() {
+    if (avatarObserver || typeof MutationObserver !== 'function') return;
+    var host = document.querySelector('.header-right');
+    if (!host) return;
+    avatarObserver = new MutationObserver(function () { reubicarAvatar(); });
+    avatarObserver.observe(host, { childList: true });
   }
 
   function fijarAbajo() { cajaFija = true; colocarCaja(); }
@@ -261,6 +292,9 @@
     estado = opts.estado || document.getElementById('estado');
     caja = opts.caja || document.getElementById('caja');
     if (!caja || !form) return;
+    slotAvatar = opts.slotAvatar || document.getElementById('avatar-flotante');
+    observarAvatar();
+    reubicarAvatar();
 
     // Figuras: un solo stack, compartido con el resto de la página.
     if (window.STT_FIGURAS) {

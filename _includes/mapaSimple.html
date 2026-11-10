@@ -45,6 +45,12 @@
   @media (prefers-reduced-motion: reduce) {
     #header, .leaflet-top { transition: none; }
   }
+  /* Refugio de la foto de perfil cuando el header sube: mapaCaja.js muda
+     el botón-avatar acá para que el menú lateral siga a un click sin
+     encabezado, y lo devuelve a la barra cuando el header reaparece.
+     z-index sobre el backdrop (1240) y el panel (1245): siempre clicable. */
+  #avatar-flotante { position: fixed; top: 10px; right: 12px; z-index: 1250; }
+  #avatar-flotante .stt-user-avatar { box-shadow: 0 2px 10px rgba(7, 79, 102, .45); }
 
   /* Posiciones de la caja (fixed = relativa a la pantalla visible):
      inicio: centro vertical | .abajo: pegada a la base (tras buscar o dibujar). */
@@ -260,6 +266,10 @@
 
 <div id="mapid"></div>
 
+<!-- Refugio del avatar mientras el header está escondido (ver CSS arriba):
+     arranca vacío y oculto; mapaCaja.js lo llena/vacía con el zoom. -->
+<div id="avatar-flotante" hidden></div>
+
 <div id="caja">
   <form id="form-buscar" autocomplete="off">
     <input type="text" id="texto" name="texto" placeholder="escribe lo que estás buscando" aria-label="Qué inmueble estás buscando">
@@ -292,7 +302,7 @@
 <script src="/assets/js/inmueblesPdf.js?v=7"></script>
 <script src="/assets/js/acm.js?v=5"></script>
 <script src="/assets/js/mapaAgente.js?v=5"></script>
-<script src="/assets/js/mapaCaja.js?v=3"></script>
+<script src="/assets/js/mapaCaja.js?v=4"></script>
 <script src="/assets/js/mapa.js?v=50"></script>
 <!-- rutasMicros.js: toolbox de rutas de micros (slot al final de #toolbox) -->
 <script src="/assets/js/rutasMicros.js?v=2"></script>
