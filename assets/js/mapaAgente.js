@@ -410,7 +410,10 @@ function actualizarToolbox() {
   });
 
   if (true) {
-    $("#toolbox .section:nth-child(2) .section-body").html(`
+    // #sel-section: la .section "Seleccionados & PDF" del toolbox (id fijo en
+    // mapaToolbox.html; antes se buscaba por posición :nth-child(2), que se
+    // movió al agregarse la cabecera .tb-head del panel).
+    $("#sel-section .section-body").html(`
       <div id="sel-box">
         <b>Seleccionados: ${seleccionados.length}</b>
         ${html}
@@ -536,11 +539,15 @@ function addBaseLayers() {
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap'
     }).addTo(map);
-    // Regla de mapa.js: el zoom del usuario esconde el toolbox (que no tape el mapa).
+    // Regla de mapa.js: el zoom del usuario esconde el toolbox solo en
+    // pantalla chica (donde el panel tapa el mapa). En desktop queda abierto
+    // para seguir trabajando con los pines; cierra con ⚙, ✕ o Esc.
     // Se registra por instancia (junto al flag), no en document.ready, porque cada
-    // renderMap puede crear un mapa nuevo. reactivarToolbox() no lo vuelve a mostrar
+    // renderMap puede crear un mapa nuevo. No lo vuelve a mostrar
     // hasta que el usuario lo abra con #toolbox-btn.
-    map.on('zoomstart', function () { $('#toolbox').hide(); });
+    map.on('zoomstart', function () {
+      if (window.STT_TOOLBOX && window.STT_TOOLBOX.esMovil()) window.STT_TOOLBOX.cerrar(false);
+    });
   }
 }
 
@@ -587,12 +594,17 @@ function initEmptyMap() {
   }
   addBaseLayers();
 
-  $('#toolbox').show();
+  // Auto-apertura del toolbox solo en desktop: en celular el panel nace
+  // cerrado (abierto taparía casi toda la pantalla al entrar al mapa vacío).
+  var autoAbrir = !(window.STT_TOOLBOX && window.STT_TOOLBOX.esMovil());
+  if (autoAbrir && window.STT_TOOLBOX) window.STT_TOOLBOX.abrir();
 
-  setTimeout(function () {
-    var fndInmHeader = document.querySelector('#stt-fndinm-slot .section-header');
-    if (fndInmHeader) fndInmHeader.click();
-  }, 300);
+  if (autoAbrir) {
+    setTimeout(function () {
+      var fndInmHeader = document.querySelector('#stt-fndinm-slot .section-header');
+      if (fndInmHeader) fndInmHeader.click();
+    }, 300);
+  }
 }
 
 /**

@@ -107,24 +107,90 @@
     display: none !important;
   }
 
-  /* ---------- Toolbox del modo agente (⚙): baja del header fijo de 64px.
-     El botón nace display:none y mapa.js lo muestra solo con usuario.hasTime. */
+  /* ---------- Toolbox del modo agente (⚙): drawer derecho que baja del
+     header fijo de 64px. El botón nace display:none (inline) y mapa.js lo
+     muestra solo con usuario.hasTime quitando el inline → cae en el flex
+     de esta regla. */
   #toolbox-btn {
-    position: fixed; top: 74px; right: 10px;
-    background: white; border: 1px solid #ccc;
-    border-radius: 50%; width: 40px; height: 40px;
-    text-align: center; line-height: 38px;
-    cursor: pointer; z-index: 1201; font-size: 18px;
+    position: fixed; top: 74px; right: 10px; z-index: 1250;
+    width: 44px; height: 44px; padding: 0;
+    background: #fff; border: 1px solid #d5dde2; border-radius: 50%;
+    color: #074f66; font-size: 20px; line-height: 1; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 8px rgba(7, 79, 102, .18);
+    transition: background .2s ease, transform .2s ease, right .25s ease;
   }
+  #toolbox-btn:hover { background: #f2f9fc; transform: translateY(-1px); }
+  #toolbox-btn:focus-visible { outline: 2px solid #17baef; outline-offset: 2px; }
+  /* Abierto: el ⚙ acompaña al drawer y se corre a su borde izquierdo, para no
+     tapar el ✕ del header del panel (coinciden en la esquina si no se mueve). */
+  #toolbox-btn[aria-expanded="true"] {
+    background: #17baef; color: #fff; border-color: #17baef;
+    right: calc(360px + 10px);
+  }
+  /* Backdrop: solo pantallas chicas. Le da affordance al "tap fuera cierra"
+     (antes era acertarle a la franja de mapa que asomaba). */
+  #toolbox-backdrop {
+    position: fixed; inset: 0; z-index: 1240;
+    background: rgba(0, 0, 0, .35);
+    opacity: 0; visibility: hidden; display: none;
+    transition: opacity .25s ease, visibility .25s;
+  }
+  #toolbox-backdrop.open { opacity: 1; visibility: visible; }
+  @media (max-width: 767px) { #toolbox-backdrop { display: block; } }
+
+  /* El panel nunca usa display:none: vive renderizado y entra/sale con
+     transform → ancho FIJO (ya no shrink-to-fit: no salta con el contenido,
+     con el modo "solo" de menuIcons ni con las secciones que se montan
+     tarde). z-index por debajo del ⚙ para que el botón siga clicable con
+     el panel abierto. */
   #toolbox {
-    position: fixed; top: 0; right: 0;
-    height: 100vh; max-height: 100vh;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    background: white; border: 1px solid #ccc; border-top: 0; border-right: 0;
-    padding: 10px 10px 10px 10px; display: none; z-index: 2147483002;
-    min-width: 220px; max-width: min(420px, 94vw);
+    position: fixed; top: 64px; right: 0;
+    width: 360px; max-width: 100vw;
+    height: calc(100vh - 64px); max-height: calc(100vh - 64px);
+    overflow-y: auto; overscroll-behavior: contain;
+    background: #fff; border-left: 1px solid #e3e8ec;
+    box-shadow: -8px 0 30px rgba(7, 79, 102, .12);
+    z-index: 1245;
+    transform: translateX(105%); visibility: hidden;
+    transition: transform .25s ease, visibility .25s;
   }
+  #toolbox.open { transform: translateX(0); visibility: visible; }
+  /* En celular el panel deja una franja de mapa visible y clicable. */
+  @media (max-width: 767px) { #toolbox { width: min(320px, 86vw); } }
+
+  /* Cabecera propia del panel, sticky: el ✕ queda a mano con scroll. */
+  #toolbox .tb-head {
+    position: sticky; top: 0; z-index: 2;
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 8px 10px 16px; background: #fff;
+    border-bottom: 1px solid #e9eef1;
+  }
+  #toolbox .tb-head h2 {
+    margin: 0; font-size: .95rem; font-weight: 700; color: #074f66;
+  }
+  #toolbox .tb-close {
+    margin-left: auto; width: 40px; height: 40px; padding: 0;
+    border: 0; border-radius: 8px; background: none; cursor: pointer;
+    font-size: 20px; line-height: 1; color: #5a6b74;
+    display: flex; align-items: center; justify-content: center;
+  }
+  #toolbox .tb-close:hover { background: #f0f4f6; color: #074f66; }
+  #toolbox .tb-close:focus-visible { outline: 2px solid #17baef; }
+
+  /* En celular el ⚙ no se mueve (a la izquierda pisaría los controles de zoom
+     de Leaflet): queda sobre la esquina del panel como handle flotante, y el
+     header reserva espacio para que el ✕ no quede debajo. Este bloque va
+     DESPUÉS de las reglas base: misma especificidad → gana el orden. */
+  @media (max-width: 767px) {
+    #toolbox-btn[aria-expanded="true"] { right: 10px; }
+    #toolbox .tb-head { padding-right: 56px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    #toolbox, #toolbox-btn, #toolbox-backdrop { transition: none; }
+  }
+
   #toolbox .search-container { display: flex; align-items: center; margin-bottom: 10px; }
   #toolbox .search-container span { margin-right: 5px; font-size: 16px; }
   #toolbox .search-container input { flex: 1; padding: 3px 5px; }
@@ -144,13 +210,28 @@
   /* Escopetado a #toolbox: el tema del sitio (theme-*.css, main.css) tiene
      reglas globales .section { padding: 80px 0 } y .section-header
      { text-align:center; margin-bottom:4rem } que rompen el panel. */
-  #toolbox .section { border-top: 1px solid #ddd; padding: 0; margin: 0; }
+  #toolbox .section { border-bottom: 1px solid #eef2f4; padding: 0; margin: 0; }
   #toolbox .section-header {
-    cursor: pointer; font-weight: bold; padding: 5px; background: #f0f0f0;
+    cursor: pointer; font-weight: 600; font-size: .92rem; color: #2b3a42;
+    padding: 13px 16px; background: #fff;
     text-align: left; margin-bottom: 0;
+    display: flex; align-items: center; gap: 8px;
+    min-height: 44px; box-sizing: border-box;
+    user-select: none; transition: background .15s ease;
   }
-  #toolbox .section-body { display: none; padding: 5px; }
+  #toolbox .section-header:hover { background: #f6fafc; }
+  #toolbox .section-body { display: none; padding: 4px 16px 16px; }
   #toolbox .section.active .section-body { display: block; }
+
+  /* Chevron de colapsar (lo crea mapa.js en cada .section-header): siempre
+     visible a la derecha, gira cuando la sección está abierta. */
+  #toolbox .section-collapse {
+    margin-left: auto; border: 0; background: transparent;
+    font-size: 14px; line-height: 1; cursor: pointer;
+    color: #9db0b9; flex-shrink: 0; padding: 4px 6px;
+    transition: transform .2s ease;
+  }
+  #toolbox .section.active .section-collapse { transform: rotate(180deg); }
 
   /* --- menuIcons.js: icon-row flex mode --- */
   #toolbox.stt-icons-mode { display: flex; flex-wrap: wrap; align-items: flex-start; }
@@ -193,9 +274,9 @@
 <script src="/assets/js/mapaPublico.js?v=1"></script>
 <script src="/assets/js/inmueblesPdf.js?v=7"></script>
 <script src="/assets/js/acm.js?v=4"></script>
-<script src="/assets/js/mapaAgente.js?v=1"></script>
+<script src="/assets/js/mapaAgente.js?v=2"></script>
 <script src="/assets/js/mapaCaja.js?v=1"></script>
-<script src="/assets/js/mapa.js?v=42"></script>
+<script src="/assets/js/mapa.js?v=43"></script>
 <!-- rutasMicros.js: toolbox de rutas de micros (slot al final de #toolbox) -->
 <script src="/assets/js/rutasMicros.js?v=2"></script>
 <!-- menuIcons.js: colapsa headers inactivos a solo ícono cuando una sección está abierta -->

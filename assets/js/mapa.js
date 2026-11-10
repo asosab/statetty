@@ -30,7 +30,7 @@ function _degradarAPublico() {
   window.STT_MAPA.modo = 'publico';
   var btn = document.getElementById('toolbox-btn');
   if (btn) btn.style.display = 'none';
-  $('#toolbox').hide();
+  _toolboxCerrar(false);
 }
 
 /** ------------------------------------------------------------------------------------------- normalizarM2TDesdeURI */
@@ -105,17 +105,72 @@ function _initMapaBase() {
   }
 }
 
-// ---------- Toolbox: toggle, cierre por click fuera, acordeón ----------
+// ---------- Toolbox: drawer (abrir/cerrar), API global, acordeón ----------
+
+// Único punto de verdad del estado del panel: la visibilidad la maneja la
+// clase .open (transform en CSS), no display. Todo el que antes hacía
+// $('#toolbox').show()/.hide()/.toggle() pasa por acá para mantener
+// sincronizados el backdrop y el aria-expanded del ⚙.
+function _toolboxEsMovil() { return window.innerWidth < 768; }
+
+function _toolboxAbrir() {
+  var box = document.getElementById('toolbox');
+  if (!box) return;
+  box.classList.add('open');
+  var bd = document.getElementById('toolbox-backdrop');
+  if (bd) bd.classList.add('open');
+  var btn = document.getElementById('toolbox-btn');
+  if (btn) btn.setAttribute('aria-expanded', 'true');
+}
+
+function _toolboxCerrar(devolverFoco) {
+  var box = document.getElementById('toolbox');
+  if (!box || !box.classList.contains('open')) return;
+  box.classList.remove('open');
+  var bd = document.getElementById('toolbox-backdrop');
+  if (bd) bd.classList.remove('open');
+  var btn = document.getElementById('toolbox-btn');
+  if (btn) btn.setAttribute('aria-expanded', 'false');
+  // Si el foco quedó dentro del panel, vuelve al ⚙ (cierre con Esc/✕).
+  if (devolverFoco !== false && btn && box.contains(document.activeElement)) btn.focus();
+}
+
+function _toolboxAbierta() {
+  var box = document.getElementById('toolbox');
+  return !!(box && box.classList.contains('open'));
+}
+
+window.STT_TOOLBOX = {
+  abrir: _toolboxAbrir,
+  cerrar: _toolboxCerrar,
+  toggle: function () { _toolboxAbierta() ? _toolboxCerrar() : _toolboxAbrir(); },
+  abierta: _toolboxAbierta,
+  esMovil: _toolboxEsMovil
+};
 
 function _initToolboxHandlers() {
   initPopupTooltips(document.getElementById('toolbox'));
 
   $('#toolbox-btn').on('click', function () {
-    $('#toolbox').toggle();
+    window.STT_TOOLBOX.toggle();
   });
+  // El ✕ del header propio del panel (delegado: el markup vive en el include).
+  $(document).on('click', '#toolbox .tb-close', function () {
+    _toolboxCerrar();
+  });
+  // Backdrop móvil: mismo cierre que el click-fuera, pero con affordance.
+  $(document).on('click', '#toolbox-backdrop', function () {
+    _toolboxCerrar(false);
+  });
+  $(document).on('keydown', function (e) {
+    if (e.key === 'Escape') _toolboxCerrar();
+  });
+  // Click-fuera solo en pantallas chicas: en desktop el panel queda abierto
+  // para trabajar con los pines del mapa (selección para ACM/PDF).
   $(document).on('click', function (e) {
-    if ($('#toolbox').is(':visible') && !$(e.target).closest('#toolbox, #toolbox-btn').length) {
-      $('#toolbox').hide();
+    if (!_toolboxEsMovil() || !_toolboxAbierta()) return;
+    if (!$(e.target).closest('#toolbox, #toolbox-btn').length) {
+      _toolboxCerrar(false);
     }
   });
 
@@ -124,21 +179,12 @@ function _initToolboxHandlers() {
   function actualizarBotonesCollapse() {
     $('.section-header').each(function () {
       var $header = $(this);
-      var $section = $header.parent();
       var $button = $header.find('.section-collapse');
 
       if (!$button.length) {
-        $header.css({ display: 'flex', alignItems: 'center' });
-        $button = $('<button type="button" class="section-collapse" aria-label="Minimizar sección" title="Minimizar">×</button>')
-          .css({
-            display: 'none', marginLeft: 'auto', border: '0', background: 'transparent',
-            fontSize: '18px', lineHeight: '1', cursor: 'pointer', padding: '2px 5px',
-            color: '#777', flexShrink: '0'
-          });
+        $button = $('<button type="button" class="section-collapse" aria-label="Colapsar sección" title="Colapsar">▾</button>');
         $header.append($button);
       }
-
-      $button.css('display', $section.hasClass('active') ? 'block' : 'none');
     });
   }
 

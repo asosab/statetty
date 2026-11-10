@@ -1,8 +1,14 @@
 <!-- Toolbox del modo agente (⚙): el DOM existe siempre en la página del mapa
      unificado pero el botón queda oculto hasta que la sesión resuelve con
      usuario.hasTime (mapa.js → activarModoAgente). -->
-<div id="toolbox-btn" style="display:none;">⚙</div>
-<div id="toolbox">
+<button type="button" id="toolbox-btn" style="display:none;" aria-expanded="false"
+        aria-controls="toolbox" aria-label="Herramientas" title="Herramientas">⚙</button>
+<div id="toolbox-backdrop" aria-hidden="true"></div>
+<div id="toolbox" role="dialog" aria-label="Herramientas del mapa">
+  <div class="tb-head">
+    <h2>Herramientas</h2>
+    <button type="button" class="tb-close" aria-label="Cerrar panel" title="Cerrar">×</button>
+  </div>
   <!-- Bloque 1: Buscar + Estadísticas -->
   <div class="section">
     <div class="section-header" data-tippy-content="Filtra los resultados visibles en el mapa por texto y mira estadísticas de precio de la búsqueda actual.">📊 Estadísticas & 🔍 Buscar</div>
@@ -24,8 +30,8 @@
       </div>
   </div>
 
-  <!-- Bloque 2: Seleccionados + PDF -->
-  <div class="section">
+  <!-- Bloque 2: Seleccionados + PDF (id: mapaAgente inyecta #sel-box aquí) -->
+  <div class="section" id="sel-section">
     <div class="section-header">✅ Seleccionados & 📄 PDF</div>
     <div class="section-body">
       <div id="sel-box"><!-- generado dinámicamente por mapaAgente.js --></div>
