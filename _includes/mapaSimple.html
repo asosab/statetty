@@ -223,25 +223,48 @@ var STT_GEO = (function () {
     return null;
   }
 
+  // Cajas de los mercados para saber a qué país pertenece una posición guardada.
+  // Sin esto, quien alguna vez dejó el mapa en SCZ quedaba atascado ahí aunque
+  // estuviera en Perú: la memoria mandaba sobre el geo sin verificar el país.
+  var BBOX_MERCADO = {
+    bo: { latMin: -23.1, latMax: -9.5, lngMin: -69.7, lngMax: -57.4 },
+    pe: { latMin: -18.6, latMax: 0.1, lngMin: -81.4, lngMax: -68.6 }
+  };
+  function paisDeCentro(c) {
+    if (!Array.isArray(c)) return null;
+    for (var k in BBOX_MERCADO) {
+      var b = BBOX_MERCADO[k];
+      if (c[0] >= b.latMin && c[0] <= b.latMax && c[1] >= b.lngMin && c[1] <= b.lngMax) return k;
+    }
+    return null;
+  }
+  // La posición guardada solo manda dentro del mismo país del visitante:
+  // países distintos → el geo corrige (SCZ guardado + visitante en Perú = LIM).
+  function debeCorregir(memoria, paisVisitante) {
+    if (!memoria || !paisVisitante) return false;
+    return paisDeCentro(memoria.centro) !== String(paisVisitante).toLowerCase();
+  }
+
   // Respuesta de GET /api/statetty/geo → destino del mapa (o null → probar trace).
   function desdeGeo(g) {
     if (!g || typeof g !== 'object') return null;
     var lat = parseFloat(g.lat), lng = parseFloat(g.lng);
-    if (isFinite(lat) && isFinite(lng)) return { centro: [lat, lng], zoom: ZOOM_DEF, fuente: 'geo' };
+    if (isFinite(lat) && isFinite(lng)) return { centro: [lat, lng], zoom: ZOOM_DEF, fuente: 'geo', pais: slug(g.pais) || null };
     var p = slug(g.pais);
     if (!p) return null;
     var c = pais(p);
-    return c ? { centro: [c.lat, c.lng], zoom: c.z, fuente: 'geo' }
-             : { cobertura: true, fuente: 'geo' };
+    return c ? { centro: [c.lat, c.lng], zoom: c.z, fuente: 'geo', pais: p }
+             : { cobertura: true, fuente: 'geo', pais: p };
   }
 
   // Texto plano de /cdn-cgi/trace (loc=XX) → mismo destino que desdeGeo.
   function desdeTrace(texto) {
     var m = /loc=([A-Za-z]{2})/.exec(String(texto || ''));
     if (!m) return null;
-    var c = pais(slug(m[1]));
-    return c ? { centro: [c.lat, c.lng], zoom: c.z, fuente: 'geo' }
-             : { cobertura: true, fuente: 'geo' };
+    var p = slug(m[1]);
+    var c = pais(p);
+    return c ? { centro: [c.lat, c.lng], zoom: c.z, fuente: 'geo', pais: p }
+             : { cobertura: true, fuente: 'geo', pais: p };
   }
 
   // Resolución síncrona al cargar: URL > localStorage > default.
@@ -258,7 +281,8 @@ var STT_GEO = (function () {
 
   return {
     porQuery: porQuery, guardado: guardado, desdeGeo: desdeGeo,
-    desdeTrace: desdeTrace, inicial: inicial, cobertura: cobertura
+    desdeTrace: desdeTrace, inicial: inicial, cobertura: cobertura,
+    paisDeCentro: paisDeCentro, debeCorregir: debeCorregir
   };
 })();
 </script>
@@ -337,10 +361,12 @@ var STT_GEO = (function () {
   map.on('moveend', guardarPosicion);
   map.on('zoomend', guardarPosicion);
 
-  // Centro por IP del visitante — solo si ni la URL ni localStorage decidieron.
+  // Centro por IP del visitante — corre salvo que la URL haya decidido. Sin
+  // decisión previa aplica directo; con posición guardada solo corrige cuando
+  // el país no coincide (quien quedó guardado en SCZ estando en Perú sale de ahí).
   // API /geo primero (ciudad + lat/lng vía headers CF); si sale vacío, país por
   // /cdn-cgi/trace del mismo origen. País sin cobertura → encuadre SCZ+LIM.
-  if (inicial.fuente === 'default') {
+  if (inicial.fuente !== 'url') {
     var saltar = function (destino) {
       saltoAuto = true;
       if (destino.cobertura) {
@@ -350,18 +376,22 @@ var STT_GEO = (function () {
       }
       saltoAuto = false;
     };
+    var alLlegarGeo = function (d) {
+      if (!d) return;
+      if (inicial.fuente === 'local' && !STT_GEO.debeCorregir(inicial, d.pais)) return;
+      saltar(d);
+    };
     var porTrace = function () {
       return fetch('/cdn-cgi/trace').then(function (r) { return r.text(); })
         .then(function (t) {
-          var d = STT_GEO.desdeTrace(t);
-          if (d) saltar(d);
+          alLlegarGeo(STT_GEO.desdeTrace(t));
         }).catch(function () {});
     };
     var baseGeo = (window.STATETTY_CONFIG && STATETTY_CONFIG.WS_API_BASE) || '';
     fetch(baseGeo + 'statetty/geo').then(function (r) { return r.json(); })
       .then(function (g) {
         var d = STT_GEO.desdeGeo(g);
-        if (d) saltar(d); else return porTrace();
+        if (d) alLlegarGeo(d); else return porTrace();
       }).catch(porTrace);
   }
 
