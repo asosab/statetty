@@ -484,8 +484,13 @@ $(document).ready(function () {
   // aviso suave (experiencia pública). Se corre apenas STT.ready resuelva y
   // otra vez si llega un auth-ready tardío (magic link / ticket ?k=).
   var evaluar = function () {
-    if (_usuarioConTiempo()) { activarModoAgente(); return 'agente'; }
     var u = window.STT && window.STT.getUsuario ? window.STT.getUsuario() : null;
+    // Con sesión la #caja baja a la base: el centro de la pantalla es la
+    // bienvenida del anónimo; quien se autentica viene a trabajar el mapa.
+    if (u && u._id && window.STT_MAPA_CAJA && window.STT_MAPA_CAJA.fijarAbajo) {
+      window.STT_MAPA_CAJA.fijarAbajo();
+    }
+    if (_usuarioConTiempo()) { activarModoAgente(); return 'agente'; }
     if (u && u._id && !u.hasTime) mostrarAvisoSuave();
     return 'publico';
   };
