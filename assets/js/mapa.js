@@ -965,12 +965,28 @@ function limpiarRenderPrevio() {
   seleccionados = [];
 }
 
+// Centros por código de ciudad (espejo de config.ciudades del backend). Sirven
+// de vista inicial mientras llegan resultados o el mapCenter del localStorage.
+var CENTRO_POR_CIUDAD = {
+  SCZ: [-17.7833, -63.1821],
+  LIM: [-12.0953, -77.0540]
+};
+
+function centroInicialMapa() {
+  try {
+    var mc = JSON.parse(localStorage.getItem("mapCenter"));
+    if (Array.isArray(mc) && isFinite(mc[0]) && isFinite(mc[1])) return mc;
+  } catch (_) {}
+  var u = (window.STT && window.STT.getUsuario) ? window.STT.getUsuario() : null;
+  return CENTRO_POR_CIUDAD[(u && u.ciudad) || 'SCZ'] || CENTRO_POR_CIUDAD.SCZ;
+}
+
 function initEmptyMap() {
   // Re-carga dinámica (window.recargarMapa): si había un render anterior, sus pines
   // no deben quedar detrás del mapa vacío. En la carga inicial `map` es null y no hace nada.
   if (map) limpiarRenderPrevio();
   if (!map) {
-    map = window.map || L.map('mapid').setView([-17.7833, -63.1821], 12);
+    map = window.map || L.map('mapid').setView(centroInicialMapa(), 12);
     window.map = map;
   }
   addBaseLayers();

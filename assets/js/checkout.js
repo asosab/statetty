@@ -140,7 +140,7 @@
             return '<div class="stt-co-plan" data-cod="' + esc(p.cod) + '" data-dias="' + esc(p.dias) +
               '" data-monto="' + esc(p.monto) + '" data-qr="' + esc(p.qr || '') + '">' +
               '<div class="p-dias">' + esc(p.dias) + ' días</div>' +
-              '<div class="p-monto">Bs. ' + esc(p.monto) + '</div>' +
+              '<div class="p-monto">' + esc(p.simbolo || 'Bs.') + ' ' + esc(p.monto) + '</div>' +
               '<div class="p-cuentas">' + esc(p.cuentas) + ' cuenta(s)</div>' +
               '</div>';
           }).join('')) +
@@ -178,8 +178,8 @@
         'Si lo verificas hoy, tu tiempo vencería aproximadamente el <span class="stt-co-fecha">' +
         esc(fechatxt(nowMasDias(p.dias))) + '</span>.';
     }
-    informe.texto += ' <div class="stt-co-note">Valor del paquete: <b>Bs. ' + esc(p.monto) +
-      '</b> ≈ <b>Bs. ' + posDia(p) + ' por día</b>.</div>';
+    informe.texto += ' <div class="stt-co-note">Valor del paquete: <b>' + esc(p.simbolo || 'Bs.') + ' ' + esc(p.monto) +
+      '</b> ≈ <b>' + esc(p.simbolo || 'Bs.') + ' ' + posDia(p) + ' por día</b>.</div>';
     return informe;
   }
 
