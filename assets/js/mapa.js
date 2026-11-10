@@ -2,10 +2,11 @@
 // mapa.js — orquestador del mapa unificado (`/`).
 // Absorbe lo que antes vivía en dos lugares: la home pública de mapaSimple
 // (geo-IP, caja, figuras, render simple) y el mapa de asesor de /maps/find
-// (toolbox ⚙, render enriquecido, última búsqueda).
+// (panel de herramientas, render enriquecido, última búsqueda).
 //
 // Arranque: el mapa nace en modo PÚBLICO (sin muros). Cuando la sesión resuelve
-// con usuario.hasTime → activarModoAgente(): aparece el ⚙, se auto-carga la
+// con usuario.hasTime → activarModoAgente(): el avatar del menú de usuario
+// queda como trigger del panel, se auto-carga la
 // última búsqueda ({ultima:true} → renderMap) y las búsquedas siguientes
 // pintan enriquecido. Sin sesión o sin tiempo, la página queda pública.
 //
@@ -25,11 +26,10 @@ var __activo = false;   // el modo agente se activa una sola vez
 function _esAgente() { return window.STT_MAPA.modo === 'agente'; }
 
 // Degradación a público cuando el servidor dice sin_tiempo en medio del uso:
-// oculta el ⚙ y vuelve a render público (la sesión expiró con la página abierta).
+// cierra el panel y vuelve a render público (la sesión expiró con la página
+// abierta). El avatar queda: sigue dando acceso a los links de usuario.
 function _degradarAPublico() {
   window.STT_MAPA.modo = 'publico';
-  var btn = document.getElementById('toolbox-btn');
-  if (btn) btn.style.display = 'none';
   _toolboxCerrar(false);
 }
 
@@ -113,14 +113,20 @@ function _initMapaBase() {
 // sincronizados el backdrop y el aria-expanded del ⚙.
 function _toolboxEsMovil() { return window.innerWidth < 768; }
 
+// El trigger del panel es el avatar del menú de usuario (lo monta menuUser.js
+// en el header): puede no existir si el usuario no tiene tiempo.
+function _toolboxTrigger() {
+  return document.querySelector('.stt-user-trigger');
+}
+
 function _toolboxAbrir() {
   var box = document.getElementById('toolbox');
   if (!box) return;
   box.classList.add('open');
   var bd = document.getElementById('toolbox-backdrop');
   if (bd) bd.classList.add('open');
-  var btn = document.getElementById('toolbox-btn');
-  if (btn) btn.setAttribute('aria-expanded', 'true');
+  var trigger = _toolboxTrigger();
+  if (trigger) trigger.setAttribute('aria-expanded', 'true');
 }
 
 function _toolboxCerrar(devolverFoco) {
@@ -129,10 +135,10 @@ function _toolboxCerrar(devolverFoco) {
   box.classList.remove('open');
   var bd = document.getElementById('toolbox-backdrop');
   if (bd) bd.classList.remove('open');
-  var btn = document.getElementById('toolbox-btn');
-  if (btn) btn.setAttribute('aria-expanded', 'false');
-  // Si el foco quedó dentro del panel, vuelve al ⚙ (cierre con Esc/✕).
-  if (devolverFoco !== false && btn && box.contains(document.activeElement)) btn.focus();
+  var trigger = _toolboxTrigger();
+  if (trigger) trigger.setAttribute('aria-expanded', 'false');
+  // Si el foco quedó dentro del panel, vuelve al avatar (cierre con Esc/✕).
+  if (devolverFoco !== false && trigger && box.contains(document.activeElement)) trigger.focus();
 }
 
 function _toolboxAbierta() {
@@ -151,9 +157,6 @@ window.STT_TOOLBOX = {
 function _initToolboxHandlers() {
   initPopupTooltips(document.getElementById('toolbox'));
 
-  $('#toolbox-btn').on('click', function () {
-    window.STT_TOOLBOX.toggle();
-  });
   // El ✕ del header propio del panel (delegado: el markup vive en el include).
   $(document).on('click', '#toolbox .tb-close', function () {
     _toolboxCerrar();
@@ -166,10 +169,11 @@ function _initToolboxHandlers() {
     if (e.key === 'Escape') _toolboxCerrar();
   });
   // Click-fuera solo en pantallas chicas: en desktop el panel queda abierto
-  // para trabajar con los pines del mapa (selección para ACM/PDF).
+  // para trabajar con los pines del mapa (selección para ACM/PDF). El
+  // header-right (avatar + ☰) no cuenta como "fuera": el avatar es el trigger.
   $(document).on('click', function (e) {
     if (!_toolboxEsMovil() || !_toolboxAbierta()) return;
-    if (!$(e.target).closest('#toolbox, #toolbox-btn').length) {
+    if (!$(e.target).closest('#toolbox, .header-right').length) {
       _toolboxCerrar(false);
     }
   });
@@ -432,8 +436,6 @@ function activarModoAgente() {
   if (__activo) return;
   __activo = true;
   window.STT_MAPA.modo = 'agente';
-  var btn = document.getElementById('toolbox-btn');
-  if (btn) btn.style.display = '';
   if (typeof initACMTools === 'function') initACMTools();
   if (typeof initFiltroTextoToolbox === 'function') initFiltroTextoToolbox();
   if (window.map && typeof initACMMapClickMarker === 'function') {

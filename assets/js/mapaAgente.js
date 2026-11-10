@@ -544,7 +544,7 @@ function addBaseLayers() {
     // para seguir trabajando con los pines; cierra con ⚙, ✕ o Esc.
     // Se registra por instancia (junto al flag), no en document.ready, porque cada
     // renderMap puede crear un mapa nuevo. No lo vuelve a mostrar
-    // hasta que el usuario lo abra con #toolbox-btn.
+    // hasta que el usuario lo abra con el avatar del menú de usuario.
     map.on('zoomstart', function () {
       if (window.STT_TOOLBOX && window.STT_TOOLBOX.esMovil()) window.STT_TOOLBOX.cerrar(false);
     });
@@ -594,10 +594,15 @@ function initEmptyMap() {
   }
   addBaseLayers();
 
-  // Auto-apertura del toolbox solo en desktop: en celular el panel nace
-  // cerrado (abierto taparía casi toda la pantalla al entrar al mapa vacío).
+  // Auto-apertura del panel solo en desktop: en celular nace cerrado (abierto
+  // taparía casi toda la pantalla al entrar al mapa vacío). Al abrirse, la
+  // caja de búsqueda baja a la base para no quedar a media pantalla junto al
+  // panel (decisión del dueño, plan home-menu-usuario-fusion-engranaje).
   var autoAbrir = !(window.STT_TOOLBOX && window.STT_TOOLBOX.esMovil());
   if (autoAbrir && window.STT_TOOLBOX) window.STT_TOOLBOX.abrir();
+  if (autoAbrir && window.STT_MAPA_CAJA && window.STT_MAPA_CAJA.fijarAbajo) {
+    window.STT_MAPA_CAJA.fijarAbajo();
+  }
 
   if (autoAbrir) {
     setTimeout(function () {

@@ -14,14 +14,14 @@
  *        circular (usuario.userIcon) que al hacer click despliega un menú
  *        propio (dropdown flotante con estilos inyectados por este script).
  *
- *      - MODO TOOLBOX (página del mapa): NO agrega un ícono/dropdown nuevo
- *        ni una sección propia con título ("Mi cuenta" / "¡Hola ...!").
- *        En vez de eso, simplemente añade los ítems del menú de usuario
- *        (MENU_ITEMS) como links sueltos al final del panel del engranaje
- *        (#toolbox, el mismo que abre #toolbox-btn), sumándose a lo que
- *        mapa.js ya puso ahí (Agencias, Seleccionados, etc.), sin crear
- *        un acordeón/sección nueva ni un título propio. El botón engranaje
- *        NO se reemplaza por el ícono del usuario: se mantiene tal cual.
+ *      - MODO TOOLBOX (página del mapa): el avatar (saludo + días + imagen)
+ *        se monta en el header igual que en modo CTA, pero NO crea dropdown
+ *        propio: su click abre/cierra el panel #toolbox (STT_TOOLBOX.toggle),
+ *        que es donde vive el menú completo. Dentro del panel van las
+ *        herramientas del mapa (las que antes abría el engranaje, ya eliminado)
+ *        y, al final, los ítems del menú de usuario (MENU_ITEMS) como links
+ *        sueltos — sin acordeón ni título propio. Además inyecta una copia
+ *        del saludo (¡Hola ...! + días) en la cabecera del panel (#tb-greeting).
  *
  *   3. Si no hay usuario (no logueado / error), no toca nada.
  *
@@ -119,9 +119,10 @@
   // Modo de integración: 'cta' | 'toolbox' | 'auto'
   var MODE = window.STT_MENU_USER_MODE || 'auto';
 
-  // IDs del panel del engranaje (mapa.js)
+  // IDs del panel de herramientas (mapa.js). El trigger ya no es un ⚙ propio:
+  // es el avatar que este mismo script monta en el header.
   var TOOLBOX_BOX_ID = 'toolbox';
-  var TOOLBOX_BTN_ID = 'toolbox-btn';
+  var TOOLBOX_GREETING_ID = 'tb-greeting';
   // Ya no es una ".section" con título propio: es solo el contenedor de
   // links que se suma al final del panel, sin acordeón ni encabezado.
   var TOOLBOX_LINKS_ID = 'stt-user-toolbox-links';
@@ -492,40 +493,38 @@
   // MODO CTA: ícono circular + dropdown flotante
   // ------------------------------------------------------------------
 
-  function buildUserMenu(usuario, includeFndInmSlot) {
-    var wrap = document.createElement('div');
-    wrap.className = 'stt-user-menu';
-
+  // Saludo "¡Hola X!" + "N días de uso": se usa dos veces en modo toolbox
+  // (header y cabecera del panel), así que vive en helper propio.
+  // Los días vienen de auth.js (tg.dias de statetty/auth/me, mapeado en
+  // buildUsuario()). Sin nombre → null; sin dato de días → solo el saludo.
+  function buildHello(usuario) {
     var firstName = getFirstName(usuario);
-    if (firstName) {
-      var hello = document.createElement('div');
-      hello.className = 'stt-user-hello';
+    if (!firstName) return null;
+    var hello = document.createElement('div');
+    hello.className = 'stt-user-hello';
 
-      var greeting = document.createElement('span');
-      greeting.className = 'stt-user-greeting';
-      greeting.textContent = '¡Hola ' + firstName + '!';
-      hello.appendChild(greeting);
+    var greeting = document.createElement('span');
+    greeting.className = 'stt-user-greeting';
+    greeting.textContent = '¡Hola ' + firstName + '!';
+    hello.appendChild(greeting);
 
-      // Días de uso restantes: vienen de auth.js (tg.dias de statetty/auth/me,
-      // mapeado en buildUsuario()). Se montan aquí, ya con el usuario cargado
-      // (handleKeyReady llega tras el me). Sin dato → no se muestra.
-      var dias = Number(usuario && usuario.dias);
-      if (isFinite(dias)) {
-        var diasEl = document.createElement('span');
-        diasEl.className = 'stt-user-dias ' + diasClass(dias);
-        diasEl.textContent = dias + (dias === 1 ? ' día de uso' : ' días de uso');
-        hello.appendChild(diasEl);
-      }
-
-      wrap.appendChild(hello);
+    var dias = Number(usuario && usuario.dias);
+    if (isFinite(dias)) {
+      var diasEl = document.createElement('span');
+      diasEl.className = 'stt-user-dias ' + diasClass(dias);
+      diasEl.textContent = dias + (dias === 1 ? ' día de uso' : ' días de uso');
+      hello.appendChild(diasEl);
     }
+    return hello;
+  }
 
+  function buildAvatarTrigger(usuario, ariaLabel) {
     var trigger = document.createElement('button');
     trigger.type = 'button';
     trigger.className = 'stt-user-trigger';
     trigger.setAttribute('aria-haspopup', 'true');
     trigger.setAttribute('aria-expanded', 'false');
-    trigger.setAttribute('aria-label', 'Menú de usuario');
+    trigger.setAttribute('aria-label', ariaLabel || 'Menú de usuario');
 
     var img = document.createElement('img');
     img.className = 'stt-user-avatar';
@@ -537,6 +536,17 @@
       this.src = DEFAULT_ICON;
     };
     trigger.appendChild(img);
+    return trigger;
+  }
+
+  function buildUserMenu(usuario, includeFndInmSlot) {
+    var wrap = document.createElement('div');
+    wrap.className = 'stt-user-menu';
+
+    var hello = buildHello(usuario);
+    if (hello) wrap.appendChild(hello);
+
+    var trigger = buildAvatarTrigger(usuario);
 
     var dropdown = document.createElement('div');
     dropdown.className = 'stt-user-dropdown';
@@ -653,6 +663,42 @@
     });
 
     return dropdowns;
+  }
+
+  // ------------------------------------------------------------------
+  // MODO TOOLBOX (home del mapa con hasTime): avatar en el header como
+  // trigger del panel #toolbox — NO crea dropdown propio. El menú
+  // completo vive dentro del panel: herramientas del mapa arriba y los
+  // links de usuario (addToolboxLinks) al final. El estado abierto/
+  // cerrado lo refleja mapa.js en el aria-expanded del trigger.
+  // ------------------------------------------------------------------
+
+  function buildPanelMenu(usuario) {
+    var wrap = document.createElement('div');
+    wrap.className = 'stt-user-menu';
+
+    var hello = buildHello(usuario);
+    if (hello) wrap.appendChild(hello);
+
+    var trigger = buildAvatarTrigger(usuario, 'Menú de usuario y herramientas');
+    trigger.setAttribute('aria-controls', TOOLBOX_BOX_ID);
+    trigger.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (window.STT_TOOLBOX && typeof window.STT_TOOLBOX.toggle === 'function') {
+        window.STT_TOOLBOX.toggle();
+      }
+    });
+    wrap.appendChild(trigger);
+    return wrap;
+  }
+
+  // Copia del saludo dentro de la cabecera del panel (#tb-greeting): el
+  // panel ya no dice "Herramientas", muestra ¡Hola X! + días.
+  function mountPanelGreeting(usuario) {
+    var host = document.getElementById(TOOLBOX_GREETING_ID);
+    if (!host || host.firstChild) return;
+    var hello = buildHello(usuario);
+    if (hello) host.appendChild(hello);
   }
 
   // ------------------------------------------------------------------
@@ -828,11 +874,22 @@
     var n = 0;
 
     if (mode === 'toolbox') {
+      injectStyles();        // estilos del avatar/saludo del header
+      injectToolboxStyles(); // estilos de los links dentro del panel
       // Reservar el contenedor de "Buscar Inmuebles" primero, para que
       // quede arriba de los links sueltos (addToolboxLinks se agrega
       // siempre después, ver reserveFndInmSlot()).
       reserveFndInmSlot();
       n = addToolboxLinks();
+      // El avatar del header es el trigger del panel: el menú completo vive
+      // adentro. Si la página no tiene slot (raro en la home) el panel sigue
+      // igual, solo queda sin el trigger nuevo.
+      var slot = document.querySelectorAll(CTA_SELECTOR)[0];
+      if (slot) {
+        slot.replaceWith(buildPanelMenu(detail.usuario));
+        mountPanelGreeting(detail.usuario);
+        n++;
+      }
     } else {
       injectStyles();
       // El slot de "Buscar Inmuebles" ya queda reservado adentro del
@@ -876,7 +933,9 @@
       btn.addEventListener('click', function () {
         if (window.STT && window.STT.startLogin) window.STT.startLogin();
       });
-      el.parentNode.appendChild(btn);
+      // Junto al slot (no al final del padre): en el header-right el
+      // hamburguesa va después del slot y el botón no debe quedar tras él.
+      el.parentNode.insertBefore(btn, el.nextSibling);
       mounted++;
     });
     if (mounted > 0) document.body.dataset[LOGIN_CTA_FLAG] = '1';

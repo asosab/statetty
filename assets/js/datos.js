@@ -114,8 +114,13 @@ function fetchBuscarMapaStream(token, body, cb) {
       else if (msg.error && cb.onError) cb.onError(msg.error);
     };
 
-    // Fallback: respuesta JSON normal (sin flag o sin soporte) -> mismos callbacks.
-    if (!soportado || !res.body || typeof res.body.getReader !== 'function') {
+    // Fallback: respuesta JSON normal (sin flag, sin soporte, o el server
+    // respondió JSON pese al flag — backend sin stream o esActivo=false) ->
+    // mismos callbacks. Sin el check de Content-Type un JSON 200 se leía como
+    // NDJSON: parsea como una sola "línea" sin meta/items/fin y se descartaba
+    // en silencio (búsqueda colgada en "Buscando...", mapa vacío, ACM sin datos).
+    var _ct = (res.headers.get('content-type') || '').toLowerCase();
+    if (!soportado || _ct.indexOf('ndjson') < 0 || !res.body || typeof res.body.getReader !== 'function') {
       var data = null;
       try { data = await res.json(); } catch (e) {}
       if (!data) { if (cb.onError) cb.onError('json'); return { ok: false, error: 'json' }; }

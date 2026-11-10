@@ -46,7 +46,23 @@
 }
 .header-logo:hover { color: var(--yellow); }
 .header-logo img { width: 28px; height: 28px; object-fit: contain; }
-.header-nav { display: flex; align-items: center; gap: 8px; }
+.header-nav { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+/* Columna derecha del header: avatar del menú de usuario + hamburguesa.
+   Vive fuera de .header-nav para no colapsar con ella en móvil: el menú de
+   usuario queda siempre a la vista. margin-left:auto lo pega al borde derecho
+   aun cuando la nav está colapsada (fuera del flujo) en pantallas chicas. */
+.header .header-right { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+/* El saludo/días del menú de usuario nacieron para fondo claro; en el header
+   azul necesitan tonos claros para leerse. */
+.header .stt-user-greeting { color: #fff; }
+.header .stt-user-dias.is-alto { color: #7be495; }
+.header .stt-user-dias.is-medio { color: #ffd54a; }
+.header .stt-user-dias.is-bajo { color: #ff8a80; }
+/* En pantallas muy chicas se oculta solo el saludo: el avatar (trigger del
+   menú) y el contador de días quedan siempre a la vista. */
+@media (max-width: 480px) {
+  .header .stt-user-greeting { display: none; }
+}
 .header-nav a {
   font-family: var(--font-head); font-weight: 600;
   font-size: .82rem; text-transform: uppercase; letter-spacing: .04em;

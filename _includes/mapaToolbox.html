@@ -1,12 +1,12 @@
-<!-- Toolbox del modo agente (⚙): el DOM existe siempre en la página del mapa
-     unificado pero el botón queda oculto hasta que la sesión resuelve con
-     usuario.hasTime (mapa.js → activarModoAgente). -->
-<button type="button" id="toolbox-btn" style="display:none;" aria-expanded="false"
-        aria-controls="toolbox" aria-label="Herramientas" title="Herramientas">⚙</button>
+<!-- Panel del modo agente: el DOM existe siempre en la página del mapa
+     unificado pero solo se abre con usuario.hasTime. No hay botón propio: el
+     trigger es el avatar del menú de usuario (menuUser.js → STT_TOOLBOX). La
+     cabecera muestra el saludo al usuario, que menuUser.js inyecta en
+     #tb-greeting. -->
 <div id="toolbox-backdrop" aria-hidden="true"></div>
-<div id="toolbox" role="dialog" aria-label="Herramientas del mapa">
+<div id="toolbox" role="dialog" aria-label="Menú del mapa">
   <div class="tb-head">
-    <h2>Herramientas</h2>
+    <div id="tb-greeting"></div>
     <button type="button" class="tb-close" aria-label="Cerrar panel" title="Cerrar">×</button>
   </div>
   <!-- Bloque 1: Buscar + Estadísticas -->
