@@ -123,11 +123,11 @@
     overscroll-behavior: contain;
     background: white; border: 1px solid #ccc; border-top: 0; border-right: 0;
     padding: 10px 10px 10px 10px; display: none; z-index: 2147483002;
-    min-width: 220px;
+    min-width: 220px; max-width: min(420px, 94vw);
   }
-  .search-container { display: flex; align-items: center; margin-bottom: 10px; }
-  .search-container span { margin-right: 5px; font-size: 16px; }
-  .search-container input { flex: 1; padding: 3px 5px; }
+  #toolbox .search-container { display: flex; align-items: center; margin-bottom: 10px; }
+  #toolbox .search-container span { margin-right: 5px; font-size: 16px; }
+  #toolbox .search-container input { flex: 1; padding: 3px 5px; }
 
   .check-overlay {
     font-size: 18px; color: green; font-weight: bold;
@@ -141,12 +141,16 @@
     padding: 10px 20px; border-radius: 8px;
     font-weight: bold; display: none; z-index: 2000;
   }
-  .section { border-top: 1px solid #ddd; }
-  .section-header {
+  /* Escopetado a #toolbox: el tema del sitio (theme-*.css, main.css) tiene
+     reglas globales .section { padding: 80px 0 } y .section-header
+     { text-align:center; margin-bottom:4rem } que rompen el panel. */
+  #toolbox .section { border-top: 1px solid #ddd; padding: 0; margin: 0; }
+  #toolbox .section-header {
     cursor: pointer; font-weight: bold; padding: 5px; background: #f0f0f0;
+    text-align: left; margin-bottom: 0;
   }
-  .section-body { display: none; padding: 5px; }
-  .section.active .section-body { display: block; }
+  #toolbox .section-body { display: none; padding: 5px; }
+  #toolbox .section.active .section-body { display: block; }
 
   /* --- menuIcons.js: icon-row flex mode --- */
   #toolbox.stt-icons-mode { display: flex; flex-wrap: wrap; align-items: flex-start; }
