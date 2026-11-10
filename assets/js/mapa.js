@@ -286,6 +286,15 @@ async function init() {
   if (response.resultados.length > 0) {
     var parsed = parseBuscarMapa(response);
     locs = parsed.locations;
+    // apiItemToLocation deja lat/lng en NaN cuando el doc no trae coordenadas:
+    // L.marker([NaN, NaN]) revienta renderMap, init() rechaza y el llamador
+    // (fndInm.js) cae a recargar la página. Se descartan acá, igual que hace
+    // STT_MAPA_CAJA._aLocations.
+    var antes = locs.length;
+    locs = locs.filter(function (l) { return isFinite(l.lat) && isFinite(l.lng); });
+    if (locs.length !== antes) {
+      console.warn('[init] se descartaron', antes - locs.length, 'inmuebles sin coordenadas válidas');
+    }
     locs.forEach(function(loc) {
       loc.uid = normalizeURL(loc.URL);
       loc.brand = marcaDe({ dato: loc });

@@ -612,7 +612,10 @@ function initEmptyMap() {
  * sobre el mapa. Se vuelve global porque la #caja repinta con él.
  */
 function renderMap(locs, centerLat, centerLng, circleRadius, avgPrice, na, ag) {
-  locations = locs;
+  // Solo inmuebles con coordenadas válidas: un lat/lng NaN revienta
+  // L.marker y se lleva el render entero (y con él la re-carga dinámica
+  // del buscador de la toolbox, que cae a recargar la página).
+  locations = (locs || []).filter(function (l) { return isFinite(l.lat) && isFinite(l.lng); });
   dispersarCoordenadas();
   // El contenedor #mapid puede haberlo tomado antes otro bloque (la #caja espera
   // mapa). Se adopta el existente: Leaflet rechaza L.map() sobre un contenedor ya

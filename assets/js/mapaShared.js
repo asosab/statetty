@@ -18,6 +18,7 @@ window.__backupLocalStorage = window.__backupLocalStorage || {};
 // -------------------------------
 function calculateDH(lat1, lng1, lat2, lng2) {
   const lat1Rad = lat1 * Math.PI / 180, lng1Rad = lng1 * Math.PI / 180;
+  const lat2Rad = lat2 * Math.PI / 180, lng2Rad = lng2 * Math.PI / 180;
   const dLat = lat2Rad - lat1Rad, dLng = lng2Rad - lng1Rad;
   const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1Rad) * Math.cos(lat2Rad) * Math.sin(dLng / 2) ** 2;
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
