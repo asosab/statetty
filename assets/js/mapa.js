@@ -1890,6 +1890,8 @@ function calculateDH(lat1, lng1, lat2, lng2) {
         texto: texto,
         poligono: datosDe('poligono'),              // [{ puntos: [{lat, lng}, ...] }]
         circunferencia: datosDe('circunferencia'),  // [{ lat, lng, radio }] radio en metros
+        lat: map ? map.getCenter().lat : undefined,   // si el texto no resuelve zona ni hay
+        lng: map ? map.getCenter().lng : undefined,   // figuras, se busca el país de esta vista
       }),
     }).then(function (r) {
       return r.json().then(function (d) { return { status: r.status, data: d }; });

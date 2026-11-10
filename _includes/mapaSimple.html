@@ -709,6 +709,8 @@ var STT_GEO = (function () {
           texto: texto,
           poligono: datosDe('poligono'),              // [{ puntos: [{lat, lng}, ...] }]
           circunferencia: datosDe('circunferencia'),  // [{ lat, lng, radio }] radio en metros
+          lat: map.getCenter().lat,   // si el texto no resuelve zona ni hay figuras,
+          lng: map.getCenter().lng,   // el server busca en todo el país de esta vista
         }),
       });
     }).then(function (r) {
