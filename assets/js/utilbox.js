@@ -45,6 +45,7 @@
       '#'+ID_BTN+':hover{background:#0a6a88}'+
       '#'+ID_BACK+'{position:fixed;inset:0;z-index:2147482988;background:rgba(7,52,63,.45)}'+
       '#'+ID_PANEL+'{position:fixed;top:0;right:0;bottom:0;width:min(400px,94vw);z-index:2147482989;background:#fff;box-shadow:-12px 0 40px rgba(0,0,0,.25);display:flex;flex-direction:column;font-family:Lato,Arial,sans-serif}'+
+      '#'+ID_PANEL+'[hidden]{display:none}'+
       '#'+ID_PANEL+' .ubx-head{display:flex;align-items:center;gap:8px;background:#074f66;color:#fff;padding:12px 14px;flex:0 0 auto}'+
       '#'+ID_PANEL+' .ubx-head h2{margin:0;font-size:16px;font-weight:700;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'+
       '#'+ID_PANEL+' .ubx-head button{background:none;border:none;color:#fff;font-size:20px;cursor:pointer;padding:2px 6px;line-height:1}'+
