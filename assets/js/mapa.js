@@ -22,6 +22,7 @@ window.STT_MAPA.modo = 'publico';   // 'publico' | 'agente'
 window.__mapUserid = null;
 
 var __activo = false;   // el modo agente se activa una sola vez
+var _saltarAuto = null; // lo define _initMapaBase; saltos geo-IP y GPS
 
 function _esAgente() { return window.STT_MAPA.modo === 'agente'; }
 
@@ -74,36 +75,59 @@ function _initMapaBase() {
   map.on('moveend', function () { if (!saltoAuto) _guardarPosicion(); });
   map.on('zoomend', function () { if (!saltoAuto) _guardarPosicion(); });
 
-  // Centro por IP del visitante — corre salvo que la URL haya decidido. El
-  // geo siempre manda sobre la posición guardada: el mapa empieza donde está
-  // el visitante (la memoria solo sirve de primer paint y de respaldo cuando
-  // el geo no responde). La única vista que no se toca es la del agente con
-  // su última búsqueda ya renderizada (__mapaCargado).
-  if (inicial.fuente !== 'url' && window.STT_GEO) {
-    var saltar = function (destino) {
+  // Ubicación del visitante — corre salvo que la URL haya decidido. El geo-IP
+  // (Cloudflare) responde primero y el GPS del equipo lo afina si el usuario
+  // consiente (_pedirGps, disparado al resolver la sesión). Ambos mandan
+  // sobre la posición guardada, que solo pinta el arranque y queda de
+  // respaldo si ninguno responde. Los saltos se apagan cuando el usuario ya
+  // arrastró el mapa o cuando la última búsqueda del agente ya se pintó
+  // (__mapaCargado).
+  if (inicial.fuente !== 'url') {
+    var pendienteAuto = true;
+    map.on('dragstart', function () { pendienteAuto = false; });
+    _saltarAuto = function (destino) {
+      if (!pendienteAuto || window.__mapaCargado) return;
       saltoAuto = true;
       if (destino.cobertura) {
-        map.fitBounds(window.STT_GEO.cobertura(), { padding: [24, 24], animate: false });
+        if (window.STT_GEO) map.fitBounds(window.STT_GEO.cobertura(), { padding: [24, 24], animate: false });
       } else {
         map.setView(destino.centro, destino.zoom, { animate: false });
       }
       saltoAuto = false;
     };
-    var alLlegarGeo = function (d) {
-      if (!d || window.__mapaCargado) return;
-      saltar(d);
-    };
-    var porTrace = function () {
-      return fetch('/cdn-cgi/trace').then(function (r) { return r.text(); })
-        .then(function (t) { alLlegarGeo(window.STT_GEO.desdeTrace(t)); }).catch(function () {});
-    };
-    var baseGeo = (window.STATETTY_CONFIG && window.STATETTY_CONFIG.WS_API_BASE) || '';
-    fetch(baseGeo + 'statetty/geo').then(function (r) { return r.json(); })
-      .then(function (g) {
-        var d = window.STT_GEO.desdeGeo(g);
-        if (d) alLlegarGeo(d); else return porTrace();
-      }).catch(porTrace);
+    if (window.STT_GEO) {
+      var porTrace = function () {
+        return fetch('/cdn-cgi/trace').then(function (r) { return r.text(); })
+          .then(function (t) { _saltarAuto(window.STT_GEO.desdeTrace(t)); }).catch(function () {});
+      };
+      var baseGeo = (window.STATETTY_CONFIG && window.STATETTY_CONFIG.WS_API_BASE) || '';
+      fetch(baseGeo + 'statetty/geo').then(function (r) { return r.json(); })
+        .then(function (g) {
+          var d = window.STT_GEO.desdeGeo(g);
+          if (d) _saltarAuto(d); else return porTrace();
+        }).catch(porTrace);
+    }
   }
+}
+
+// ---------- GPS del equipo ----------
+
+// Si el navegador expone geolocalización, pide el permiso y usa la posición
+// del equipo — más fina que el geo-IP. Solo corre en modo público (lo llama
+// evaluar tras resolver la sesión): al agente le llega el centro de su
+// última búsqueda y el permiso sería puro ruido. Denegado o timeout → se
+// queda la vista del geo-IP. Una sola petición por carga de página.
+var _gpsPedido = false;
+function _pedirGps() {
+  var api = (typeof navigator !== 'undefined') && navigator.geolocation;
+  if (_gpsPedido || !_saltarAuto || !api) return;
+  _gpsPedido = true;
+  api.getCurrentPosition(function (pos) {
+    var c = pos && pos.coords;
+    if (c && isFinite(c.latitude) && isFinite(c.longitude)) {
+      _saltarAuto({ centro: [c.latitude, c.longitude], zoom: 16 });
+    }
+  }, function () {}, { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 });
 }
 
 // ---------- Toolbox: drawer (abrir/cerrar), API global, acordeón ----------
@@ -505,6 +529,7 @@ $(document).ready(function () {
     }
     if (_usuarioConTiempo()) { activarModoAgente(); return 'agente'; }
     if (u && u._id && !u.hasTime) mostrarAvisoSuave();
+    _pedirGps();
     return 'publico';
   };
 
