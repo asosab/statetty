@@ -11,9 +11,11 @@
 //   agencia elegida   → serie única
 (function(){
   var charts={};
-  var DATA={inmuebles:null,agentes:null};      // {meses,filas}
+  var DATA={inmuebles:null,agentes:null,activos:null};      // {meses,filas}
   var DIM={paises:new Set(),inmobs:new Set(),ags:new Map()}; // ag→{nombre,pais,inmobiliaria}
   var sel={pais:'todos',inmob:'todas',agencia:'todas'};
+  var MARCAS_CRED={};        // marca → credibilidad máxima (viene de la API)
+  var CHK=new Map();         // marca → checkbox encendido
 
   function apiBase(){return (window.STATETTY_CONFIG&&STATETTY_CONFIG.WS_API_BASE)||'https://api.statetty.com/api/';}
   function token(){return (window.STT&&STT.getToken&&STT.getToken())||window.publicKey||null;}
@@ -58,7 +60,8 @@
   }
 
   function pasaFiltrosPaisInmob(p,m){
-    return (sel.pais==='todos'||p===sel.pais)&&(sel.inmob==='todas'||m===sel.inmob);
+    return (sel.pais==='todos'||p===sel.pais)&&(sel.inmob==='todas'||m===sel.inmob)
+      &&CHK.get(m)!==false;
   }
   function paisDeFila(f){return f.pais||SIN_PAIS;}
   function inmobDeFila(f){return f.inmobiliaria||SIN_INMOB;}
@@ -82,7 +85,7 @@
     var inmobs=new Set();
     DIM.inmobs.forEach(function(k){
       var p=k.split('|')[0],m=k.split('|')[1];
-      if(sel.pais==='todos'||p===sel.pais)inmobs.add(m);
+      if((sel.pais==='todos'||p===sel.pais)&&CHK.get(m)!==false)inmobs.add(m);
     });
     var inmobOpts=[{v:'todas',t:'Todas'}];
     [...inmobs].sort(function(a,b){return etiquetaMarca(a===SIN_INMOB?null:a).localeCompare(etiquetaMarca(b===SIN_INMOB?null:b),'es');})
@@ -204,6 +207,38 @@
   function repintarTodo(){
     repintar('inmuebles','barra');
     repintar('agentes','barra');
+    repintar('activos','barra');
+  }
+
+  // Caja de checkboxes por inmobiliaria: credibilidad < 5 (o sin dato) arranca
+  // apagada; «Sin inmobiliaria» arranca encendida (no es una marca con cred).
+  function buildInmobs(){
+    var marcas=new Set();
+    DIM.inmobs.forEach(function(k){marcas.add(k.split('|')[1]);});
+    var lista=[...marcas].sort(function(a,b){
+      return etiquetaMarca(a===SIN_INMOB?null:a).localeCompare(etiquetaMarca(b===SIN_INMOB?null:b),'es');
+    });
+    var cont=document.getElementById('graf-inmobs-lista');
+    cont.innerHTML='';
+    lista.forEach(function(m){
+      if(!CHK.has(m)){
+        CHK.set(m, m===SIN_INMOB ? true : (MARCAS_CRED[m]||0)>=5);
+      }
+      var lab=document.createElement('label');
+      var cb=document.createElement('input');
+      cb.type='checkbox';
+      cb.checked=CHK.get(m);
+      lab.classList.toggle('off',!cb.checked);
+      cb.addEventListener('change',function(){
+        CHK.set(m,cb.checked);
+        lab.classList.toggle('off',!cb.checked);
+        refrescarSelects();
+        repintarTodo();
+      });
+      lab.appendChild(cb);
+      lab.appendChild(document.createTextNode(etiquetaMarca(m===SIN_INMOB?null:m)));
+      cont.appendChild(lab);
+    });
   }
 
   function cargar(id){
@@ -213,6 +248,7 @@
       if(!r.data||!r.data.meses||!r.data.meses.length){estado(id,'Todavía no hay datos para mostrar.');return;}
       DATA[id]=r.data;
       indexar(r.data.filas);
+      if(r.data.marcas)Object.assign(MARCAS_CRED,r.data.marcas);
       estado(id,'');
     }).catch(function(){estado(id,'No se pudieron cargar los datos.',true);});
   }
@@ -235,11 +271,14 @@
     }
     document.getElementById('graf-gate').hidden=true;
     document.getElementById('graf-filtros').hidden=false;
+    document.getElementById('graf-inmobs').hidden=false;
     bloqueVisible('inmuebles');
     bloqueVisible('agentes');
+    bloqueVisible('activos');
     if(pedido)return;
     pedido=true;
-    Promise.all([cargar('inmuebles'),cargar('agentes')]).then(function(){
+    Promise.all([cargar('inmuebles'),cargar('agentes'),cargar('activos')]).then(function(){
+      buildInmobs();
       refrescarSelects();
       repintarTodo();
     });

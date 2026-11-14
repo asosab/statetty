@@ -134,6 +134,51 @@
       text-overflow: ellipsis;
     }
     .graf-filtros select:focus { outline: 2px solid var(--blue-light); }
+    .graf-inmobs {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 16px 20px;
+      margin-bottom: 18px;
+      box-shadow: 0 4px 18px rgba(7, 79, 102, .06);
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .graf-inmobs-titulo {
+      font-family: var(--font-head);
+      font-size: .72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--blue-dark);
+      padding-top: 6px;
+      white-space: nowrap;
+    }
+    .graf-inmobs-lista {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      flex: 1;
+    }
+    .graf-inmobs-lista label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: .85rem;
+      color: var(--text);
+      background: var(--section-bg);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 5px 12px;
+      cursor: pointer;
+      user-select: none;
+      transition: border-color .15s, background .15s;
+    }
+    .graf-inmobs-lista label:hover { border-color: var(--blue-light); }
+    .graf-inmobs-lista input { accent-color: var(--blue); cursor: pointer; }
+    .graf-inmobs-lista label.off { opacity: .55; }
     .graf-estado {
       padding: 60px 0;
       text-align: center;
@@ -192,6 +237,11 @@
       <button id="graf-gate-btn" hidden>Iniciar sesión</button>
     </div>
 
+    <div class="graf-inmobs" id="graf-inmobs" hidden>
+      <span class="graf-inmobs-titulo">Inmobiliarias</span>
+      <div class="graf-inmobs-lista" id="graf-inmobs-lista"></div>
+    </div>
+
     <div class="graf-filtros" id="graf-filtros" hidden>
       <label>País
         <select id="f-pais"></select>
@@ -217,6 +267,13 @@
       <div class="graf-estado" id="estado-agentes">Cargando datos…</div>
       <div class="graf-chart" id="chart-agentes" hidden></div>
     </section>
+
+    <section class="graf-bloque" id="bloque-activos" hidden>
+      <h2>Inmuebles activos por mes</h2>
+      <p class="graf-nota">Cuántos inmuebles estuvieron activos cada mes: entran desde que Statetty los vio por primera vez y, si hoy figuran inactivos, se cuentan hasta la fecha de su último cambio. Responde a los mismos filtros y checkboxes de arriba.</p>
+      <div class="graf-estado" id="estado-activos">Cargando datos…</div>
+      <div class="graf-chart" id="chart-activos" hidden></div>
+    </section>
   </main>
 
   <script src="/assets/js/config.js"></script>
@@ -224,6 +281,6 @@
   <script src="/assets/js/auth.js?v=20" defer></script>
   <script src="/assets/js/utilbox.js?v=2" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/echarts@6.1.0/dist/echarts.min.js" defer></script>
-  <script src="/assets/js/graficas.js?v=3" defer></script>
+  <script src="/assets/js/graficas.js?v=4" defer></script>
 </body>
 </html>
