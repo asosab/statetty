@@ -74,9 +74,11 @@ function _initMapaBase() {
   map.on('moveend', function () { if (!saltoAuto) _guardarPosicion(); });
   map.on('zoomend', function () { if (!saltoAuto) _guardarPosicion(); });
 
-  // Centro por IP del visitante — corre salvo que la URL haya decidido. Sin
-  // decisión previa aplica directo; con posición guardada solo corrige cuando
-  // el país no coincide.
+  // Centro por IP del visitante — corre salvo que la URL haya decidido. El
+  // geo siempre manda sobre la posición guardada: el mapa empieza donde está
+  // el visitante (la memoria solo sirve de primer paint y de respaldo cuando
+  // el geo no responde). La única vista que no se toca es la del agente con
+  // su última búsqueda ya renderizada (__mapaCargado).
   if (inicial.fuente !== 'url' && window.STT_GEO) {
     var saltar = function (destino) {
       saltoAuto = true;
@@ -88,8 +90,7 @@ function _initMapaBase() {
       saltoAuto = false;
     };
     var alLlegarGeo = function (d) {
-      if (!d) return;
-      if (inicial.fuente === 'local' && !window.STT_GEO.debeCorregir(inicial, d.pais)) return;
+      if (!d || window.__mapaCargado) return;
       saltar(d);
     };
     var porTrace = function () {

@@ -303,13 +303,15 @@
 <script src="/assets/js/acm.js?v=5"></script>
 <script src="/assets/js/mapaAgente.js?v=5"></script>
 <script src="/assets/js/mapaCaja.js?v=4"></script>
-<script src="/assets/js/mapa.js?v=50"></script>
+<script src="/assets/js/mapa.js?v=51"></script>
 <!-- rutasMicros.js: toolbox de rutas de micros (slot al final de #toolbox) -->
 <script src="/assets/js/rutasMicros.js?v=2"></script>
 <!-- menuIcons.js: colapsa headers inactivos a solo ícono cuando una sección está abierta -->
 <script src="/assets/js/menuIcons.js?v=5"></script>
 <script>
-// ---------- Centro inicial del mapa: URL > localStorage > geo IP > SCZ ----------
+// ---------- Centro inicial del mapa: URL > geo IP > (memoria/default) ----------
+// El geo del visitante siempre gana: la posición guardada solo pinta el mapa
+// mientras llega la respuesta y queda de respaldo si el geo no contesta.
 // Bloque aparte (mismo patrón que el shim de arriba): la lógica de resolución es
 // pura y se prueba con stubs en scripts/mapa-home-geo.test.js.
 var STT_GEO = (function () {
@@ -401,28 +403,6 @@ var STT_GEO = (function () {
     return null;
   }
 
-  // Cajas de los mercados para saber a qué país pertenece una posición guardada.
-  // Sin esto, quien alguna vez dejó el mapa en SCZ quedaba atascado ahí aunque
-  // estuviera en Perú: la memoria mandaba sobre el geo sin verificar el país.
-  var BBOX_MERCADO = {
-    bo: { latMin: -23.1, latMax: -9.5, lngMin: -69.7, lngMax: -57.4 },
-    pe: { latMin: -18.6, latMax: 0.1, lngMin: -81.4, lngMax: -68.6 }
-  };
-  function paisDeCentro(c) {
-    if (!Array.isArray(c)) return null;
-    for (var k in BBOX_MERCADO) {
-      var b = BBOX_MERCADO[k];
-      if (c[0] >= b.latMin && c[0] <= b.latMax && c[1] >= b.lngMin && c[1] <= b.lngMax) return k;
-    }
-    return null;
-  }
-  // La posición guardada solo manda dentro del mismo país del visitante:
-  // países distintos → el geo corrige (SCZ guardado + visitante en Perú = LIM).
-  function debeCorregir(memoria, paisVisitante) {
-    if (!memoria || !paisVisitante) return false;
-    return paisDeCentro(memoria.centro) !== String(paisVisitante).toLowerCase();
-  }
-
   // Respuesta de GET /api/statetty/geo → destino del mapa (o null → probar trace).
   function desdeGeo(g) {
     if (!g || typeof g !== 'object') return null;
@@ -459,8 +439,7 @@ var STT_GEO = (function () {
 
   return {
     porQuery: porQuery, guardado: guardado, desdeGeo: desdeGeo,
-    desdeTrace: desdeTrace, inicial: inicial, cobertura: cobertura,
-    paisDeCentro: paisDeCentro, debeCorregir: debeCorregir
+    desdeTrace: desdeTrace, inicial: inicial, cobertura: cobertura
   };
 })();
 </script>
