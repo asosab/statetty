@@ -96,6 +96,44 @@
       width: 100%;
       height: 420px;
     }
+    .graf-filtros {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 28px;
+    }
+    .graf-filtros label {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-family: var(--font-head);
+      font-size: .72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--blue-dark);
+      flex: 1 1 200px;
+      max-width: 320px;
+    }
+    .graf-filtros select {
+      font-family: var(--font-body);
+      font-size: .95rem;
+      color: var(--text-strong);
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(7, 79, 102, .05);
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23074f66'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 32px;
+      max-width: 100%;
+      text-overflow: ellipsis;
+    }
+    .graf-filtros select:focus { outline: 2px solid var(--blue-light); }
     .graf-estado {
       padding: 60px 0;
       text-align: center;
@@ -154,16 +192,28 @@
       <button id="graf-gate-btn" hidden>Iniciar sesión</button>
     </div>
 
+    <div class="graf-filtros" id="graf-filtros" hidden>
+      <label>País
+        <select id="f-pais"></select>
+      </label>
+      <label>Inmobiliaria
+        <select id="f-inmob"></select>
+      </label>
+      <label>Agencia
+        <select id="f-agencia"></select>
+      </label>
+    </div>
+
     <section class="graf-bloque" id="bloque-inmuebles" hidden>
       <h2>Inmuebles nuevos por agencia</h2>
-      <p class="graf-nota">Cada barra apila los inmuebles que Statetty vio por primera vez ese mes, separados por agencia. Pasá el puntero sobre una columna para ver el detalle; con la rueda o el deslizador de abajo acercás el período que te interese.</p>
+      <p class="graf-nota">Cada barra apila los inmuebles que Statetty vio por primera vez ese mes. Los filtros de arriba eligen qué se compara: sin elegir nada, cada color es un país; al elegir un país se comparan sus inmobiliarias, y al elegir una inmobiliaria, sus agencias.</p>
       <div class="graf-estado" id="estado-inmuebles">Cargando datos…</div>
       <div class="graf-chart" id="chart-inmuebles" hidden></div>
     </section>
 
     <section class="graf-bloque" id="bloque-agentes" hidden>
       <h2>Agentes por agencia, mes a mes</h2>
-      <p class="graf-nota">Cuántos agentes tuvo cada agencia en cada mes, contados desde su primer hasta su último inmueble registrado allí. Pasá el puntero para ver los números y tocá la leyenda para apagar o prender una agencia.</p>
+      <p class="graf-nota">Cuántos agentes hubo mes a mes, contados desde su primer hasta su último inmueble registrado en cada agencia. Responde a los mismos filtros de arriba. Pasá el puntero para ver los números y tocá la leyenda para apagar o prender una serie.</p>
       <div class="graf-estado" id="estado-agentes">Cargando datos…</div>
       <div class="graf-chart" id="chart-agentes" hidden></div>
     </section>
@@ -174,6 +224,6 @@
   <script src="/assets/js/auth.js?v=20" defer></script>
   <script src="/assets/js/utilbox.js?v=2" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/echarts@6.1.0/dist/echarts.min.js" defer></script>
-  <script src="/assets/js/graficas.js?v=1" defer></script>
+  <script src="/assets/js/graficas.js?v=2" defer></script>
 </body>
 </html>
