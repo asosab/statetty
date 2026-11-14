@@ -203,7 +203,7 @@
   }
   function repintarTodo(){
     repintar('inmuebles','barra');
-    repintar('agentes','linea');
+    repintar('agentes','barra');
   }
 
   function cargar(id){
