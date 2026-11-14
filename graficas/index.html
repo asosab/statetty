@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gráficas — Statetty</title>
+  <meta name="description" content="Panel de gráficas de Statetty">
+  <meta name="robots" content="noindex, nofollow">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/images/favicon/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/images/favicon/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/images/favicon/favicon-16x16.png">
+  <meta name="theme-color" content="#ffffff">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/theme-1.css">
+
+  <style>
+    :root {
+      --blue:        #17baef;
+      --blue-dark:   #074f66;
+      --blue-light:  #6dd0f5;
+      --yellow:      #eebf3f;
+      --font-head:   'Montserrat', sans-serif;
+      --font-body:   'Lato', sans-serif;
+      --radius-md:   12px;
+      --radius-lg:   20px;
+      --section-bg:  #f5f5f5;
+      --card-bg:     #ffffff;
+      --border:      #e6e6e6;
+      --text:        #444;
+      --text-strong: #222;
+      --muted:       #777;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-body);
+      color: var(--text);
+      background: var(--section-bg);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+    .graf-top {
+      background: var(--blue-dark);
+      color: #fff;
+      padding: 18px 0;
+    }
+    .graf-top .wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 20px;
+      display: flex;
+      align-items: baseline;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .graf-top .marca {
+      font-family: var(--font-head);
+      font-weight: 800;
+      font-size: 1.3rem;
+      letter-spacing: .5px;
+    }
+    .graf-top .marca span { color: var(--blue-light); }
+    .graf-top .sub {
+      font-size: .9rem;
+      opacity: .75;
+    }
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 28px 20px 60px;
+    }
+    .graf-bloque {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 26px 26px 18px;
+      margin-bottom: 28px;
+      box-shadow: 0 4px 18px rgba(7, 79, 102, .06);
+    }
+    .graf-bloque h2 {
+      font-family: var(--font-head);
+      font-size: 1.15rem;
+      color: var(--blue-dark);
+      margin-bottom: 6px;
+    }
+    .graf-nota {
+      font-size: .88rem;
+      color: var(--muted);
+      margin-bottom: 14px;
+      max-width: 70ch;
+    }
+    .graf-chart {
+      width: 100%;
+      height: 420px;
+    }
+    .graf-estado {
+      padding: 60px 0;
+      text-align: center;
+      color: var(--muted);
+      font-size: .95rem;
+    }
+    .graf-estado.error { color: #b04632; }
+    .graf-gate {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 60px 30px;
+      text-align: center;
+      box-shadow: 0 4px 18px rgba(7, 79, 102, .06);
+    }
+    .graf-gate h1 {
+      font-family: var(--font-head);
+      color: var(--blue-dark);
+      font-size: 1.4rem;
+      margin-bottom: 10px;
+    }
+    .graf-gate p { color: var(--muted); margin-bottom: 18px; }
+    .graf-gate button {
+      font-family: var(--font-head);
+      font-weight: 700;
+      font-size: .95rem;
+      color: #fff;
+      background: var(--blue);
+      border: 0;
+      border-radius: 999px;
+      padding: 12px 30px;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .graf-gate button:hover { background: var(--blue-dark); }
+    [hidden] { display: none !important; }
+    @media (max-width: 720px) {
+      .graf-chart { height: 320px; }
+      .graf-bloque { padding: 18px 14px 12px; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="graf-top">
+    <div class="wrap">
+      <div class="marca">Statetty<span>.</span></div>
+      <div class="sub">Panel de gráficas</div>
+    </div>
+  </header>
+
+  <main>
+    <div class="graf-gate" id="graf-gate">
+      <h1 id="graf-gate-titulo">Verificando acceso…</h1>
+      <p id="graf-gate-texto">Un momento.</p>
+      <button id="graf-gate-btn" hidden>Iniciar sesión</button>
+    </div>
+
+    <section class="graf-bloque" id="bloque-inmuebles" hidden>
+      <h2>Inmuebles nuevos por agencia</h2>
+      <p class="graf-nota">Cada barra apila los inmuebles que Statetty vio por primera vez ese mes, separados por agencia. Pasá el puntero sobre una columna para ver el detalle; con la rueda o el deslizador de abajo acercás el período que te interese.</p>
+      <div class="graf-estado" id="estado-inmuebles">Cargando datos…</div>
+      <div class="graf-chart" id="chart-inmuebles" hidden></div>
+    </section>
+
+    <section class="graf-bloque" id="bloque-agentes" hidden>
+      <h2>Agentes por agencia, mes a mes</h2>
+      <p class="graf-nota">Cuántos agentes tuvo cada agencia en cada mes, contados desde su primer hasta su último inmueble registrado allí. Pasá el puntero para ver los números y tocá la leyenda para apagar o prender una agencia.</p>
+      <div class="graf-estado" id="estado-agentes">Cargando datos…</div>
+      <div class="graf-chart" id="chart-agentes" hidden></div>
+    </section>
+  </main>
+
+  <script src="/assets/js/config.js"></script>
+  <script src="https://statetty.com/assets/buddy/buddy.js?v=a19" defer></script>
+  <script src="/assets/js/auth.js?v=20" defer></script>
+  <script src="/assets/js/utilbox.js?v=2" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@6.1.0/dist/echarts.min.js" defer></script>
+  <script src="/assets/js/graficas.js?v=1" defer></script>
+</body>
+</html>
