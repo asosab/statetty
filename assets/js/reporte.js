@@ -248,8 +248,8 @@
   if (window.STT && window.STT.ready && typeof window.STT.ready.then === 'function') {
     window.STT.ready.then(alCambiarSesion);
   }
-  window.addEventListener('statetty:auth-ready', alCambiarSesion);
-  window.addEventListener('statetty:key-ready', alCambiarSesion);
+  document.addEventListener('statetty:auth-ready', alCambiarSesion);
+  document.addEventListener('statetty:key-ready', alCambiarSesion);
   // Si auth.js aún no definió STT (orden de scripts), reintentar breve.
   var intentos = 0;
   var timer = setInterval(function () {
