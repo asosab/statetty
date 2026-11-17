@@ -456,15 +456,58 @@ async function generarMapaInmuebles(inmuebles, vertical = false) {
     const bounds = L.featureGroup(group).getBounds();
     map.fitBounds(bounds, { padding: [40, 40], maxZoom: 16, minZoom: 12 });
 
-    tileLayer.on("load", () => {
+    // El "load" del tileLayer dispara por tanda: fitBounds cambia la vista y
+    // pide una segunda tanda de tiles después. Hay que esperar a que la vista
+    // termine de asentarse (moveend) y recién ahí a que carguen los tiles de
+    // ESA vista, verificando que cada <img> esté completa. Sin esto la
+    // captura salía con el mapa en blanco o a medio cargar (el reintento
+    // funcionaba porque el navegador ya tenía los tiles en caché).
+    let capturado = false;
+    const limite = Date.now() + 15000;
+
+    function tilesListos() {
+      const imgs = mapDiv.querySelectorAll(".leaflet-tile");
+      for (let i = 0; i < imgs.length; i++) {
+        if (!imgs[i].complete || !imgs[i].naturalWidth) return false;
+      }
+      return imgs.length > 0;
+    }
+
+    function terminar() {
+      if (capturado) return;
+      capturado = true;
       setTimeout(() => {
-        html2canvas(mapDiv, { useCORS: true, backgroundColor: "#fff", removeContainer: true }).then(canvas => {
-          const imgData = canvas.toDataURL("image/png");
-          document.body.removeChild(mapDiv);
-          resolve({ data: imgData, type: "image/png" });
-        });
-      }, 500);
+        html2canvas(mapDiv, { useCORS: true, backgroundColor: "#fff", removeContainer: true })
+          .then(canvas => {
+            const imgData = canvas.toDataURL("image/png");
+            document.body.removeChild(mapDiv);
+            resolve({ data: imgData, type: "image/png" });
+          })
+          .catch(() => {
+            document.body.removeChild(mapDiv);
+            resolve(null);
+          });
+      }, 300);
+    }
+
+    // Reintenta tiles que fallaron (OSM a veces devuelve 404/timeout suelto).
+    tileLayer.on("tileerror", (e) => {
+      const tile = e.tile;
+      setTimeout(() => { try { tile.src = tile.src; } catch (_) {} }, 800);
     });
+
+    map.once("moveend", () => {
+      tileLayer.once("load", () => {
+        const iv = setInterval(() => {
+          if (tilesListos() || Date.now() > limite) {
+            clearInterval(iv);
+            terminar();
+          }
+        }, 200);
+      });
+    });
+    // Respaldo: si moveend/load nunca llegan, capturar igual a los 15 s.
+    setTimeout(() => { if (!capturado) terminar(); }, 15000);
   });
 }
 
