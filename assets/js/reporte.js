@@ -145,10 +145,38 @@
       return el && el.closest && el.closest('#stt-fab-reporte,#stt-panel-reporte,#stt-reporte-cargando');
     }
 
-    function capturar() {
+    function esperarImagenes(timeoutMs) {
+    return new Promise(function (resolve) {
+      var imgs = Array.prototype.slice.call(document.images || []);
+      var pendientes = imgs.filter(function (im) {
+        return !im.complete || !im.naturalWidth;
+      });
+      if (!pendientes.length) return resolve();
+      var fin = false;
+      function done() { if (!fin) { fin = true; resolve(); } }
+      var timer = setTimeout(done, timeoutMs || 3000);
+      pendientes.forEach(function (im) {
+        im.addEventListener('load', function check() {
+          if (pendientes.every(function (x) { return x.complete && x.naturalWidth; })) {
+            clearTimeout(timer); done();
+          }
+        });
+        im.addEventListener('error', function check() {
+          if (pendientes.every(function (x) { return x.complete; })) {
+            clearTimeout(timer); done();
+          }
+        });
+      });
+      // Red de seguridad: si alguna nunca dispara evento, el timeout resuelve.
+    });
+  }
+
+  function capturar() {
       cargando.style.display = 'flex';
       msgSet('');
-      cargarHtml2Canvas().then(function () {
+      esperarImagenes(3000).then(function () {
+        return cargarHtml2Canvas();
+      }).then(function () {
         return window.html2canvas(document.documentElement, {
           useCORS: true,
           logging: false,
