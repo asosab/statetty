@@ -159,6 +159,33 @@
   #toolbox .search-container span { margin-right: 5px; font-size: 16px; }
   #toolbox .search-container input { flex: 1; padding: 3px 5px; }
 
+  /* Formularios del panel: la home carga statettyAccesibilidad.css (hoja
+     pensada para las landings) cuyas reglas globales —input/select/
+     textarea con padding .75em 1em y button con .85em 1.6em + negrita—
+     inflan todo lo que vive dentro de #toolbox. /maps/find nunca cargó
+     esa hoja, así que acá se restaura el tamaño compacto original: solo
+     unos pocos píxeles de aire entre el texto y el borde visible.
+     Los widgets con estilo propio (fndInm, rutasMicros, links de
+     usuario, acordeones, #acm-info-btn) ganan por especificidad. */
+  #toolbox input:not(:where([type="checkbox"],[type="radio"])),
+  #toolbox select,
+  #toolbox textarea {
+    font-size: .85rem; line-height: 1.4;
+    padding: 3px 6px;
+    border: 1px solid #ccc; border-radius: 6px;
+  }
+  #toolbox input[type="checkbox"],
+  #toolbox input[type="radio"] { padding: 0; border-radius: 3px; }
+  #toolbox input:focus, #toolbox select:focus, #toolbox textarea:focus {
+    outline: 2px solid #17baef; outline-offset: 1px;
+  }
+  #toolbox button {
+    padding: 4px 8px; font-size: 12px; font-weight: 400;
+    border: 1px solid #ccc; border-radius: 6px;
+    background: #f7f7f7; color: inherit; cursor: pointer;
+  }
+  #toolbox label { font-size: .85rem; font-weight: 400; }
+
   .check-overlay {
     font-size: 18px; color: green; font-weight: bold;
     text-shadow: 1px 1px 2px #fff;

@@ -228,9 +228,15 @@
       'color:inherit;text-decoration:none;border-radius:6px;}' +
       '#' + TOOLBOX_LINKS_ID + ' a:hover,' +
       '#' + TOOLBOX_LINKS_ID + ' a:focus-visible{background:rgba(0,0,0,.06);}' +
-      '.' + ADMIN_BLOCK_CLASS + ' button{display:block;width:100%;border:0;background:none;cursor:pointer;' +
+      // Prefijado con #stt-user-toolbox-links: la home carga
+      // statettyAccesibilidad.css y mapaSimple.html trae un reset
+      // "#toolbox button" que, con la misma especificidad que esta regla
+      // iba a ganar por orden de cascada y convertía los ítems de admin
+      // en botones con caja en vez de filas de texto.
+      '#' + TOOLBOX_LINKS_ID + ' .' + ADMIN_BLOCK_CLASS + ' button{display:block;width:100%;border:0;background:none;cursor:pointer;' +
       'padding:8px 6px;text-align:left;color:inherit;font-family:inherit;font-size:inherit;border-radius:6px;}' +
-      '.' + ADMIN_BLOCK_CLASS + ' button:hover,' + ADMIN_BLOCK_CLASS + ' button:focus-visible{background:rgba(0,0,0,.06);}' +
+      '#' + TOOLBOX_LINKS_ID + ' .' + ADMIN_BLOCK_CLASS + ' button:hover,' +
+      '#' + TOOLBOX_LINKS_ID + ' .' + ADMIN_BLOCK_CLASS + ' button:focus-visible{background:rgba(0,0,0,.06);}' +
       '#' + TOOLBOX_LINKS_ID + ' .stt-user-toolbox-sep{height:1px;background:rgba(0,0,0,.08);margin:4px 0;}' +
       '#' + TOOLBOX_LINKS_ID + ' .stt-user-logout{width:100%;padding:8px 6px;border:0;' +
       'font-family:inherit;font-size:inherit;color:#999;background:none;cursor:pointer;text-align:left;' +
