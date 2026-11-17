@@ -25,6 +25,7 @@
   var SLOT_ID = 'stt-rutasmicros-slot';
   var STYLE_ID = 'stt-rutasmicros-styles';
   var API = 'statetty/rutasMicros';
+  var STORAGE_KEY = 'stt_rutasmicros_puntos';
   var COLORS = ['#17baef', '#7c3aed', '#0e7490'];
   var WALK_COLOR = '#f59e0b';
 
@@ -148,9 +149,36 @@
     else destino = { lat: lat, lng: lng };
     if (el.estOrigen) el.estOrigen.textContent = textoPunto('origen');
     if (el.estDestino) el.estDestino.textContent = textoPunto('destino');
+    guardarPuntos();
     pintarPunto(cual);
     limpiarResultados();
     avisar('', false);
+  }
+
+  // Origen/destino persisten entre sesiones (localStorage); solo el botón
+  // Limpiar los borra. D10 (sin caché) aplicaba a las RESPUESTAS del API.
+  function guardarPuntos() {
+    try {
+      if (!origen && !destino) { localStorage.removeItem(STORAGE_KEY); return; }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ origen: origen, destino: destino }));
+    } catch (e) {}
+  }
+
+  function cargarPuntos() {
+    try {
+      var data = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+      if (!data) return;
+      ['origen', 'destino'].forEach(function (c) {
+        var p = data[c];
+        var lat = Number(p && p.lat), lng = Number(p && p.lng);
+        if (isFinite(lat) && isFinite(lng)) {
+          if (c === 'origen') origen = { lat: lat, lng: lng };
+          else destino = { lat: lat, lng: lng };
+        }
+      });
+      if (el.estOrigen) el.estOrigen.textContent = textoPunto('origen');
+      if (el.estDestino) el.estDestino.textContent = textoPunto('destino');
+    } catch (e) {}
   }
 
   function setModo(nuevo) {
@@ -324,6 +352,7 @@
   function limpiar() {
     origen = null;
     destino = null;
+    guardarPuntos();
     setModo(null);
     ['origen', 'destino'].forEach(function (c) {
       if (marcadores[c] && mapa) mapa.removeLayer(marcadores[c]);
@@ -392,6 +421,7 @@
 
   function init() {
     if (!montar()) return;
+    cargarPuntos();
     esperarMapa();
     initGate();
   }
