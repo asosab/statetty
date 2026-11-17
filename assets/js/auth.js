@@ -59,8 +59,28 @@
   window.STT.tg=null;
   window.STT.linked=false;
   window.STT.token=null;
-  window.STT.getKey=function(){return window.STT.token||window.publicKey||null;};
-  window.STT.getToken=function(){return window.STT.token||null;};
+  // getToken/getKey devuelven el accessToken VIVO de Buddy (state o
+  // sessionStorage, ambos actualizados en cada refresh), no la foto
+  // window.STT.token tomada al cargar: esa caduca a la hora y dejaba
+  // 401 en todos los endpoints `authenticate` con la pestaña abierta.
+  window.STT.getKey=function(){return window.STT.getToken()||window.publicKey||null;};
+  window.STT.getToken=function(){return getBuddyAccessToken()||window.STT.token||null;};
+  // Token vigente para llamadas autenticadas: si el JWT está vencido o por
+  // vencer, fuerza Buddy.auth.checkSession() (refresca vía refreshToken) y
+  // re-lee. Devuelve Promise<string|null>.
+  window.STT.getTokenFresco=async function(skewMs){
+    skewMs=skewMs||15000;
+    var t=window.STT.getToken();
+    var exp=_jwtExp(t);
+    if(t&&exp&&exp>Date.now()+skewMs) return t;
+    var a=buddyAuth();
+    if(a&&typeof a.checkSession==='function'){
+      try{ await a.checkSession(); }catch(e){}
+      t=window.STT.getToken();
+      if(t) return t;
+    }
+    return window.STT.token||null;
+  };
   window.STT.getUsuario=function(){return window.STT.usuario;};
   window.STT.getBuddy=function(){return window.STT.buddy;};
   window.STT.getTg=function(){return window.STT.tg;};
@@ -69,6 +89,18 @@
   function dispatch(detail, name){
     try{document.dispatchEvent(new CustomEvent(name||'statetty:key-ready',{detail:detail||{}}));}
     catch(e){}
+  }
+
+  // exp del JWT en ms (0 si no se puede leer). Solo para decidir refresh.
+  function _jwtExp(token){
+    try{
+      var part=String(token||'').split('.')[1];
+      if(!part) return 0;
+      var b64=part.replace(/-/g,'+').replace(/_/g,'/');
+      while(b64.length%4) b64+='=';
+      var p=JSON.parse(atob(b64));
+      return p&&p.exp?p.exp*1000:0;
+    }catch(e){return 0;}
   }
 
   // ── helpers de Buddy ───────────────────────────────────────────────────────

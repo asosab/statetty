@@ -286,10 +286,15 @@
     if (el.buscar) el.buscar.disabled = true;
     avisar('Buscando rutas...', false);
 
-    var token = window.STT && window.STT.getToken ? window.STT.getToken() : '';
     var base = (window.STATETTY_CONFIG && STATETTY_CONFIG.WS_API_BASE) || '';
+    // getTokenFresco refresca el JWT Buddy si venció (accessToken de 1h);
+    // sin él un STT.token viejo devolvía 401 con sesión aparentemente activa.
+    var tokenPromise = (window.STT && window.STT.getTokenFresco)
+      ? window.STT.getTokenFresco()
+      : Promise.resolve(window.STT && window.STT.getToken ? window.STT.getToken() : '');
 
-    fetch(base + API, {
+    Promise.resolve(tokenPromise).then(function (token) {
+    return fetch(base + API, {
       method: 'POST',
       headers: Object.assign(
         { 'Content-Type': 'application/json' },
@@ -312,6 +317,7 @@
     }).then(function () {
       pidiendo = false;
       if (el.buscar) el.buscar.disabled = false;
+    });
     });
   }
 
