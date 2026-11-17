@@ -114,6 +114,16 @@
     var abierto = false;
     var blobCaptura = null;
 
+    // El menú lateral y otros cierres por click-fuera escuchan en
+    // document/window: hay que cortar la propagación para que tocar el
+    // FAB o el panel no altere la escena que se va a capturar.
+    function frenar(e) { e.stopPropagation(); }
+    ['pointerdown', 'mousedown', 'touchstart', 'click'].forEach(function (evt) {
+      fab.addEventListener(evt, frenar);
+      panel.addEventListener(evt, frenar);
+      cargando.addEventListener(evt, frenar);
+    });
+
     function msgSet(t, esError) {
       msg.textContent = t || '';
       msg.className = esError ? 'err' : '';
