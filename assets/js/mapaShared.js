@@ -98,6 +98,24 @@ function esInmuebleNuevo(dato, diasMax = 15) {
   } catch (e) { console.log('esInmuebleNuevo error', e); return false; }
 }
 
+// Emoji de estado del inmueble para el popup: 🔴 inactivo, 🟡 activo con más
+// de 12 meses de antigüedad, 🟢 el resto. `activo` puede faltar en fichas
+// viejas guardadas: sin el campo se asume activo.
+function emojiEstadoInmueble(dato) {
+  try {
+    // apiItemToLocation deja '' cuando la ficha no trae el campo: no es "inactivo".
+    var a = dato && dato.activo;
+    var inactivo = a !== undefined && a !== null && a !== '' && !a;
+    if (inactivo) return { emoji: '🔴', titulo: 'Inmueble inactivo' };
+    var fecha = getFechaAntiguedad(dato);
+    var unAnioMs = 365 * 24 * 60 * 60 * 1000;
+    if (fecha && (Date.now() - fecha.getTime()) > unAnioMs) {
+      return { emoji: '🟡', titulo: 'Inmueble activo, publicado hace más de 12 meses' };
+    }
+    return { emoji: '🟢', titulo: 'Inmueble activo' };
+  } catch (e) { console.log('emojiEstadoInmueble error', e); return { emoji: '🟢', titulo: 'Inmueble activo' }; }
+}
+
 function formatAntiguedad(dato) {
   try {
     var fecha = getFechaAntiguedad(dato);

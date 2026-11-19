@@ -689,6 +689,10 @@ function _popupDeDato(dato) {
   var tipoEmoji = getTipoEmoji(dato.tipoInmueble);
   var precioCompacto = formatCompactPrice(dato.precio);
   var detalles = [];
+  // Estado del inmueble primero que los emojis informativos: 🟢 activo,
+  // 🔴 inactivo, 🟡 activo con más de 12 meses de antigüedad.
+  var estadoInmueble = emojiEstadoInmueble(dato);
+  detalles.push(`<span data-tippy-content="${estadoInmueble.titulo}">${estadoInmueble.emoji}</span>`);
   detalles.push(`<span data-tippy-content="Tipo de inmueble: ${dato.tipoInmueble || 'No especificado'}">${tipoEmoji}</span>`);
   detalles.push(`<span data-tippy-content="Precio: USD ${formatNumber(dato.precio)}">💰${precioCompacto}</span>`);
   if (dato.m2terreno) detalles.push(`<span data-tippy-content="Superficie de terreno: ${dato.m2terreno} m²">📐${dato.m2terreno}</span>`);

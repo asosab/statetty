@@ -198,6 +198,7 @@ function apiItemToLocation(item) {
     tipoNegocio: 'tipoNegocio',
     estacionamientos: 'estacionamientos',
     createdAt: 'createdAt',
+    activo: 'activo',
     _id: '_id'
   };
 

@@ -140,6 +140,21 @@
   // - field.tooltip: texto explicativo de ese campo puntual (va en el input, vía Tippy.js)
   var GROUPS = [
     {
+      legend: 'Búsqueda por URL',
+      tooltip: 'Si este campo tiene valor, es lo único que se tiene en cuenta: se ignoran todos los demás filtros y se busca el inmueble por su URL, esté activo o inactivo.',
+      fields: [
+        {
+          name: 'url', type: 'text', label: 'URL del inmueble',
+          placeholder: 'https://…',
+          tooltip: 'Pega la URL del inmueble. Si se completa, el resto del formulario se ignora: se busca solo por esta URL, sin distinguir mayúsculas, activo o inactivo.'
+        }
+      ],
+      summary: function (form) {
+        var u = getVal(form, 'url');
+        return u ? truncate(u, 48) : '';
+      }
+    },
+    {
       legend: 'Ubicación y radio',
       tooltip: 'Define el centro geográfico y el radio de búsqueda alrededor de ese punto.',
       fields: [
@@ -1219,12 +1234,22 @@
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       var params = getParams();
+      // Búsqueda solo por URL: si el campo URL tiene valor es lo ÚNICO que se
+      // envía — ningún otro filtro se valida (el backend ignora hasta
+      // activo/inactivo, antigüedad, precio y geografía). Se conserva
+      // `nombre` porque es la etiqueta de la búsqueda, no un filtro.
+      var busquedaSoloUrl = !!params.url;
+      if (busquedaSoloUrl) {
+        var nombreUrl = params.nombre;
+        params = { url: params.url };
+        if (nombreUrl) params.nombre = nombreUrl;
+      }
       // Superficie dibujada en el mapa (plan figuras-sobrescriben-geografia, D3): si hay
       // figuras mandan ellas; las coords/radio del form no se envían ni se guardan.
       var fig = (typeof window.STT_MAP_FIGURAS === 'function') ? window.STT_MAP_FIGURAS() : null;
       var hayFiguras = !!(fig && ((fig.poligono && fig.poligono.length) ||
                                   (fig.circunferencia && fig.circunferencia.length)));
-      if (hayFiguras) {
+      if (hayFiguras && !busquedaSoloUrl) {
         params.poligono = fig.poligono;
         params.circunferencia = fig.circunferencia;
         delete params.lat;
@@ -1330,7 +1355,7 @@
     // lat/lng siguen siendo dos campos independientes a nivel de datos;
     // solo la presentación/edición está unificada en un input "latlng".
     var textFields = ['nombre', 'lat', 'lng', 'userID', 'agenciaID', 'agenteID', 'inmuebleID',
-      'whiteList', 'blackList', 'ciudad'];
+      'whiteList', 'blackList', 'ciudad', 'url'];
     var boolFields = [];
 
     textFields.forEach(function (name) {
