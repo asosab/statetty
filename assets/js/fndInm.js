@@ -400,6 +400,14 @@
       '#' + SECTION_ID + ' .fndinm-slots select{flex:1;min-width:120px;}' +
       '#' + SECTION_ID + ' fieldset{border:1px solid rgba(0,0,0,.12);border-radius:8px;' +
       'margin:0 0 8px;padding:6px 10px;}' +
+      // Estado de uso de cada fieldset: borde verde cuando sus campos
+      // aportan valores a la búsqueda; en modo solo-URL, borde rojo en
+      // todos los demás (sus valores no se toman en cuenta) con un leve
+      // tinte para que se note aun con el fieldset cerrado.
+      '#' + SECTION_ID + ' fieldset.fndinm-estado-usado{border-color:#2e9e4f;' +
+      'background:rgba(46,158,79,.05);}' +
+      '#' + SECTION_ID + ' fieldset.fndinm-estado-ignorado{border-color:#d64545;' +
+      'background:rgba(214,69,69,.05);}' +
       '#' + SECTION_ID + ' legend{display:flex;align-items:center;gap:6px;width:100%;' +
       'font-size:.82rem;font-weight:600;padding:4px 4px;opacity:.85;cursor:pointer;' +
       'user-select:none;box-sizing:border-box;}' +
@@ -767,7 +775,10 @@
         });
       });
 
-      if (form._fieldsetRefs) refreshLegends(form, form._fieldsetRefs);
+      if (form._fieldsetRefs) {
+        refreshLegends(form, form._fieldsetRefs);
+        refreshEstados(form, form._fieldsetRefs);
+      }
     });
 
     wrap.appendChild(select);
@@ -820,6 +831,38 @@
         try { text = ref.group.summary(form) || ''; } catch (e) { text = ''; }
       }
       summarySpan.textContent = text ? ' | ' + text : '';
+    });
+  }
+
+  // Un campo "aporta" a la búsqueda si getParams() lo tomaría: texto o
+  // número con valor, checkbox tildado, select con una opción elegida.
+  function campoAportaValor(form, field) {
+    if (field.type === 'latlng') {
+      var combinado = document.getElementById('fndInm-latlng');
+      return !!(combinado && String(combinado.value).trim() !== '');
+    }
+    var el = form.elements[field.name];
+    if (!el) return false;
+    if (field.type === 'checkbox') return !!el.checked;
+    return String(el.value).trim() !== '';
+  }
+
+  // Pinta el estado de cada fieldset: verde si sus campos se usarán en la
+  // búsqueda, rojo si el modo solo-URL los deja fuera. Sin URL, los
+  // fieldsets sin valores quedan sin marca.
+  function refreshEstados(form, fieldsetRefs) {
+    if (!form || !fieldsetRefs) return;
+    var urlEl = form.elements['url'];
+    var hayUrl = !!(urlEl && String(urlEl.value).trim() !== '');
+    fieldsetRefs.forEach(function (ref) {
+      ref.el.classList.remove('fndinm-estado-usado', 'fndinm-estado-ignorado');
+      if (hayUrl) {
+        var esUrl = (ref.group.fields || []).some(function (f) { return f.name === 'url'; });
+        ref.el.classList.add(esUrl ? 'fndinm-estado-usado' : 'fndinm-estado-ignorado');
+        return;
+      }
+      var usado = (ref.group.fields || []).some(function (f) { return campoAportaValor(form, f); });
+      if (usado) ref.el.classList.add('fndinm-estado-usado');
     });
   }
 
@@ -877,6 +920,7 @@
         }
       });
       refreshLegends(form, form._fieldsetRefs);
+      refreshEstados(form, form._fieldsetRefs);
     }
     return aplicados.length;
   }
@@ -922,7 +966,10 @@
     if (combinado && (!form.elements['lat'] || form.elements['lat'].value === '')) {
       combinado.value = '';
     }
-    if (form._fieldsetRefs) refreshLegends(form, form._fieldsetRefs);
+    if (form._fieldsetRefs) {
+      refreshLegends(form, form._fieldsetRefs);
+      refreshEstados(form, form._fieldsetRefs);
+    }
     return n;
   }
 
@@ -1009,9 +1056,15 @@
 
     attachFieldsetAccordion(form, fieldsetRefs);
 
-    // Recalcular leyendas ante cualquier cambio en el formulario
-    form.addEventListener('input', function () { refreshLegends(form, fieldsetRefs); });
-    form.addEventListener('change', function () { refreshLegends(form, fieldsetRefs); });
+    // Recalcular leyendas y estado de uso ante cualquier cambio
+    form.addEventListener('input', function () {
+      refreshLegends(form, fieldsetRefs);
+      refreshEstados(form, fieldsetRefs);
+    });
+    form.addEventListener('change', function () {
+      refreshLegends(form, fieldsetRefs);
+      refreshEstados(form, fieldsetRefs);
+    });
 
     // --- Auto-save debounced por campo editado ---
     var _pendingData = null;
@@ -1105,11 +1158,13 @@
         var combined = document.getElementById('fndInm-latlng');
         if (combined) combined.dispatchEvent(new Event('input', { bubbles: true }));
         refreshLegends(form, fieldsetRefs);
+        refreshEstados(form, fieldsetRefs);
       }, 0);
     });
 
-    // Estado inicial de las leyendas (según valores por defecto/overrides)
+    // Estado inicial de las leyendas y de uso (según defaults/overrides)
     refreshLegends(form, fieldsetRefs);
+    refreshEstados(form, fieldsetRefs);
     form._fieldsetRefs = fieldsetRefs;
 
     var actions = document.createElement('div');
@@ -1132,6 +1187,7 @@
         var combined = document.getElementById('fndInm-latlng');
         if (combined) combined.dispatchEvent(new Event('input', { bubbles: true }));
         refreshLegends(form, fieldsetRefs);
+        refreshEstados(form, fieldsetRefs);
       }
     });
 

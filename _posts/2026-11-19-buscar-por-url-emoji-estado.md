@@ -19,6 +19,15 @@ Un detalle útil: la búsqueda por URL encuentra el inmueble **esté activo o in
 
 Si no hay ningún inmueble que coincida, el mapa avisa que la búsqueda no devolvió resultados, igual que con cualquier otro filtro.
 
+## Las cajas te dicen qué se va a usar
+
+Para que no queden dudas sobre qué filtros cuentan, el formulario pinta el borde de cada grupo de campos:
+
+- 🟢 **Verde**: ese grupo tiene valores que sí entran en la búsqueda.
+- 🔴 **Rojo**: ese grupo queda descartado. Pasa cuando el campo URL tiene algo escrito: todo lo demás se ignora hasta que lo borres.
+
+Así, antes de tocar Buscar, ves qué va a contar y qué no.
+
 ## Un círculo de colores en cada puntero
 
 Aprovechamos para mejorar la información del mapa. Ahora, al abrir el detalle de un inmueble, el primer símbolo que ves es un círculo de colores:
