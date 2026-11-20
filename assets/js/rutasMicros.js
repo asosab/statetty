@@ -25,9 +25,12 @@
   var SLOT_ID = 'stt-rutasmicros-slot';
   var STYLE_ID = 'stt-rutasmicros-styles';
   var API = 'statetty/rutasMicros';
+  var API_MAPA = 'statetty/rutasMicros/mapa';
   var STORAGE_KEY = 'stt_rutasmicros_puntos';
   var COLORS = ['#17baef', '#7c3aed', '#0e7490'];
   var WALK_COLOR = '#f59e0b';
+  var SECCIONES = ['nombre', 'origen', 'destino'];
+  var COLOR_SECCION = { nombre: '#7c3aed', origen: '#0e7490', destino: '#f97316' };
 
   var mapa = null;
   var slot = null;
@@ -39,6 +42,9 @@
   var opciones = [];
   var pidiendo = false;
   var seleccion = -1;
+  var capasSeccion = {};
+  var pidiendoSeccion = {};
+  var peticionSeccion = {};
   var el = {};
 
   function sesionActiva() {
@@ -76,7 +82,18 @@
       '.stt-rm-card.activa{border-color:#17baef;background:#d9f2fd;}' +
       '.stt-rm-card-titulo{font-weight:700;font-size:12px;}' +
       '.stt-rm-card-lineas{font-size:12px;margin:1px 0;}' +
-      '.stt-rm-card-detalle{font-size:11px;color:#444;}';
+      '.stt-rm-card-detalle{font-size:11px;color:#444;}' +
+      '#stt-rutasmicros-slot .stt-rm-seccion{margin-top:10px;border-top:1px dashed #d9ecf5;padding-top:8px;}' +
+      '#stt-rutasmicros-slot .stt-rm-seccion-tit{font-size:12px;font-weight:700;color:#074f66;margin-bottom:6px;}' +
+      '#stt-rutasmicros-slot .stt-rm-filtro{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px;}' +
+      '#stt-rutasmicros-slot .stt-rm-filtro label{font-size:12px;font-weight:700;color:#04364a;}' +
+      '#stt-rutasmicros-slot .stt-rm-filtro input{flex:1;min-width:150px;padding:4px 6px;border:1px solid #cfe9f5;' +
+        'border-radius:6px;font-size:12px;color:#04364a;background:#fff;}' +
+      '#stt-rutasmicros-slot .stt-rm-item{display:block;width:100%;text-align:left;margin:4px 0;padding:5px 7px;' +
+        'border:1px solid #e2eef3;border-radius:7px;background:#fff;font-size:11px;color:#04364a;}' +
+      '#stt-rutasmicros-slot .stt-rm-item-nom{font-weight:700;color:#074f66;}' +
+      '#stt-rutasmicros-slot .stt-rm-item-det{color:#7b8f99;margin-top:1px;}' +
+      '#stt-rutasmicros-slot .stt-rm-item.error{border-color:#f2c1bd;background:#fff5f4;color:#b3261e;}';
     document.head.appendChild(style);
   }
 
@@ -99,6 +116,33 @@
         '</div>' +
         '<div id="stt-rm-estado" role="status" aria-live="polite"></div>' +
         '<div id="stt-rm-resultados"></div>' +
+        '<div class="stt-rm-seccion">' +
+          '<div class="stt-rm-seccion-tit">Por nombre</div>' +
+          '<div class="stt-rm-filtro">' +
+            '<label for="stt-rm-ruta">Ruta:</label>' +
+            '<input type="text" id="stt-rm-ruta" placeholder="escribe aquí el nombre de rutas separadas por coma">' +
+          '</div>' +
+          '<div class="stt-rm-botones">' +
+            '<button type="button" id="stt-rm-mostrar-nombre">Mostrar</button>' +
+            '<button type="button" id="stt-rm-limpiar-nombre">Limpiar</button>' +
+          '</div>' +
+          '<div id="stt-rm-resultados-nombre"></div>' +
+        '</div>' +
+        '<div class="stt-rm-seccion">' +
+          '<div class="stt-rm-seccion-tit">Cruzan un punto</div>' +
+          '<div class="stt-rm-botones">' +
+            '<button type="button" id="stt-rm-mostrar-origen">Mostrar rutas que cruzan por Origen</button>' +
+            '<button type="button" id="stt-rm-limpiar-origen">Limpiar</button>' +
+          '</div>' +
+          '<div id="stt-rm-resultados-origen"></div>' +
+        '</div>' +
+        '<div class="stt-rm-seccion">' +
+          '<div class="stt-rm-botones">' +
+            '<button type="button" id="stt-rm-mostrar-destino">Mostrar rutas que cruzan por Destino</button>' +
+            '<button type="button" id="stt-rm-limpiar-destino">Limpiar</button>' +
+          '</div>' +
+          '<div id="stt-rm-resultados-destino"></div>' +
+        '</div>' +
       '</div>' +
     '</div>';
 
@@ -112,6 +156,18 @@
     el.btnDestino = document.getElementById('stt-rm-destino');
     el.buscar = document.getElementById('stt-rm-buscar');
     el.limpiar = document.getElementById('stt-rm-limpiar');
+    el.rutaInput = document.getElementById('stt-rm-ruta');
+    el.mostrarNombre = document.getElementById('stt-rm-mostrar-nombre');
+    el.limpiarNombre = document.getElementById('stt-rm-limpiar-nombre');
+    el.mostrarOrigen = document.getElementById('stt-rm-mostrar-origen');
+    el.limpiarOrigen = document.getElementById('stt-rm-limpiar-origen');
+    el.mostrarDestino = document.getElementById('stt-rm-mostrar-destino');
+    el.limpiarDestino = document.getElementById('stt-rm-limpiar-destino');
+    el.resultadosExtra = {
+      nombre: document.getElementById('stt-rm-resultados-nombre'),
+      origen: document.getElementById('stt-rm-resultados-origen'),
+      destino: document.getElementById('stt-rm-resultados-destino')
+    };
   }
 
   function textoPunto(cual) {
@@ -142,6 +198,133 @@
     if (capa) capa.clearLayers();
   }
 
+  function resultadosSeccion(sec) {
+    return el.resultadosExtra ? el.resultadosExtra[sec] : null;
+  }
+
+  function mensajeSeccion(sec, txt, esError) {
+    var res = resultadosSeccion(sec);
+    if (!res) return;
+    res.innerHTML = '<div class="stt-rm-item' + (esError ? ' error' : '') + '">' + txt + '</div>';
+  }
+
+  function capaSeccion(sec) {
+    if (!mapa) return null;
+    if (!capasSeccion[sec]) capasSeccion[sec] = L.layerGroup().addTo(mapa);
+    return capasSeccion[sec];
+  }
+
+  function limpiarSeccion(sec) {
+    var res = resultadosSeccion(sec);
+    if (res) res.innerHTML = '';
+    var cg = capasSeccion[sec];
+    if (cg) {
+      cg.clearLayers();
+      if (mapa) mapa.removeLayer(cg);
+      capasSeccion[sec] = null;
+    }
+    peticionSeccion[sec] = (peticionSeccion[sec] || 0) + 1;
+  }
+
+  function pintarRutasSeccion(sec, rutas) {
+    limpiarSeccion(sec);
+    var res = resultadosSeccion(sec);
+    if (!res) return;
+    if (!rutas || !rutas.length) {
+      mensajeSeccion(sec, 'Sin rutas para mostrar.', true);
+      return;
+    }
+    var cg = capaSeccion(sec);
+    var bounds = L.latLngBounds([]);
+    rutas.forEach(function (r) {
+      var coords = r.coords || [];
+      if (coords.length > 1 && cg) {
+        L.polyline(coords, { color: COLOR_SECCION[sec], weight: 4, opacity: 0.8 }).addTo(cg);
+      }
+      coords.forEach(function (c) { bounds.extend(c); });
+      var item = document.createElement('div');
+      item.className = 'stt-rm-item';
+      var nom = document.createElement('div');
+      nom.className = 'stt-rm-item-nom';
+      nom.textContent = (r.nombre || 'Ruta') + (r.direccion ? ' · ' + r.direccion : '');
+      var det = document.createElement('div');
+      det.className = 'stt-rm-item-det';
+      det.textContent = (r.sentido ? r.sentido + ' · ' : '') + 'Recorrido: ' + ((r.distancia || 0) / 1000).toFixed(1) + ' km' +
+        (r.distanciaPunto != null ? ' · pasa a ' + r.distanciaPunto + ' m del punto' : '');
+      item.appendChild(nom);
+      item.appendChild(det);
+      res.appendChild(item);
+    });
+    if (mapa && bounds.isValid()) mapa.fitBounds(bounds, { padding: [30, 30] });
+  }
+
+  function pedirMapa(sec, body, boton) {
+    if (pidiendoSeccion[sec]) return;
+    if (!sesionActiva()) {
+      avisar('Inicia sesión con una cuenta activa para ver rutas.', true);
+      aplicarGate();
+      return;
+    }
+    pidiendoSeccion[sec] = true;
+    if (boton) boton.disabled = true;
+    limpiarSeccion(sec);
+    var req = peticionSeccion[sec];
+    mensajeSeccion(sec, 'Buscando rutas…', false);
+
+    var base = (window.STATETTY_CONFIG && STATETTY_CONFIG.WS_API_BASE) || '';
+    var tokenPromise = (window.STT && window.STT.getTokenFresco)
+      ? window.STT.getTokenFresco()
+      : Promise.resolve(window.STT && window.STT.getToken ? window.STT.getToken() : '');
+
+    Promise.resolve(tokenPromise).then(function (token) {
+      return fetch(base + API_MAPA, {
+        method: 'POST',
+        headers: Object.assign(
+          { 'Content-Type': 'application/json' },
+          token ? { 'Authorization': 'Bearer ' + token } : {}
+        ),
+        body: JSON.stringify(body)
+      }).then(function (r) {
+        return r.json().then(function (d) { return { status: r.status, data: d }; });
+      }).then(function (res) {
+        if (peticionSeccion[sec] !== req) return;
+        if (res.status === 401) { mensajeSeccion(sec, 'Inicia sesión para ver rutas.', true); return; }
+        if (res.status === 403) { mensajeSeccion(sec, 'Tu cuenta no está activa o no tiene tiempo de uso disponible.', true); return; }
+        if (res.status === 429) { mensajeSeccion(sec, 'Demasiadas búsquedas. Espera un minuto e intenta de nuevo.', true); return; }
+        if (res.status !== 200 || !res.data || !res.data.ok) {
+          mensajeSeccion(sec, 'No se pudieron cargar las rutas. Intenta de nuevo.', true);
+          return;
+        }
+        pintarRutasSeccion(sec, res.data.rutas || []);
+      }).catch(function () {
+        if (peticionSeccion[sec] === req) mensajeSeccion(sec, 'Falló la búsqueda de rutas. Revisa tu conexión.', true);
+      }).then(function () {
+        pidiendoSeccion[sec] = false;
+        if (boton) boton.disabled = false;
+      });
+    });
+  }
+
+  function mostrarNombre() {
+    var texto = el.rutaInput ? el.rutaInput.value : '';
+    var nombres = String(texto || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+    if (!nombres.length) {
+      mensajeSeccion('nombre', 'Escribe al menos un nombre de ruta.', true);
+      return;
+    }
+    pedirMapa('nombre', { modo: 'nombres', nombres: nombres }, el.mostrarNombre);
+  }
+
+  function mostrarCerca(sec) {
+    var p = sec === 'origen' ? origen : destino;
+    if (!p) {
+      mensajeSeccion(sec, 'Fija primero el punto ' + (sec === 'origen' ? 'inicial' : 'final') + '.', true);
+      return;
+    }
+    pedirMapa(sec, { modo: 'punto', punto: p, radio: 50 },
+      sec === 'origen' ? el.mostrarOrigen : el.mostrarDestino);
+  }
+
   function setPunto(cual, punto) {
     var lat = Number(punto && punto.lat), lng = Number(punto && punto.lng);
     if (!isFinite(lat) || !isFinite(lng)) return;
@@ -152,6 +335,7 @@
     guardarPuntos();
     pintarPunto(cual);
     limpiarResultados();
+    if (cual === 'origen' || cual === 'destino') limpiarSeccion(cual);
     avisar('', false);
   }
 
@@ -359,6 +543,7 @@
       marcadores[c] = null;
     });
     limpiarResultados();
+    SECCIONES.forEach(limpiarSeccion);
     if (el.estOrigen) el.estOrigen.textContent = textoPunto('origen');
     if (el.estDestino) el.estDestino.textContent = textoPunto('destino');
     avisar('', false);
@@ -389,6 +574,15 @@
     });
     if (el.buscar) el.buscar.addEventListener('click', buscarRutas);
     if (el.limpiar) el.limpiar.addEventListener('click', limpiar);
+    if (el.mostrarNombre) el.mostrarNombre.addEventListener('click', mostrarNombre);
+    if (el.limpiarNombre) el.limpiarNombre.addEventListener('click', function () { limpiarSeccion('nombre'); });
+    if (el.mostrarOrigen) el.mostrarOrigen.addEventListener('click', function () { mostrarCerca('origen'); });
+    if (el.limpiarOrigen) el.limpiarOrigen.addEventListener('click', function () { limpiarSeccion('origen'); });
+    if (el.mostrarDestino) el.mostrarDestino.addEventListener('click', function () { mostrarCerca('destino'); });
+    if (el.limpiarDestino) el.limpiarDestino.addEventListener('click', function () { limpiarSeccion('destino'); });
+    if (el.rutaInput) el.rutaInput.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); mostrarNombre(); }
+    });
   }
 
   function initGate() {
