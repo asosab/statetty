@@ -83,11 +83,11 @@
 
 ## 6. MODELO DE NEGOCIO
 
-**Modelo:** Suscripción prepago en bolivianos (BOB). Sin mensualidades automáticas; el usuario compra días de acceso.
+**Modelo:** Suscripción prepago por días de acceso. Sin mensualidades automáticas; el usuario compra días de acceso. Precios en BOB para Bolivia y PEN para Perú.
 
-### Planes individuales (1 cuenta)
+### Planes individuales — Bolivia (BOB)
 
-| Planes individuales (1 cuenta) — Bolivia (BOB) | | |
+| Días  | Precio (Bs) | Precio aprox. USD* |
 |-------|-------------|-------------------|
 | 30 d  | 100         | ~14               |
 | 90 d  | 249         | ~36               |
@@ -114,7 +114,7 @@
 | 10      | 90   | 960         |
 | 10      | 180  | 1.560       |
 
-> *Grupos personalizados (5–9 cuentas usan base x5; 10+ usan base x10). El precio se calcula proporcionalmente.*
+> *Precios de equipo en Bolivia (BOB). Grupos personalizados (5–9 cuentas usan base x5; 10+ usan base x10). El precio se calcula proporcionalmente. Planes de equipo en Perú por cotización.*
 
 ### Servicios adicionales
 
