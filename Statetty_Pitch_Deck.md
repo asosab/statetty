@@ -8,7 +8,7 @@
 |-----------|--------------------------------------------------------------|
 | Nombre    | **Statetty**                                                 |
 | Slogan    | *"La navaja suiza del asesor inmobiliario"*                  |
-| Canal     | t.me/statettybot (Telegram)                                  |
+| Canal     | Web: statetty.com · Bot opcional: t.me/statettybot       |
 | Web       | https://statetty.com                                         |
 | Director  | Alejandro Sosa Briceño — alejandro.sosa@statetty.com         |
 | Sede      | Charcas 168, Santa Cruz, Bolivia                             |
@@ -31,7 +31,7 @@
 
 ## 3. SOLUCIÓN
 
-**Statetty** es una plataforma de inteligencia operativa para el mercado inmobiliario, accesible desde Telegram, que automatiza la búsqueda, el análisis y la presentación de inmuebles.
+**Statetty** es una plataforma de inteligencia operativa para el mercado inmobiliario, con aplicación web propia (statetty.com) y bot de Telegram opcional para alertas en tiempo real, que automatiza la búsqueda, el análisis y la presentación de inmuebles.
 
 **Misión:** Conectar el ecosistema inmobiliario mediante automatización.
 
@@ -43,8 +43,8 @@
 
 ## 4. PRODUCTO
 
-**App:** Statetty Bot (`@statettybot`)
-**Plataforma:** Telegram (cobertura principal: Santa Cruz, Bolivia)
+**App:** Statetty Web (statetty.com) + `@statettybot` (opcional, alertas)
+**Plataforma:** Aplicación web — sin instalación (cobertura principal: Santa Cruz, Bolivia); Telegram como canal de alertas en tiempo real
 **Descripción:** Búsqueda y alertas de inmuebles; indexa webs y grupos de WhatsApp; exporta resultados a mapa interactivo y Google Sheets.
 
 ### Funciones clave
@@ -75,7 +75,7 @@
 | Mercado primario  | Asesores inmobiliarios en Santa Cruz, Bolivia      |
 | Mercado secundario| Todo Bolivia                                       |
 | Perfil de usuario | Asesor independiente o inmobiliaria pequeña/mediana |
-| Canal de acceso   | Telegram (baja fricción, sin app extra)            |
+| Canal de acceso   | Web (sin instalación, login con correo); Telegram opcional |
 
 **Contexto:** Santa Cruz es el mercado inmobiliario más dinámico de Bolivia. El sector opera en gran parte a través de WhatsApp y portales web sin inteligencia de datos integrada.
 
@@ -87,12 +87,21 @@
 
 ### Planes individuales (1 cuenta)
 
-| Días  | Precio (Bs) | Precio aprox. USD* |
+| Planes individuales (1 cuenta) — Bolivia (BOB) | | |
 |-------|-------------|-------------------|
-| 2 d   | 14          | ~2                |
-| 30 d  | 75          | ~11               |
-| 90 d  | 189         | ~27               |
-| 180 d | 300         | ~43               |
+| 30 d  | 100         | ~14               |
+| 90 d  | 249         | ~36               |
+| 180 d | 396         | ~57               |
+
+### Planes individuales — Perú (PEN)
+
+| Días  | Precio (S/.) |
+|-------|--------------|
+| 30 d  | 35           |
+| 90 d  | 90           |
+| 180 d | 144          |
+
+> Precios individuales publicados en la web (sección Planes, selector Bolivia/Perú). Planes de equipo por cotización según tamaño.
 
 ### Planes de equipo
 
@@ -114,7 +123,7 @@
 | Presentación presencial (SCZ) | 400        | Deducible al contratar un plan   |
 | Asesoría / Taller             | 400        | 1er taller grupal gratuito       |
 
-**Forma de pago:** QR de pago + comprobante por Telegram. Sin fricción de tarjeta de crédito.
+**Forma de pago:** Checkout con QR desde la web; también QR de pago + comprobante por WhatsApp/Telegram. Sin fricción de tarjeta de crédito.
 
 ---
 
@@ -186,7 +195,8 @@ Miércoles → cita o dato destacado sin link (segunda impresión de marca)
 | Canal        | Dato                                                          |
 |--------------|---------------------------------------------------------------|
 | Web          | https://statetty.com                                          |
-| Telegram bot | t.me/statettybot                                              |
+| Registro     | statetty.com/registro (cuenta con correo; Telegram opcional)  |
+| Bot Telegram | t.me/statettybot (opcional — alertas)                         |
 | Comunidad    | t.me/Statetty                                                 |
 | WhatsApp     | https://wa.me/59178447518                                     |
 | Canal WA     | https://whatsapp.com/channel/0029Vb6WYM36mYPE27u1Dk1t        |
@@ -203,5 +213,5 @@ Miércoles → cita o dato destacado sin link (segunda impresión de marca)
 - *"La navaja suiza del asesor inmobiliario"* → portada / hero slide
 - *"Capa de inteligencia operativa para el mercado inmobiliario"* → visión
 - *"Conectar el ecosistema inmobiliario mediante automatización"* → misión
-- *"Busca, analiza y presenta — todo desde Telegram"* → propuesta de valor en una línea
-- *"Sin app extra. Sin fricción. Solo resultados."* → beneficio de canal
+- *"Busca, analiza y presenta — todo desde la web"* → propuesta de valor en una línea
+- *"Sin instalación. Sin fricción. Telegram solo si quieres alertas."* → canal web + bot opcional
