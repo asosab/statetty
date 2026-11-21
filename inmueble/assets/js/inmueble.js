@@ -563,7 +563,10 @@
     }, function () {});
   }
 
-  /* ---------- Entorno: rutas de micros (todos) + clima/ruido (solo asesor ?t=) ---------- */
+  /* ---------- Entorno: rutas de transporte + clima/ruido ----------
+     Dos cajas independientes; cada una solo se muestra si tiene contenido.
+     Regla del dueño: la vista pública ve TODO (rutas + clima + ruido);
+     la vista asesor ?t= oculta clima y ruido (info «negativa» para el cliente). */
   var WMO_EMOJI = {
     0: '☀️', 1: '🌤️', 2: '⛅', 3: '☁️', 45: '🌫️', 48: '🌫️',
     51: '🌦️', 53: '🌦️', 55: '🌧️', 61: '🌧️', 63: '🌧️', 65: '🌧️',
@@ -594,6 +597,9 @@
     s.textContent =
       '#inm-entorno{margin:18px 0;padding:16px;border:1px solid #e2eef3;border-radius:12px;background:#fbfdff;}' +
       '#inm-entorno h3{margin:0 0 10px;font-size:15px;color:#074f66;}' +
+      '.inm-ent-bloque{margin-bottom:14px;}' +
+      '.inm-ent-bloque:last-child{margin-bottom:0;}' +
+      '.inm-ent-bloque h3{margin-bottom:8px;}' +
       '.inm-ent-sub{font-size:12px;font-weight:700;color:#04364a;margin:12px 0 6px;}' +
       '.inm-ent-rutas{display:flex;flex-wrap:wrap;gap:6px;}' +
       '.inm-ent-ruta{background:#f2fbff;border:1px solid #cfe9f5;border-radius:999px;' +
@@ -618,24 +624,31 @@
     var sec = document.createElement('div');
     sec.id = 'inm-entorno';
     sec.innerHTML =
-      '<h3>🚌 Entorno: rutas y clima</h3>' +
-      '<div class="inm-ent-sub">Rutas de micros que pasan cerca</div>' +
-      '<div class="inm-ent-rutas" id="inm-ent-rutas"><span style="font-size:12px;color:#7b8f99">Cargando…</span></div>' +
-      (esAsesor
-        ? '<div class="inm-ent-sub">Clima y ruido de la zona</div>' +
-          '<div id="inm-ent-clima"><span style="font-size:12px;color:#7b8f99">Cargando…</span></div>'
-        : '');
+      '<div class="inm-ent-bloque" id="inm-ent-bloque-rutas">' +
+        '<h3>🚌 Rutas de transporte urbano</h3>' +
+        '<div class="inm-ent-rutas" id="inm-ent-rutas"><span style="font-size:12px;color:#7b8f99">Cargando…</span></div>' +
+      '</div>' +
+      (esAsesor ? '' :
+        '<div class="inm-ent-bloque" id="inm-ent-bloque-clima">' +
+          '<h3>🌡️ Clima y ruido de la zona</h3>' +
+          '<div id="inm-ent-clima"><span style="font-size:12px;color:#7b8f99">Cargando…</span></div>' +
+        '</div>');
     anchor.parentNode.insertBefore(sec, anchor);
     return sec;
   }
 
+  // Quita una caja si quedó sin contenido; si no queda ninguna, quita la sección.
+  function limpiarBloqueVacio(sec, bloqueId) {
+    var b = sec.querySelector('#' + bloqueId);
+    if (b && !b.textContent.replace(/\s/g, '')) b.remove();
+    if (!sec.querySelector('.inm-ent-bloque')) sec.remove();
+  }
+
   function pintarRutasEntorno(sec, rutas) {
-    var box = sec.querySelector('#inm-ent-rutas');
-    if (!box) return;
-    if (!rutas || !rutas.length) {
-      box.innerHTML = '<span style="font-size:12px;color:#7b8f99">Ninguna ruta de micros pasa a menos de 150 m.</span>';
-      return;
-    }
+    var bloque = sec.querySelector('#inm-ent-bloque-rutas');
+    if (!bloque) return;
+    if (!rutas || !rutas.length) { bloque.remove(); limpiarBloqueVacio(sec, 'inm-ent-bloque-rutas'); return; }
+    var box = bloque.querySelector('#inm-ent-rutas');
     box.innerHTML = '';
     rutas.forEach(function (r) {
       var chip = document.createElement('span');
@@ -648,8 +661,11 @@
   }
 
   function pintarClimaEntorno(sec, d) {
-    var box = sec.querySelector('#inm-ent-clima');
+    var bloque = sec.querySelector('#inm-ent-bloque-clima');
+    if (!bloque) return;
+    var box = bloque.querySelector('#inm-ent-clima');
     if (!box) return;
+    d = d || {};
     var html = '';
     if (d.actual) {
       html += '<div class="inm-ent-actual">' +
@@ -675,7 +691,8 @@
     }
     if (d.celda && d.celda.mensual && d.celda.mensual.length === 12) {
       html += '<div class="inm-ent-sub" style="margin-top:10px">Ciclo anual de sensación térmica ' +
-        '(promedio mensual 2001-2025)</div>' + graficoCicloAnual(d.celda.mensual);
+        '(promedio mensual 2001-2025) · mes actual resaltado</div>' +
+        graficoCicloAnual(d.celda.mensual, d.actual);
     }
     if (d.celda && d.celda.ruido != null) {
       var etiqueta = d.celda.ruido <= 0 ? 'Sin aporte de buses' :
@@ -688,19 +705,34 @@
         (d.celda.ruidoRutas ? ' <small style="color:#7b8f99">(' + d.celda.ruidoRutas + ' rutas solapadas)</small>' : '') +
         (d.celda.tranquila ? ' · <b style="color:#15803d">calle tranquila</b>' : '') + '</div>';
     }
-    box.innerHTML = html || '<span style="font-size:12px;color:#7b8f99">Sin datos de clima para esta zona.</span>';
+    if (!html) { bloque.remove(); if (!sec.querySelector('.inm-ent-bloque')) sec.remove(); return; }
+    box.innerHTML = html;
   }
 
   // Gráfica SVG del ciclo anual: sensación térmica (naranja) y temperatura
-  // media (azul) por mes. Sin dependencias.
-  function graficoCicloAnual(mensual) {
+  // media (azul) por mes. El mes actual va resaltado y se marcan la
+  // temperatura real de ahora y la sensación real contra el promedio del mes.
+  // Sin dependencias.
+  function graficoCicloAnual(mensual, actual) {
     var W = 640, H = 170, P = { l: 34, r: 8, t: 10, b: 22 };
     var MESES_C = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    // Mes actual: por la fecha del dato real; si no hay, el mes de hoy.
+    var mesActual = null;
+    if (actual && actual.fecha) {
+      var fm = parseInt(String(actual.fecha).slice(5, 7), 10);
+      if (fm >= 1 && fm <= 12) mesActual = fm - 1;
+    }
+    if (mesActual == null) mesActual = new Date().getMonth();
     var s = mensual.map(function (m) { return m.sensacion != null ? m.sensacion : m.tMedia; })
       .filter(function (v) { return v != null; });
     var t = mensual.map(function (m) { return m.tMedia; }).filter(function (v) { return v != null; });
+    var vals = s.concat(t);
+    if (actual) {
+      if (actual.t != null && isFinite(actual.t)) vals.push(actual.t);
+      if (actual.sensacion != null && isFinite(actual.sensacion)) vals.push(actual.sensacion);
+    }
     if (!s.length) return '';
-    var min = Math.min.apply(null, s.concat(t)), max = Math.max.apply(null, s.concat(t));
+    var min = Math.min.apply(null, vals), max = Math.max.apply(null, vals);
     if (max - min < 1) { max += 1; min -= 1; }
     function X(i) { return P.l + (W - P.l - P.r) * i / 11; }
     function Y(v) { return P.t + (H - P.t - P.b) * (1 - (v - min) / (max - min)); }
@@ -721,14 +753,48 @@
       return '<text x="2" y="' + (Y(v) + 3) + '" font-size="9" fill="#7b8f99">' + Math.round(v) + '°</text>';
     }).join('');
     var etiquetasX = MESES_C.map(function (m, i) {
-      return '<text x="' + X(i) + '" y="' + (H - 6) + '" font-size="9" fill="#7b8f99" text-anchor="middle">' + m + '</text>';
+      var peso = i === mesActual ? 'font-weight="700" fill="#074f66"' : 'fill="#7b8f99"';
+      return '<text x="' + X(i) + '" y="' + (H - 6) + '" font-size="9" ' + peso +
+        ' text-anchor="middle">' + m + '</text>';
     }).join('');
+
+    // Mes actual: banda de fondo + marcador del mes en la etiqueta.
+    var pasoX = (W - P.l - P.r) / 11;
+    var fondo = mesActual != null
+      ? '<rect x="' + (X(mesActual) - pasoX / 2) + '" y="' + P.t + '" width="' + pasoX +
+        '" height="' + (H - P.t - P.b) + '" fill="rgba(7,79,102,.07)"/>'
+      : '';
+
+    // Marcadores «ahora»: temperatura real (punto azul sobre la serie de
+    // temperatura media) y sensación real (punto naranja sobre su serie).
+    var marcadores = '', notaHoy = '';
+    if (actual && mesActual != null) {
+      var mm = mensual[mesActual] || {};
+      if (actual.t != null && isFinite(actual.t)) {
+        marcadores += '<circle cx="' + X(mesActual) + '" cy="' + Y(actual.t) +
+          '" r="4" fill="#1d4ed8" stroke="#fff" stroke-width="1.5"/>';
+      }
+      if (actual.sensacion != null && isFinite(actual.sensacion)) {
+        marcadores += '<circle cx="' + X(mesActual) + '" cy="' + Y(actual.sensacion) +
+          '" r="4" fill="#ea580c" stroke="#fff" stroke-width="1.5"/>';
+      }
+      var partes = [];
+      if (actual.t != null && mm.tMedia != null)
+        partes.push('hoy <b>' + Math.round(actual.t) + ' °C</b> real · promedio del mes ' + Math.round(mm.tMedia) + ' °C');
+      if (actual.sensacion != null && (mm.sensacion != null || mm.tMedia != null)) {
+        var prom = mm.sensacion != null ? mm.sensacion : mm.tMedia;
+        partes.push('sensación <b>' + Math.round(actual.sensacion) + ' °C</b> · promedio ' + Math.round(prom) + ' °C');
+      }
+      if (partes.length) notaHoy = '<div class="inm-ent-nota" style="color:#074f66;font-weight:600">' + partes.join(' · ') + '</div>';
+    }
+
     return '<svg class="inm-ent-clima-chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" ' +
-      'aria-label="Ciclo anual de sensación térmica">' + etiquetasY + etiquetasX +
+      'aria-label="Ciclo anual de sensación térmica">' + fondo + etiquetasY + etiquetasX +
       serie(t, '#2563eb', 'rgba(37,99,235,.08)') +
-      serie(s, '#ea580c', 'rgba(234,88,12,.08)') + '</svg>' +
+      serie(s, '#ea580c', 'rgba(234,88,12,.08)') + marcadores + '</svg>' +
+      notaHoy +
       '<div class="inm-ent-nota">Azul: temperatura media · Naranja: sensación térmica (T + humedad + viento). ' +
-      'Valores normales de las normales climáticas NASA POWER.</div>';
+      'Puntos sólidos: valor real de ahora. Valores normales NASA POWER 2001-2025.</div>';
   }
 
   function renderEntornoInmueble(esAsesor) {
@@ -745,14 +811,15 @@
       .then(function (d) { pintarRutasEntorno(sec, d && d.rutas); })
       .catch(function () { pintarRutasEntorno(sec, []); });
 
-    // Clima + ruido: solo vista asesor (?t= válido), decisión del dueño.
-    if (!esAsesor) return;
+    // Clima + ruido: solo vista PÚBLICA. En ?t= (asesor) se ocultan porque
+    // pueden mostrar datos «negativos» de la zona (regla del dueño).
+    if (esAsesor) return;
     fetch(base + 'statetty/clima/punto?lat=' + coords.lat + '&lng=' + coords.lng)
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (d) { pintarClimaEntorno(sec, d || {}); })
       .catch(function () {
-        var box = sec.querySelector('#inm-ent-clima');
-        if (box) box.innerHTML = '<span style="font-size:12px;color:#7b8f99">Sin datos de clima para esta zona.</span>';
+        var bloque = sec.querySelector('#inm-ent-bloque-clima');
+        if (bloque) { bloque.remove(); if (!sec.querySelector('.inm-ent-bloque')) sec.remove(); }
       });
   }
 
