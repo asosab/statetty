@@ -21,11 +21,13 @@
   window.__mapaCapasInit = true;
 
   var API_CELDAS = 'statetty/ruido/celdas';
+  var API_CLIMA_CELDAS = 'statetty/clima/celdas';
   var API_LEYENDA = 'statetty/ruido/leyenda';
 
   var mapa = null;
   var control = null;
   var selTipo = null, chkRuido = null, chkRutas = null;
+  var chkTemp = null, chkAmp = null, chkLluvia = null;
   var estRuido = null, leyendaBox = null;
 
   var capaRuido = null;          // L.layerGroup con los polígonos H3
@@ -35,6 +37,12 @@
   var leyendaCats = null;
   var cacheCeldas = {};          // key bbox+figuras → respuesta
   var debounceMove = null;
+
+  // ── capa de clima (temperature/lluvia por celda) ──
+  var capaClima = null;
+  var climaModo = null;          // 'temp' | 'amplitud' | 'lluvia'
+  var cacheClima = {};
+  var peticionClima = 0;
 
   // ── helpers de sesión / red ────────────────────────────────────────────────
   function sesionActiva() {
@@ -295,6 +303,124 @@
     });
   }
 
+  // ── capa de clima ──────────────────────────────────────────────────────────
+  // Métricas por celda (de /clima/celdas): actual.t, amplitud, actual.lluvia.
+  function colorTemp(t) {
+    if (t == null) return '#e5e7eb';
+    // 15 °C azul → 22 verde → 30 naranja → 38 rojo
+    var stops = [[15, 59, 130, 246], [22, 34, 197, 94], [30, 249, 115, 22], [38, 220, 38, 38]];
+    for (var i = 1; i < stops.length; i++) {
+      if (t <= stops[i][0]) {
+        var a = stops[i - 1], b = stops[i], k = (t - a[0]) / (b[0] - a[0]);
+        return 'rgb(' + Math.round(a[1] + (b[1] - a[1]) * k) + ',' +
+          Math.round(a[2] + (b[2] - a[2]) * k) + ',' + Math.round(a[3] + (b[3] - a[3]) * k) + ')';
+      }
+    }
+    return 'rgb(180,20,20)';
+  }
+  function colorAmp(a) {
+    if (a == null) return '#e5e7eb';
+    // amplitud 0-15 °C: verde estable → rojo contrastado
+    var k = Math.max(0, Math.min(1, a / 15));
+    return 'hsl(' + Math.round(120 - k * 120) + ',70%,' + Math.round(45 + k * 10) + '%)';
+  }
+  function colorLluvia(l, prob) {
+    var mm = l || 0, p = prob || 0;
+    if (mm <= 0.2 && p < 20) return '#e5e7eb';
+    var k = Math.max(0, Math.min(1, (mm + p * 0.1) / 20));
+    return 'hsl(210,75%,' + Math.round(75 - k * 35) + '%)';
+  }
+  function valorClima(c, modo) {
+    if (modo === 'temp') return c.actual ? c.actual.t ?? c.actual.sensacion : null;
+    if (modo === 'amplitud') return c.amplitud;
+    if (modo === 'lluvia') return c.actual ? { lluvia: c.actual.lluvia, prob: c.actual.probLluvia } : null;
+    return null;
+  }
+  function colorDe(c, modo) {
+    var v = valorClima(c, modo);
+    if (modo === 'lluvia') return colorLluvia(v ? v.lluvia : 0, v ? v.prob : 0);
+    if (modo === 'temp') return colorTemp(typeof v === 'number' ? v : null);
+    return colorAmp(typeof v === 'number' ? v : null);
+  }
+  function etiquetaClima(c, modo) {
+    var v = valorClima(c, modo);
+    if (modo === 'temp') return v == null ? 'sin dato' : Math.round(v * 10) / 10 + ' °C';
+    if (modo === 'amplitud') return v == null ? 'sin dato' : v + ' °C de amplitud';
+    if (modo === 'lluvia') {
+      if (!v) return 'sin dato';
+      return (v.lluvia ? v.lluvia + ' mm' : '0 mm') + (v.prob != null ? ' · ' + v.prob + '% prob.' : '');
+    }
+    return '';
+  }
+
+  function pintarClima(celdas, modo) {
+    if (!mapa) return;
+    if (!capaClima) capaClima = L.layerGroup().addTo(mapa);
+    capaClima.clearLayers();
+    var pintadas = 0;
+    celdas.forEach(function (c) {
+      var ring = c.poligono;
+      if (!Array.isArray(ring) || ring.length < 4) return;
+      var coords = ring.map(function (p) { return [p[1], p[0]]; });
+      var color = colorDe(c, modo);
+      var poly = L.polygon(coords, {
+        color: color, weight: 0.6, opacity: 0.9,
+        fillColor: color, fillOpacity: 0.45
+      });
+      poly.bindTooltip('<b>' + etiquetaClima(c, modo) + '</b>', { sticky: true });
+      poly.addTo(capaClima);
+      pintadas++;
+    });
+    if (!pintadas) avisarRuido('No hay datos de clima en esta zona.', true);
+  }
+
+  function actualizarClima() {
+    if (!climaModo || !mapa) return;
+    var fig = figurasActuales();
+    var bb = bboxDeZona(fig);
+    var clave = 'c' + claveZona(fig, bb);
+    peticionClima++;
+    var miReq = peticionClima;
+    if (cacheClima[clave]) { pintarClima(filtrarCeldas(cacheClima[clave], fig), climaModo); return; }
+    var q = 'minLng=' + bb.minLng + '&minLat=' + bb.minLat +
+            '&maxLng=' + bb.maxLng + '&maxLat=' + bb.maxLat;
+    fetch(baseApi() + API_CLIMA_CELDAS + '?' + q)
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (peticionClima !== miReq || !climaModo) return;
+        if (!d || d.ok === false) { avisarRuido('Sin datos de clima en esta zona.', true); return; }
+        cacheClima[clave] = d;
+        pintarClima(filtrarCeldas(d, fig), climaModo);
+      })
+      .catch(function () {
+        if (peticionClima === miReq) avisarRuido('Falló la consulta de clima.', true);
+      });
+  }
+
+  // Filtra las celdas develtas por bbox a las que caen dentro de las figuras.
+  function filtrarCeldas(d, fig) {
+    var celdas = d.celdas || [];
+    if (!hayFiguras(fig)) return celdas;
+    return celdas.filter(function (c) {
+      return c.centro && dentroDeFiguras(c.centro, fig);
+    });
+  }
+
+  function activarClima(modo) {
+    climaModo = modo;
+    if (chkTemp) chkTemp.checked = modo === 'temp';
+    if (chkAmp) chkAmp.checked = modo === 'amplitud';
+    if (chkLluvia) chkLluvia.checked = modo === 'lluvia';
+    if (!capaClima && mapa) capaClima = L.layerGroup().addTo(mapa);
+    actualizarClima();
+  }
+  function desactivarClima() {
+    climaModo = null;
+    [chkTemp, chkAmp, chkLluvia].forEach(function (c) { if (c) c.checked = false; });
+    if (capaClima && mapa) { capaClima.clearLayers(); mapa.removeLayer(capaClima); }
+    capaClima = null;
+  }
+
   function encenderRuido() {
     if (!mapa) { avisarRuido('El mapa aún no está listo.', true); return; }
     if (!sesionActiva()) {
@@ -359,6 +485,7 @@
       '.stt-capas-estado.error{color:#b3261e;}' +
       '.stt-capas-leyenda{margin-top:6px;border-top:1px dashed #d9ecf5;padding-top:5px;display:none;}' +
       '.stt-capas-leyenda-row{white-space:nowrap;font-size:11px;}' +
+      '.stt-capas-sub{margin-top:6px;font-weight:700;border-top:1px dashed #d9ecf5;padding-top:4px;}' +
       '.stt-capas-chip{display:inline-block;width:10px;height:10px;border-radius:2px;' +
         'margin-right:5px;vertical-align:-1px;}';
     document.head.appendChild(s);
@@ -379,6 +506,10 @@
         '</select></label>' +
         '<label><input type="checkbox" id="stt-capa-ruido"> Ruido</label>' +
         '<label><input type="checkbox" id="stt-capa-rutas"> Rutas de micros</label>' +
+        '<div class="stt-capas-sub">Clima</div>' +
+        '<label><input type="checkbox" id="stt-capa-temp"> Temperatura actual</label>' +
+        '<label><input type="checkbox" id="stt-capa-amp"> Amplitud anual</label>' +
+        '<label><input type="checkbox" id="stt-capa-lluvia"> Lluvia hoy</label>' +
         '<div class="stt-capas-estado" id="stt-capa-estado"></div>' +
         '<div class="stt-capas-leyenda" id="stt-capas-leyenda"></div>';
       selTipo = div.querySelector('#stt-capa-tipo');
@@ -396,7 +527,19 @@
       chkRuido.addEventListener('change', function () {
         if (chkRuido.checked) encenderRuido(); else apagarRuido();
       });
+      chkTemp = div.querySelector('#stt-capa-temp');
+      chkAmp = div.querySelector('#stt-capa-amp');
+      chkLluvia = div.querySelector('#stt-capa-lluvia');
       chkRutas.addEventListener('change', function () { alternarRutas(chkRutas.checked); });
+      chkTemp.addEventListener('change', function () {
+        if (chkTemp.checked) activarClima('temp'); else desactivarClima();
+      });
+      chkAmp.addEventListener('change', function () {
+        if (chkAmp.checked) activarClima('amplitud'); else desactivarClima();
+      });
+      chkLluvia.addEventListener('change', function () {
+        if (chkLluvia.checked) activarClima('lluvia'); else desactivarClima();
+      });
       return div;
     };
     control.addTo(mapa);
@@ -418,13 +561,18 @@
     montarControl();
     // Sin figuras dibujadas, la zona de ruido sigue la vista del usuario.
     mapa.on('moveend', function () {
-      if (!ruidoActivo || !mapa || hayFiguras(figurasActuales())) return;
-      clearTimeout(debounceMove);
-      debounceMove = setTimeout(actualizarRuido, 600);
+      if (mapa && !hayFiguras(figurasActuales())) {
+        clearTimeout(debounceMove);
+        debounceMove = setTimeout(function () {
+          if (ruidoActivo) actualizarRuido();
+          if (climaModo) actualizarClima();
+        }, 600);
+      }
     });
-    // Las figuras (✏️/📍) cambian la zona de ruido si la capa está activa.
+    // Las figuras (✏️/📍) cambian la zona de ruido/clima si la capa está activa.
     document.addEventListener('stt:figuras-cambio', function () {
       if (ruidoActivo) actualizarRuido();
+      if (climaModo) actualizarClima();
     });
     // Cuando rutasMicros dibuja rutas, el check «Rutas de micros» se marca
     // y se muestra la capa (si estaba oculta).

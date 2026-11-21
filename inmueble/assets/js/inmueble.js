@@ -43,12 +43,15 @@
           activateAgentMode(data);
         } else {
           renderSimilares(id);
+          renderEntornoInmueble(false);
         }
       }, function () {
         renderSimilares(id);
+        renderEntornoInmueble(false);
       });
     } else if (id) {
       renderSimilares(id);
+      renderEntornoInmueble(false);
     }
   }
 
@@ -451,6 +454,7 @@
       lat = parseFloat(inm && inm.lat);
       lng = parseFloat(inm && inm.lng);
     }
+    if (!isNaN(lat) && !isNaN(lng)) coordsResueltas = { lat: lat, lng: lng };
     if (isNaN(lat) || isNaN(lng)) {
       if (section) section.classList.add('inm-hidden');
       return;
@@ -559,12 +563,208 @@
     }, function () {});
   }
 
+  /* ---------- Entorno: rutas de micros (todos) + clima/ruido (solo asesor ?t=) ---------- */
+  var WMO_EMOJI = {
+    0: '☀️', 1: '🌤️', 2: '⛅', 3: '☁️', 45: '🌫️', 48: '🌫️',
+    51: '🌦️', 53: '🌦️', 55: '🌧️', 61: '🌧️', 63: '🌧️', 65: '🌧️',
+    71: '🌨️', 73: '🌨️', 75: '❄️', 80: '🌦️', 81: '🌧️', 82: '⛈️',
+    95: '⛈️', 96: '⛈️', 99: '⛈️'
+  };
+  function wmoEmoji(c) { return WMO_EMOJI[c] || '🌡️'; }
+  function escHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (ch) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch];
+    });
+  }
+
+  var coordsResueltas = null;
+  function coordsInmueble() {
+    if (coordsResueltas) return coordsResueltas;
+    var section = DOM.mapSection;
+    var lat = section ? parseFloat(section.dataset.lat) : NaN;
+    var lng = section ? parseFloat(section.dataset.lng) : NaN;
+    if (isNaN(lat) || isNaN(lng)) return null;
+    return { lat: lat, lng: lng };
+  }
+
+  function inyectarEstilosEntorno() {
+    if (document.getElementById('inm-entorno-styles')) return;
+    var s = document.createElement('style');
+    s.id = 'inm-entorno-styles';
+    s.textContent =
+      '#inm-entorno{margin:18px 0;padding:16px;border:1px solid #e2eef3;border-radius:12px;background:#fbfdff;}' +
+      '#inm-entorno h3{margin:0 0 10px;font-size:15px;color:#074f66;}' +
+      '.inm-ent-sub{font-size:12px;font-weight:700;color:#04364a;margin:12px 0 6px;}' +
+      '.inm-ent-rutas{display:flex;flex-wrap:wrap;gap:6px;}' +
+      '.inm-ent-ruta{background:#f2fbff;border:1px solid #cfe9f5;border-radius:999px;' +
+        'padding:3px 10px;font-size:12px;color:#074f66;}' +
+      '.inm-ent-ruta small{color:#7b8f99;}' +
+      '.inm-ent-actual{display:flex;flex-wrap:wrap;gap:10px;font-size:13px;color:#04364a;}' +
+      '.inm-ent-actual b{font-size:16px;}' +
+      '.inm-ent-fc{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;}' +
+      '.inm-ent-dia{min-width:64px;text-align:center;background:#fff;border:1px solid #e2eef3;' +
+        'border-radius:8px;padding:6px 4px;font-size:11px;color:#04364a;}' +
+      '.inm-ent-dia .d{font-weight:700;}' +
+      '.inm-ent-clima-chart{width:100%;height:auto;display:block;}' +
+      '.inm-ent-ruido{display:inline-block;margin-top:8px;padding:4px 10px;border-radius:8px;' +
+        'font-size:12px;font-weight:700;color:#fff;}' +
+      '.inm-ent-nota{font-size:11px;color:#7b8f99;margin-top:8px;}';
+    document.head.appendChild(s);
+  }
+
+  function montarSeccionEntorno(coords, esAsesor) {
+    var anchor = DOM.mapSection;
+    if (!anchor || !anchor.parentNode) return null;
+    var sec = document.createElement('div');
+    sec.id = 'inm-entorno';
+    sec.innerHTML =
+      '<h3>🚌 Entorno: rutas y clima</h3>' +
+      '<div class="inm-ent-sub">Rutas de micros que pasan cerca</div>' +
+      '<div class="inm-ent-rutas" id="inm-ent-rutas"><span style="font-size:12px;color:#7b8f99">Cargando…</span></div>' +
+      (esAsesor
+        ? '<div class="inm-ent-sub">Clima y ruido de la zona</div>' +
+          '<div id="inm-ent-clima"><span style="font-size:12px;color:#7b8f99">Cargando…</span></div>'
+        : '');
+    anchor.parentNode.insertBefore(sec, anchor);
+    return sec;
+  }
+
+  function pintarRutasEntorno(sec, rutas) {
+    var box = sec.querySelector('#inm-ent-rutas');
+    if (!box) return;
+    if (!rutas || !rutas.length) {
+      box.innerHTML = '<span style="font-size:12px;color:#7b8f99">Ninguna ruta de micros pasa a menos de 150 m.</span>';
+      return;
+    }
+    box.innerHTML = '';
+    rutas.forEach(function (r) {
+      var chip = document.createElement('span');
+      chip.className = 'inm-ent-ruta';
+      chip.innerHTML = escHtml(r.nombre || 'Ruta') +
+        (r.direccion ? ' <small>' + escHtml(r.direccion) + '</small>' : '') +
+        (r.distanciaM != null ? ' <small>· a ' + r.distanciaM + ' m</small>' : '');
+      box.appendChild(chip);
+    });
+  }
+
+  function pintarClimaEntorno(sec, d) {
+    var box = sec.querySelector('#inm-ent-clima');
+    if (!box) return;
+    var html = '';
+    if (d.actual) {
+      html += '<div class="inm-ent-actual">' +
+        '<span>' + wmoEmoji(d.actual.code) + ' <b>' + (d.actual.t != null ? Math.round(d.actual.t) + ' °C' : '—') + '</b> ahora</span>' +
+        (d.actual.sensacion != null ? '<span>sensación <b>' + Math.round(d.actual.sensacion) + ' °C</b></span>' : '') +
+        (d.actual.hr != null ? '<span>humedad <b>' + d.actual.hr + '%</b></span>' : '') +
+        (d.actual.presion != null ? '<span>presión <b>' + Math.round(d.actual.presion) + ' hPa</b></span>' : '') +
+        (d.actual.lluvia != null ? '<span>lluvia <b>' + d.actual.lluvia + ' mm</b></span>' : '') +
+        '</div>';
+    }
+    if (d.pronostico && d.pronostico.length) {
+      html += '<div class="inm-ent-sub" style="margin-top:10px">Próximos 7 días</div><div class="inm-ent-fc">';
+      var DIAS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+      d.pronostico.forEach(function (p, i) {
+        var nom = i === 0 ? 'Hoy' : (i === 1 ? 'Mañana' : DIAS[new Date(p.fecha + 'T12:00:00').getDay()]);
+        html += '<div class="inm-ent-dia"><div class="d">' + nom + '</div>' +
+          '<div>' + wmoEmoji(p.code) + '</div>' +
+          '<div><b>' + (p.tMax != null ? Math.round(p.tMax) : '—') + '</b>/' + (p.tMin != null ? Math.round(p.tMin) : '—') + '°</div>' +
+          (p.probLluvia != null && p.probLluvia > 10 ? '<div>🌧 ' + p.probLluvia + '%</div>' : '') +
+          '</div>';
+      });
+      html += '</div>';
+    }
+    if (d.celda && d.celda.mensual && d.celda.mensual.length === 12) {
+      html += '<div class="inm-ent-sub" style="margin-top:10px">Ciclo anual de sensación térmica ' +
+        '(promedio mensual 2001-2025)</div>' + graficoCicloAnual(d.celda.mensual);
+    }
+    if (d.celda && d.celda.ruido != null) {
+      var etiqueta = d.celda.ruido <= 0 ? 'Sin aporte de buses' :
+        d.celda.ruido <= 25 ? 'Bajo' : d.celda.ruido <= 55 ? 'Moderado' :
+        d.celda.ruido <= 80 ? 'Alto' : 'Intenso';
+      var color = d.celda.ruido <= 0 ? '#6b7280' : d.celda.ruido <= 25 ? '#ca8a04' :
+        d.celda.ruido <= 55 ? '#ea580c' : d.celda.ruido <= 80 ? '#dc2626' : '#7c3aed';
+      html += '<div>Ruido de la zona: <span class="inm-ent-ruido" style="background:' + color + '">' +
+        etiqueta + ' · ' + d.celda.ruido + '/100</span>' +
+        (d.celda.ruidoRutas ? ' <small style="color:#7b8f99">(' + d.celda.ruidoRutas + ' rutas solapadas)</small>' : '') +
+        (d.celda.tranquila ? ' · <b style="color:#15803d">calle tranquila</b>' : '') + '</div>';
+    }
+    box.innerHTML = html || '<span style="font-size:12px;color:#7b8f99">Sin datos de clima para esta zona.</span>';
+  }
+
+  // Gráfica SVG del ciclo anual: sensación térmica (naranja) y temperatura
+  // media (azul) por mes. Sin dependencias.
+  function graficoCicloAnual(mensual) {
+    var W = 640, H = 170, P = { l: 34, r: 8, t: 10, b: 22 };
+    var MESES_C = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    var s = mensual.map(function (m) { return m.sensacion != null ? m.sensacion : m.tMedia; })
+      .filter(function (v) { return v != null; });
+    var t = mensual.map(function (m) { return m.tMedia; }).filter(function (v) { return v != null; });
+    if (!s.length) return '';
+    var min = Math.min.apply(null, s.concat(t)), max = Math.max.apply(null, s.concat(t));
+    if (max - min < 1) { max += 1; min -= 1; }
+    function X(i) { return P.l + (W - P.l - P.r) * i / 11; }
+    function Y(v) { return P.t + (H - P.t - P.b) * (1 - (v - min) / (max - min)); }
+    function serie(vals, color, fill) {
+      // Solo puntos con dato; los huecos se omiten (POWER devuelve los 12
+      // meses, pero un mes puede venir -999 si falta).
+      var idx = vals.map(function (v, i) { return { i: i, v: v }; })
+        .filter(function (p) { return p.v != null && isFinite(p.v); });
+      if (!idx.length) return '';
+      var pts = idx.map(function (p) { return X(p.i) + ',' + Y(p.v); });
+      var line = pts.join(' ');
+      var area = 'M' + pts[0] + ' L' + pts.slice(1).join(' L') +
+        ' L' + X(idx[idx.length - 1].i) + ',' + Y(min) + ' L' + X(idx[0].i) + ',' + Y(min) + ' Z';
+      return (fill ? '<path d="' + area + '" fill="' + fill + '"/>' : '') +
+        '<polyline points="' + line + '" fill="none" stroke="' + color + '" stroke-width="2"/>';
+    }
+    var etiquetasY = [min, (min + max) / 2, max].map(function (v) {
+      return '<text x="2" y="' + (Y(v) + 3) + '" font-size="9" fill="#7b8f99">' + Math.round(v) + '°</text>';
+    }).join('');
+    var etiquetasX = MESES_C.map(function (m, i) {
+      return '<text x="' + X(i) + '" y="' + (H - 6) + '" font-size="9" fill="#7b8f99" text-anchor="middle">' + m + '</text>';
+    }).join('');
+    return '<svg class="inm-ent-clima-chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" ' +
+      'aria-label="Ciclo anual de sensación térmica">' + etiquetasY + etiquetasX +
+      serie(t, '#2563eb', 'rgba(37,99,235,.08)') +
+      serie(s, '#ea580c', 'rgba(234,88,12,.08)') + '</svg>' +
+      '<div class="inm-ent-nota">Azul: temperatura media · Naranja: sensación térmica (T + humedad + viento). ' +
+      'Valores normales de las normales climáticas NASA POWER.</div>';
+  }
+
+  function renderEntornoInmueble(esAsesor) {
+    var coords = coordsInmueble();
+    if (!coords) return;
+    inyectarEstilosEntorno();
+    var sec = montarSeccionEntorno(coords, esAsesor);
+    if (!sec) return;
+    var base = window.STATETTY_CONFIG ? STATETTY_CONFIG.WS_API_BASE : '';
+
+    // Rutas de micros cercanas: para todos los visitantes.
+    fetch(base + 'statetty/inmueble/rutas?lat=' + coords.lat + '&lng=' + coords.lng + '&radio=150')
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) { pintarRutasEntorno(sec, d && d.rutas); })
+      .catch(function () { pintarRutasEntorno(sec, []); });
+
+    // Clima + ruido: solo vista asesor (?t= válido), decisión del dueño.
+    if (!esAsesor) return;
+    fetch(base + 'statetty/clima/punto?lat=' + coords.lat + '&lng=' + coords.lng)
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) { pintarClimaEntorno(sec, d || {}); })
+      .catch(function () {
+        var box = sec.querySelector('#inm-ent-clima');
+        if (box) box.innerHTML = '<span style="font-size:12px;color:#7b8f99">Sin datos de clima para esta zona.</span>';
+      });
+  }
+
   /* ---------- Vista asesor (?t=waphone, usuario activo) ---------- */
+  var modoAsesor = false;
   function activateAgentMode(data) {
+    modoAsesor = true;
     if (DOM.contactBar) DOM.contactBar.classList.add('inm-hidden');
     if (DOM.contactCard) DOM.contactCard.classList.add('inm-hidden');
     if (DOM.simCard) DOM.simCard.classList.add('inm-hidden');
     renderAgenteCard(data);
+    renderEntornoInmueble(true);
   }
 
   function renderAgenteCard(data) {
