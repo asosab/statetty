@@ -705,6 +705,21 @@
         (d.celda.ruidoRutas ? ' <small style="color:#7b8f99">(' + d.celda.ruidoRutas + ' rutas solapadas)</small>' : '') +
         (d.celda.tranquila ? ' · <b style="color:#15803d">calle tranquila</b>' : '') + '</div>';
     }
+    // Detalle fino: raster de 30 m en el punto exacto del inmueble.
+    if (d.ruidoPunto && d.ruidoPunto.dentro && d.ruidoPunto.valor != null) {
+      var rp = d.ruidoPunto;
+      var etq2 = rp.valor <= 0 ? 'Sin buses a <250 m' :
+        rp.valor <= 25 ? 'Bajo' : rp.valor <= 55 ? 'Moderado' :
+        rp.valor <= 80 ? 'Alto' : 'Intenso';
+      var col2 = rp.valor <= 0 ? '#6b7280' : rp.valor <= 25 ? '#ca8a04' :
+        rp.valor <= 55 ? '#ea580c' : rp.valor <= 80 ? '#dc2626' : '#7c3aed';
+      html += '<div class="inm-ent-nota" style="margin-top:4px">Detalle a ' + rp.pasoM + ' m del punto: ' +
+        '<span class="inm-ent-ruido" style="background:' + col2 + ';font-size:11px">' +
+        etq2 + ' · ' + rp.valor + '/100</span>' +
+        (rp.local != null ? ' <small>(cuadra ~' + rp.local + ' · pico ' + rp.max + ')</small>' : '') +
+        (rp.distM != null ? ' · <small>a ' + rp.distM + ' m de la ruta más cercana</small>' : '') +
+        (rp.rutas ? ' · <small>' + rp.rutas + ' rutas a ≤30 m</small>' : '') + '</div>';
+    }
     if (!html) { bloque.remove(); if (!sec.querySelector('.inm-ent-bloque')) sec.remove(); return; }
     box.innerHTML = html;
   }
