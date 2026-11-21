@@ -4,12 +4,14 @@
  *
  * - Selector de tipo de mapa: Calles (OSM) / Satélite (Esri) / Relieve
  *   (OpenTopoMap). Usa window.STT_MAPA_BASE que expone mapa.js.
- * - Checkbox «Ruido»: capa de celdas H3 con índice sonoro (GridCell.noiseIndex,
- *   endpoint statetty/ruido/celdas). Si hay figuras dibujadas con ✏️ (btn-lapiz)
- *   o 📍 (btn-pin) la capa se limita a esas zonas; si no, cubre la vista actual.
+ * - Checkbox «Ruido»: malla fina del raster (~120 m, endpoint
+ *   statetty/ruido/malla) — diferencia cuadra a cuadra. Si hay figuras
+ *   dibujadas con ✏️ (btn-lapiz) o 📍 (btn-pin) la capa se limita a esas
+ *   zonas; si no, cubre la vista actual y se actualiza al mover el mapa.
  *   Solo hay datos para Santa Cruz (sczmicros); fuera de cobertura avisa.
- * - Checkbox «Rutas de micros»: muestra/oculta las capas de rutas que dibuja
- *   rutasMicros.js (se comunica por window.STT_RUTAS_MICROS).
+ * - Checkbox «Rutas de micros»: pinta TODAS las líneas que cruzan la zona
+ *   (endpoint statetty/rutasMicros/capas) + los resultados de búsqueda del
+ *   toolbox (vía window.STT_RUTAS_MICROS).
  *
  * La capa de ruido también se puede alternar desde la sección «Ruido urbano»
  * del toolbox de rutas (botón stt-rm-mostrar-ruido → STT_CAPAS.ruido.alternar).
@@ -20,8 +22,9 @@
   if (window.__mapaCapasInit) return;
   window.__mapaCapasInit = true;
 
-  var API_CELDAS = 'statetty/ruido/celdas';
+  var API_CELDAS = 'statetty/ruido/malla';
   var API_CLIMA_CELDAS = 'statetty/clima/celdas';
+  var API_RUTAS_CAPAS = 'statetty/rutasMicros/capas';
   var API_LEYENDA = 'statetty/ruido/leyenda';
 
   var mapa = null;
@@ -30,13 +33,19 @@
   var chkTemp = null, chkAmp = null, chkLluvia = null;
   var estRuido = null, leyendaBox = null;
 
-  var capaRuido = null;          // L.layerGroup con los polígonos H3
+  var capaRuido = null;          // L.layerGroup con los cuadros de la malla
   var ruidoActivo = false;
   var ruidoCargando = false;
   var peticionRuido = 0;
   var leyendaCats = null;
   var cacheCeldas = {};          // key bbox+figuras → respuesta
   var debounceMove = null;
+
+  // ── capa de rutas de micros (red completa de la zona) ──
+  var capaRed = null;
+  var redActiva = false;
+  var cacheRed = {};
+  var peticionRed = 0;
 
   // ── capa de clima (temperature/lluvia por celda) ──
   var capaClima = null;
@@ -166,20 +175,24 @@
     return 'Intenso';
   }
 
+  var rendererRuido = null;
   function pintarCeldas(celdas) {
     if (!mapa) return;
     if (!capaRuido) capaRuido = L.layerGroup().addTo(mapa);
+    if (!rendererRuido) rendererRuido = L.canvas({ padding: 0.5 });
     capaRuido.clearLayers();
     var pintadas = 0;
     celdas.forEach(function (c) {
-      var ring = c.poligono;
+      // malla: anillo [lng,lat]; celdas H3 (endpoint viejo): poligono igual
+      var ring = c.anillo || c.poligono;
       if (!Array.isArray(ring) || ring.length < 4) return;
       // GeoJSON [lng,lat] → Leaflet [lat,lng]
       var coords = ring.map(function (p) { return [p[1], p[0]]; });
       var color = colorRuido(c.ruido);
       var poly = L.polygon(coords, {
         color: color, weight: 0.6, opacity: 0.9,
-        fillColor: color, fillOpacity: c.ruido > 0 ? 0.5 : 0.35
+        fillColor: color, fillOpacity: c.ruido > 0 ? 0.5 : 0.35,
+        renderer: rendererRuido
       });
       poly.bindTooltip(
         '<b>' + etiquetaRuido(c) + '</b> · índice ' + (c.ruido == null ? '—' : c.ruido) +
@@ -455,6 +468,107 @@
   }
 
   // ── rutas de micros (capas dibujadas por rutasMicros.js) ──────────────────
+  // ── red de rutas de micros (capa propia del panel) ─────────────────────────
+  // A diferencia de los resultados de búsqueda del toolbox, esta capa pinta
+  // TODAS las líneas que cruzan la zona (figuras o vista actual).
+  function colorRuta(nombre) {
+    var h = 0;
+    for (var i = 0; i < nombre.length; i++) h = (h * 31 + nombre.charCodeAt(i)) | 0;
+    return 'hsl(' + (Math.abs(h) % 360) + ',65%,42%)';
+  }
+
+  // Deja solo los tramos de la línea que caen dentro de las figuras.
+  // Sin figuras devuelve la línea completa.
+  function recortarRuta(coords, fig) {
+    if (!hayFiguras(fig)) return [coords];
+    var seg = [], cur = [];
+    coords.forEach(function (p) {
+      var dentro = dentroDeFiguras([p[1], p[0]], fig);   // coords [lat,lng] → [lng,lat]
+      if (dentro) cur.push(p);
+      else if (cur.length) { seg.push(cur); cur = []; }
+    });
+    if (cur.length) seg.push(cur);
+    return seg.filter(function (s) { return s.length >= 2; });
+  }
+
+  var rendererRed = null;
+  function pintarRed(rutas, fig) {
+    if (!mapa) return;
+    if (!capaRed) capaRed = L.layerGroup().addTo(mapa);
+    if (!rendererRed) rendererRed = L.canvas({ padding: 0.5 });
+    capaRed.clearLayers();
+    var pintadas = 0, lineas = 0;
+    rutas.forEach(function (r) {
+      var coords = r.coords || [];
+      if (coords.length < 2) return;
+      recortarRuta(coords, fig).forEach(function (seg) {
+        L.polyline(seg, {
+          color: colorRuta(String(r.nombre || r.route_id || '')), weight: 2.5,
+          opacity: 0.55, renderer: rendererRed
+        }).bindTooltip(
+          '<b>' + (r.nombre || 'Ruta') + '</b>' +
+          (r.direccion ? '<br>' + r.direccion : '') +
+          (r.sentido ? ' · ' + r.sentido : ''),
+          { sticky: true }
+        ).addTo(capaRed);
+        lineas++;
+      });
+      pintadas++;
+    });
+    avisarRuido(pintadas ? pintadas + ' líneas de micros en la zona (' + lineas + ' tramos). Pasa el cursor para ver el detalle.'
+      : 'No hay rutas de micros en esta zona (cobertura: Santa Cruz).', !pintadas);
+  }
+
+  function actualizarRed() {
+    if (!redActiva || !mapa) return;
+    if (!sesionActiva()) {
+      avisarRuido('Inicia sesión con una cuenta de agente para ver las rutas.', true);
+      return;
+    }
+    var fig = figurasActuales();
+    var bb = bboxDeZona(fig);
+    var clave = 'r' + claveZona(fig, bb);
+    peticionRed++;
+    var miReq = peticionRed;
+    if (cacheRed[clave]) { pintarRed(cacheRed[clave], fig); return; }
+    var q = 'minLng=' + bb.minLng + '&minLat=' + bb.minLat +
+            '&maxLng=' + bb.maxLng + '&maxLat=' + bb.maxLat;
+    getAuthed(API_RUTAS_CAPAS + '?' + q).then(function (r) {
+      if (r.status === 401 || r.status === 403) { avisarRuido('Inicia sesión con una cuenta de agente para ver las rutas.', true); return null; }
+      if (r.status === 429) { avisarRuido('Demasiadas consultas. Espera un minuto.', true); return null; }
+      if (!r.ok) { avisarRuido('No se pudieron cargar las rutas (' + r.status + ').', true); return null; }
+      return r.json();
+    }).then(function (d) {
+      if (peticionRed !== miReq || !redActiva) return;
+      if (!d || d.ok === false) { avisarRuido('Sin datos de rutas en esta zona.', true); return; }
+      cacheRed[clave] = d.rutas || [];
+      pintarRed(cacheRed[clave], fig);
+    }).catch(function () {
+      if (peticionRed === miReq) avisarRuido('Falló la consulta de rutas.', true);
+    });
+  }
+
+  function encenderRed() {
+    if (!mapa) { avisarRuido('El mapa aún no está listo.', true); return; }
+    if (!sesionActiva()) {
+      avisarRuido('Inicia sesión con una cuenta de agente para ver las rutas.', true);
+      if (chkRutas) chkRutas.checked = false;
+      return;
+    }
+    redActiva = true;
+    if (!capaRed) capaRed = L.layerGroup().addTo(mapa);
+    alternarRutas(true);          // también muestra resultados de búsqueda si los hay
+    actualizarRed();
+  }
+
+  function apagarRed() {
+    redActiva = false;
+    peticionRed++;
+    if (capaRed && mapa) { capaRed.clearLayers(); mapa.removeLayer(capaRed); }
+    capaRed = null;
+    alternarRutas(false);
+  }
+
   function alternarRutas(visible) {
     if (window.STT_RUTAS_MICROS && window.STT_RUTAS_MICROS.alternar) {
       window.STT_RUTAS_MICROS.alternar(visible);
@@ -509,9 +623,12 @@
         '<label><input type="checkbox" id="stt-capa-ruido"> Ruido</label>' +
         '<label><input type="checkbox" id="stt-capa-rutas"> Rutas de micros</label>' +
         '<div class="stt-capas-sub">Clima</div>' +
-        '<label><input type="checkbox" id="stt-capa-temp"> Temperatura actual</label>' +
-        '<label><input type="checkbox" id="stt-capa-amp"> Amplitud anual</label>' +
-        '<label><input type="checkbox" id="stt-capa-lluvia"> Lluvia hoy</label>' +
+        '<label title="Temperatura actual en cada zona (°C), de Open-Meteo. Áreas cálidas en rojo, frescas en azul.">' +
+          '<input type="checkbox" id="stt-capa-temp"> Temperatura actual</label>' +
+        '<label title="Amplitud anual = diferencia entre el mes más caliente y el más frío del clima típico (NASA POWER, 25 años). Verde = clima estable todo el año; rojo = veranos muy calurosos e inviernos frescos.">' +
+          '<input type="checkbox" id="stt-capa-amp"> Amplitud anual</label>' +
+        '<label title="Lluvia de hoy en cada zona: milímetros caídos y probabilidad del día (pronóstico Open-Meteo, 7 días).">' +
+          '<input type="checkbox" id="stt-capa-lluvia"> Lluvia hoy</label>' +
         '<div class="stt-capas-estado" id="stt-capa-estado"></div>' +
         '<div class="stt-capas-leyenda" id="stt-capas-leyenda"></div>';
       selTipo = div.querySelector('#stt-capa-tipo');
@@ -532,7 +649,9 @@
       chkTemp = div.querySelector('#stt-capa-temp');
       chkAmp = div.querySelector('#stt-capa-amp');
       chkLluvia = div.querySelector('#stt-capa-lluvia');
-      chkRutas.addEventListener('change', function () { alternarRutas(chkRutas.checked); });
+      chkRutas.addEventListener('change', function () {
+        if (chkRutas.checked) encenderRed(); else apagarRed();
+      });
       chkTemp.addEventListener('change', function () {
         if (chkTemp.checked) activarClima('temp'); else desactivarClima();
       });
@@ -568,18 +687,20 @@
         debounceMove = setTimeout(function () {
           if (ruidoActivo) actualizarRuido();
           if (climaModo) actualizarClima();
+          if (redActiva) actualizarRed();
         }, 600);
       }
     });
-    // Las figuras (✏️/📍) cambian la zona de ruido/clima si la capa está activa.
+    // Las figuras (✏️/📍) cambian la zona de ruido/clima/rutas si están activas.
     document.addEventListener('stt:figuras-cambio', function () {
       if (ruidoActivo) actualizarRuido();
       if (climaModo) actualizarClima();
+      if (redActiva) actualizarRed();
     });
     // Cuando rutasMicros dibuja rutas, el check «Rutas de micros» se marca
     // y se muestra la capa (si estaba oculta).
     document.addEventListener('stt:rutas-dibujadas', function () {
-      if (chkRutas && !chkRutas.checked) { chkRutas.checked = true; alternarRutas(true); }
+      if (chkRutas && !chkRutas.checked) { chkRutas.checked = true; encenderRed(); }
     });
   }
 
