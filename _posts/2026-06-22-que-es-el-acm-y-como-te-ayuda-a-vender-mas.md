@@ -7,7 +7,7 @@ comments: true
 description: "El Análisis Comparativo de Mercado (ACM) es la herramienta clave para fijar precios competitivos. Aprendé a calcularlo paso a paso y descubrí cómo Statetty lo hace en segundos"
 tags: [acm, análisis de mercado, precios, valoración de propiedades, herramientas]
 published: true
-image: "statetty_banner.jpg"
+image: "posts/2026-06-22-acm-tutorial.jpg"
 ---
 
 ¿Sin tiempo para leer? Escucha el artículo en [Statetty Podcast](https://open.spotify.com/episode/0NSokJKTVAyiPsUL8RPBNV)
@@ -184,7 +184,7 @@ Con Statetty, un ACM que antes te tomaba medio día ahora lo tenés en **menos d
 ### Videos: cómo hacer el ACM con Statetty
 
 **Tutorial completo: ACM paso a paso**
-[![Tutorial ACM en Statetty](https://img.youtube.com/vi/0_wDeIei7Dc/0.jpg)](https://youtu.be/0_wDeIei7Dc)
+[![Tutorial ACM en Statetty](/assets/images/posts/2026-06-22-acm-tutorial.jpg)](https://youtu.be/0_wDeIei7Dc)
 
 > Parámetros recomendados para el ACM: función *Inmuebles*, radio 1 km, antigüedad 12 meses, búsqueda sobre activos **e** inactivos. Incluir inactivos es clave porque los inmuebles vendidos son los comparables más sólidos.
 

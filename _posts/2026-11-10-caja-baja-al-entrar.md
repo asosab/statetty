@@ -5,9 +5,13 @@ date: 2026-11-10
 categories: novedades, producto
 comments: true
 description: "La caja de búsqueda ya no se queda en el centro de la pantalla cuando inicias sesión: se corre abajo sola y deja el mapa libre."
+image: "posts/2026-11-10-caja-baja.png"
 tags: [statetty, mapa, buscador]
 published: true
 ---
+
+![Caja de búsqueda bajada al borde inferior del mapa](/assets/images/posts/2026-11-10-caja-baja.png)
+
 
 Cuando entrabas al mapa con tu cuenta, la caja de «¿qué estás buscando?» quedaba plantada en el medio de la pantalla. Ahí no molesta si acabas de llegar sin conocer el sitio — de hecho es la invitación a probar — pero con sesión iniciada estorbaba: tus inmuebles cargaban debajo y la caja les tapaba la vista hasta que buscabas algo.
 

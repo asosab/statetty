@@ -5,9 +5,13 @@ date: 2026-11-16
 categories: novedades, producto
 comments: true
 description: "Si tienes sesión iniciada, verás una cámara 📸 abajo a la derecha en cualquier pantalla. Al tocarla se captura la página y puedes escribir qué pasó o qué mejorarías."
+image: "posts/2026-11-16-boton-reportar.png"
 tags: [statetty, reporte, soporte, usuarios]
 published: true
 ---
+
+![Panel de reporte con captura de página y comentario](/assets/images/posts/2026-11-16-boton-reportar.png)
+
 
 Encontraste un error, una pantalla rara o una idea para mejorar Statetty y no sabías cómo contárnoslo. Ahora hay un botón 📸 fijo en la esquina inferior derecha, disponible en todas las páginas mientras tengas sesión iniciada.
 

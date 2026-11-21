@@ -5,9 +5,13 @@ date: 2026-11-10
 categories: novedades, producto
 comments: true
 description: "Las búsquedas de cuentas con tiempo activo pintan los primeros inmuebles apenas llegan, en grupos de a cincuenta, en vez de esperar a que terminen todos."
+image: "posts/2026-11-10-resultados-tandas.png"
 tags: [statetty, mapa, búsqueda, agentes]
 published: true
 ---
+
+![Resultados de búsqueda pintados sobre el mapa](/assets/images/posts/2026-11-10-resultados-tandas.png)
+
 
 Si tu cuenta tiene tiempo activo, una búsqueda amplia puede devolver hasta 400 inmuebles. Hasta ahora el mapa esperaba a tenerlos todos antes de dibujar el primer pin, y en búsquedas grandes eso se sentía como una página congelada.
 

@@ -5,9 +5,13 @@ date: 2026-11-09
 categories: novedades, producto
 comments: true
 description: "Crear tu cuenta de Statetty desde la web ya no te pregunta si usaste Telegram antes. Tu correo verificado alcanza, y si tenías cuenta en el bot se unen solas."
+image: "posts/2026-11-09-cuenta-web.png"
 tags: [statetty, cuenta, registro, telegram, web]
 published: true
 ---
+
+![Formulario de registro de Statetty para crear cuenta con correo](/assets/images/posts/2026-11-09-cuenta-web.png)
+
 
 Crear tu cuenta de Statetty desde la página web acaba de ponerse más simple.
 

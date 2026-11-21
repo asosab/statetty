@@ -5,9 +5,13 @@ date: 2026-11-19
 categories: novedades, producto
 comments: true
 description: "El formulario Buscar Inmuebles tiene un campo nuevo para pegar el enlace de una propiedad. Y el mapa ahora te dice de un vistazo si el inmueble sigue activo."
+image: "posts/2026-11-19-buscar-por-url.png"
 tags: [statetty, mapa, busqueda, usuarios, URL]
 published: true
 ---
+
+![Formulario Buscar Inmuebles con el campo URL destacado](/assets/images/posts/2026-11-19-buscar-por-url.png)
+
 
 A veces ya tienes el enlace de una propiedad —el que te pasó un colega, el que guardaste en WhatsApp, el del aviso que viste en Instagram— y lo único que quieres es encontrarlo en el mapa. Para eso agregamos un campo nuevo en **Buscar Inmuebles**: **URL**.
 

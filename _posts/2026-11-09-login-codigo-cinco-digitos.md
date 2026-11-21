@@ -5,9 +5,13 @@ date: 2026-11-09
 categories: novedades, producto
 comments: true
 description: "Cambiamos el enlace de acceso por un código de 5 dígitos que llega a tu correo. Te contamos qué cambió y qué tienes que hacer (casi nada)."
+image: "posts/2026-11-09-login-codigo.png"
 tags: [statetty, login, acceso, cuenta, seguridad]
 published: true
 ---
+
+![Ventana de inicio de sesión de Statetty que envía un código al correo](/assets/images/posts/2026-11-09-login-codigo.png)
+
 
 Entrar a Statetty desde la web cambió un poco, para bien.
 

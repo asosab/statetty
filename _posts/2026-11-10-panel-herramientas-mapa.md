@@ -5,9 +5,13 @@ date: 2026-11-10
 categories: novedades, producto
 comments: true
 description: "El menú del engranaje ya no tapa el mapa en el celular: ahora tiene botón de cerrar propio, ancho fijo y se puede seguir usando el mapa con el panel abierto."
+image: "posts/2026-11-10-panel-herramientas.png"
 tags: [statetty, mapa, herramientas, agentes]
 published: true
 ---
+
+![Panel de herramientas del mapa abierto al costado](/assets/images/posts/2026-11-10-panel-herramientas.png)
+
 
 Si tienes tiempo activo en tu cuenta, el engranaje ⚙ del mapa abre el panel con tus herramientas: buscar inmuebles, filtrar por texto, ver estadísticas, armar la selección para el PDF o el ACM, y las rutas de micros.
 

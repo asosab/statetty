@@ -5,9 +5,13 @@ date: 2026-11-09
 categories: novedades, producto
 comments: true
 description: "El buscador ya no arranca siempre en Santa Cruz: detecta tu ciudad por tu conexión, recuerda dónde lo dejaste y acepta enlaces con zona."
+image: "posts/2026-11-09-mapa-ciudad.png"
 tags: [statetty, mapa, buscador, inmuebles]
 published: true
 ---
+
+![Mapa de Statetty centrado en la ciudad del visitante](/assets/images/posts/2026-11-09-mapa-ciudad.png)
+
 
 Al entrar a statetty.com el mapa ya no se queda quieto en Santa Cruz de la Sierra: ahora se fija en dónde estás y arranca desde ahí.
 

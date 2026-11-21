@@ -5,9 +5,13 @@ date: 2026-11-09
 categories: novedades, producto
 comments: true
 description: "La página principal y el mapa de resultados se unieron en uno solo. Si tienes tiempo activo verás tus datos completos ahí mismo, sin saltar de página."
+image: "posts/2026-11-09-un-solo-mapa.png"
 tags: [statetty, mapa, buscador, inmuebles]
 published: true
 ---
+
+![Mapa único de Statetty con resultados de búsqueda](/assets/images/posts/2026-11-09-un-solo-mapa.png)
+
 
 Hasta ahora había dos mapas: el de la portada, con la vista pública, y el de resultados que usan los asesores. Desde hoy son el mismo: todo pasa en statetty.com.
 

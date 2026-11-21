@@ -5,9 +5,13 @@ date: 2026-11-10
 categories: novedades, producto
 comments: true
 description: "El buscador del engranaje del mapa ahora pinta los resultados en el momento, sin recargar la página ni hacerte esperar de más."
+image: "posts/2026-11-10-buscar-sin-recargar.png"
 tags: [statetty, mapa, búsqueda, agentes]
 published: true
 ---
+
+![Sección Buscar del panel del mapa](/assets/images/posts/2026-11-10-buscar-sin-recargar.png)
+
 
 Si tu cuenta tiene tiempo activo, el engranaje ⚙ del mapa tiene una sección "Buscar Inmuebles" para armar búsquedas con filtros: zona, precio, dormitorios, superficie y más.
 

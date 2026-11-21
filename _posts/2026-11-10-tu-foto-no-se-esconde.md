@@ -5,9 +5,13 @@ date: 2026-11-10
 categories: novedades, producto
 comments: true
 description: "Al acercar el mapa la barra de arriba se retira y se llevaba tu foto de perfil, la puerta al menú. Ahora la foto se queda flotando en la esquina hasta que la barra vuelve."
+image: "posts/2026-11-10-foto-no-se-esconde.png"
 tags: [statetty, mapa, menú, agentes]
 published: true
 ---
+
+![Foto de perfil flotando en la esquina al acercar el mapa](/assets/images/posts/2026-11-10-foto-no-se-esconde.png)
+
 
 Cuando acercas el mapa, la barra de arriba se retira sola para darte más espacio. El problema era que se llevaba tu foto de perfil, que es la puerta al menú. Si querías abrir el panel con el mapa ampliado, no había dónde tocar.
 

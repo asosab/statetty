@@ -5,9 +5,13 @@ date: 2026-11-14
 categories: novedades, producto
 comments: true
 description: "El mapa ya no vuelve a donde lo dejaste: arranca siempre en tu ubicación, con GPS si le das permiso. Solo con sesión iniciada verás tu última búsqueda."
+image: "posts/2026-11-14-mapa-donde-estas.png"
 tags: [statetty, mapa, buscador, inmuebles]
 published: true
 ---
+
+![Mapa de Statetty acercado a la zona del visitante](/assets/images/posts/2026-11-14-mapa-donde-estas.png)
+
 
 Hasta ahora el mapa recordaba dónde lo habías dejado y volvía a abrir ahí. Cómodo si trabajas siempre la misma zona; raro cuando te cambiaste de ciudad o lo dejaste en un barrio que ya no te interesa.
 
