@@ -157,8 +157,14 @@
   }
 
   // ── capa de ruido ──────────────────────────────────────────────────────────
-  function colorRuido(v) {
-    if (v == null) return '#e5e7eb';
+  // Índice efectivo: el solapamiento de muchas rutas sube el piso del
+  // etiquetado (44 rutas encima no puede verse «Moderado'). Regla del dueño.
+  function idxEfectivo(ruido, rutas) {
+    var piso = (rutas >= 50) ? 85 : (rutas >= 25 ? 60 : 0);
+    return Math.max(ruido || 0, piso);
+  }
+  function colorRuido(v, rutas) {
+    v = idxEfectivo(v, rutas);
     if (v <= 0) return '#e5e7eb';
     if (v <= 25) return '#fde047';
     if (v <= 55) return '#f97316';
@@ -167,11 +173,12 @@
   }
 
   function etiquetaRuido(c) {
+    var v = idxEfectivo(c.ruido, c.rutas);
     if (c.ruido == null) return 'Sin datos';
-    if (c.ruido <= 0) return 'Sin aporte de buses';
-    if (c.ruido <= 25) return 'Bajo';
-    if (c.ruido <= 55) return 'Moderado';
-    if (c.ruido <= 80) return 'Alto';
+    if (v <= 0) return 'Sin aporte de buses';
+    if (v <= 25) return 'Bajo';
+    if (v <= 55) return 'Moderado';
+    if (v <= 80) return 'Alto';
     return 'Intenso';
   }
 
@@ -188,7 +195,7 @@
       if (!Array.isArray(ring) || ring.length < 4) return;
       // GeoJSON [lng,lat] → Leaflet [lat,lng]
       var coords = ring.map(function (p) { return [p[1], p[0]]; });
-      var color = colorRuido(c.ruido);
+      var color = colorRuido(c.ruido, c.rutas);
       var poly = L.polygon(coords, {
         color: color, weight: 0.6, opacity: 0.9,
         fillColor: color, fillOpacity: c.ruido > 0 ? 0.5 : 0.35,

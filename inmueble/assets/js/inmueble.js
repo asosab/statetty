@@ -694,25 +694,51 @@
         '(promedio mensual 2001-2025) · mes actual resaltado</div>' +
         graficoCicloAnual(d.celda.mensual, d.actual);
     }
+    // Piso por solapamiento: muchas rutas encima no puede leerse «Moderado»
+    // (misma regla que el mapa: >=25 rutas → Alto, >=50 → Intenso).
+    function pisoRuido(idx, rutas) {
+      return Math.max(idx || 0, rutas >= 50 ? 85 : rutas >= 25 ? 60 : 0);
+    }
+    function etiquetaRuidoIdx(idx) {
+      return idx <= 0 ? 'Sin aporte de buses' :
+        idx <= 25 ? 'Bajo' : idx <= 55 ? 'Moderado' :
+        idx <= 80 ? 'Alto' : 'Intenso';
+    }
+    function colorRuidoIdx(idx) {
+      return idx <= 0 ? '#6b7280' : idx <= 25 ? '#ca8a04' :
+        idx <= 55 ? '#ea580c' : idx <= 80 ? '#dc2626' : '#7c3aed';
+    }
     if (d.celda && d.celda.ruido != null) {
-      var etiqueta = d.celda.ruido <= 0 ? 'Sin aporte de buses' :
-        d.celda.ruido <= 25 ? 'Bajo' : d.celda.ruido <= 55 ? 'Moderado' :
-        d.celda.ruido <= 80 ? 'Alto' : 'Intenso';
-      var color = d.celda.ruido <= 0 ? '#6b7280' : d.celda.ruido <= 25 ? '#ca8a04' :
-        d.celda.ruido <= 55 ? '#ea580c' : d.celda.ruido <= 80 ? '#dc2626' : '#7c3aed';
-      html += '<div>Ruido de la zona: <span class="inm-ent-ruido" style="background:' + color + '">' +
-        etiqueta + ' · ' + d.celda.ruido + '/100</span>' +
+      var vZona = pisoRuido(d.celda.ruido, d.celda.ruidoRutas);
+      html += '<div>Ruido de la zona: <span class="inm-ent-ruido" style="background:' + colorRuidoIdx(vZona) + '">' +
+        etiquetaRuidoIdx(vZona) + ' · ' + d.celda.ruido + '/100</span>' +
         (d.celda.ruidoRutas ? ' <small style="color:#7b8f99">(' + d.celda.ruidoRutas + ' rutas solapadas)</small>' : '') +
         (d.celda.tranquila ? ' · <b style="color:#15803d">calle tranquila</b>' : '') + '</div>';
+    }
+    // Comparativa frente al resto de la ciudad (percentil de las celdas SCZ).
+    if (d.comparativa && (d.comparativa.ruidoPct != null || d.comparativa.transitoPct != null)) {
+      var cmp = [];
+      if (d.comparativa.ruidoPct != null) {
+        cmp.push(d.comparativa.ruidoPct >= 50
+          ? 'supera al ' + d.comparativa.ruidoPct + '% de las zonas en ruido'
+          : 'está entre el ' + d.comparativa.ruidoPct + '% más tranquilo');
+      }
+      if (d.comparativa.transitoPct != null) {
+        cmp.push(d.comparativa.transitoPct >= 50
+          ? 'supera al ' + d.comparativa.transitoPct + '% de las zonas en líneas de micro'
+          : 'está entre el ' + d.comparativa.transitoPct + '% menos transitado');
+      }
+      if (cmp.length) {
+        html += '<div class="inm-ent-nota" style="margin-top:6px;font-weight:600;color:#074f66">' +
+          'Frente al resto de Santa Cruz: ' + cmp.join(' · ') + '.</div>';
+      }
     }
     // Detalle fino: raster de 30 m en el punto exacto del inmueble.
     if (d.ruidoPunto && d.ruidoPunto.dentro && d.ruidoPunto.valor != null) {
       var rp = d.ruidoPunto;
-      var etq2 = rp.valor <= 0 ? 'Sin buses a <250 m' :
-        rp.valor <= 25 ? 'Bajo' : rp.valor <= 55 ? 'Moderado' :
-        rp.valor <= 80 ? 'Alto' : 'Intenso';
-      var col2 = rp.valor <= 0 ? '#6b7280' : rp.valor <= 25 ? '#ca8a04' :
-        rp.valor <= 55 ? '#ea580c' : rp.valor <= 80 ? '#dc2626' : '#7c3aed';
+      var vPunto = pisoRuido(rp.valor, rp.rutas);
+      var etq2 = etiquetaRuidoIdx(vPunto);
+      var col2 = colorRuidoIdx(vPunto);
       html += '<div class="inm-ent-nota" style="margin-top:4px">Detalle a ' + rp.pasoM + ' m del punto: ' +
         '<span class="inm-ent-ruido" style="background:' + col2 + ';font-size:11px">' +
         etq2 + ' · ' + rp.valor + '/100</span>' +
