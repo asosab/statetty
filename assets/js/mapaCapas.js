@@ -623,15 +623,23 @@
       // Móvil: #caja abajo (z-index 1100, ~92vw) tapa el control Leaflet.
       // El panel se muda a un contenedor fijo justo encima de la caja,
       // colapsado a un icono; z-index 1150 queda sobre la caja y bajo el header.
-      '.stt-capas-movil{position:fixed;left:50%;transform:translateX(-50%);' +
-        'z-index:1150;display:none;flex-direction:column;align-items:center;gap:6px;}' +
+      // Icono/toolbox a la IZQUIERDA, base a la altura de la caja (nunca la
+      // solapa). Estado abierto/cerrado persistente (localStorage).
+      '.stt-capas-movil{position:fixed;left:12px;transform:none;' +
+        'z-index:1150;display:none;flex-direction:column;align-items:flex-start;gap:0;}' +
       '.stt-capas-movil.visible{display:flex;}' +
       '.stt-capas-movil .stt-capas{margin:0;max-width:86vw;}' +
       '.stt-capas-movil.colapsado .stt-capas{display:none;}' +
+      '.stt-capas-movil:not(.colapsado) .stt-capas-icono{display:none;}' +
       '.stt-capas-icono{width:44px;height:44px;border-radius:50%;padding:0;' +
         'border:1px solid #cfe9f5;background:rgba(255,255,255,.95);color:#04364a;' +
         'font-size:20px;line-height:1;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.25);}' +
-      '.stt-capas-icono:active{transform:scale(.94);}';
+      '.stt-capas-icono:active{transform:scale(.94);}' +
+      '.stt-capas-tit{display:flex;align-items:center;justify-content:space-between;gap:10px;}' +
+      '.stt-capas-cerrar{display:none;border:0;background:none;color:#04364a;' +
+        'font-size:15px;line-height:1;cursor:pointer;padding:2px 4px;opacity:.7;}' +
+      '.stt-capas-cerrar:hover{opacity:1;}' +
+      '.stt-capas-movil .stt-capas-cerrar{display:inline-flex;align-items:center;justify-content:center;}';
     document.head.appendChild(s);
   }
 
@@ -643,7 +651,9 @@
       var div = L.DomUtil.create('div', 'stt-capas');
       panelCapas = div;
       div.innerHTML =
-        '<div class="stt-capas-tit">🗺️ Capas</div>' +
+        '<div class="stt-capas-tit"><span>🗺️ Capas</span>' +
+          '<button type="button" class="stt-capas-cerrar" id="stt-capas-cerrar" ' +
+            'title="Cerrar" aria-label="Cerrar capas">✕</button></div>' +
         '<label>Tipo de mapa <select id="stt-capa-tipo">' +
           '<option value="calles">Calles</option>' +
           '<option value="satelite">Satélite</option>' +
@@ -671,6 +681,7 @@
       }
       L.DomEvent.disableClickPropagation(div);
       L.DomEvent.disableScrollPropagation(div);
+      div.querySelector('#stt-capas-cerrar').addEventListener('click', cerrarCapasMovil);
       selTipo.addEventListener('change', cambiarTipo);
       chkRuido.addEventListener('change', function () {
         if (chkRuido.checked) encenderRuido(); else apagarRuido();
@@ -753,14 +764,22 @@
     if (!movilBox || !cajaEl || !cajaAbajo()) return;
     var r = cajaEl.getBoundingClientRect();
     movilBox.style.bottom = Math.max(8, window.innerHeight - r.top + 10) + 'px';
+    movilBox.style.left = Math.max(8, r.left) + 'px';   // borde izquierdo de la caja
   }
 
-  function cerrarCapasMovil() {
-    capasAbiertas = false;
-    if (movilBox) {
-      movilBox.classList.add('colapsado');
-      if (btnIcono) btnIcono.setAttribute('aria-expanded', 'false');
-    }
+  // Estado persistido: primera vez icono; luego se recuerda lo elegido.
+  function setAbiertasMovil(v) {
+    capasAbiertas = !!v;
+    if (movilBox) movilBox.classList.toggle('colapsado', !capasAbiertas);
+    if (btnIcono) btnIcono.setAttribute('aria-expanded', String(capasAbiertas));
+    try { localStorage.setItem('stt-capas-abierto', capasAbiertas ? '1' : '0'); } catch (e) {}
+  }
+
+  function cerrarCapasMovil() { setAbiertasMovil(false); }
+
+  function abiertasGuardadas() {
+    try { return localStorage.getItem('stt-capas-abierto') === '1'; } catch (e) {}
+    return false;
   }
 
   function evaluarModoMovil() {
@@ -770,8 +789,8 @@
     if (!movilBox) return;
     if (activo) {
       if (panelHome == null) panelHome = panelCapas.parentNode;
-      movilBox.insertBefore(panelCapas, btnIcono);
-      cerrarCapasMovil();
+      movilBox.appendChild(panelCapas);
+      setAbiertasMovil(abiertasGuardadas());   // recuerda el estado; 1.ª vez = icono
       movilBox.classList.add('visible');
       posicionarMovil();
     } else {
@@ -797,20 +816,14 @@
     btnIcono.textContent = '🗂️';
     btnIcono.addEventListener('click', function () {
       if (!modoMovil) return;
-      capasAbiertas = !capasAbiertas;
-      movilBox.classList.toggle('colapsado', !capasAbiertas);
-      btnIcono.setAttribute('aria-expanded', String(capasAbiertas));
+      setAbiertasMovil(!capasAbiertas);
     });
     movilBox.appendChild(btnIcono);
     document.body.appendChild(movilBox);
     // La caja baja al pie por zoom (colocarCaja) o por buscar/dibujar
     // (fijarAbajo): ambos cambian su className → observer. Click en la caja
     // o su regreso al centro también repliega el panel a icono.
-    cajaObs = new MutationObserver(function () {
-      var era = modoMovil;
-      evaluarModoMovil();
-      if (!era && modoMovil) cerrarCapasMovil();
-    });
+    cajaObs = new MutationObserver(function () { evaluarModoMovil(); });
     cajaObs.observe(cajaEl, { attributes: true, attributeFilter: ['class'] });
     cajaEl.addEventListener('click', function () {
       if (modoMovil && capasAbiertas) cerrarCapasMovil();
