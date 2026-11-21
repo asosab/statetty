@@ -5,6 +5,7 @@ date: 2026-11-20
 categories: novedades, producto
 comments: true
 description: "Statetty ahora muestra todas las rutas de transporte público que pasan a menos de 50 metros de cualquier punto del mapa, y permite comparar rutas por nombre. Una herramienta nueva para evaluar locales, fachadas y zonas."
+image: "posts/2026-11-20-rutas-micros-cruce.png"
 tags: [statetty, mapa, rutas, micros, transporte, agentes]
 published: true
 ---
@@ -32,7 +33,9 @@ La herramienta **Rutas de micros** del mapa suma dos formas de leer la ciudad po
 
 Cada sección tiene su propio botón *Limpiar*, así que podés quitar una capa sin borrar las demás y quedarte solo con la comparativa que estás analizando.
 
-![Rutas de micros que cruzan un punto en el mapa de Statetty](/assets/images/posts/2026-11-20-rutas-micros-cruce.png)
+![Vista del mapa de Statetty con un punto de origen en la esquina de Charcas y Murillo y cientos de rutas de micros cruzando la ciudad](/assets/images/posts/2026-11-20-rutas-micros-cruce.png)
+
+En la captura, el punto está en la esquina de **Charcas y Murillo**, en pleno centro. Fijado ahí, el mapa dibuja cientos de rutas que pasan a menos de 50 metros: en una sola esquina del centro se concentra buena parte de la movilidad de la ciudad. Ese es el tipo de dato que antes había que reconstruir a pie, parada por parada.
 
 ## Para qué te sirve en la próxima visita
 
