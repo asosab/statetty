@@ -176,7 +176,7 @@
   }
 
   var rendererRuido = null;
-  function pintarCeldas(celdas) {
+  function pintarCeldas(celdas, pasoM) {
     if (!mapa) return;
     if (!capaRuido) capaRuido = L.layerGroup().addTo(mapa);
     if (!rendererRuido) rendererRuido = L.canvas({ padding: 0.5 });
@@ -213,7 +213,7 @@
       if (c.rutas > maxRutas) maxRutas = c.rutas;
       if (c.ruido > maxRuido) maxRuido = c.ruido;
     });
-    avisarRuido(pintadas + ' zonas · índice máx ' + maxRuido +
+    avisarRuido(pintadas + ' zonas (~' + (pasoM || pasoRuidoActual) + ' m) · índice máx ' + maxRuido +
       (maxRutas ? ' · hasta ' + maxRutas + ' rutas solapadas' : '') +
       '. Pasa el cursor para ver el detalle.', false);
   }
@@ -270,24 +270,39 @@
       });
     }
     if (!celdas.length) {
-      pintarCeldas([]);
+      pintarCeldas([], d && d.pasoM);
       avisarRuido(hayFiguras(fig)
         ? 'La zona marcada no tiene datos de ruido (cobertura: Santa Cruz).'
         : 'Esta vista no tiene datos de ruido (cobertura: Santa Cruz).', true);
       leyendaBox.style.display = 'none';
       return;
     }
-    pintarCeldas(celdas);
+    pintarCeldas(celdas, d && d.pasoM);
     cargarLeyenda();
     if (leyendaBox) leyendaBox.style.display = '';
   }
+
+  // Paso de la malla según el tamaño de la zona: figuras o vista de pocos
+  // cientos de metros → 30 m (detalle de cuadra); zona media → 60 m;
+  // vista de ciudad → 120 m. El servidor auto-coarsen si hace falta.
+  function pasoSegunZona(bb) {
+    var w = distM(bb.minLat, bb.minLng, bb.minLat, bb.maxLng);
+    var h = distM(bb.minLat, bb.minLng, bb.maxLat, bb.minLng);
+    var max = Math.max(w, h);
+    if (max <= 1500) return 30;
+    if (max <= 4000) return 60;
+    return 120;
+  }
+  var pasoRuidoActual = 120;
 
   function actualizarRuido() {
     if (!ruidoActivo || !mapa) return;
     // El ruido es público (regla del dueño): sin sesión también se muestra.
     var fig = figurasActuales();
     var bb = bboxDeZona(fig);
-    var clave = claveZona(fig, bb);
+    var paso = pasoSegunZona(bb);
+    pasoRuidoActual = paso;
+    var clave = claveZona(fig, bb) + '|p' + paso;
     reqId++;
     var miReq = reqId;
     peticionRuido = miReq;
@@ -295,7 +310,7 @@
     if (cacheCeldas[clave]) { terminarCeldas(cacheCeldas[clave], fig); return; }
     ruidoCargando = true;
     var q = 'minLng=' + bb.minLng + '&minLat=' + bb.minLat +
-            '&maxLng=' + bb.maxLng + '&maxLat=' + bb.maxLat;
+            '&maxLng=' + bb.maxLng + '&maxLat=' + bb.maxLat + '&paso=' + paso;
     getAuthed(API_CELDAS + '?' + q).then(function (r) {
       if (r.status === 401 || r.status === 403) { avisarRuido('No se pudo cargar el ruido.', true); return null; }
       if (r.status === 429) { avisarRuido('Demasiadas consultas. Espera un minuto.', true); return null; }
