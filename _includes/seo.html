@@ -1,5 +1,6 @@
 
   <meta name="title" content="{% if page.title %}{{ page.title }}{% else %}{{ site.title }}{% endif %}">
+  {% if page.robots %}<meta name="robots" content="{{ page.robots }}">{% endif %}
   <meta name="description" content="{% if page.description %}{{ page.description }}{% else %}{{ site.description }}{% endif %}">
   <meta name="keywords" content="{% if page.keywords %}{{ site.keywords }}, {{ page.keywords }}{% else %}{{ site.keywords }}{% endif %}">
   <link rel="shortlink" href="{% if page.shortlink %}{{ page.shortlink }}{% else %}{{ site.shortlink }}{% endif %}">
