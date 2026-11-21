@@ -620,14 +620,15 @@
       '.leaflet-control.stt-capas{margin-bottom:72px;}' +
       '.stt-capas-chip{display:inline-block;width:10px;height:10px;border-radius:2px;' +
         'margin-right:5px;vertical-align:-1px;}' +
-      // #caja abajo (z-index 1100) tapa el control Leaflet — en móvil (~92vw)
-      // y también en escritorio. El panel se muda a un contenedor fijo sobre
-      // la caja, colapsado a un icono; z-index 1150 queda sobre la caja y
-      // bajo el header.
+      // #caja (z-index 1100) ocupa el centro o la base según el estado del
+      // mapa. El panel de capas siempre flota como icono/toolbox justo sobre
+      // la caja (z-index 1150, bajo el header) para que nunca se solapen:
+      // si estorba, basta un toque para plegarlo a icono.
       // Icono/toolbox a la IZQUIERDA, base a la altura de la caja (nunca la
       // solapa). Estado abierto/cerrado persistente (localStorage).
       '.stt-capas-movil{position:fixed;left:12px;transform:none;' +
-        'z-index:1150;display:none;flex-direction:column;align-items:flex-start;gap:0;}' +
+        'z-index:1150;display:none;flex-direction:column;align-items:flex-start;gap:0;' +
+        'transition:bottom .5s ease,left .5s ease;}' +
       '.stt-capas-movil.visible{display:flex;}' +
       '.stt-capas-movil .stt-capas{margin:0;max-width:86vw;}' +
       '.stt-capas-movil.colapsado .stt-capas{display:none;}' +
@@ -746,21 +747,19 @@
     });
   }
 
-  // ── modo flotante: #caja abajo tapa el control → icono sobre la caja ──────
-  // Cualquier tamaño de pantalla: cuando #caja tiene .abajo (se buscó, se
-  // dibujó o el zoom superó zoomRef — mapaCaja.colocarCaja) el panel de capas
-  // se muda a un contenedor fijo alineado al borde izquierdo de la caja, un
-  // poco por encima de ella, y su estado natural es un icono. Se despliega con
-  // el icono / cierra con ✕ (z-index 1150 > caja 1100), por click en la caja o
-  // en el mapa, y vuelve a la esquina cuando la caja regresa al centro.
+  // ── modo flotante: el panel siempre vive como icono sobre la caja ─────────
+  // Cualquier tamaño de pantalla y cualquier posición de #caja: el panel de
+  // capas se muda a un contenedor fijo alineado al borde izquierdo de la caja
+  // y siempre ~10 px por encima de ella (transición propia que la sigue al
+  // moverse), nunca la solapa. Estado natural: icono 🗂️ (persistido en
+  // localStorage). Se despliega con el icono / cierra con ✕ (z-index 1150 >
+  // caja 1100), por click en la caja o en el mapa.
   var movilBox = null, btnIcono = null, cajaEl = null;
   var modoMovil = false, capasAbiertas = false;
   var cajaObs = null, movListenersOk = false;
 
-  function cajaAbajo() { return !!(cajaEl && cajaEl.classList.contains('abajo')); }
-
   function posicionarMovil() {
-    if (!movilBox || !cajaEl || !cajaAbajo()) return;
+    if (!movilBox || !cajaEl) return;
     var r = cajaEl.getBoundingClientRect();
     movilBox.style.bottom = Math.max(8, window.innerHeight - r.top + 10) + 'px';
     movilBox.style.left = Math.max(8, r.left) + 'px';   // borde izquierdo de la caja
@@ -782,7 +781,7 @@
   }
 
   function evaluarModoMovil() {
-    var activo = cajaAbajo() && !!panelCapas;
+    var activo = !!panelCapas;
     if (activo === modoMovil) { if (activo) posicionarMovil(); return; }
     modoMovil = activo;
     if (!movilBox) return;
@@ -827,8 +826,12 @@
     cajaEl.addEventListener('click', function () {
       if (modoMovil && capasAbiertas) cerrarCapasMovil();
     });
-    // La caja tiene transición de .5 s: el icono se reubica al terminar el
-    // desplazamiento y ante resize/orientación.
+    // La caja tiene transición de .5 s: el icono se reubica al empezar el
+    // desplazamiento (su propia transición lo hace seguir a la caja) y ante
+    // resize/orientación.
+    cajaEl.addEventListener('transitionstart', function (e) {
+      if (e.propertyName === 'top' || e.propertyName === 'transform') posicionarMovil();
+    });
     cajaEl.addEventListener('transitionend', function (e) {
       if (e.propertyName === 'top' || e.propertyName === 'transform') posicionarMovil();
     });
