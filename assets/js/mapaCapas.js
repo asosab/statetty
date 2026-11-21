@@ -32,6 +32,7 @@
   var selTipo = null, chkRuido = null, chkRutas = null;
   var chkTemp = null, chkAmp = null, chkLluvia = null;
   var estRuido = null, leyendaBox = null;
+  var panelCapas = null, panelHome = null;
 
   var capaRuido = null;          // L.layerGroup con los cuadros de la malla
   var ruidoActivo = false;
@@ -618,7 +619,19 @@
       // Subir el control para no pisar el botón de menú admin (esquina inf-izq).
       '.leaflet-control.stt-capas{margin-bottom:72px;}' +
       '.stt-capas-chip{display:inline-block;width:10px;height:10px;border-radius:2px;' +
-        'margin-right:5px;vertical-align:-1px;}';
+        'margin-right:5px;vertical-align:-1px;}' +
+      // Móvil: #caja abajo (z-index 1100, ~92vw) tapa el control Leaflet.
+      // El panel se muda a un contenedor fijo justo encima de la caja,
+      // colapsado a un icono; z-index 1150 queda sobre la caja y bajo el header.
+      '.stt-capas-movil{position:fixed;left:50%;transform:translateX(-50%);' +
+        'z-index:1150;display:none;flex-direction:column;align-items:center;gap:6px;}' +
+      '.stt-capas-movil.visible{display:flex;}' +
+      '.stt-capas-movil .stt-capas{margin:0;max-width:86vw;}' +
+      '.stt-capas-movil.colapsado .stt-capas{display:none;}' +
+      '.stt-capas-icono{width:44px;height:44px;border-radius:50%;padding:0;' +
+        'border:1px solid #cfe9f5;background:rgba(255,255,255,.95);color:#04364a;' +
+        'font-size:20px;line-height:1;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.25);}' +
+      '.stt-capas-icono:active{transform:scale(.94);}';
     document.head.appendChild(s);
   }
 
@@ -628,6 +641,7 @@
     control = L.control({ position: 'bottomleft' });
     control.onAdd = function () {
       var div = L.DomUtil.create('div', 'stt-capas');
+      panelCapas = div;
       div.innerHTML =
         '<div class="stt-capas-tit">🗺️ Capas</div>' +
         '<label>Tipo de mapa <select id="stt-capa-tipo">' +
@@ -695,6 +709,7 @@
     if (mapa) return;
     mapa = m;
     montarControl();
+    iniciarModoMovil();
     // Sin figuras dibujadas, la zona de ruido sigue la vista del usuario.
     mapa.on('moveend', function () {
       if (mapa && !hayFiguras(figurasActuales())) {
@@ -717,6 +732,104 @@
     document.addEventListener('stt:rutas-dibujadas', function () {
       if (chkRutas && !chkRutas.checked) { chkRutas.checked = true; encenderRed(); }
     });
+  }
+
+  // ── modo móvil: #caja abajo tapa el control → icono sobre la caja ──────────
+  // En pantallas ≤640 px, cuando #caja tiene .abajo (la búsqueda se hizo o el
+  // zoom superó zoomRef, vía mapaCaja.colocarCaja) el panel de capas se muda a
+  // un contenedor fijo centrado justo encima de la caja, colapsado a un icono.
+  // Se despliega con click en el icono (z-index 1150 > caja 1100) y se cierra
+  // al hacer click en la caja o cuando la caja vuelve al centro.
+  var mqMovil = (typeof window.matchMedia === 'function')
+    ? window.matchMedia('(max-width: 640px)') : null;
+  var movilBox = null, btnIcono = null, cajaEl = null;
+  var modoMovil = false, capasAbiertas = false;
+  var cajaObs = null, movListenersOk = false;
+
+  function esMovil() { return !!(mqMovil && mqMovil.matches); }
+  function cajaAbajo() { return !!(cajaEl && cajaEl.classList.contains('abajo')); }
+
+  function posicionarMovil() {
+    if (!movilBox || !cajaEl || !cajaAbajo()) return;
+    var r = cajaEl.getBoundingClientRect();
+    movilBox.style.bottom = Math.max(8, window.innerHeight - r.top + 10) + 'px';
+  }
+
+  function cerrarCapasMovil() {
+    capasAbiertas = false;
+    if (movilBox) {
+      movilBox.classList.add('colapsado');
+      if (btnIcono) btnIcono.setAttribute('aria-expanded', 'false');
+    }
+  }
+
+  function evaluarModoMovil() {
+    var activo = esMovil() && cajaAbajo() && !!panelCapas;
+    if (activo === modoMovil) { if (activo) posicionarMovil(); return; }
+    modoMovil = activo;
+    if (!movilBox) return;
+    if (activo) {
+      if (panelHome == null) panelHome = panelCapas.parentNode;
+      movilBox.insertBefore(panelCapas, btnIcono);
+      cerrarCapasMovil();
+      movilBox.classList.add('visible');
+      posicionarMovil();
+    } else {
+      movilBox.classList.remove('visible', 'colapsado');
+      if (panelHome && panelCapas.parentNode !== panelHome) panelHome.appendChild(panelCapas);
+    }
+  }
+
+  function iniciarModoMovil() {
+    if (movListenersOk) return;
+    movListenersOk = true;
+    cajaEl = document.getElementById('caja');
+    if (!cajaEl || typeof MutationObserver !== 'function') return;
+    movilBox = document.createElement('div');
+    movilBox.id = 'stt-capas-movil';
+    movilBox.className = 'stt-capas-movil colapsado';
+    btnIcono = document.createElement('button');
+    btnIcono.type = 'button';
+    btnIcono.className = 'stt-capas-icono';
+    btnIcono.title = 'Capas del mapa';
+    btnIcono.setAttribute('aria-label', 'Capas del mapa');
+    btnIcono.setAttribute('aria-expanded', 'false');
+    btnIcono.textContent = '🗂️';
+    btnIcono.addEventListener('click', function () {
+      if (!modoMovil) return;
+      capasAbiertas = !capasAbiertas;
+      movilBox.classList.toggle('colapsado', !capasAbiertas);
+      btnIcono.setAttribute('aria-expanded', String(capasAbiertas));
+    });
+    movilBox.appendChild(btnIcono);
+    document.body.appendChild(movilBox);
+    // La caja baja al pie por zoom (colocarCaja) o por buscar/dibujar
+    // (fijarAbajo): ambos cambian su className → observer. Click en la caja
+    // o su regreso al centro también repliega el panel a icono.
+    cajaObs = new MutationObserver(function () {
+      var era = modoMovil;
+      evaluarModoMovil();
+      if (!era && modoMovil) cerrarCapasMovil();
+    });
+    cajaObs.observe(cajaEl, { attributes: true, attributeFilter: ['class'] });
+    cajaEl.addEventListener('click', function () {
+      if (modoMovil && capasAbiertas) cerrarCapasMovil();
+    });
+    // La caja tiene transición de .5 s: el icono se reubica al terminar el
+    // desplazamiento y ante resize/orientación.
+    cajaEl.addEventListener('transitionend', function (e) {
+      if (e.propertyName === 'top' || e.propertyName === 'transform') posicionarMovil();
+    });
+    window.addEventListener('resize', posicionarMovil);
+    window.addEventListener('orientationchange', posicionarMovil);
+    if (mqMovil) {
+      if (mqMovil.addEventListener) mqMovil.addEventListener('change', evaluarModoMovil);
+      else if (mqMovil.addListener) mqMovil.addListener(evaluarModoMovil);
+    }
+    if (mapa) {
+      mapa.on('click', function () { if (modoMovil && capasAbiertas) cerrarCapasMovil(); });
+    }
+    evaluarModoMovil();
   }
 
   // API para el botón de la sección «Ruido urbano» del toolbox de rutas.
