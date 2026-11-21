@@ -2,8 +2,8 @@
  * mapaCapas.js — toolbox de capas del mapa unificado (esquina inferior
  * izquierda). Pedido del dueño 2026-11-21.
  *
- * - Selector de tipo de mapa: Calles (OSM) / Satélite (Esri) / Oscuro (CARTO).
- *   Usa window.STT_MAPA_BASE que expone mapa.js.
+ * - Selector de tipo de mapa: Calles (OSM) / Satélite (Esri) / Relieve
+ *   (OpenTopoMap). Usa window.STT_MAPA_BASE que expone mapa.js.
  * - Checkbox «Ruido»: capa de celdas H3 con índice sonoro (GridCell.noiseIndex,
  *   endpoint statetty/ruido/celdas). Si hay figuras dibujadas con ✏️ (btn-lapiz)
  *   o 📍 (btn-pin) la capa se limita a esas zonas; si no, cubre la vista actual.
@@ -375,7 +375,7 @@
         '<label>Tipo de mapa <select id="stt-capa-tipo">' +
           '<option value="calles">Calles</option>' +
           '<option value="satelite">Satélite</option>' +
-          '<option value="oscuro">Oscuro</option>' +
+          '<option value="relieve">Relieve</option>' +
         '</select></label>' +
         '<label><input type="checkbox" id="stt-capa-ruido"> Ruido</label>' +
         '<label><input type="checkbox" id="stt-capa-rutas"> Rutas de micros</label>' +

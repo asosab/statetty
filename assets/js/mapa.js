@@ -73,13 +73,13 @@ function _initMapaBase() {
     maxZoom: 19,
     attribution: 'Esri, Maxar, Earthstar Geographics',
   });
-  var capaOscuro = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    maxZoom: 19,
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+  var capaRelieve = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+    maxZoom: 17,
+    attribution: 'Mapas &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | <a href="https://opentopomap.org">OpenTopoMap</a> (CC-BY-SA)',
   });
   window.STT_MAPA_BASE = {
     actual: 'calles',
-    capas: { calles: capaCalles, satelite: capaSatelite, oscuro: capaOscuro },
+    capas: { calles: capaCalles, satelite: capaSatelite, relieve: capaRelieve },
     cambiar: function (tipo) {
       var capas = this.capas;
       if (!capas[tipo] || tipo === this.actual) return;
