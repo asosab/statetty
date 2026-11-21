@@ -620,9 +620,10 @@
       '.leaflet-control.stt-capas{margin-bottom:72px;}' +
       '.stt-capas-chip{display:inline-block;width:10px;height:10px;border-radius:2px;' +
         'margin-right:5px;vertical-align:-1px;}' +
-      // Móvil: #caja abajo (z-index 1100, ~92vw) tapa el control Leaflet.
-      // El panel se muda a un contenedor fijo justo encima de la caja,
-      // colapsado a un icono; z-index 1150 queda sobre la caja y bajo el header.
+      // #caja abajo (z-index 1100) tapa el control Leaflet — en móvil (~92vw)
+      // y también en escritorio. El panel se muda a un contenedor fijo sobre
+      // la caja, colapsado a un icono; z-index 1150 queda sobre la caja y
+      // bajo el header.
       // Icono/toolbox a la IZQUIERDA, base a la altura de la caja (nunca la
       // solapa). Estado abierto/cerrado persistente (localStorage).
       '.stt-capas-movil{position:fixed;left:12px;transform:none;' +
@@ -745,19 +746,17 @@
     });
   }
 
-  // ── modo móvil: #caja abajo tapa el control → icono sobre la caja ──────────
-  // En pantallas ≤640 px, cuando #caja tiene .abajo (la búsqueda se hizo o el
-  // zoom superó zoomRef, vía mapaCaja.colocarCaja) el panel de capas se muda a
-  // un contenedor fijo centrado justo encima de la caja, colapsado a un icono.
-  // Se despliega con click en el icono (z-index 1150 > caja 1100) y se cierra
-  // al hacer click en la caja o cuando la caja vuelve al centro.
-  var mqMovil = (typeof window.matchMedia === 'function')
-    ? window.matchMedia('(max-width: 640px)') : null;
+  // ── modo flotante: #caja abajo tapa el control → icono sobre la caja ──────
+  // Cualquier tamaño de pantalla: cuando #caja tiene .abajo (se buscó, se
+  // dibujó o el zoom superó zoomRef — mapaCaja.colocarCaja) el panel de capas
+  // se muda a un contenedor fijo alineado al borde izquierdo de la caja, un
+  // poco por encima de ella, y su estado natural es un icono. Se despliega con
+  // el icono / cierra con ✕ (z-index 1150 > caja 1100), por click en la caja o
+  // en el mapa, y vuelve a la esquina cuando la caja regresa al centro.
   var movilBox = null, btnIcono = null, cajaEl = null;
   var modoMovil = false, capasAbiertas = false;
   var cajaObs = null, movListenersOk = false;
 
-  function esMovil() { return !!(mqMovil && mqMovil.matches); }
   function cajaAbajo() { return !!(cajaEl && cajaEl.classList.contains('abajo')); }
 
   function posicionarMovil() {
@@ -783,7 +782,7 @@
   }
 
   function evaluarModoMovil() {
-    var activo = esMovil() && cajaAbajo() && !!panelCapas;
+    var activo = cajaAbajo() && !!panelCapas;
     if (activo === modoMovil) { if (activo) posicionarMovil(); return; }
     modoMovil = activo;
     if (!movilBox) return;
@@ -835,10 +834,6 @@
     });
     window.addEventListener('resize', posicionarMovil);
     window.addEventListener('orientationchange', posicionarMovil);
-    if (mqMovil) {
-      if (mqMovil.addEventListener) mqMovil.addEventListener('change', evaluarModoMovil);
-      else if (mqMovil.addListener) mqMovil.addListener(evaluarModoMovil);
-    }
     if (mapa) {
       mapa.on('click', function () { if (modoMovil && capasAbiertas) cerrarCapasMovil(); });
     }
