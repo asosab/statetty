@@ -1,0 +1,456 @@
+/**
+ * mapaCapas.js — toolbox de capas del mapa unificado (esquina inferior
+ * izquierda). Pedido del dueño 2026-11-21.
+ *
+ * - Selector de tipo de mapa: Calles (OSM) / Satélite (Esri) / Oscuro (CARTO).
+ *   Usa window.STT_MAPA_BASE que expone mapa.js.
+ * - Checkbox «Ruido»: capa de celdas H3 con índice sonoro (GridCell.noiseIndex,
+ *   endpoint statetty/ruido/celdas). Si hay figuras dibujadas con ✏️ (btn-lapiz)
+ *   o 📍 (btn-pin) la capa se limita a esas zonas; si no, cubre la vista actual.
+ *   Solo hay datos para Santa Cruz (sczmicros); fuera de cobertura avisa.
+ * - Checkbox «Rutas de micros»: muestra/oculta las capas de rutas que dibuja
+ *   rutasMicros.js (se comunica por window.STT_RUTAS_MICROS).
+ *
+ * La capa de ruido también se puede alternar desde la sección «Ruido urbano»
+ * del toolbox de rutas (botón stt-rm-mostrar-ruido → STT_CAPAS.ruido.alternar).
+ */
+(function () {
+  'use strict';
+
+  if (window.__mapaCapasInit) return;
+  window.__mapaCapasInit = true;
+
+  var API_CELDAS = 'statetty/ruido/celdas';
+  var API_LEYENDA = 'statetty/ruido/leyenda';
+
+  var mapa = null;
+  var control = null;
+  var selTipo = null, chkRuido = null, chkRutas = null;
+  var estRuido = null, leyendaBox = null;
+
+  var capaRuido = null;          // L.layerGroup con los polígonos H3
+  var ruidoActivo = false;
+  var ruidoCargando = false;
+  var peticionRuido = 0;
+  var leyendaCats = null;
+  var cacheCeldas = {};          // key bbox+figuras → respuesta
+  var debounceMove = null;
+
+  // ── helpers de sesión / red ────────────────────────────────────────────────
+  function sesionActiva() {
+    var token = window.STT && window.STT.getToken ? window.STT.getToken() : '';
+    var u = window.STT && window.STT.getUsuario ? window.STT.getUsuario() : null;
+    return !!(token && u && u.hasTime);
+  }
+
+  function baseApi() {
+    return (window.STATETTY_CONFIG && STATETTY_CONFIG.WS_API_BASE) || '';
+  }
+
+  function tokenFresco() {
+    return (window.STT && window.STT.getTokenFresco)
+      ? window.STT.getTokenFresco()
+      : Promise.resolve(window.STT && window.STT.getToken ? window.STT.getToken() : '');
+  }
+
+  function getAuthed(url) {
+    return tokenFresco().then(function (token) {
+      return fetch(baseApi() + url, {
+        headers: token ? { 'Authorization': 'Bearer ' + token } : {}
+      });
+    });
+  }
+
+  // Escribe el estado del ruido en el control y en la sección del toolbox
+  // de rutas (si existe) para que ambos lugares muestren lo mismo.
+  function avisarRuido(txt, esError) {
+    if (estRuido) {
+      estRuido.textContent = txt || '';
+      estRuido.className = 'stt-capas-estado' + (esError ? ' error' : '');
+    }
+    var res = document.getElementById('stt-rm-resultados-ruido');
+    if (res) {
+      res.innerHTML = txt
+        ? '<div class="stt-rm-item' + (esError ? ' error' : '') + '">' + txt + '</div>'
+        : '';
+    }
+  }
+
+  // ── geometría de figuras (✏️ polígono / 📍 circunferencia) ────────────────
+  function figurasActuales() {
+    try {
+      if (window.STT_MAP_FIGURAS) return window.STT_MAP_FIGURAS() || {};
+    } catch (e) {}
+    return {};
+  }
+
+  function hayFiguras(fig) {
+    return !!((fig.poligono && fig.poligono.length) || (fig.circunferencia && fig.circunferencia.length));
+  }
+
+  function bboxDeFiguras(fig) {
+    var b = null;
+    function ext(lat, lng) {
+      if (!b) { b = { minLat: lat, maxLat: lat, minLng: lng, maxLng: lng }; return; }
+      if (lat < b.minLat) b.minLat = lat; if (lat > b.maxLat) b.maxLat = lat;
+      if (lng < b.minLng) b.minLng = lng; if (lng > b.maxLng) b.maxLng = lng;
+    }
+    (fig.poligono || []).forEach(function (p) {
+      (p.puntos || []).forEach(function (pt) { ext(pt.lat, pt.lng); });
+    });
+    (fig.circunferencia || []).forEach(function (c) {
+      var dLat = c.radio / 111320;
+      var dLng = c.radio / (111320 * Math.max(0.2, Math.cos(c.lat * Math.PI / 180)));
+      ext(c.lat - dLat, c.lng - dLng); ext(c.lat - dLat, c.lng + dLng);
+      ext(c.lat + dLat, c.lng - dLng); ext(c.lat + dLat, c.lng + dLng);
+    });
+    return b;
+  }
+
+  function puntoEnPoligono(lng, lat, puntos) {
+    var dentro = false;
+    for (var i = 0, j = puntos.length - 1; i < puntos.length; j = i++) {
+      var pi = puntos[i], pj = puntos[j];
+      if (((pi.lat > lat) !== (pj.lat > lat)) &&
+          (lng < (pj.lng - pi.lng) * (lat - pi.lat) / (pj.lat - pi.lat) + pi.lng)) {
+        dentro = !dentro;
+      }
+    }
+    return dentro;
+  }
+
+  function distM(lat1, lng1, lat2, lng2) {
+    var dx = (lng2 - lng1) * 111320 * Math.cos((lat1 + lat2) / 2 * Math.PI / 180);
+    var dy = (lat2 - lat1) * 110540;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  // ¿El centro de la celda cae dentro de alguna figura dibujada?
+  function dentroDeFiguras(centro, fig) {
+    var lng = centro[0], lat = centro[1];
+    var polis = fig.poligono || [], cirs = fig.circunferencia || [];
+    for (var i = 0; i < polis.length; i++) {
+      if (puntoEnPoligono(lng, lat, polis[i].puntos || [])) return true;
+    }
+    for (var k = 0; k < cirs.length; k++) {
+      var c = cirs[k];
+      if (distM(lat, lng, c.lat, c.lng) <= (c.radio || 0)) return true;
+    }
+    return false;
+  }
+
+  // ── capa de ruido ──────────────────────────────────────────────────────────
+  function colorRuido(v) {
+    if (v == null) return '#e5e7eb';
+    if (v <= 0) return '#e5e7eb';
+    if (v <= 25) return '#fde047';
+    if (v <= 55) return '#f97316';
+    if (v <= 80) return '#ef4444';
+    return '#7c3aed';
+  }
+
+  function etiquetaRuido(c) {
+    if (c.ruido == null) return 'Sin datos';
+    if (c.ruido <= 0) return 'Sin aporte de buses';
+    if (c.ruido <= 25) return 'Bajo';
+    if (c.ruido <= 55) return 'Moderado';
+    if (c.ruido <= 80) return 'Alto';
+    return 'Intenso';
+  }
+
+  function pintarCeldas(celdas) {
+    if (!mapa) return;
+    if (!capaRuido) capaRuido = L.layerGroup().addTo(mapa);
+    capaRuido.clearLayers();
+    var pintadas = 0;
+    celdas.forEach(function (c) {
+      var ring = c.poligono;
+      if (!Array.isArray(ring) || ring.length < 4) return;
+      // GeoJSON [lng,lat] → Leaflet [lat,lng]
+      var coords = ring.map(function (p) { return [p[1], p[0]]; });
+      var color = colorRuido(c.ruido);
+      var poly = L.polygon(coords, {
+        color: color, weight: 0.6, opacity: 0.9,
+        fillColor: color, fillOpacity: c.ruido > 0 ? 0.5 : 0.35
+      });
+      poly.bindTooltip(
+        '<b>' + etiquetaRuido(c) + '</b> · índice ' + (c.ruido == null ? '—' : c.ruido) +
+        (c.max != null ? ' (pico ' + c.max + ')' : '') +
+        (c.rutas ? ' · ' + c.rutas + ' rutas' : '') +
+        (c.distM != null ? ' · a ' + c.distM + ' m de la ruta más cercana' : ''),
+        { sticky: true }
+      );
+      poly.addTo(capaRuido);
+      pintadas++;
+    });
+    if (!pintadas) {
+      avisarRuido('No hay celdas con datos de ruido en esta zona.', true);
+      return;
+    }
+    var maxRutas = 0, maxRuido = 0;
+    celdas.forEach(function (c) {
+      if (c.rutas > maxRutas) maxRutas = c.rutas;
+      if (c.ruido > maxRuido) maxRuido = c.ruido;
+    });
+    avisarRuido(pintadas + ' zonas · índice máx ' + maxRuido +
+      (maxRutas ? ' · hasta ' + maxRutas + ' rutas solapadas' : '') +
+      '. Pasa el cursor para ver el detalle.', false);
+  }
+
+  function pintarLeyenda() {
+    if (!leyendaBox) return;
+    leyendaBox.innerHTML = '';
+    var cats = leyendaCats || [
+      { min: 0, max: 0, label: 'Sin aporte de buses', color: '#e5e7eb' },
+      { min: 1, max: 25, label: 'Bajo', color: '#fde047' },
+      { min: 26, max: 55, label: 'Moderado', color: '#f97316' },
+      { min: 56, max: 80, label: 'Alto', color: '#ef4444' },
+      { min: 81, max: 100, label: 'Intenso', color: '#7c3aed' }
+    ];
+    cats.forEach(function (c) {
+      var row = document.createElement('div');
+      row.className = 'stt-capas-leyenda-row';
+      row.innerHTML = '<span class="stt-capas-chip" style="background:' + c.color + '"></span>' + c.label;
+      leyendaBox.appendChild(row);
+    });
+  }
+
+  function cargarLeyenda() {
+    if (leyendaCats) { pintarLeyenda(); return; }
+    getAuthed(API_LEYENDA).then(function (r) { return r.json(); }).then(function (d) {
+      if (d && d.categorias) { leyendaCats = d.categorias; pintarLeyenda(); }
+    }).catch(function () {});
+  }
+
+  function bboxDeZona(fig) {
+    if (hayFiguras(fig)) return bboxDeFiguras(fig);
+    var b = mapa.getBounds();
+    return { minLat: b.getSouth(), maxLat: b.getNorth(), minLng: b.getWest(), maxLng: b.getEast() };
+  }
+
+  function claveZona(fig, bb) {
+    var partes = [bb.minLng.toFixed(4), bb.minLat.toFixed(4), bb.maxLng.toFixed(4), bb.maxLat.toFixed(4)];
+    if (hayFiguras(fig)) {
+      // hash simple de la geometría: distingue figuras distintas en la misma zona
+      var s = JSON.stringify(fig), h = 0;
+      for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+      partes.push('f' + h);
+    }
+    return partes.join(',');
+  }
+
+  var reqId = 0;
+
+  function terminarCeldas(d, fig) {
+    var celdas = d.celdas || [];
+    if (hayFiguras(fig)) {
+      celdas = celdas.filter(function (c) {
+        return c.centro && dentroDeFiguras(c.centro, fig);
+      });
+    }
+    if (!celdas.length) {
+      pintarCeldas([]);
+      avisarRuido(hayFiguras(fig)
+        ? 'La zona marcada no tiene datos de ruido (cobertura: Santa Cruz).'
+        : 'Esta vista no tiene datos de ruido (cobertura: Santa Cruz).', true);
+      leyendaBox.style.display = 'none';
+      return;
+    }
+    pintarCeldas(celdas);
+    cargarLeyenda();
+    if (leyendaBox) leyendaBox.style.display = '';
+  }
+
+  function actualizarRuido() {
+    if (!ruidoActivo || !mapa) return;
+    if (!sesionActiva()) {
+      avisarRuido('Inicia sesión con una cuenta de agente para ver el ruido.', true);
+      return;
+    }
+    var fig = figurasActuales();
+    var bb = bboxDeZona(fig);
+    var clave = claveZona(fig, bb);
+    reqId++;
+    var miReq = reqId;
+    peticionRuido = miReq;
+    avisarRuido('Cargando ruido…', false);
+    if (cacheCeldas[clave]) { terminarCeldas(cacheCeldas[clave], fig); return; }
+    ruidoCargando = true;
+    var q = 'minLng=' + bb.minLng + '&minLat=' + bb.minLat +
+            '&maxLng=' + bb.maxLng + '&maxLat=' + bb.maxLat;
+    getAuthed(API_CELDAS + '?' + q).then(function (r) {
+      if (r.status === 401 || r.status === 403) { avisarRuido('Inicia sesión con una cuenta de agente para ver el ruido.', true); return null; }
+      if (r.status === 429) { avisarRuido('Demasiadas consultas. Espera un minuto.', true); return null; }
+      if (!r.ok) { avisarRuido('No se pudo cargar el ruido (' + r.status + ').', true); return null; }
+      return r.json();
+    }).then(function (d) {
+      if (peticionRuido !== miReq || !ruidoActivo) return;
+      if (!d || d.ok === false) { avisarRuido('Sin datos de ruido en esta zona.', true); return; }
+      cacheCeldas[clave] = d;
+      terminarCeldas(d, fig);
+    }).catch(function () {
+      if (peticionRuido === miReq) avisarRuido('Falló la consulta de ruido. Revisa tu conexión.', true);
+    }).then(function () {
+      ruidoCargando = false;
+    });
+  }
+
+  function encenderRuido() {
+    if (!mapa) { avisarRuido('El mapa aún no está listo.', true); return; }
+    if (!sesionActiva()) {
+      avisarRuido('Inicia sesión con una cuenta de agente para ver el ruido.', true);
+      if (chkRuido) chkRuido.checked = false;
+      return;
+    }
+    ruidoActivo = true;
+    if (chkRuido) chkRuido.checked = true;
+    if (!capaRuido) capaRuido = L.layerGroup().addTo(mapa);
+    var fig = figurasActuales();
+    if (hayFiguras(fig)) {
+      // centra la vista en la zona dibujada para que el ruido se vea
+      var b = bboxDeFiguras(fig);
+      if (b) mapa.fitBounds([[b.minLat, b.minLng], [b.maxLat, b.maxLng]], { padding: [40, 40] });
+    }
+    actualizarRuido();
+  }
+
+  function apagarRuido() {
+    ruidoActivo = false;
+    peticionRuido++;
+    if (chkRuido) chkRuido.checked = false;
+    if (capaRuido && mapa) { capaRuido.clearLayers(); mapa.removeLayer(capaRuido); }
+    capaRuido = null;
+    if (leyendaBox) leyendaBox.style.display = 'none';
+    avisarRuido('', false);
+  }
+
+  function alternarRuido() {
+    if (ruidoActivo) apagarRuido(); else encenderRuido();
+  }
+
+  // ── rutas de micros (capas dibujadas por rutasMicros.js) ──────────────────
+  function alternarRutas(visible) {
+    if (window.STT_RUTAS_MICROS && window.STT_RUTAS_MICROS.alternar) {
+      window.STT_RUTAS_MICROS.alternar(visible);
+    }
+  }
+
+  // ── tipo de mapa ───────────────────────────────────────────────────────────
+  function cambiarTipo() {
+    if (window.STT_MAPA_BASE && selTipo) {
+      window.STT_MAPA_BASE.cambiar(selTipo.value);
+    }
+  }
+
+  // ── montaje del control ────────────────────────────────────────────────────
+  var CSS_ID = 'stt-capas-styles';
+  function inyectarEstilos() {
+    if (document.getElementById(CSS_ID)) return;
+    var s = document.createElement('style');
+    s.id = CSS_ID;
+    s.textContent =
+      '.stt-capas{background:rgba(255,255,255,.95);border:1px solid #cfe9f5;border-radius:10px;' +
+        'padding:8px 10px;font-size:12px;color:#04364a;line-height:1.6;min-width:170px;}' +
+      '.stt-capas-tit{font-weight:700;margin-bottom:4px;}' +
+      '.stt-capas label{display:flex;align-items:center;gap:6px;margin:2px 0;cursor:pointer;}' +
+      '.stt-capas select{flex:1;padding:2px 4px;border:1px solid #cfe9f5;border-radius:6px;' +
+        'font-size:12px;color:#04364a;background:#fff;}' +
+      '.stt-capas-estado{margin-top:6px;font-size:11px;color:#074f66;line-height:1.4;min-height:1em;}' +
+      '.stt-capas-estado.error{color:#b3261e;}' +
+      '.stt-capas-leyenda{margin-top:6px;border-top:1px dashed #d9ecf5;padding-top:5px;display:none;}' +
+      '.stt-capas-leyenda-row{white-space:nowrap;font-size:11px;}' +
+      '.stt-capas-chip{display:inline-block;width:10px;height:10px;border-radius:2px;' +
+        'margin-right:5px;vertical-align:-1px;}';
+    document.head.appendChild(s);
+  }
+
+  function montarControl() {
+    if (control || !mapa) return;
+    inyectarEstilos();
+    control = L.control({ position: 'bottomleft' });
+    control.onAdd = function () {
+      var div = L.DomUtil.create('div', 'stt-capas');
+      div.innerHTML =
+        '<div class="stt-capas-tit">🗺️ Capas</div>' +
+        '<label>Tipo de mapa <select id="stt-capa-tipo">' +
+          '<option value="calles">Calles</option>' +
+          '<option value="satelite">Satélite</option>' +
+          '<option value="oscuro">Oscuro</option>' +
+        '</select></label>' +
+        '<label><input type="checkbox" id="stt-capa-ruido"> Ruido</label>' +
+        '<label><input type="checkbox" id="stt-capa-rutas"> Rutas de micros</label>' +
+        '<div class="stt-capas-estado" id="stt-capa-estado"></div>' +
+        '<div class="stt-capas-leyenda" id="stt-capas-leyenda"></div>';
+      selTipo = div.querySelector('#stt-capa-tipo');
+      chkRuido = div.querySelector('#stt-capa-ruido');
+      chkRutas = div.querySelector('#stt-capa-rutas');
+      estRuido = div.querySelector('#stt-capa-estado');
+      leyendaBox = div.querySelector('#stt-capas-leyenda');
+      if (window.STT_MAPA_BASE) selTipo.value = window.STT_MAPA_BASE.actual || 'calles';
+      if (window.STT_RUTAS_MICROS && window.STT_RUTAS_MICROS.ocultas) {
+        chkRutas.checked = !window.STT_RUTAS_MICROS.ocultas();
+      }
+      L.DomEvent.disableClickPropagation(div);
+      L.DomEvent.disableScrollPropagation(div);
+      selTipo.addEventListener('change', cambiarTipo);
+      chkRuido.addEventListener('change', function () {
+        if (chkRuido.checked) encenderRuido(); else apagarRuido();
+      });
+      chkRutas.addEventListener('change', function () { alternarRutas(chkRutas.checked); });
+      return div;
+    };
+    control.addTo(mapa);
+  }
+
+  function esperarMapa() {
+    if (window.map) { conectarMapa(window.map); return; }
+    var intentos = 0;
+    var iv = setInterval(function () {
+      intentos++;
+      if (window.map) { clearInterval(iv); conectarMapa(window.map); }
+      else if (intentos > 80) clearInterval(iv);
+    }, 250);
+  }
+
+  function conectarMapa(m) {
+    if (mapa) return;
+    mapa = m;
+    montarControl();
+    // Sin figuras dibujadas, la zona de ruido sigue la vista del usuario.
+    mapa.on('moveend', function () {
+      if (!ruidoActivo || !mapa || hayFiguras(figurasActuales())) return;
+      clearTimeout(debounceMove);
+      debounceMove = setTimeout(actualizarRuido, 600);
+    });
+    // Las figuras (✏️/📍) cambian la zona de ruido si la capa está activa.
+    document.addEventListener('stt:figuras-cambio', function () {
+      if (ruidoActivo) actualizarRuido();
+    });
+    // Cuando rutasMicros dibuja rutas, el check «Rutas de micros» se marca
+    // y se muestra la capa (si estaba oculta).
+    document.addEventListener('stt:rutas-dibujadas', function () {
+      if (chkRutas && !chkRutas.checked) { chkRutas.checked = true; alternarRutas(true); }
+    });
+  }
+
+  // API para el botón de la sección «Ruido urbano» del toolbox de rutas.
+  window.STT_CAPAS = {
+    ruido: {
+      alternar: alternarRuido,
+      encender: encenderRuido,
+      apagar: apagarRuido,
+      activo: function () { return ruidoActivo; }
+    }
+  };
+
+  function init() {
+    inyectarEstilos();
+    esperarMapa();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();

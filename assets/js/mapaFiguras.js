@@ -161,6 +161,11 @@
     limpiarCirculoBusqueda();
     _avisar('', false);
     refrescarBotones();
+    avisarCambio();
+  }
+
+  function avisarCambio() {
+    try { document.dispatchEvent(new Event('stt:figuras-cambio')); } catch (e) {}
   }
 
   function conectarMapa(m) {
@@ -202,6 +207,7 @@
       if (mapa) mapa.removeLayer(f.capa);
       refrescarBotones();
       _avisar('', false);
+      avisarCambio();
     });
     refrescarBotones();
   }
@@ -215,6 +221,7 @@
     figuras = [];
     activar(null);
     refrescarBotones();
+    avisarCambio();
   }
 
   // Figuras vivas para el resto de la página: el form #fndInm del toolbox las

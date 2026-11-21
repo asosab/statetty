@@ -63,10 +63,33 @@ function _initMapaBase() {
   // fitBounds al crear: el país pedido por URL debe verse completo desde el
   // primer paint.
   if (inicial.cobertura) map.fitBounds(window.STT_GEO.cobertura(), { padding: [24, 24], animate: false });
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  var capaCalles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>',
   }).addTo(map);
+  // Capas base conmutables (toolbox de capas, mapaCapas.js). Solo la activa
+  // está añadida al mapa; las demás existen como objetos sin pedir tiles.
+  var capaSatelite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    maxZoom: 19,
+    attribution: 'Esri, Maxar, Earthstar Geographics',
+  });
+  var capaOscuro = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    maxZoom: 19,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+  });
+  window.STT_MAPA_BASE = {
+    actual: 'calles',
+    capas: { calles: capaCalles, satelite: capaSatelite, oscuro: capaOscuro },
+    cambiar: function (tipo) {
+      var capas = this.capas;
+      if (!capas[tipo] || tipo === this.actual) return;
+      Object.keys(capas).forEach(function (k) {
+        if (k === tipo) { if (!map.hasLayer(capas[k])) capas[k].addTo(map); }
+        else if (map.hasLayer(capas[k])) map.removeLayer(capas[k]);
+      });
+      this.actual = tipo;
+    }
+  };
   setTimeout(function () { map.invalidateSize(); }, 300);
 
   // Posición persistente (mismo contrato que siempre: mapCenter/mapZoom).

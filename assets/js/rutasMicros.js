@@ -26,8 +26,6 @@
   var STYLE_ID = 'stt-rutasmicros-styles';
   var API = 'statetty/rutasMicros';
   var API_MAPA = 'statetty/rutasMicros/mapa';
-  var API_RUIDO_PNG = 'statetty/ruido/mapa.png';
-  var API_RUIDO_LEYENDA = 'statetty/ruido/leyenda';
   var STORAGE_KEY = 'stt_rutasmicros_puntos';
   var COLORS = ['#17baef', '#7c3aed', '#0e7490'];
   var WALK_COLOR = '#f59e0b';
@@ -47,9 +45,7 @@
   var capasSeccion = {};
   var pidiendoSeccion = {};
   var peticionSeccion = {};
-  var overlayRuido = null;
-  var urlRuido = null;
-  var ctrlRuido = null;
+  var rutasOcultas = false;   // checkbox «Rutas de micros» del panel de capas
   var el = {};
 
   function sesionActiva() {
@@ -141,7 +137,7 @@
           '<div id="stt-rm-resultados-nombre"></div>' +
         '</div>' +
         '<div class="stt-rm-seccion">' +
-          '<div class="stt-rm-seccion-tit">Cruzan un punto</div>' +
+          '<div class="stt-rm-seccion-tit">Cruzan por Origen</div>' +
           '<div class="stt-rm-botones">' +
             '<button type="button" id="stt-rm-mostrar-origen">Mostrar rutas que cruzan por Origen</button>' +
             '<button type="button" id="stt-rm-limpiar-origen">Limpiar</button>' +
@@ -149,19 +145,22 @@
           '<div id="stt-rm-resultados-origen"></div>' +
         '</div>' +
         '<div class="stt-rm-seccion">' +
-          '<div class="stt-rm-seccion-tit">Ruido urbano</div>' +
-          '<div class="stt-rm-botones">' +
-            '<button type="button" id="stt-rm-mostrar-ruido">🗺️ Ver mapa de ruido</button>' +
-            '<button type="button" id="stt-rm-limpiar-ruido">Limpiar</button>' +
-          '</div>' +
-          '<div id="stt-rm-resultados-ruido"></div>' +
-        '</div>' +
-        '<div class="stt-rm-seccion">' +
+          '<div class="stt-rm-seccion-tit">Cruzan por Destino</div>' +
           '<div class="stt-rm-botones">' +
             '<button type="button" id="stt-rm-mostrar-destino">Mostrar rutas que cruzan por Destino</button>' +
             '<button type="button" id="stt-rm-limpiar-destino">Limpiar</button>' +
           '</div>' +
           '<div id="stt-rm-resultados-destino"></div>' +
+        '</div>' +
+        '<div class="stt-rm-seccion">' +
+          '<div class="stt-rm-seccion-tit">Ruido urbano</div>' +
+          '<div class="stt-rm-botones">' +
+            '<button type="button" id="stt-rm-mostrar-ruido">🗺️ Ruido urbano</button>' +
+          '</div>' +
+          '<div class="stt-rm-item-det">Se dibuja sobre la zona marcada con ✏️ o 📍; ' +
+            'sin zona, sobre la vista actual (cobertura: Santa Cruz). ' +
+            'También está en el panel de capas, esquina inferior izquierda.</div>' +
+          '<div id="stt-rm-resultados-ruido"></div>' +
         '</div>' +
       '</div>' +
     '</div>';
@@ -190,7 +189,6 @@
       ruido: document.getElementById('stt-rm-resultados-ruido')
     };
     el.mostrarRuido = document.getElementById('stt-rm-mostrar-ruido');
-    el.limpiarRuido = document.getElementById('stt-rm-limpiar-ruido');
   }
 
   function textoPunto(cual) {
@@ -233,7 +231,11 @@
 
   function capaSeccion(sec) {
     if (!mapa) return null;
-    if (!capasSeccion[sec]) capasSeccion[sec] = L.layerGroup().addTo(mapa);
+    if (!capasSeccion[sec]) {
+      var g = L.layerGroup();
+      if (!rutasOcultas) g.addTo(mapa);
+      capasSeccion[sec] = g;
+    }
     return capasSeccion[sec];
   }
 
@@ -247,9 +249,9 @@
       capasSeccion[sec] = null;
     }
     if (sec === 'ruido') {
-      if (ctrlRuido && mapa) { mapa.removeControl(ctrlRuido); ctrlRuido = null; }
-      if (overlayRuido && mapa) { mapa.removeLayer(overlayRuido); overlayRuido = null; }
-      if (urlRuido) { try { URL.revokeObjectURL(urlRuido); } catch (e) {} urlRuido = null; }
+      // La capa de ruido vive en mapaCapas.js (panel de capas); aquí solo
+      // se apaga y se limpia el mensaje de la sección.
+      if (window.STT_CAPAS && window.STT_CAPAS.ruido) window.STT_CAPAS.ruido.apagar();
     }
     peticionSeccion[sec] = (peticionSeccion[sec] || 0) + 1;
   }
@@ -284,6 +286,7 @@
       res.appendChild(item);
     });
     if (mapa && bounds.isValid()) mapa.fitBounds(bounds, { padding: [30, 30] });
+    try { document.dispatchEvent(new Event('stt:rutas-dibujadas')); } catch (e) {}
   }
 
   function pedirMapa(sec, body, boton) {
@@ -353,82 +356,43 @@
       sec === 'origen' ? el.mostrarOrigen : el.mostrarDestino);
   }
 
-  // ── Ruido urbano: PNG del raster + leyenda (GET con Bearer) ──────────────
-  function tokenFresco() {
-    return (window.STT && window.STT.getTokenFresco)
-      ? window.STT.getTokenFresco()
-      : Promise.resolve(window.STT && window.STT.getToken ? window.STT.getToken() : '');
-  }
-
-  function getAuthed(url) {
-    var base = (window.STATETTY_CONFIG && STATETTY_CONFIG.WS_API_BASE) || '';
-    return tokenFresco().then(function (token) {
-      return fetch(base + url, {
-        headers: token ? { 'Authorization': 'Bearer ' + token } : {}
-      });
-    });
-  }
-
-  function pintarLeyendaRuido(cats) {
-    if (!mapa || ctrlRuido) return;
-    ctrlRuido = L.control({ position: 'bottomright' });
-    ctrlRuido.onAdd = function () {
-      var div = L.DomUtil.create('div', 'stt-rm-leyenda');
-      div.innerHTML = '<div class="stt-rm-leyenda-tit">Ruido por micros</div>';
-      (cats || []).forEach(function (c) {
-        var row = document.createElement('div');
-        row.className = 'stt-rm-leyenda-row';
-        row.innerHTML = '<span class="stt-rm-leyenda-chip" style="background:' + c.color + '"></span>' +
-          c.label + ' <em>' + c.min + (c.max ? '–' + c.max : '') + '</em>';
-        div.appendChild(row);
-      });
-      return div;
-    };
-    ctrlRuido.addTo(mapa);
-  }
-
+  // ── Ruido urbano ───────────────────────────────────────────────────────────
+  // La capa de ruido (celdas H3 por zona) vive en mapaCapas.js / panel de
+  // capas. Este botón solo la alterna; los mensajes caen en
+  // #stt-rm-resultados-ruido desde allá.
   function mostrarRuido() {
-    if (pidiendoSeccion.ruido) return;
-    if (!sesionActiva()) {
-      avisar('Inicia sesión con una cuenta activa para ver el mapa de ruido.', true);
-      aplicarGate();
+    if (window.STT_CAPAS && window.STT_CAPAS.ruido) {
+      window.STT_CAPAS.ruido.alternar();
       return;
     }
-    if (!mapa) { mensajeSeccion('ruido', 'El mapa aún no está listo.', true); return; }
-    pidiendoSeccion.ruido = true;
-    if (el.mostrarRuido) el.mostrarRuido.disabled = true;
-    limpiarSeccion('ruido');
-    var req = peticionSeccion.ruido;
-    mensajeSeccion('ruido', 'Cargando mapa de ruido…', false);
-
-    getAuthed(API_RUIDO_LEYENDA).then(function (r) { return r.json(); }).then(function (ley) {
-      if (peticionSeccion.ruido !== req) return null;
-      if (!ley || ley.ok === false) throw new Error('leyenda');
-      return getAuthed(API_RUIDO_PNG).then(function (r2) {
-        if (peticionSeccion.ruido !== req) return null;
-        if (r2.status === 403) { mensajeSeccion('ruido', 'Tu cuenta no está activa.', true); return null; }
-        if (r2.status === 404) { mensajeSeccion('ruido', 'Sin cobertura de ruido en esta zona.', true); return null; }
-        if (!r2.ok) throw new Error('png ' + r2.status);
-        return r2.blob().then(function (blob) {
-          if (peticionSeccion.ruido !== req) return null;
-          urlRuido = URL.createObjectURL(blob);
-          var b = ley.bounds;
-          var cg = capaSeccion('ruido');
-          overlayRuido = L.imageOverlay(urlRuido,
-            [[b.minLat, b.minLng], [b.maxLat, b.maxLng]], { opacity: 0.8 }).addTo(cg);
-          mapa.fitBounds([[b.minLat, b.minLng], [b.maxLat, b.maxLng]], { padding: [20, 20] });
-          pintarLeyendaRuido(ley.categorias);
-          mensajeSeccion('ruido', 'Mapa de ruido cargado (' + (ley.rutas || 0) + ' rutas). Toca una zona para estimar el nivel.', false);
-          return null;
-        });
-      });
-    }).catch(function () {
-      if (peticionSeccion.ruido === req) mensajeSeccion('ruido', 'No se pudo cargar el mapa de ruido. Intenta de nuevo.', true);
-    }).then(function () {
-      pidiendoSeccion.ruido = false;
-      if (el.mostrarRuido) el.mostrarRuido.disabled = false;
-    });
+    mensajeSeccion('ruido', 'El panel de capas aún no está listo.', true);
   }
+
+  // Visibilidad de las capas de rutas (checkbox «Rutas de micros» del panel
+  // de capas, mapaCapas.js). ocultas=true saca los layer groups del mapa sin
+  // borrar los datos; al reactivar se vuelven a añadir.
+  function gruposRutas() {
+    var g = [];
+    if (capa) g.push(capa);
+    Object.keys(capasSeccion).forEach(function (k) {
+      if (capasSeccion[k]) g.push(capasSeccion[k]);
+    });
+    return g;
+  }
+
+  window.STT_RUTAS_MICROS = {
+    alternar: function (visible) {
+      rutasOcultas = !visible;
+      if (mapa) {
+        gruposRutas().forEach(function (g) {
+          if (visible) { if (!mapa.hasLayer(g)) mapa.addLayer(g); }
+          else if (mapa.hasLayer(g)) mapa.removeLayer(g);
+        });
+      }
+      try { document.dispatchEvent(new CustomEvent('stt:rutas-visibilidad', { detail: { visible: !!visible } })); } catch (e) {}
+    },
+    ocultas: function () { return rutasOcultas; }
+  };
 
   function setPunto(cual, punto) {
     var lat = Number(punto && punto.lat), lng = Number(punto && punto.lng);
@@ -495,7 +459,8 @@
   function conectarMapa(m) {
     if (mapa) return;
     mapa = m;
-    capa = L.layerGroup().addTo(mapa);
+    capa = L.layerGroup();
+    if (!rutasOcultas) capa.addTo(mapa);
     mapa.on('click', onMapClick);
     if (origen) pintarPunto('origen');
     if (destino) pintarPunto('destino');
@@ -686,7 +651,6 @@
     if (el.mostrarDestino) el.mostrarDestino.addEventListener('click', function () { mostrarCerca('destino'); });
     if (el.limpiarDestino) el.limpiarDestino.addEventListener('click', function () { limpiarSeccion('destino'); });
     if (el.mostrarRuido) el.mostrarRuido.addEventListener('click', mostrarRuido);
-    if (el.limpiarRuido) el.limpiarRuido.addEventListener('click', function () { limpiarSeccion('ruido'); });
     if (el.rutaInput) el.rutaInput.addEventListener('keydown', function (e) {
       if (e.key === 'Enter') { e.preventDefault(); mostrarNombre(); }
     });
