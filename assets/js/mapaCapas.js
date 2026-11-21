@@ -486,6 +486,8 @@
       '.stt-capas-leyenda{margin-top:6px;border-top:1px dashed #d9ecf5;padding-top:5px;display:none;}' +
       '.stt-capas-leyenda-row{white-space:nowrap;font-size:11px;}' +
       '.stt-capas-sub{margin-top:6px;font-weight:700;border-top:1px dashed #d9ecf5;padding-top:4px;}' +
+      // Subir el control para no pisar el botón de menú admin (esquina inf-izq).
+      '.leaflet-control.stt-capas{margin-bottom:72px;}' +
       '.stt-capas-chip{display:inline-block;width:10px;height:10px;border-radius:2px;' +
         'margin-right:5px;vertical-align:-1px;}';
     document.head.appendChild(s);
