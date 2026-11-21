@@ -284,10 +284,7 @@
 
   function actualizarRuido() {
     if (!ruidoActivo || !mapa) return;
-    if (!sesionActiva()) {
-      avisarRuido('Inicia sesión con una cuenta de agente para ver el ruido.', true);
-      return;
-    }
+    // El ruido es público (regla del dueño): sin sesión también se muestra.
     var fig = figurasActuales();
     var bb = bboxDeZona(fig);
     var clave = claveZona(fig, bb);
@@ -300,7 +297,7 @@
     var q = 'minLng=' + bb.minLng + '&minLat=' + bb.minLat +
             '&maxLng=' + bb.maxLng + '&maxLat=' + bb.maxLat;
     getAuthed(API_CELDAS + '?' + q).then(function (r) {
-      if (r.status === 401 || r.status === 403) { avisarRuido('Inicia sesión con una cuenta de agente para ver el ruido.', true); return null; }
+      if (r.status === 401 || r.status === 403) { avisarRuido('No se pudo cargar el ruido.', true); return null; }
       if (r.status === 429) { avisarRuido('Demasiadas consultas. Espera un minuto.', true); return null; }
       if (!r.ok) { avisarRuido('No se pudo cargar el ruido (' + r.status + ').', true); return null; }
       return r.json();
@@ -436,11 +433,7 @@
 
   function encenderRuido() {
     if (!mapa) { avisarRuido('El mapa aún no está listo.', true); return; }
-    if (!sesionActiva()) {
-      avisarRuido('Inicia sesión con una cuenta de agente para ver el ruido.', true);
-      if (chkRuido) chkRuido.checked = false;
-      return;
-    }
+    // El ruido es público (regla del dueño): sin sesión también se muestra.
     ruidoActivo = true;
     if (chkRuido) chkRuido.checked = true;
     if (!capaRuido) capaRuido = L.layerGroup().addTo(mapa);
