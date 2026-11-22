@@ -474,6 +474,12 @@ permalink: /manual/
         <p>Cuando termines, pulsa <strong>🔎 Buscar</strong>. Verás una barra de progreso mientras se procesa
         y luego te lleva directo al mapa de resultados. El botón <strong>↺ Limpiar</strong> borra todo lo
         configurado (te pide confirmación).</p>
+        <p>Encima de esos dos botones hay otros dos para compartir la búsqueda: <strong>📋 Copiar
+        búsqueda</strong> lleva al portapapeles un JSON con todos tus filtros y el área que hayas dibujado
+        en el mapa, listo para mandarlo por WhatsApp o donde quieras; <strong>📥 Pegar búsqueda</strong>
+        carga en tu formulario un JSON que te hayan compartido (lo valida antes: si el texto no es un JSON
+        con datos aplicables, te avisa y no toca lo que tenías). Sirve para pasarte una búsqueda entre
+        colegas o para que soporte te mande una ya armada.</p>
       </div>
 
       <div class="plat plat-tg">
@@ -808,7 +814,7 @@ permalink: /manual/
     {title:"Explorar sin crear una cuenta", id:"sin-cuenta", kw:"anónimo visitante sin registro sin login"},
     {title:"Crear mi cuenta", id:"crear-cuenta", kw:"registro registrarme signup cuenta nueva"},
     {title:"Iniciar sesión y vincular Web + Telegram", id:"iniciar-sesion", kw:"login entrar sesión vincular correo magic link"},
-    {title:"Buscar inmuebles según mis filtros", id:"buscar-inmuebles", kw:"comprar filtros buscar propiedades búsqueda"},
+    {title:"Buscar inmuebles según mis filtros", id:"buscar-inmuebles", kw:"comprar filtros buscar propiedades búsqueda copiar pegar compartir"},
     {title:"Ver y comparar resultados en el mapa", id:"ver-resultados", kw:"mapa resultados comparar seleccionar fuentes"},
     {title:"Estimar el valor de un inmueble (ACM)", id:"estimar-valor", kw:"tasación avalúo precio valor mercado acm"},
     {title:"Generar un PDF para compartir", id:"generar-pdf", kw:"brochure pdf compartir exportar tsv descargar"},

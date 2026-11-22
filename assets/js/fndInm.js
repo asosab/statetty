@@ -40,6 +40,11 @@
  *     2. Un formulario (id="fndInm-form") con un campo por cada parámetro
  *        que espera recibir buscarInmuebles() (ver paramfnd.md /
  *        nodeLab/servicios/statetty/inmuebles.js:639).
+ *     3. Sobre los botones Buscar/Limpiar, una fila para compartir la
+ *        búsqueda como JSON: «Copiar búsqueda» lleva al portapapeles los
+ *        filtros + las figuras dibujadas en el mapa; «Pegar búsqueda»
+ *        valida un JSON compartido y carga sus valores (con
+ *        STT_FIGURAS.cargar para el área dibujada).
  *
  *   Este script NO dispara ningún AJAX todavía: el submit del formulario
  *   está prevenido y solo arma el objeto de parámetros (getParams()) y lo
@@ -469,6 +474,10 @@
       'border-color:var(--blue,#17baef);color:#fff;}' +
       '#' + SECTION_ID + ' #fndInm-btn-buscar:hover{background:var(--blue-dark,#0f95bd);' +
       'border-color:var(--blue-dark,#0f95bd);}' +
+      // Copiar/Pegar: acciones secundarias arriba de Buscar/Limpiar, más
+      // chicas y discretas para no competir con el CTA principal.
+      '#' + SECTION_ID + ' .fndinm-share button{font-size:.78rem;padding:6px 8px;' +
+      'background:#fff;}' +
       // Espacio invisible después de los botones Buscar/Limpiar: cuando el
       // formulario desplegado llena todo el alto de #toolbox (que ahora
       // ocupa 100vh, ver index.html), los botones quedaban pegados al
@@ -983,6 +992,146 @@
   }
 
   // ------------------------------------------------------------------
+  // Compartir la búsqueda como JSON (Copiar / Pegar)
+  // ------------------------------------------------------------------
+  // Claves que identifican al usuario o a la sesión: nunca viajan en el JSON
+  // compartido. Copiar las quita del objeto; Pegar las descarta aunque vengan
+  // escritas en el texto — un JSON ajeno NO debe poder pisar la identidad del
+  // usuario que lo recibe (ej. el userID oculto del form).
+  var CAMPOS_PRIVADOS = ['userID', 'publicKey', 'bearer', 'searchTs'];
+
+  // JSON completo de la búsqueda tal como la ejecuta el botón Buscar: los
+  // filtros del formulario + las figuras dibujadas en el mapa, que en el
+  // submit mandan por encima de la geografía lat/lng/dist.
+  function jsonDeBusqueda() {
+    var params = getParams();
+    CAMPOS_PRIVADOS.forEach(function (k) { delete params[k]; });
+    var fig = (typeof window.STT_MAP_FIGURAS === 'function') ? window.STT_MAP_FIGURAS() : null;
+    if (fig) {
+      if (Array.isArray(fig.poligono) && fig.poligono.length) params.poligono = fig.poligono;
+      if (Array.isArray(fig.circunferencia) && fig.circunferencia.length) params.circunferencia = fig.circunferencia;
+    }
+    return params;
+  }
+
+  // Extrae el objeto de búsqueda de un texto (portapapeles). Tolera texto
+  // alrededor del JSON: el caso típico es el mensaje de WhatsApp copiado
+  // entero ("mirá esta búsqueda: {…}, avisame qué te parece").
+  // Devuelve { params } o { error: 'vacio' | 'json' }.
+  function parsearJsonCompartido(texto) {
+    var s = String(texto || '').trim();
+    if (!s) return { error: 'vacio' };
+    var obj = null;
+    try { obj = JSON.parse(s); }
+    catch (e) {
+      var i = s.indexOf('{'), j = s.lastIndexOf('}');
+      if (i > -1 && j > i) {
+        try { obj = JSON.parse(s.slice(i, j + 1)); } catch (e2) { return { error: 'json' }; }
+      } else return { error: 'json' };
+    }
+    if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return { error: 'json' };
+    CAMPOS_PRIVADOS.forEach(function (k) { delete obj[k]; });
+    return { params: obj };
+  }
+
+  // Cuántas claves del JSON tienen un campo del formulario donde caer con
+  // valor. Las figuras no son campos: cuentan aparte (se restauran en el mapa).
+  function camposAplicables(params) {
+    var form = document.getElementById(FORM_ID);
+    if (!form) return 0;
+    var n = 0;
+    Object.keys(params || {}).forEach(function (name) {
+      if (name === 'poligono' || name === 'circunferencia') return;
+      var v = params[name];
+      if (v === null || v === undefined || v === '') return;
+      var el = form.elements[name];
+      if (el && el.tagName !== 'BUTTON' && el.type !== 'submit') n++;
+    });
+    return n;
+  }
+
+  // Cuántas figuras del JSON son restaurables (mismo filtro que aplica
+  // STT_FIGURAS.cargar al dibujarlas: polígonos con ≥3 puntos válidos,
+  // círculos con centro válido y radio ≥ RADIO_MIN).
+  function figurasRestaurables(params) {
+    var min = (window.STT_FIGURAS && window.STT_FIGURAS.RADIO_MIN) || 20;
+    var n = 0;
+    (Array.isArray(params.poligono) ? params.poligono : []).forEach(function (p) {
+      var pts = (p && Array.isArray(p.puntos) ? p.puntos : []).filter(function (q) {
+        return q && isFinite(Number(q.lat)) && isFinite(Number(q.lng));
+      });
+      if (pts.length >= 3) n++;
+    });
+    (Array.isArray(params.circunferencia) ? params.circunferencia : []).forEach(function (c) {
+      if (c && isFinite(Number(c.lat)) && isFinite(Number(c.lng)) &&
+          isFinite(Number(c.radio)) && Number(c.radio) >= min) n++;
+    });
+    return n;
+  }
+
+  // Portapapeles: navigator.clipboard exige contexto seguro (HTTPS). Si no
+  // está disponible o el permiso es denegado, se cae a execCommand/prompt.
+  function copiarAlPortapapeles(texto) {
+    function fallback() {
+      try {
+        var ta = document.createElement('textarea');
+        ta.value = texto;
+        ta.setAttribute('readonly', '');
+        ta.style.cssText = 'position:fixed;top:-1000px;left:-1000px;opacity:0;';
+        document.body.appendChild(ta);
+        ta.select();
+        var ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+        return ok;
+      } catch (e) { return false; }
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(texto).then(function () { return true; }, fallback);
+    }
+    return Promise.resolve(fallback());
+  }
+
+  function leerDelPortapapeles() {
+    function manual() {
+      var t = window.prompt('Pega aquí el JSON de la búsqueda compartida:');
+      return t || '';
+    }
+    if (navigator.clipboard && navigator.clipboard.readText) {
+      return navigator.clipboard.readText().catch(manual);
+    }
+    return Promise.resolve(manual());
+  }
+
+  // Click de «Pegar búsqueda»: valida el texto y solo si contiene al menos un
+  // dato aplicable toca el formulario y las figuras. Un texto inválido, vacío
+  // o sin campos del form no destruye lo que el usuario ya tenía cargado.
+  // Pegar una búsqueda sin figuras también limpia las que estén dibujadas:
+  // lo pegado define por completo el área de la búsqueda.
+  function pegarBusqueda() {
+    leerDelPortapapeles().then(function (texto) {
+      var r = parsearJsonCompartido(texto);
+      if (r.error === 'vacio') { showSaveStatus('error', 'No se encontró texto para pegar.'); return; }
+      if (r.error) { showSaveStatus('error', 'El texto pegado no es un JSON válido.'); return; }
+      var params = r.params;
+      var puedeFig = window.STT_FIGURAS && typeof window.STT_FIGURAS.cargar === 'function';
+      var nCampos = camposAplicables(params);
+      var nFigPrev = figurasRestaurables(params);
+      if (!nCampos && !(puedeFig && nFigPrev)) {
+        showSaveStatus('error', 'El JSON no contiene ningún dato de búsqueda aplicable.');
+        return;
+      }
+      var figs = { poligono: params.poligono, circunferencia: params.circunferencia };
+      delete params.poligono;
+      delete params.circunferencia;
+      var nFig = puedeFig ? window.STT_FIGURAS.cargar(figs) : 0;
+      aplicarResultado(params);
+      var msg = 'Búsqueda cargada';
+      if (nFig) msg += ' con ' + nFig + ' figura' + (nFig > 1 ? 's' : '') + ' en el mapa';
+      showSaveStatus('success', msg);
+    });
+  }
+
+  // ------------------------------------------------------------------
   // Construcción del formulario completo
   // ------------------------------------------------------------------
   function buildForm(usuario) {
@@ -1175,6 +1324,38 @@
     refreshLegends(form, fieldsetRefs);
     refreshEstados(form, fieldsetRefs);
     form._fieldsetRefs = fieldsetRefs;
+
+    // Fila secundaria, justo encima de Buscar/Limpiar: compartir la búsqueda
+    // como JSON entre usuarios (ej. por WhatsApp) o que soporte le pase una
+    // búsqueda armada a alguien que recién empieza.
+    var shareActions = document.createElement('div');
+    shareActions.className = 'fndinm-actions fndinm-share';
+
+    var btnCopiar = document.createElement('button');
+    btnCopiar.type = 'button';
+    btnCopiar.id = 'fndInm-btn-copiar';
+    btnCopiar.textContent = '📋 Copiar búsqueda';
+    btnCopiar.setAttribute('data-tippy-content', 'Copia al portapapeles el JSON completo de esta búsqueda, incluidas las figuras dibujadas en el mapa, para compartirla o guardarla.');
+    btnCopiar.addEventListener('click', function () {
+      var json;
+      try { json = JSON.stringify(jsonDeBusqueda()); }
+      catch (e) { showSaveStatus('error', 'No se pudo armar el JSON de la búsqueda.'); return; }
+      copiarAlPortapapeles(json).then(function (ok) {
+        showSaveStatus(ok ? 'success' : 'error',
+          ok ? 'Búsqueda copiada al portapapeles' : 'No se pudo copiar al portapapeles.');
+      });
+    });
+
+    var btnPegar = document.createElement('button');
+    btnPegar.type = 'button';
+    btnPegar.id = 'fndInm-btn-pegar';
+    btnPegar.textContent = '📥 Pegar búsqueda';
+    btnPegar.setAttribute('data-tippy-content', 'Pega el JSON de una búsqueda compartida y carga sus valores en este formulario (reemplaza también el área dibujada en el mapa).');
+    btnPegar.addEventListener('click', pegarBusqueda);
+
+    shareActions.appendChild(btnCopiar);
+    shareActions.appendChild(btnPegar);
+    form.appendChild(shareActions);
 
     var actions = document.createElement('div');
     actions.className = 'fndinm-actions';

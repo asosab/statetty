@@ -9,6 +9,7 @@
 //   STT_FIGURAS.datosDe('poligono'|'circunferencia')
 //   STT_FIGURAS.hayFiguras()
 //   STT_FIGURAS.limpiar()              // quita todas las figuras del mapa
+//   STT_FIGURAS.cargar(datos)          // reemplaza la pila con figuras de un JSON
 //   window.STT_MAP_FIGURAS()           // contrato que usa fndInm.js
 //
 // Máximo de figuras por tipo: al llegar, la herramienta activa se apaga y su
@@ -285,6 +286,63 @@
     avisarCambio();
   }
 
+  // Reemplaza la pila con las figuras serializadas de una búsqueda compartida
+  // (botón «Pegar búsqueda» de fndInm.js). Acepta exactamente la forma que
+  // devuelve window.STT_MAP_FIGURAS():
+  //   { poligono: [{puntos:[{lat,lng}...]}...], circunferencia: [{lat,lng,radio}...] }
+  // Las entradas inválidas se saltan; si la lista total pasa de LIMITE se
+  // restauran solo las primeras. Devuelve cuántas figuras quedaron dibujadas.
+  // Se llama siempre (también con datos vacíos) para que pegar una búsqueda
+  // sin figuras limpie las que el usuario tenía dibujadas.
+  function cargar(datos) {
+    limpiar();
+    if (!mapa || !datos || typeof datos !== 'object') return 0;
+    var restauradas = 0;
+    var bounds = [];
+
+    (Array.isArray(datos.poligono) ? datos.poligono : []).forEach(function (p) {
+      if (contar('poligono') >= LIMITE.poligono) return;
+      var pts = (p && Array.isArray(p.puntos) ? p.puntos : [])
+        .filter(function (q) { return q && isFinite(Number(q.lat)) && isFinite(Number(q.lng)); })
+        .map(function (q) { return { lat: Number(q.lat), lng: Number(q.lng) }; });
+      if (pts.length < PUNTOS_MIN) return;
+      figuras.push({
+        tipo: 'poligono',
+        capa: L.polygon(pts, ESTILO_AREA).addTo(mapa),
+        datos: { puntos: pts }
+      });
+      bounds = bounds.concat(pts);
+      restauradas++;
+    });
+
+    (Array.isArray(datos.circunferencia) ? datos.circunferencia : []).forEach(function (c) {
+      if (contar('circunferencia') >= LIMITE.circunferencia) return;
+      var lat = Number(c && c.lat), lng = Number(c && c.lng), r = Number(c && c.radio);
+      if (!isFinite(lat) || !isFinite(lng) || !isFinite(r) || r < RADIO_MIN) return;
+      var centro = L.latLng(lat, lng);
+      var capa = L.featureGroup([
+        L.circle(centro, L.extend({ radius: r, interactive: false }, ESTILO_AREA)),
+        L.circleMarker(centro, {
+          radius: 4, color: '#04364a', weight: 2, fillColor: '#ffd54a', fillOpacity: 1, interactive: false
+        })
+      ]).addTo(mapa);
+      figuras.push({ tipo: 'circunferencia', capa: capa, datos: { lat: lat, lng: lng, radio: Math.round(r) } });
+      // El fitBounds necesita esquinas, no el centro: se agregan los cuatro
+      // extremos del círculo (1° lat ≈ 110.54 km, 1° lng ≈ 111.32·cos(lat) km).
+      var dLat = r / 110540, dLng = r / (111320 * Math.max(Math.cos(lat * Math.PI / 180), 0.01));
+      bounds.push({ lat: lat - dLat, lng: lng }, { lat: lat + dLat, lng: lng },
+                  { lat: lat, lng: lng - dLng }, { lat: lat, lng: lng + dLng });
+      restauradas++;
+    });
+
+    if (bounds.length && typeof mapa.fitBounds === 'function') {
+      try { mapa.fitBounds(bounds, { padding: [30, 30] }); } catch (e) {}
+    }
+    refrescarBotones();
+    if (restauradas) avisarCambio();
+    return restauradas;
+  }
+
   // Figuras vivas para el resto de la página: el form #fndInm del toolbox las
   // adjunta a su POST para que la superficie dibujada mande SIEMPRE sobre
   // lat/lng/dist (plan figuras-sobrescriben-geografia, D2/D3).
@@ -299,6 +357,7 @@
     desactivar: desactivar,
     hayFiguras: function () { return figuras.length > 0; },
     limpiar: limpiar,
+    cargar: cargar,
     LIMITE: LIMITE,
     RADIO_MIN: RADIO_MIN,
     PUNTOS_MIN: PUNTOS_MIN,
