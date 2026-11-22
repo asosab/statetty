@@ -26,3 +26,5 @@ Al pegar, la búsqueda además queda guardada en tu lista: si tenías una elegid
 Esto abre dos usos que ya nos hacían falta. Uno entre ustedes: pasarle una búsqueda a un colega o a un cliente tal cual la armaste. Otro con soporte: si quieres que te ayudemos a ordenar o mejorar una búsqueda, la copias, nos la mandas y te devolvemos la versión ajustada lista para pegar.
 
 Un detalle por las dudas: el JSON no lleva tu identidad. Los campos de usuario se quitan al copiar, así que compartir la búsqueda no comparte tu cuenta.
+
+¿Quieres verlo en video? Acá está el [recorrido completo en un minuto](/copiar-pegar-video/), del mensaje en WhatsApp a la búsqueda ya pegada.
