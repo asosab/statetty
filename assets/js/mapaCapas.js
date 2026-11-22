@@ -493,18 +493,71 @@
     return 'hsl(' + (Math.abs(h) % 360) + ',65%,42%)';
   }
 
-  // Deja solo los tramos de la línea que caen dentro de las figuras.
-  // Sin figuras devuelve la línea completa.
+  // Parámetros t ∈ [0,1] donde el segmento a→b cruza el borde de alguna
+  // figura (unión de polígonos y círculos), ordenados e incluyendo 0 y 1.
+  function cortesSegmento(latA, lngA, latB, lngB, fig) {
+    var ts = [0, 1];
+    var dx = lngB - lngA, dy = latB - latA;
+    if (!dx && !dy) return ts;
+    // círculos: |P + t·d − C| = r en metros (proyección afín local; el mismo
+    // t sirve para interpolar de vuelta en grados).
+    (fig.circunferencia || []).forEach(function (c) {
+      var mLng = 111320 * Math.cos(c.lat * Math.PI / 180), mLat = 111320;
+      var ax = (lngA - c.lng) * mLng, ay = (latA - c.lat) * mLat;
+      var ex = (lngB - lngA) * mLng, ey = (latB - latA) * mLat;
+      var qa = ex * ex + ey * ey;
+      var qb = 2 * (ax * ex + ay * ey);
+      var qc = ax * ax + ay * ay - c.radio * c.radio;
+      var disc = qb * qb - 4 * qa * qc;
+      if (!qa || disc <= 0) return;
+      var sq = Math.sqrt(disc);
+      [(-qb - sq) / (2 * qa), (-qb + sq) / (2 * qa)].forEach(function (t) {
+        if (t > 1e-9 && t < 1 - 1e-9) ts.push(t);
+      });
+    });
+    // polígonos: cruce paramétrico con cada arista, en grados (puntoEnPoligono
+    // también trabaja en grados, así el test adentro/afuera es consistente).
+    (fig.poligono || []).forEach(function (pol) {
+      var pts = pol.puntos || [];
+      for (var i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+        var ex = pts[i].lng - pts[j].lng, ey = pts[i].lat - pts[j].lat;
+        var den = dx * ey - dy * ex;
+        if (Math.abs(den) < 1e-12) continue;
+        var qx = pts[j].lng - lngA, qy = pts[j].lat - latA;
+        var t = (qx * ey - qy * ex) / den;
+        var s = (qx * dy - qy * dx) / den;
+        if (t > 1e-9 && t < 1 - 1e-9 && s >= -1e-9 && s <= 1 + 1e-9) ts.push(t);
+      }
+    });
+    return ts.sort(function (a, b) { return a - b; });
+  }
+
+  // Recorta la polilínea a los tramos que caen dentro de las figuras.
+  // A diferencia de un filtro por vértices, calcula el cruce real de cada
+  // segmento con el borde del polígono/círculo: una ruta que atraviesa el
+  // dibujo sin vértices dentro también se dibuja.
   function recortarRuta(coords, fig) {
     if (!hayFiguras(fig)) return [coords];
     var seg = [], cur = [];
-    coords.forEach(function (p) {
-      var dentro = dentroDeFiguras([p[1], p[0]], fig);   // coords [lat,lng] → [lng,lat]
-      if (dentro) cur.push(p);
-      else if (cur.length) { seg.push(cur); cur = []; }
-    });
-    if (cur.length) seg.push(cur);
-    return seg.filter(function (s) { return s.length >= 2; });
+    function cerrar() { if (cur.length >= 2) seg.push(cur); cur = []; }
+    function interpola(a, b, t) {
+      return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+    }
+    for (var i = 1; i < coords.length; i++) {
+      var a = coords[i - 1], b = coords[i];
+      if (a[0] === b[0] && a[1] === b[1]) continue;
+      var ts = cortesSegmento(a[0], a[1], b[0], b[1], fig);
+      for (var k = 0; k + 1 < ts.length; k++) {
+        var t0 = ts[k], t1 = ts[k + 1];
+        if (t1 - t0 < 1e-9) continue;
+        var mid = interpola(a, b, (t0 + t1) / 2);
+        if (!dentroDeFiguras([mid[1], mid[0]], fig)) { cerrar(); continue; }
+        if (!cur.length) cur.push(interpola(a, b, t0));
+        cur.push(interpola(a, b, t1));
+      }
+    }
+    cerrar();
+    return seg;
   }
 
   var rendererRed = null;
@@ -517,7 +570,8 @@
     rutas.forEach(function (r) {
       var coords = r.coords || [];
       if (coords.length < 2) return;
-      recortarRuta(coords, fig).forEach(function (seg) {
+      var tramos = recortarRuta(coords, fig);
+      tramos.forEach(function (seg) {
         L.polyline(seg, {
           color: colorRuta(String(r.nombre || r.route_id || '')), weight: 2.5,
           opacity: 0.55, renderer: rendererRed
@@ -529,7 +583,7 @@
         ).addTo(capaRed);
         lineas++;
       });
-      pintadas++;
+      if (tramos.length) pintadas++;
     });
     avisarRuido(pintadas ? pintadas + ' líneas de micros en la zona (' + lineas + ' tramos). Pasa el cursor para ver el detalle.'
       : 'No hay rutas de micros en esta zona (cobertura: Santa Cruz).', !pintadas);
