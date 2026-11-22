@@ -615,6 +615,11 @@ function limpiarRenderPrevio() {
   circuloBusqueda = null;
   cruzCentro = null;
   seleccionados = [];
+  // Los markers quedaron en cero: las cajas de las figuras recalculan (sin
+  // marcar búsqueda nueva — solo refresca contra el mapa como quedó).
+  if (window.STT_FIGURAS && typeof window.STT_FIGURAS.actualizarStats === 'function') {
+    window.STT_FIGURAS.actualizarStats(false);
+  }
 }
 
 // Centros por código de ciudad (espejo de config.ciudades del backend). Sirven
@@ -946,6 +951,12 @@ function renderMapFin() {
 
   ultimosFiltrados = getVisibleLocations();
   actualizarEstadisticas(ultimosFiltrados);
+
+  // Las cajas informativas de las figuras dibujadas (mapaFiguras.js) recuentan
+  // sus inmuebles contenidos contra los markers recién pintados.
+  if (window.STT_FIGURAS && typeof window.STT_FIGURAS.actualizarStats === 'function') {
+    window.STT_FIGURAS.actualizarStats();
+  }
 
   map.off("moveend", guardarMapa);
   map.off("zoomend", guardarMapa);

@@ -69,6 +69,11 @@
       if (window.STT_MAPA_CAJA && window.STT_MAPA_CAJA.registrarZoomAuto) {
         window.STT_MAPA_CAJA.registrarZoomAuto(m.getZoom());
       }
+      // Sin resultados también actualiza las cajas de las figuras: su contador
+      // de inmuebles contenidos baja a 0.
+      if (window.STT_FIGURAS && typeof window.STT_FIGURAS.actualizarStats === 'function') {
+        window.STT_FIGURAS.actualizarStats();
+      }
       return 0;
     }
     // Encuadre automático: el zoom que queda es el nuevo "de reposo" para que
@@ -84,6 +89,11 @@
     }
     if (window.STT_MAPA_CAJA && window.STT_MAPA_CAJA.registrarZoomAuto) {
       window.STT_MAPA_CAJA.registrarZoomAuto(zoomRef);
+    }
+    // Las cajas informativas de las figuras dibujadas (mapaFiguras.js) cuentan
+    // sus inmuebles contenidos contra los markers recién pintados.
+    if (window.STT_FIGURAS && typeof window.STT_FIGURAS.actualizarStats === 'function') {
+      window.STT_FIGURAS.actualizarStats();
     }
     return markers.length;
   }

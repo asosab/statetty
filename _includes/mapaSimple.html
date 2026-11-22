@@ -89,9 +89,22 @@
   .herr:disabled { opacity: .4; cursor: not-allowed; }
   .herr:focus-visible { outline: 2px solid #17baef; outline-offset: 1px; }
   #mapid.dibujando, #mapid.dibujando .leaflet-interactive { cursor: crosshair !important; }
-  #mapid.dibujando { touch-action: none; }
+  /* El touch-action:none solo aplica al trazo de la circunferencia; con el
+     lápiz (.pan-libre) el touch sigue siendo pan/pinza: los vértices entran
+     por tap y hay que poder mover el mapa entre punto y punto. */
+  #mapid.dibujando:not(.pan-libre) { touch-action: none; }
   #estado { margin-top: 8px; min-height: 1.2em; font-size: .9rem; color: #04364a; }
   #estado.error { color: #b3261e; }
+
+  /* Caja informativa de cada figura dibujada (mapaFiguras.js): tooltip
+     permanente anclado al centro, sin flecha. */
+  .stt-figura-info {
+    background: rgba(255, 255, 255, .94); border: 1px solid #17baef;
+    border-radius: 8px; box-shadow: 0 1px 8px rgba(4, 54, 74, .3);
+    color: #04364a; font-size: 11px; line-height: 1.4;
+    padding: 5px 8px; white-space: nowrap; text-align: left;
+  }
+  .stt-figura-info.leaflet-tooltip::before { display: none; }
 
   /* Pin con insignia de tipo de inmueble */
   .pin-tipo { background: none; border: 0; }
@@ -306,7 +319,7 @@
     <button type="button" class="herr" id="btn-pin" aria-pressed="false" title="Dibujar una circunferencia" aria-label="Dibujar una circunferencia">
       <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-6-5.6-6-10a6 6 0 0 1 12 0c0 4.4-6 10-6 10z"/><circle cx="12" cy="11" r="2"/></svg>
     </button>
-    <button type="button" class="herr" id="btn-deshacer" title="Borrar la última figura" aria-label="Borrar la última figura" disabled>
+    <button type="button" class="herr" id="btn-deshacer" title="Quitar el último punto o figura" aria-label="Quitar el último punto o figura" disabled>
       <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>
     </button>
     <button type="submit" id="btn-buscar">Buscar</button>
@@ -324,11 +337,11 @@
 <!-- Módulos del mapa unificado (orden importa: shared primero, orquestador al final) -->
 <script src="/assets/js/datos.js?v=7"></script>
 <script src="/assets/js/mapaShared.js?v=3"></script>
-<script src="/assets/js/mapaFiguras.js?v=4"></script>
-<script src="/assets/js/mapaPublico.js?v=1"></script>
+<script src="/assets/js/mapaFiguras.js?v=5"></script>
+<script src="/assets/js/mapaPublico.js?v=2"></script>
 <script src="/assets/js/inmueblesPdf.js?v=8"></script>
 <script src="/assets/js/acm.js?v=5"></script>
-<script src="/assets/js/mapaAgente.js?v=7"></script>
+<script src="/assets/js/mapaAgente.js?v=8"></script>
 <script src="/assets/js/mapaCaja.js?v=5"></script>
 <script src="/assets/js/mapa.js?v=55"></script>
 <!-- rutasMicros.js: toolbox de rutas de micros (slot al final de #toolbox) -->
