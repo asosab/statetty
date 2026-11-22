@@ -362,6 +362,15 @@
     }
   }
 
+  // Al lanzar o concluir una búsqueda las herramientas de dibujo de la #caja
+  // (lápiz/pin, solo existen en la página del mapa) quedan apagadas: el click
+  // siguiente sobre el mapa no debe empezar una figura por error.
+  function desactivarHerramientasMapa() {
+    if (window.STT_FIGURAS && typeof window.STT_FIGURAS.desactivar === 'function') {
+      window.STT_FIGURAS.desactivar();
+    }
+  }
+
   function parseLatLng(str) {
     if (!str) return null;
     var parts = String(str).split(/[,;]+|\s+/).map(function (s) { return s.trim(); })
@@ -1289,6 +1298,7 @@
 
     form.addEventListener('submit', function (e) {
       e.preventDefault();
+      desactivarHerramientasMapa();
       var params = getParams();
       // Búsqueda solo por URL: si el campo URL tiene valor es lo ÚNICO que se
       // envía — ningún otro filtro se valida (el backend ignora hasta
@@ -1346,6 +1356,7 @@
         clearTimeout(slowTimer);
         controller.abort();
         overlay.remove();
+        desactivarHerramientasMapa();
       }
 
       overlay._btnCancel.addEventListener('click', cancelSearch);
@@ -1379,6 +1390,7 @@
         if (!res.ok || !res.searchTs) {
           clearTimeout(slowTimer);
           overlay.remove();
+          desactivarHerramientasMapa();
           // superficie_invalida (D5): el servidor explica por qué se descartó la figura.
           // sin_tiempo: la cuenta perdió su tiempo activo con la página abierta.
           var msg = (res.avisos && res.avisos[0]) || 'Error al iniciar la búsqueda.';
@@ -1391,6 +1403,7 @@
         if (cancelled) return;
         clearTimeout(slowTimer);
         overlay.remove();
+        desactivarHerramientasMapa();
         showSaveStatus('error', 'Error de conexión. Verifica tu conexión e intenta de nuevo.');
       });
     });

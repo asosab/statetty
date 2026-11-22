@@ -34,7 +34,11 @@
 
   var btnLapiz = null, btnPin = null, btnDeshacer = null;
   var _avisar = function () {};
+  var _leer = null;          // lector del aviso vigente (lo provee la caja)
   var _onActivar = null;     // hook: la caja fija su posición al activar
+  var hintActivo = null;     // indicativo propio que sigue en pantalla
+  var hoverActivo = null;    // tipo del botón bajo el puntero, o null
+  var hoverPrev = '';        // aviso previo, a restaurar cuando el puntero sale
 
   function contar(tipo) { return figuras.filter(function (f) { return f.tipo === tipo; }).length; }
   function redondear(n, d) { return Number(n.toFixed(d)); }
@@ -48,14 +52,39 @@
     if (herramienta && contar(herramienta) >= LIMITE[herramienta]) activar(null);
   }
 
+  function hintDe(tipo) {
+    return tipo === 'poligono'
+      ? 'Mantén presionado y arrastra para dibujar el área.'
+      : 'Presiona el centro y arrastra para definir el radio.';
+  }
+
+  // Quita el indicativo solo si el aviso sigue siendo el nuestro: si otra cosa
+  // lo pisó (resultado de búsqueda, error) ese mensaje no se toca.
+  function soltarHint() {
+    if (!hintActivo) return;
+    if (!_leer || _leer() === hintActivo) _avisar('', false);
+    hintActivo = null;
+  }
+
   function activar(tipo) {
     if (tipo && contar(tipo) >= LIMITE[tipo]) return;
     herramienta = tipo;
     refrescarBotones();
     if (contenedor) contenedor.classList.toggle('dibujando', !!tipo);
     if (mapa) HANDLERS.forEach(function (h) { mapa[h][tipo ? 'disable' : 'enable'](); });
-    if (tipo === 'poligono') _avisar('Mantén presionado y arrastra para dibujar el área.', false);
-    else if (tipo === 'circunferencia') _avisar('Presiona el centro y arrastra para definir el radio.', false);
+    if (tipo) { hintActivo = hintDe(tipo); _avisar(hintActivo, false); }
+    else soltarHint();
+  }
+
+  // Apaga la herramienta activa (las búsquedas la llaman al arrancar y al
+  // terminar): el click siguiente sobre el mapa vuelve a ser pan/zoom, no un
+  // dibujo. También cancela un trazo a medio hacer.
+  function desactivar() {
+    if (trazo) {
+      if (mapa && trazo.capa) mapa.removeLayer(trazo.capa);
+      trazo = null;
+    }
+    if (herramienta) activar(null);
   }
 
   // Limpiar círculo vestigio de búsqueda al empezar/continuar dibujo.
@@ -154,12 +183,12 @@
     }
     if (!figura) {
       mapa.removeLayer(t.capa);
-      if (ok) _avisar('El trazo fue muy corto. Intenta de nuevo.', true);
+      if (ok) { hintActivo = null; _avisar('El trazo fue muy corto. Intenta de nuevo.', true); }
       return;
     }
     figuras.push(figura);
     limpiarCirculoBusqueda();
-    _avisar('', false);
+    soltarHint();
     refrescarBotones();
     avisarCambio();
   }
@@ -182,12 +211,42 @@
     if (herramienta) HANDLERS.forEach(function (h) { mapa[h].disable(); });
   }
 
+  // Hover sobre lápiz/pin: muestra el indicativo de esa herramienta aunque el
+  // botón esté apagado, y al salir el puntero restaura lo que había (el hint
+  // de la herramienta activa, o el aviso previo). Si el aviso previo era un
+  // hint de herramienta ya apagada, no se restaura: apagado = sin indicativo.
+  function bindHover(btn, tipo) {
+    if (!btn || btn._sttHoverBound) return;
+    btn._sttHoverBound = true;
+    btn.addEventListener('pointerenter', function () {
+      if (hoverActivo === null) hoverPrev = _leer ? _leer() : '';
+      hoverActivo = tipo;
+      _avisar(hintDe(tipo), false);
+    });
+    btn.addEventListener('pointerleave', function () {
+      var era = hoverActivo;
+      hoverActivo = null;
+      if (era === null) return;
+      // Otro texto pisó el hint del hover mientras el puntero estaba encima:
+      // no hay nada que restaurar.
+      if (_leer && _leer() !== hintDe(era)) { hoverPrev = ''; return; }
+      if (herramienta) { hintActivo = hintDe(herramienta); _avisar(hintActivo, false); }
+      else {
+        hintActivo = null;
+        var prev = (hoverPrev === hintDe('poligono') || hoverPrev === hintDe('circunferencia')) ? '' : hoverPrev;
+        _avisar(prev, false);
+      }
+      hoverPrev = '';
+    });
+  }
+
   function bind(opts) {
     opts = opts || {};
     btnLapiz = opts.btnLapiz || btnLapiz;
     btnPin = opts.btnPin || btnPin;
     btnDeshacer = opts.btnDeshacer || btnDeshacer;
     if (typeof opts.avisar === 'function') _avisar = opts.avisar;
+    if (typeof opts.leer === 'function') _leer = opts.leer;
     _onActivar = typeof opts.onActivar === 'function' ? opts.onActivar : null;
     if (opts.map) conectarMapa(opts.map);
 
@@ -206,9 +265,11 @@
       if (!f) return;
       if (mapa) mapa.removeLayer(f.capa);
       refrescarBotones();
-      _avisar('', false);
+      soltarHint();
       avisarCambio();
     });
+    bindHover(btnLapiz, 'poligono');
+    bindHover(btnPin, 'circunferencia');
     refrescarBotones();
   }
 
@@ -235,6 +296,7 @@
     bind: bind,
     conectarMapa: conectarMapa,
     datosDe: datosDe,
+    desactivar: desactivar,
     hayFiguras: function () { return figuras.length > 0; },
     limpiar: limpiar,
     LIMITE: LIMITE,

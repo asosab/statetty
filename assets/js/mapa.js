@@ -328,6 +328,11 @@ async function init() {
   $('#search-input').val('');
   $('#search-count').hide();
   if (window.STT_MAPA_CAJA) window.STT_MAPA_CAJA.avisar('');
+  // La búsqueda concluyó (o arranca la página): lápiz/pin de la #caja quedan
+  // apagados, el click siguiente sobre el mapa no dibuja por error.
+  if (window.STT_FIGURAS && typeof window.STT_FIGURAS.desactivar === 'function') {
+    window.STT_FIGURAS.desactivar();
+  }
 
   await waitForKey();
   var usuario = window.STT && window.STT.getUsuario ? window.STT.getUsuario() : null;

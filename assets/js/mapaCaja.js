@@ -135,6 +135,14 @@
     return !!(window.STT_MAPA && window.STT_MAPA.modo === 'agente');
   }
 
+  // Al arrancar o concluir una búsqueda lápiz y pin quedan apagados: el click
+  // siguiente sobre el mapa es pan/zoom, no el inicio de una figura nueva.
+  function desactivarFiguras() {
+    if (window.STT_FIGURAS && typeof window.STT_FIGURAS.desactivar === 'function') {
+      window.STT_FIGURAS.desactivar();
+    }
+  }
+
   function buscar() {
     var texto = input ? input.value.trim() : '';
     var fig = (typeof window.STT_MAP_FIGURAS === 'function') ? window.STT_MAP_FIGURAS() : null;
@@ -158,6 +166,7 @@
       if (map && map.hasLayer(circuloBusqueda)) map.removeLayer(circuloBusqueda);
       circuloBusqueda = null;
     }
+    desactivarFiguras();   // lápiz/pin apagados antes de "Buscando...": el hint no queda
     fijarAbajo();   // la caja baja al base, como lápiz y pin
     if (boton) boton.disabled = true;
     avisar('Buscando...', false);
@@ -278,6 +287,7 @@
       console.log('[Statetty] [error] buscar:', e && e.message ? e.message : e);
       avisar('Falló la búsqueda. Revisá tu conexión e intentá de nuevo.', true);
     }).then(function () {
+      desactivarFiguras();   // por si el usuario reactivó la herramienta durante el fetch
       if (boton) boton.disabled = false;
     });
     };
@@ -303,6 +313,7 @@
         btnPin: opts.btnPin || document.getElementById('btn-pin'),
         btnDeshacer: opts.btnDeshacer || document.getElementById('btn-deshacer'),
         avisar: avisar,
+        leer: function () { return estado ? estado.textContent : ''; },
         onActivar: fijarAbajo
       });
     }
