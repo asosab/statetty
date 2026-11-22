@@ -514,19 +514,69 @@ function mostrarAvisoSinResultados() {
   box.innerHTML =
     '<div style="font-size:48px;margin-bottom:12px;">🔍</div>' +
     '<p style="font-size:18px;color:#333;margin:0 0 16px;line-height:1.5;">' +
-    'Tu última búsqueda no devolvió inmuebles con los criterios seleccionados. Probá ajustar tu búsqueda desde Telegram.' +
-    '</p>' +
-    '<a id="modal-sinresultados-link" href="https://t.me/statettybot" target="_blank" rel="noopener" ' +
-    'style="display:inline-block;background:#2563eb;color:#fff;border-radius:8px;padding:10px 24px;font-size:16px;text-decoration:none;">' +
-    'Ir a @statettybot' +
-    '</a>';
+    'Tu última búsqueda no devolvió inmuebles con los criterios seleccionados. Probá ajustar tu búsqueda en el ' +
+    '<a href="#" id="modal-sinresultados-menu" style="color:#2563eb;">Menú</a> → ' +
+    '<a href="#" id="modal-sinresultados-fndinm" style="color:#2563eb;">Buscar Inmuebles</a>' +
+    '</p>';
 
   overlay.appendChild(box);
   document.body.appendChild(overlay);
 
+  document.getElementById('modal-sinresultados-menu').addEventListener('click', function (e) {
+    e.preventDefault();
+    _abrirMenuBuscar(false);
+  });
+  document.getElementById('modal-sinresultados-fndinm').addEventListener('click', function (e) {
+    e.preventDefault();
+    _abrirMenuBuscar(true);
+  });
+
   overlay.addEventListener('click', function (e) {
     if (e.target === overlay) overlay.remove();
   });
+}
+
+// Links del aviso "sin resultados": "Menú" abre el panel del toolbox (o el
+// dropdown del avatar en modo cta) y "Buscar Inmuebles" además despliega la
+// sección fndInm. Ésta se monta async (menuUser carga fndInm.js dinámico),
+// por eso el expand reintenta hasta encontrarla. Se expande por clase, no
+// con click simulado: un click en un header ya activo la cerraría.
+function _abrirMenuBuscar(desplegarFndInm) {
+  var overlay = document.getElementById('modal-sinresultados-overlay');
+  if (overlay) overlay.remove();
+
+  if (window.STT_TOOLBOX && document.getElementById('toolbox')) {
+    window.STT_TOOLBOX.abrir();
+    if (window.STT_MAPA_CAJA && window.STT_MAPA_CAJA.fijarAbajo) window.STT_MAPA_CAJA.fijarAbajo();
+  } else {
+    var dd = document.querySelector('.stt-user-dropdown');
+    var trigger = document.querySelector('.stt-user-trigger');
+    if (dd && trigger && !dd.classList.contains('open')) trigger.click();
+  }
+
+  if (!desplegarFndInm) return;
+  var intentos = 0;
+  var timer = setInterval(function () {
+    var section = document.getElementById('fndInm-section');
+    if (!section) {
+      if (++intentos > 20) clearInterval(timer);
+      return;
+    }
+    clearInterval(timer);
+    if (section.classList.contains('section')) {
+      // Acordeón del toolbox (mapa.js): una sola sección activa a la vez.
+      document.querySelectorAll('#toolbox .section.active').forEach(function (s) {
+        s.classList.remove('active');
+      });
+      section.classList.add('active');
+    } else {
+      // Variante standalone dentro del dropdown del usuario.
+      section.classList.add('fndinm-standalone-open');
+      var h = section.querySelector('.fndinm-standalone-header');
+      if (h) h.setAttribute('aria-expanded', 'true');
+    }
+    section.scrollIntoView({ block: 'nearest' });
+  }, 250);
 }
 
 // Capa de fondo y pin ACM: se agregan una sola vez por mapa. renderMap se puede
