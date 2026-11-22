@@ -15,7 +15,10 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-canvas {
+/* Los <canvas> que Leaflet cuelga de .leaflet-pane traen su tamaño en el
+   estilo inline (capas Ruido y Rutas de micros del mapa); forzarlos a 100%
+   los colapsa a 0×0 y las capas se pintan pero no se ven. */
+canvas:not(.leaflet-pane > canvas) {
   width: 100% !important;
   height: 100% !important;
 }
