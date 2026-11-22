@@ -1102,6 +1102,52 @@
     return Promise.resolve(manual());
   }
 
+  // Persiste lo pegado en la lista de búsquedas guardadas. El slot elegido se
+  // SOBREESCRIBE por completo (replace:true — el endpoint fusiona por defecto
+  // y una mezcla dejaría vivas claves viejas que el JSON no trae). Sin slot
+  // elegido se usa el primero vacío; si no hay ninguno, lo pegado queda solo
+  // en el formulario sin persistir.
+  function guardarPegadoEnSlot(params, idxSel, msg) {
+    var sel = document.getElementById(SLOTS_SELECT_ID);
+    var idx = (typeof idxSel === 'number' && !isNaN(idxSel)) ? idxSel : -1;
+    var targetOpt = null;
+    if (sel) {
+      for (var i = 0; i < sel.options.length; i++) {
+        var o = sel.options[i];
+        var di = o.getAttribute('data-index');
+        if (di === null) continue;   // placeholder
+        var diN = parseInt(di, 10);
+        if (diN === idx) { targetOpt = o; break; }
+        // sin slot elegido: cae al primero vacío
+        if (idx < 0 && (!o.value || o.value === '{}')) { idx = diN; targetOpt = o; break; }
+      }
+    }
+    var pk = window.STT && window.STT.getKey && window.STT.getKey();
+    if (idx < 0 || !pk || !targetOpt) { showSaveStatus('success', msg); return; }
+    showSaveStatus('saving');
+    var base = window.STATETTY_CONFIG ? STATETTY_CONFIG.WS_API_BASE : '';
+    var body = { i: idx, data: params, replace: true };
+    var headers = { 'Content-Type': 'application/json' };
+    if (isJwtToken(pk)) { headers['Authorization'] = 'Bearer ' + pk; }
+    else { body.publicKey = pk; }
+    fetch(base + 'statetty/updtUsrBusqueda', {
+      method: 'POST', headers: headers, body: JSON.stringify(body)
+    }).then(function (r) { return r.json(); }).then(function (res) {
+      if (!res.ok) { showSaveStatus('error', 'Cargada, pero no se pudo guardar en tu lista'); return; }
+      var json = JSON.stringify(params);
+      targetOpt.value = json;
+      targetOpt.textContent = buildSlotLabel(params);
+      sel.selectedIndex = Array.prototype.indexOf.call(sel.options, targetOpt);
+      var usuario = window.STT && window.STT.getUsuario && window.STT.getUsuario();
+      if (usuario && Array.isArray(usuario.busquedas) && idx >= 0 && idx < usuario.busquedas.length) {
+        usuario.busquedas[idx] = json;
+      }
+      showSaveStatus('success', msg);
+    }).catch(function () {
+      showSaveStatus('error', 'Cargada, pero no se pudo guardar en tu lista');
+    });
+  }
+
   // Click de «Pegar búsqueda»: valida el texto y solo si contiene al menos un
   // dato aplicable toca el formulario y las figuras. Un texto inválido, vacío
   // o sin campos del form no destruye lo que el usuario ya tenía cargado.
@@ -1120,6 +1166,12 @@
         showSaveStatus('error', 'El JSON no contiene ningún dato de búsqueda aplicable.');
         return;
       }
+      // El slot elegido se captura ANTES de aplicarResultado, que lo resetea al
+      // placeholder (así la carga programada no pisa una guardada por accidente:
+      // acá el reemplazo es a propósito y va con replace:true).
+      var sel = document.getElementById(SLOTS_SELECT_ID);
+      var optSel = sel && sel.options && sel.options[sel.selectedIndex];
+      var idxSel = optSel ? parseInt(optSel.getAttribute('data-index'), 10) : NaN;
       var figs = { poligono: params.poligono, circunferencia: params.circunferencia };
       delete params.poligono;
       delete params.circunferencia;
@@ -1127,7 +1179,9 @@
       aplicarResultado(params);
       var msg = 'Búsqueda cargada';
       if (nFig) msg += ' con ' + nFig + ' figura' + (nFig > 1 ? 's' : '') + ' en el mapa';
-      showSaveStatus('success', msg);
+      // Un JSON de solo figuras no toca los slots: guardan filtros, no área.
+      if (Object.keys(params).length) guardarPegadoEnSlot(params, idxSel, msg);
+      else showSaveStatus('success', msg);
     });
   }
 

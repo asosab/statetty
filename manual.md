@@ -478,7 +478,10 @@ permalink: /manual/
         búsqueda</strong> lleva al portapapeles un JSON con todos tus filtros y el área que hayas dibujado
         en el mapa, listo para mandarlo por WhatsApp o donde quieras; <strong>📥 Pegar búsqueda</strong>
         carga en tu formulario un JSON que te hayan compartido (lo valida antes: si el texto no es un JSON
-        con datos aplicables, te avisa y no toca lo que tenías). Sirve para pasarte una búsqueda entre
+        con datos aplicables, te avisa y no toca lo que tenías). Lo pegado también queda guardado en tu
+        lista de búsquedas: si tenías una elegida en el selector, la reemplaza por completo; si no, ocupa
+        el primer espacio vacío. Y si el JSON trae solo el área dibujada, tus filtros quedan como estaban.
+        Sirve para pasarte una búsqueda entre
         colegas o para que soporte te mande una ya armada.</p>
       </div>
 

@@ -21,6 +21,8 @@ El menú **Buscar inmuebles** tiene ahora dos botones nuevos, justo encima de Bu
 
 El texto no tiene que venir prolijo: si copiaste el mensaje entero («mirá esta búsqueda: {…}, avisame qué te parece»), el botón encuentra el JSON igual. Lo que sí revisa antes de tocar nada: que el texto sea un JSON válido y que traiga al menos un dato que el formulario entienda. Si no, te avisa y deja todo como estaba.
 
+Al pegar, la búsqueda además queda guardada en tu lista: si tenías una elegida en el selector, la reemplaza por completo; si no, ocupa el primer espacio vacío. Y si el JSON trae solo el área dibujada, tus filtros no se tocan; lo único que cambia es el mapa.
+
 Esto abre dos usos que ya nos hacían falta. Uno entre ustedes: pasarle una búsqueda a un colega o a un cliente tal cual la armaste. Otro con soporte: si quieres que te ayudemos a ordenar o mejorar una búsqueda, la copias, nos la mandas y te devolvemos la versión ajustada lista para pegar.
 
 Un detalle por las dudas: el JSON no lleva tu identidad. Los campos de usuario se quitan al copiar, así que compartir la búsqueda no comparte tu cuenta.
