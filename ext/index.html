@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Statetty WhatsApp Direct — extensión</title>
+  <meta name="description" content="Extensión gratuita de Statetty: los contactos de WhatsApp se abren dentro de tu pestaña de WhatsApp Web, sin pestañas nuevas."/>
+  <style>
+    body { margin: 0; font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #f0f2f5; color: #111b21; }
+    main { max-width: 42rem; margin: 0 auto; padding: 2.5rem 1.2rem 4rem; }
+    h1 { font-size: 1.5rem; }
+    .card { background: #fff; border-radius: 12px; padding: 1.2rem 1.4rem; margin: 1rem 0; box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+    ol { padding-left: 1.3rem; }
+    li { margin: .45rem 0; }
+    code { background: #e9edef; padding: .1rem .35rem; border-radius: 4px; font-size: .9em; }
+    a { color: #00a884; }
+    .dl { display: inline-block; background: #00a884; color: #fff; text-decoration: none; padding: .7rem 1.3rem; border-radius: 999px; font-weight: 600; margin-top: .4rem; }
+    .note { color: #54656f; font-size: .9rem; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Statetty WhatsApp Direct</h1>
+  <p>Extensión gratuita para Chrome y Firefox. Cuando hacés click en un contacto de WhatsApp, el chat se abre <strong>dentro de la pestaña de WhatsApp Web que ya tenés cargada</strong>: sin pestañas nuevas, sin la pantalla que invita a instalar WhatsApp y sin recargar tu sesión.</p>
+
+  <div class="card">
+    <h2>Instalación en Chrome (modo desarrollador)</h2>
+    <ol>
+      <li>Descargá y descomprimí el archivo de la extensión:
+        <br/><a class="dl" href="/ext/statetty-wa-ext.zip">Descargar extensión (.zip)</a></li>
+      <li>Abrí <code>chrome://extensions</code> en la barra de direcciones.</li>
+      <li>Activá el <strong>modo desarrollador</strong> (arriba a la derecha).</li>
+      <li>Click en <strong>«Cargar descomprimida»</strong> y elegí la carpeta <code>statetty-wa-ext</code> que descomprimiste.</li>
+    </ol>
+    <p class="note">Listo. Con WhatsApp Web abierto en alguna pestaña, los links de contacto van directo ahí.</p>
+  </div>
+
+  <div class="card">
+    <h2>Firefox</h2>
+    <ol>
+      <li>Abrí <code>about:debugging#/runtime/this-firefox</code>.</li>
+      <li>Click en <strong>«Cargar complemento temporal»</strong> y elegí el archivo <code>manifest.json</code> de la carpeta descomprimida.</li>
+    </ol>
+    <p class="note">En Firefox la carga temporal dura hasta cerrar el navegador.</p>
+  </div>
+
+  <div class="card">
+    <h2>Cómo funciona</h2>
+    <p>La extensión no lee tus mensajes ni envía datos a ningún servidor. Al hacer click en un link de contacto, localiza tu pestaña de WhatsApp Web y le pide a la propia app de WhatsApp que abra esa conversación, igual que si la buscaras vos a mano. Si WhatsApp Web no está abierto, el link se comporta como siempre.</p>
+  </div>
+</main>
+</body>
+</html>
