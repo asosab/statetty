@@ -779,7 +779,8 @@ function _popupDeDato(dato) {
     '&nbsp;|&nbsp;<a href="https://statetty.com/inmueble/' + encodeURIComponent(dato._id) + '?t=' + encodeURIComponent(waphoneUsuario) + '" target="_blank" style="text-decoration:none;">🔗 Página Statetty</a>' +
     '<br><a href="#" style="text-decoration:none;" data-tippy-content="Copy para usar en WhatsApp" onclick="return copyFichaWhatsApp(\'' + encodeURIComponent(dato._id) + '\', this);">🗨️ Copy</a>' +
     linkWA +
-    `<br><label><input type="checkbox" class="chk-sel" data-id="${dato.uid}"> Seleccionar</label>`;
+    `<br><label><input type="checkbox" class="chk-sel" data-id="${dato.uid}"> Seleccionar</label>` +
+    desactivarInmuebleHtml(dato);
 }
 
 /** Pin + overlays + popup perezoso de un solo inmueble. */

@@ -39,6 +39,7 @@
     if (r.m2t) det.push(r.m2t + ' m² terreno');
     cuerpo += linea(esc(det.join(' · ')));
     cuerpo += linea('<a href="' + esc(r.url) + '" target="_blank" rel="noopener">Ver ficha</a>');
+    cuerpo += desactivarInmuebleHtml(r);
     return cuerpo;
   }
 

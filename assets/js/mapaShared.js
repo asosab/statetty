@@ -456,3 +456,58 @@ function copyFichaWhatsApp(encId, btn) {
     })
     .then(function () { delete btn.dataset.disabled; return false; });
 }
+
+// ── Desactivar inmueble (solo confianza>=10) ───────────────────────────────
+// Gate visual: el botón solo se renderiza si el usuario tiene confianza 10.
+// La autorización real la hace el servidor (route_desactivarInmueble).
+function puedeDesactivarInmuebles() {
+  var u = window.STT && window.STT.getUsuario && window.STT.getUsuario();
+  return !!(u && Number(u.confianza) >= 10);
+}
+
+// HTML del botón para los popups de inmueble; '' cuando no aplica.
+function desactivarInmuebleHtml(dato) {
+  if (!puedeDesactivarInmuebles() || !dato || !dato._id) return '';
+  if (dato.activo === false) return '';
+  return '<br><button type="button" class="stt-btn-desactivar" ' +
+    'style="margin-top:6px;padding:4px 10px;font-size:12px;border:1px solid #c0392b;' +
+    'border-radius:6px;background:#fff;color:#c0392b;cursor:pointer;" ' +
+    'data-tippy-content="Marcar el inmueble como inactivo" ' +
+    'onclick="return desactivarInmueble(\'' + dato._id + '\', this)">Desactivar inmueble</button>';
+}
+
+// POST statetty/desactivarInmueble (Bearer Buddy) → marca el pin como inactivo.
+function desactivarInmueble(id, btn) {
+  if (!id || !btn || btn.dataset.disabled) return false;
+  if (!window.confirm('¿Desactivar este inmueble? Quedará marcado como inactivo.')) return false;
+  var base = (window.STATETTY_CONFIG && window.STATETTY_CONFIG.WS_API_BASE) || '';
+  var headers = { 'Content-Type': 'application/json' };
+  if (window.STT && typeof window.STT.getKey === 'function') {
+    var token = window.STT.getKey();
+    if (token) headers['Authorization'] = 'Bearer ' + token;
+  }
+  btn.dataset.disabled = '1';
+  return fetch(base + 'statetty/desactivarInmueble', {
+    method: 'POST', headers: headers, body: JSON.stringify({ inmuebleID: id }),
+  })
+    .then(function (r) { return r.json().then(function (b) { return { status: r.status, body: b }; }); })
+    .then(function (res) {
+      if (res.status !== 200 || !res.body || res.body.ok !== true) {
+        throw new Error((res.body && res.body.error) || 'No se pudo desactivar.');
+      }
+      // El pin pasa a estado inactivo: el popup perezoso (mapaAgente) re-renderiza
+      // solo; marcar el dato para que emojiEstadoInmueble muestre 🔴.
+      var obj = (typeof markers !== 'undefined' && markers || []).find(function (m) {
+        return m.dato && String(m.dato._id) === String(id);
+      });
+      if (obj) obj.dato.activo = false;
+      btn.textContent = res.body.yaInactivo ? 'Ya estaba inactivo' : '✔ Inmueble desactivado';
+      btn.disabled = true;
+    })
+    .catch(function (err) {
+      console.log('[Statetty] [error] desactivarInmueble:', err && err.message ? err.message : err);
+      btn.textContent = 'No se pudo desactivar';
+      delete btn.dataset.disabled;
+    })
+    .then(function () { return false; });
+}
