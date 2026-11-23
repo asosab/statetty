@@ -68,6 +68,20 @@ kramdown:
 
 permalink: /:title/
 
+# Archivos del repo que no son del sitio (defaults de Jekyll 4 + propios)
+exclude:
+  - .sass-cache/
+  - .jekyll-cache/
+  - gemfiles
+  - Gemfile
+  - Gemfile.lock
+  - node_modules/
+  - vendor/bundle/
+  - vendor/cache/
+  - vendor/gems/
+  - vendor/ruby/
+  - statetty-wa-ext/
+
 webrick:
   headers:
     Strict-Transport-Security: max-age=2592000

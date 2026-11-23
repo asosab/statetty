@@ -1,0 +1,50 @@
+{
+  "manifest_version": 3,
+  "name": "Statetty WhatsApp Direct",
+  "version": "0.1.0",
+  "description": "Abre los enlaces de WhatsApp dentro de la pestaña de WhatsApp Web ya cargada, sin recargarla ni abrir pestañas nuevas. Pensado para Statetty.",
+  "permissions": [
+    "declarativeNetRequestWithHostAccess",
+    "scripting"
+  ],
+  "host_permissions": [
+    "*://wa.me/*",
+    "*://api.whatsapp.com/*",
+    "*://www.whatsapp.com/*",
+    "https://web.whatsapp.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://statetty.com/*",
+        "*://www.statetty.com/*",
+        "*://api.statetty.com/*"
+      ],
+      "js": [
+        "stt-intercept.js"
+      ],
+      "run_at": "document_start"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "handoff.html"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ],
+  "minimum_chrome_version": "120",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "stt-wa-direct@statetty.com",
+      "strict_min_version": "128.0"
+    }
+  }
+}

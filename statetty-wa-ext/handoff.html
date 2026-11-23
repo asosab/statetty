@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Abriendo conversación…</title>
+  <style>
+    html, body { margin: 0; min-height: 100%; font-family: "Segoe UI", Roboto, sans-serif; background: #0b141a; color: #e9edef; }
+    body { display: flex; align-items: center; justify-content: center; }
+    .card { text-align: center; padding: 2rem; }
+    #status { font-size: 1.1rem; }
+    #retry { margin-top: 1rem; padding: .6rem 1.4rem; border: 0; border-radius: 999px; background: #00a884; color: #fff; font-size: 1rem; cursor: pointer; }
+    #retry[hidden] { display: none; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <p id="status">Abriendo conversación…</p>
+    <button id="retry" hidden>Reintentar</button>
+  </div>
+  <script type="module" src="handoff.js"></script>
+</body>
+</html>
