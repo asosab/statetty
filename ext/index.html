@@ -3,51 +3,127 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Statetty WhatsApp Direct — extensión</title>
-  <meta name="description" content="Extensión gratuita de Statetty: los contactos de WhatsApp se abren dentro de tu pestaña de WhatsApp Web, sin pestañas nuevas."/>
+  <title>Statetty WhatsApp Direct — cómo instalarla</title>
+  <meta name="description" content="Pasos para instalar la extensión gratuita de Statetty: los contactos de WhatsApp se abren dentro de tu pestaña de WhatsApp Web."/>
   <style>
-    body { margin: 0; font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #f0f2f5; color: #111b21; }
-    main { max-width: 42rem; margin: 0 auto; padding: 2.5rem 1.2rem 4rem; }
-    h1 { font-size: 1.5rem; }
-    .card { background: #fff; border-radius: 12px; padding: 1.2rem 1.4rem; margin: 1rem 0; box-shadow: 0 1px 3px rgba(0,0,0,.12); }
-    ol { padding-left: 1.3rem; }
-    li { margin: .45rem 0; }
-    code { background: #e9edef; padding: .1rem .35rem; border-radius: 4px; font-size: .9em; }
+    body { margin: 0; font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #f0f2f5; color: #111b21; font-size: 17px; line-height: 1.55; }
+    main { max-width: 40rem; margin: 0 auto; padding: 2rem 1.2rem 5rem; }
+    h1 { font-size: 1.6rem; line-height: 1.3; }
+    h2 { font-size: 1.15rem; margin-bottom: .4rem; }
+    .card { background: #fff; border-radius: 12px; padding: 1.2rem 1.4rem; margin: 1.2rem 0; box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+    ol.pasos { padding-left: 0; counter-reset: paso; list-style: none; }
+    ol.pasos > li { counter-increment: paso; margin: 1rem 0; padding-left: 3rem; position: relative; }
+    ol.pasos > li::before { content: counter(paso); position: absolute; left: 0; top: .1rem; width: 2rem; height: 2rem; border-radius: 50%; background: #00a884; color: #fff; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+    .accion { font-weight: 700; display: block; }
+    .vera { color: #54656f; display: block; margin-top: .2rem; }
+    code { background: #e9edef; padding: .15rem .4rem; border-radius: 4px; font-size: .95em; }
     a { color: #00a884; }
-    .dl { display: inline-block; background: #00a884; color: #fff; text-decoration: none; padding: .7rem 1.3rem; border-radius: 999px; font-weight: 600; margin-top: .4rem; }
-    .note { color: #54656f; font-size: .9rem; }
+    .dl { display: inline-block; background: #00a884; color: #fff; text-decoration: none; padding: .8rem 1.6rem; border-radius: 999px; font-weight: 700; font-size: 1.1rem; margin: .4rem 0 .2rem; }
+    .nota { background: #fff8e1; border-left: 4px solid #eebf3f; }
+    .nota p { margin: 0; }
+    details { margin: .4rem 0; }
+    summary { cursor: pointer; font-weight: 600; }
+    .faq p { margin: .3rem 0 .8rem; }
   </style>
 </head>
 <body>
 <main>
-  <h1>Statetty WhatsApp Direct</h1>
-  <p>Extensión gratuita para Chrome y Firefox. Cuando hacés click en un contacto de WhatsApp, el chat se abre <strong>dentro de la pestaña de WhatsApp Web que ya tenés cargada</strong>: sin pestañas nuevas, sin la pantalla que invita a instalar WhatsApp y sin recargar tu sesión.</p>
+  <h1>Que los contactos de WhatsApp se abran en tu WhatsApp Web</h1>
+  <p>Con esta extensión gratuita, cuando hacés click en un contacto de WhatsApp en Statetty, el chat se abre dentro de la pestaña de WhatsApp Web que ya tenés abierta. Se acabó la pantalla que te pedía instalar WhatsApp cada vez.</p>
+
+  <p>La instalación se hace una sola vez y toma unos dos minutos. Seguí los pasos tal cual.</p>
 
   <div class="card">
-    <h2>Instalación en Chrome (modo desarrollador)</h2>
-    <ol>
-      <li>Descargá y descomprimí el archivo de la extensión:
-        <br/><a class="dl" href="/ext/statetty-wa-ext.zip">Descargar extensión (.zip)</a></li>
-      <li>Abrí <code>chrome://extensions</code> en la barra de direcciones.</li>
-      <li>Activá el <strong>modo desarrollador</strong> (arriba a la derecha).</li>
-      <li>Click en <strong>«Cargar descomprimida»</strong> y elegí la carpeta <code>statetty-wa-ext</code> que descomprimiste.</li>
+    <h2>Paso previo: descargar y descomprimir</h2>
+    <ol class="pasos">
+      <li>
+        <span class="accion">Descargá la extensión.</span>
+        <a class="dl" href="/ext/statetty-wa-ext.zip">Descargar extensión</a>
+        <span class="vera">Se guarda un archivo llamado <code>statetty-wa-ext.zip</code> en tu carpeta <strong>Descargas</strong>.</span>
+      </li>
+      <li>
+        <span class="accion">Descomprimí el archivo.</span>
+        <span class="vera">Abrí la carpeta Descargas, hacé <strong>click derecho</strong> sobre <code>statetty-wa-ext.zip</code> y elegí <strong>«Extraer todo…»</strong> → <strong>«Extraer»</strong>. Ahora tenés una carpeta llamada <code>statetty-wa-ext</code>.</span>
+      </li>
     </ol>
-    <p class="note">Listo. Con WhatsApp Web abierto en alguna pestaña, los links de contacto van directo ahí.</p>
   </div>
 
   <div class="card">
-    <h2>Firefox</h2>
-    <ol>
-      <li>Abrí <code>about:debugging#/runtime/this-firefox</code>.</li>
-      <li>Click en <strong>«Cargar complemento temporal»</strong> y elegí el archivo <code>manifest.json</code> de la carpeta descomprimida.</li>
+    <h2>Instalación en Chrome (o Edge)</h2>
+    <ol class="pasos">
+      <li>
+        <span class="accion">Abrí la página de extensiones.</span>
+        <span class="vera">En la barra de direcciones de Chrome escribí <code>chrome://extensions</code> y presioná Enter. (En Edge escribí <code>edge://extensions</code>.)</span>
+      </li>
+      <li>
+        <span class="accion">Encendé el «Modo de desarrollador».</span>
+        <span class="vera">Es un interruptor arriba a la <strong>derecha</strong> de la página. Dejalo encendido (se pone azul). Al encenderlo aparecen botones nuevos arriba a la izquierda.</span>
+      </li>
+      <li>
+        <span class="accion">Hacé click en «Cargar extensión sin empaquetar».</span>
+        <span class="vera">También puede llamarse «Cargar descomprimida». Se abre una ventana para elegir una carpeta.</span>
+      </li>
+      <li>
+        <span class="accion">Elegí la carpeta que descomprimiste.</span>
+        <span class="vera">Navegá hasta <strong>Descargas</strong>, hacé <strong>un solo click</strong> sobre la carpeta <code>statetty-wa-ext</code> para seleccionarla <strong>sin abrirla</strong> y pulsá <strong>«Seleccionar carpeta»</strong>.</span>
+      </li>
+      <li>
+        <span class="accion">Listo.</span>
+        <span class="vera">Aparece «Statetty WhatsApp Direct» en tu lista de extensiones, activada. Ya podés cerrar esa pestaña.</span>
+      </li>
     </ol>
-    <p class="note">En Firefox la carga temporal dura hasta cerrar el navegador.</p>
   </div>
 
   <div class="card">
-    <h2>Cómo funciona</h2>
-    <p>La extensión no lee tus mensajes ni envía datos a ningún servidor. Al hacer click en un link de contacto, localiza tu pestaña de WhatsApp Web y le pide a la propia app de WhatsApp que abra esa conversación, igual que si la buscaras vos a mano. Si WhatsApp Web no está abierto, el link se comporta como siempre.</p>
+    <h2>Instalación en Firefox</h2>
+    <ol class="pasos">
+      <li>
+        <span class="accion">Abrí <code>about:debugging#/runtime/this-firefox</code>.</span>
+        <span class="vera">Escribilo tal cual en la barra de direcciones y presioná Enter.</span>
+      </li>
+      <li>
+        <span class="accion">Hacé click en «Cargar complemento temporal…».</span>
+        <span class="vera">Se abre una ventana para elegir un archivo.</span>
+      </li>
+      <li>
+        <span class="accion">Elegí el archivo <code>manifest.json</code>.</span>
+        <span class="vera">Está dentro de la carpeta <code>statetty-wa-ext</code> que descomprimiste en Descargas. Abrí la carpeta y elegí ese archivo.</span>
+      </li>
+    </ol>
+    <p class="vera">Ojo: en Firefox la extensión queda activa solo hasta que cierres el navegador. Si la usás seguido, avisanos y la publicamos en la tienda de Firefox.</p>
   </div>
+
+  <div class="card">
+    <h2>Cómo se usa</h2>
+    <p>No hay nada que aprender. Abrí WhatsApp Web (<a href="https://web.whatsapp.com">web.whatsapp.com</a>) como siempre. Desde ahí, cada vez que hagas click en un contacto de WhatsApp —en Statetty o en cualquier otra página— el chat se abre en esa pestaña, con el mensaje ya escrito.</p>
+    <p>Si WhatsApp Web no está abierto, el link se comporta como siempre: se abre en una pestaña nueva.</p>
+  </div>
+
+  <div class="card nota">
+    <h2>Si algo no sale</h2>
+    <details>
+      <summary>No veo el botón «Cargar extensión sin empaquetar»</summary>
+      <p>Falta encender el «Modo de desarrollador»: es el interruptor arriba a la derecha en <code>chrome://extensions</code>.</p>
+    </details>
+    <details>
+      <summary>Al cargar me dice que falta el archivo manifest</summary>
+      <p>Elegiste la carpeta equivocada. Tenés que seleccionar la carpeta descomprimida (la que tiene adentro el archivo <code>manifest.json</code>), no el archivo .zip ni una carpeta vacía.</p>
+    </details>
+    <details>
+      <summary>La instalé pero el chat no se abre en WhatsApp Web</summary>
+      <p>Verificá que WhatsApp Web esté abierto en alguna pestaña y que estés logueado (si ves el código QR, escanealo con tu teléfono). También revisá en <code>chrome://extensions</code> que «Statetty WhatsApp Direct» esté activada.</p>
+    </details>
+    <details>
+      <summary>¿Tengo que hacer esto en el celular?</summary>
+      <p>No. En el celular los contactos ya abren la aplicación de WhatsApp directamente. Esto es solo para la compu.</p>
+    </details>
+    <details>
+      <summary>¿Es segura?</summary>
+      <p>Sí. La extensión no lee tus mensajes ni manda nada a ningún servidor: solo le avisa a tu WhatsApp Web qué chat abrir, igual que si lo buscaras vos a mano. El código está abierto en nuestro repositorio.</p>
+    </details>
+  </div>
+
+  <p class="vera">¿Trabado en algún paso? Escribinos por WhatsApp desde el pie de <a href="https://statetty.com">statetty.com</a> y te guiamos.</p>
 </main>
 </body>
 </html>
