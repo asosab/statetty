@@ -31,6 +31,18 @@
     parque: 'Parques'
   };
 
+  // Emoji por categoría (los pines del mapa) — 📍 si no hay definido.
+  var EMOJIS = {
+    aparcamiento: '🅿️',
+    escuela: '🏫',
+    universidad: '🎓',
+    farmacia: '💊',
+    plaza: '🌳',
+    hospital: '🏥',
+    mercado: '🛒',
+    parque: '🌳'
+  };
+
   var mapa = null;
   var panelEq = null, panelHome = null;
   var estEq = null, listaBox = null;
@@ -50,10 +62,27 @@
     return slug.charAt(0).toUpperCase() + slug.slice(1);
   }
 
-  function colorCat(slug) {
-    var h = 0;
-    for (var i = 0; i < slug.length; i++) h = (h * 31 + slug.charCodeAt(i)) | 0;
-    return 'hsl(' + (Math.abs(h) % 360) + ',70%,38%)';
+  // Nombre en singular para la caja informativa (fallback: slug capitalizado).
+  var TIPOS = {
+    aparcamiento: 'Aparcamiento',
+    escuela: 'Escuela',
+    universidad: 'Universidad',
+    farmacia: 'Farmacia',
+    plaza: 'Plaza',
+    hospital: 'Hospital',
+    mercado: 'Mercado',
+    parque: 'Parque'
+  };
+  function tipoCat(slug) {
+    return TIPOS[slug] || nombreCat(slug);
+  }
+
+  function emojiCat(slug) {
+    return EMOJIS[slug] || '📍';
+  }
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
 
   function avisar(txt, esError) {
@@ -140,31 +169,49 @@
   }
 
   // ── pintado ────────────────────────────────────────────────────────────────
-  var rendererEq = null;
-  function tooltipEq(e) {
-    var t = '<b>' + (e.nombre || nombreCat(e.categoria)) + '</b>';
-    if (e.rating != null) t += '<br>★ ' + e.rating + (e.reviews ? ' (' + e.reviews + ' reseñas)' : '');
-    else if (e.reviews) t += '<br>' + e.reviews + ' reseñas';
-    if (e.direccion) t += '<br>' + e.direccion;
-    return t;
+  // Cada equipamiento es un pin-emoji por categoría (🅿️ aparcamiento…) con
+  // caja informativa simple al click: tipo, nombre y ranking.
+  function popupEq(e) {
+    var tipo = tipoCat(e.categoria || '');
+    var t = '<div class="stt-equip-pop">' +
+      '<div class="stt-equip-pop-tipo">' + emojiCat(e.categoria || '') + ' ' + esc(tipo) + '</div>' +
+      '<b>' + esc(e.nombre || tipo) + '</b>';
+    if (e.score != null || e.rating != null) {
+      t += '<br>★ ' + (e.score != null ? e.score : e.rating) +
+        '<span class="stt-equip-pop-mut"> · Google ' + (e.rating != null ? e.rating : '—') +
+        (e.reviews ? ' (' + e.reviews + ' reseña' + (e.reviews === 1 ? '' : 's') + ')' : '') + '</span>';
+    } else if (e.reviews) {
+      t += '<br><span class="stt-equip-pop-mut">' + e.reviews + ' reseñas</span>';
+    }
+    return t + '</div>';
+  }
+
+  var iconosEq = {};
+  function iconoEq(slug) {
+    if (!iconosEq[slug]) {
+      iconosEq[slug] = L.divIcon({
+        className: 'stt-equip-pin',
+        html: emojiCat(slug),
+        iconSize: [26, 26],
+        iconAnchor: [13, 13],
+        popupAnchor: [0, -12]
+      });
+    }
+    return iconosEq[slug];
   }
 
   function pintarEq(items, fig) {
     if (!mapa) return;
     if (!capaEq) capaEq = L.layerGroup().addTo(mapa);
-    if (!rendererEq) rendererEq = L.canvas({ padding: 0.5 });
     capaEq.clearLayers();
     var conFigs = hayFiguras(fig);
     var pintados = 0;
     items.forEach(function (e) {
       if (e.lat == null || e.lng == null) return;
       if (conFigs && !dentroDeFiguras(e.lng, e.lat, fig)) return;
-      var col = colorCat(e.categoria || '');
-      L.circleMarker([e.lat, e.lng], {
-        radius: 6, color: '#fff', weight: 1.5,
-        fillColor: col, fillOpacity: 0.85,
-        renderer: rendererEq
-      }).bindTooltip(tooltipEq(e), { sticky: true }).addTo(capaEq);
+      L.marker([e.lat, e.lng], { icon: iconoEq(e.categoria || '') })
+        .bindPopup(popupEq(e))
+        .addTo(capaEq);
       pintados++;
     });
     if (!pintados) {
@@ -174,7 +221,7 @@
       return;
     }
     avisar(pintados + ' en la zona' + (items.length >= 5000 ? ' (tope de 5000 alcanzado)' : '') +
-      '. Pasa el cursor para ver el detalle.', false);
+      '. Toca un pin para ver el detalle.', false);
   }
 
   function catsActivas() {
@@ -364,7 +411,17 @@
       '.stt-equip-icono{width:44px;height:44px;border-radius:50%;padding:0;' +
         'border:1px solid #cfe9f5;background:rgba(255,255,255,.95);color:#04364a;' +
         'font-size:20px;line-height:1;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.25);}' +
-      '.stt-equip-icono:active{transform:scale(.94);}';
+      '.stt-equip-icono:active{transform:scale(.94);}' +
+      // Pin-emoji: el divIcon trae fondo blanco por defecto → transparente,
+      // solo la sombra para leerlo sobre satélite.
+      '.stt-equip-pin.leaflet-div-icon{background:transparent;border:0;}' +
+      '.stt-equip-pin{font-size:22px;line-height:26px;text-align:center;' +
+        'filter:drop-shadow(0 1px 2px rgba(0,0,0,.45));}' +
+      // Caja informativa del equipamiento.
+      '.stt-equip-pop{font-size:13px;line-height:1.5;color:#04364a;max-width:230px;}' +
+      '.stt-equip-pop-tipo{font-size:11px;font-weight:700;color:#074f66;' +
+        'text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px;}' +
+      '.stt-equip-pop-mut{color:#5b7b88;font-size:12px;}';
     document.head.appendChild(s);
   }
 
