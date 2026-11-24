@@ -241,7 +241,7 @@ function ensureStatsActions() {
         let overlay = L.marker([a.lat, a.lng], { icon: checkOverlayIcon, interactive: false }).addTo(map);
         let obj = markers.find(m => m.dato.uid === a.uid);
         if (obj) obj.overlay = overlay;
-        $(`.chk-sel[data-id='${a.uid}']`).prop("checked", true);
+        _pintarBtnsSel();
       }
     });
     guardarSeleccionados();
@@ -253,7 +253,7 @@ function ensureStatsActions() {
     seleccionados.slice().forEach(s => {
       const obj = markers.find(m => m.dato.uid === s.uid);
       if (obj && obj.overlay) { map.removeLayer(obj.overlay); obj.overlay = null; }
-      $(`.chk-sel[data-id='${s.uid}']`).prop("checked", false);
+      _pintarBtnsSel();
     });
     seleccionados = [];
     guardarSeleccionados();
@@ -270,7 +270,7 @@ function ensureStatsActions() {
         let overlay = L.marker([a.lat, a.lng], { icon: checkOverlayIcon, interactive: false }).addTo(map);
         let obj = markers.find(m => m.dato.uid === a.uid);
         if (obj) obj.overlay = overlay;
-        $(`.chk-sel[data-id='${a.uid}']`).prop("checked", true);
+        _pintarBtnsSel();
       }
     });
     guardarSeleccionados();
@@ -285,7 +285,7 @@ function ensureStatsActions() {
       seleccionados = seleccionados.filter(s => s.uid !== a.uid);
       let obj = markers.find(m => m.dato.uid === a.uid);
       if (obj && obj.overlay) { map.removeLayer(obj.overlay); obj.overlay = null; }
-      $(`.chk-sel[data-id='${a.uid}']`).prop("checked", false);
+      _pintarBtnsSel();
     });
     guardarSeleccionados();
     actualizarToolbox();
@@ -301,7 +301,7 @@ function ensureStatsActions() {
         seleccionados = seleccionados.filter(x => x.uid !== s.uid);
         const obj = markers.find(m => m.dato.uid === s.uid);
         if (obj && obj.overlay) { map.removeLayer(obj.overlay); obj.overlay = null; }
-        $(`.chk-sel[data-id='${s.uid}']`).prop('checked', false);
+        _pintarBtnsSel();
       }
     });
 
@@ -320,7 +320,7 @@ function ensureStatsActions() {
         let overlay = L.marker([a.lat, a.lng], { icon: checkOverlayIcon, interactive: false }).addTo(map);
         let obj = markers.find(m => m.dato.uid === a.uid);
         if (obj) obj.overlay = overlay;
-        $(`.chk-sel[data-id='${a.uid}']`).prop("checked", true);
+        _pintarBtnsSel();
       }
     });
     guardarSeleccionados();
@@ -494,7 +494,7 @@ function actualizarToolbox() {
     guardarSeleccionados();
     let obj = markers.find(m => m.dato.uid === id);
     if (obj && obj.overlay) { map.removeLayer(obj.overlay); obj.overlay = null; }
-    $(`.chk-sel[data-id='${id}']`).prop("checked", false);
+    _pintarBtnsSel();
     actualizarToolbox();
   });
 
@@ -715,7 +715,7 @@ function _popupDeDato(dato) {
   const linkSrv = `${server}statetty/usrClckWsInm?u=${encodeURIComponent(window.__mapUserid)}&i=${encodeURIComponent(dato._id)}`;
 
   const linkWA = celularValido
-    ? `<br/><a href="#" onclick="openWsRedirect('${linkSrv}','https://wa.me/${cel}?text=${encodeURIComponent(msj)}');return false;">📱 Contactar a${nombreCorto}</a>`
+    ? `<button type="button" style="${popupBtnStyle()}" onclick="openWsRedirect('${linkSrv}','https://wa.me/${cel}?text=${encodeURIComponent(msj)}');return false;">📱 Contactar a${nombreCorto}</button>`
     : '';
 
   var circleCenter = (circuloBusqueda && circuloBusqueda.getLatLng())
@@ -769,18 +769,25 @@ function _popupDeDato(dato) {
     ? `<div style="font-size:11px;color:#666;" data-tippy-content="Fecha de publicación estimada del inmueble">${antiguedadTexto}</div>`
     : '';
 
+  var selMarcado = seleccionados.some(function (s) { return s.uid === dato.uid; });
+  var btnRow =
+    '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;">' +
+    popupBtnLink('🔗 Página oficial', url) +
+    popupBtnLink('🔗 Página Statetty', 'https://statetty.com/inmueble/' + encodeURIComponent(dato._id) + '?t=' + encodeURIComponent(waphoneUsuario)) +
+    '<button type="button" style="' + popupBtnStyle() + '" data-tippy-content="Copy para usar en WhatsApp" ' +
+      'onclick="return copyFichaWhatsApp(\'' + encodeURIComponent(dato._id) + '\', this);">🗨️ Copy</button>' +
+    linkWA +
+    `<button type="button" class="btn-sel" data-id="${dato.uid}" style="${popupBtnStyle('#2c7be5', selMarcado)}">${selMarcado ? 'Deseleccionar' : 'Seleccionar'}</button>` +
+    desactivarInmuebleHtml(dato) +
+    '</div>';
+
   return "<b>" + dato.Titulo + "</b>" + nuevoTag + "<br>" +
     detallesLine + "<br>" +
     antiguedadLine +
     `${descripcion}` +
     `${direccion}` +
     fotoHTML +
-    '<a href="' + url + '" target="_blank" style="text-decoration:none;">🔗 Página oficial</a>' +
-    '&nbsp;|&nbsp;<a href="https://statetty.com/inmueble/' + encodeURIComponent(dato._id) + '?t=' + encodeURIComponent(waphoneUsuario) + '" target="_blank" style="text-decoration:none;">🔗 Página Statetty</a>' +
-    '<br><a href="#" style="text-decoration:none;" data-tippy-content="Copy para usar en WhatsApp" onclick="return copyFichaWhatsApp(\'' + encodeURIComponent(dato._id) + '\', this);">🗨️ Copy</a>' +
-    linkWA +
-    `<br><label><input type="checkbox" class="chk-sel" data-id="${dato.uid}"> Seleccionar</label>` +
-    desactivarInmuebleHtml(dato);
+    btnRow;
 }
 
 /** Pin + overlays + popup perezoso de un solo inmueble. */
@@ -815,23 +822,32 @@ function _pintarLoc(dato) {
 
   marker.on("popupopen", function (e) {
     initPopupTooltips(e.popup.getElement());
-    let chk = $(`.chk-sel[data-id='${dato.uid}']`);
-    chk.prop("checked", seleccionados.some(s => s.uid === dato.uid));
-
-    chk.off("change").on("change", function () {
-      if (this.checked) {
-        if (!seleccionados.some(s => s.uid === dato.uid)) seleccionados.push(dato);
-        let overlay = L.marker([dato.lat, dato.lng], { icon: checkOverlayIcon, interactive: false }).addTo(map);
-        let obj = markers.find(m => m.dato.uid === dato.uid);
-        if (obj) obj.overlay = overlay;
-      } else {
+    var btnSel = e.popup.getElement().querySelector(".btn-sel");
+    if (btnSel) btnSel.addEventListener("click", function () {
+      if (seleccionados.some(s => s.uid === dato.uid)) {
         seleccionados = seleccionados.filter(s => s.uid !== dato.uid);
         let obj = markers.find(m => m.dato.uid === dato.uid);
         if (obj && obj.overlay) { map.removeLayer(obj.overlay); obj.overlay = null; }
+      } else {
+        seleccionados.push(dato);
+        let overlay = L.marker([dato.lat, dato.lng], { icon: checkOverlayIcon, interactive: false }).addTo(map);
+        let obj = markers.find(m => m.dato.uid === dato.uid);
+        if (obj) obj.overlay = overlay;
       }
       guardarSeleccionados();
       actualizarToolbox();
+      _pintarBtnsSel();
     });
+  });
+}
+
+/** Texto/estado de los botones Seleccionar ↔ Deseleccionar en popups abiertos. */
+function _pintarBtnsSel() {
+  if (typeof document === 'undefined' || !document.querySelectorAll) return;
+  document.querySelectorAll('.btn-sel').forEach(function (b) {
+    var marcado = seleccionados.some(function (s) { return String(s.uid) === String(b.dataset.id); });
+    b.textContent = marcado ? 'Deseleccionar' : 'Seleccionar';
+    b.setAttribute('style', popupBtnStyle('#2c7be5', marcado));
   });
 }
 
@@ -940,7 +956,7 @@ function renderMapFin() {
       let overlay = L.marker([obj.dato.lat, obj.dato.lng], { icon: checkOverlayIcon, interactive: false }).addTo(map);
       obj.overlay = overlay;
     }
-    $(`.chk-sel[data-id='${id}']`).prop("checked", true);
+    _pintarBtnsSel();
   });
   guardarSeleccionados();
   actualizarToolbox();

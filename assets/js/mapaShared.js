@@ -457,6 +457,24 @@ function copyFichaWhatsApp(encId, btn) {
     .then(function () { delete btn.dataset.disabled; return false; });
 }
 
+// ── Botones del popup de inmueble ──────────────────────────────────────────
+// Estilo común de los botones de acción del popup (links convertidos y
+// Desactivar). `filled` pinta el fondo del color (estado activo, ej. Seleccionar).
+function popupBtnStyle(color, filled) {
+  var c = color || '#2c7be5';
+  return 'padding:4px 10px;font-size:12px;border:1px solid ' + c +
+    ';border-radius:6px;background:' + (filled ? c : '#fff') +
+    ';color:' + (filled ? '#fff' : c) + ';cursor:pointer;';
+}
+
+// Botón que abre una URL en pestaña nueva (la URL viaja en data-href para no
+// meter comillas dentro del onclick).
+function popupBtnLink(texto, url, tippy) {
+  return '<button type="button" style="' + popupBtnStyle() + '" data-href="' + url + '"' +
+    (tippy ? ' data-tippy-content="' + tippy + '"' : '') +
+    ' onclick="window.open(this.dataset.href,\'_blank\');return false;">' + texto + '</button>';
+}
+
 // ── Desactivar inmueble (solo confianza>=10) ───────────────────────────────
 // Gate visual: el botón solo se renderiza si el usuario tiene confianza 10.
 // La autorización real la hace el servidor (route_desactivarInmueble).
@@ -469,9 +487,8 @@ function puedeDesactivarInmuebles() {
 function desactivarInmuebleHtml(dato) {
   if (!puedeDesactivarInmuebles() || !dato || !dato._id) return '';
   if (dato.activo === false) return '';
-  return '<br><button type="button" class="stt-btn-desactivar" ' +
-    'style="margin-top:6px;padding:4px 10px;font-size:12px;border:1px solid #c0392b;' +
-    'border-radius:6px;background:#fff;color:#c0392b;cursor:pointer;" ' +
+  return '<button type="button" class="stt-btn-desactivar" ' +
+    'style="' + popupBtnStyle('#c0392b') + '" ' +
     'data-tippy-content="Marcar el inmueble como inactivo" ' +
     'onclick="return desactivarInmueble(\'' + dato._id + '\', this)">Desactivar inmueble</button>';
 }

@@ -38,8 +38,8 @@
     if (r.m2c) det.push(r.m2c + ' m² construc.');
     if (r.m2t) det.push(r.m2t + ' m² terreno');
     cuerpo += linea(esc(det.join(' · ')));
-    cuerpo += linea('<a href="' + esc(r.url) + '" target="_blank" rel="noopener">Ver ficha</a>');
-    cuerpo += desactivarInmuebleHtml(r);
+    var btns = popupBtnLink('Ver ficha', esc(r.url)) + desactivarInmuebleHtml(r);
+    cuerpo += '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;">' + btns + '</div>';
     return cuerpo;
   }
 
