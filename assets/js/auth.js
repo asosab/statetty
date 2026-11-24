@@ -224,6 +224,7 @@
       u.waphone=tg.waphone||'';
       u.role=tg.role||'user';
       u.isAdmin=tg.isAdmin||false;
+      u.confianza=tg.confianza!=null?tg.confianza:1;
       u.hasTime=tg.hasTime||false;
       u.dias=tg.dias||0;
       u.cutoffDate=tg.cutoffDate||null;
