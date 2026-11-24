@@ -29,6 +29,9 @@
 {% endunless %}
       <button type="button" class="btn-nav-cta" data-stt-intent="buscar" data-stt-msg="Busco un inmueble para comprar o alquilar.">Hablar con un asesor</button>
       <a href="/ai/">¿Eres asesor inmobiliario?</a>
+{% unless page.url == '/blog/' %}
+      <a href="/blog/">Blog</a>
+{% endunless %}
 {% else %}
       <a href="/">Inicio</a>
       <a href="/#planes" data-stt-checkout>Planes</a>
