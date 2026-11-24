@@ -405,6 +405,8 @@
         'z-index:1150;display:none;flex-direction:column;align-items:flex-start;gap:0;' +
         'transition:bottom .5s ease,left .5s ease;}' +
       '.stt-equip-movil.visible{display:flex;}' +
+      // Caja desplegada por encima de los iconos (misma regla que Capas).
+      '.stt-equip-movil:not(.colapsado){z-index:1160;}' +
       '.stt-equip-movil .stt-equip{margin:0;max-width:86vw;}' +
       '.stt-equip-movil.colapsado .stt-equip{display:none;}' +
       '.stt-equip-movil:not(.colapsado) .stt-equip-icono{display:none;}' +

@@ -684,6 +684,9 @@
         'z-index:1150;display:none;flex-direction:column;align-items:flex-start;gap:0;' +
         'transition:bottom .5s ease,left .5s ease;}' +
       '.stt-capas-movil.visible{display:flex;}' +
+      // Caja desplegada por encima de los iconos (el icono de equipamientos
+      // vive en la misma zona); iconos solapados quedan en 1150.
+      '.stt-capas-movil:not(.colapsado){z-index:1160;}' +
       '.stt-capas-movil .stt-capas{margin:0;max-width:86vw;}' +
       '.stt-capas-movil.colapsado .stt-capas{display:none;}' +
       '.stt-capas-movil:not(.colapsado) .stt-capas-icono{display:none;}' +
@@ -732,9 +735,9 @@
       estRuido = div.querySelector('#stt-capa-estado');
       leyendaBox = div.querySelector('#stt-capas-leyenda');
       if (window.STT_MAPA_BASE) selTipo.value = window.STT_MAPA_BASE.actual || 'calles';
-      if (window.STT_RUTAS_MICROS && window.STT_RUTAS_MICROS.ocultas) {
-        chkRutas.checked = !window.STT_RUTAS_MICROS.ocultas();
-      }
+      // «Rutas de micros» arranca deschequeado: solo se marca al encender la
+      // capa (checkbox propio o evento stt:rutas-dibujadas). Marcarlo aquí sin
+      // activar la red dejaba un estado fantasma (pedido del dueño 2026-11-24).
       L.DomEvent.disableClickPropagation(div);
       L.DomEvent.disableScrollPropagation(div);
       div.querySelector('#stt-capas-cerrar').addEventListener('click', cerrarCapasMovil);
