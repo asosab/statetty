@@ -29,6 +29,7 @@
       '.caja-globos{display:flex;flex-direction:column;gap:6px;margin-top:6px}' +
       '.caja-globo{position:relative;background:#074f66;color:#fff;border-radius:12px 12px 12px 2px;padding:9px 30px 9px 12px;font:14px/1.4 Lato,Arial,sans-serif;box-shadow:0 3px 10px rgba(0,0,0,.25);animation:cajaIn .25s ease-out}' +
       '.caja-globo button{position:absolute;top:4px;right:6px;background:none;border:none;color:#bfe4f0;font-size:15px;cursor:pointer;padding:2px;line-height:1}' +
+      '.caja-globo a{color:#bfe4f0}.caja-globo.anclado a{color:#074f66;text-decoration:underline}' +
       '.caja-globo.anclado{background:#e8a33d;color:#074f66;border-radius:12px}' +
       '.caja-globo.anclado:before{content:"";position:absolute;top:-7px;left:22px;border:7px solid transparent;border-bottom-color:#e8a33d;border-top:0}' +
       '@keyframes cajaIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1}}' +
@@ -37,13 +38,25 @@
     document.head.appendChild(st);
   }
 
+  function escHtml(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+  // URLs clicables: externas (YouTube etc.) en pestaña nueva, internas en la misma.
+  function linkify(html) {
+    return html.replace(/https?:\/\/[^\s<]+/g, function (url) {
+      var urlLimpia = url.replace(/[.,;:!?»)\]]+$/, '');
+      var cola = url.slice(urlLimpia.length);
+      var externa = !/^https?:\/\/(www\.)?statetty\.com/i.test(urlLimpia);
+      return '<a href="' + urlLimpia + '"' + (externa ? ' target="_blank" rel="noopener"' : '') + '>' + urlLimpia + '</a>' + cola;
+    });
+  }
+
   function globo(txt, ancladoA) {
     var caja = document.getElementById('caja'); if (!caja) return;
     var cont = caja.querySelector('.caja-globos');
     if (!cont) { cont = document.createElement('div'); cont.className = 'caja-globos'; caja.appendChild(cont); }
     var g = document.createElement('div');
     g.className = 'caja-globo' + (ancladoA ? ' anclado' : '');
-    g.textContent = txt;
+    g.innerHTML = linkify(escHtml(txt)).replace(/\n/g, '<br>');
     var x = document.createElement('button'); x.textContent = '✕'; x.setAttribute('aria-label', 'Cerrar');
     x.addEventListener('click', function () { g.remove(); });
     g.appendChild(x);
@@ -52,7 +65,8 @@
       if (el) { el.scrollIntoView({block: 'center', behavior: 'smooth'}); el.insertAdjacentElement('afterend', g); }
       else { cont.appendChild(g); }
     } else { cont.appendChild(g); }
-    setTimeout(function () { if (g.parentNode) g.remove(); }, 20000);
+    // los globos con links no se cierran solos: el usuario necesita tiempo para hacer click
+    if (!g.querySelector('a')) { setTimeout(function () { if (g.parentNode) g.remove(); }, 20000); }
   }
 
   function resaltar(sel) {
