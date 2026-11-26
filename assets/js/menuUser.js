@@ -208,7 +208,31 @@
       'font-size:.92rem;font-family:var(--font-body,\'Lato\',sans-serif);color:#999;text-decoration:none;text-align:left;' +
       'background:none;cursor:pointer;white-space:nowrap;transition:background .15s ease,color .15s ease;}' +
       '.stt-user-logout:hover,.stt-user-logout:focus-visible{background:rgba(0,0,0,.04);color:#666;}' +
-      '@media (max-width:768px){.stt-user-dropdown{width:min(320px,92vw);}}';
+      '@media (max-width:768px){.stt-user-dropdown{width:min(320px,92vw);}}' +
+      // Panel "Mis sesiones" (F7): overlay sencillo, sin dependencias.
+      '.stt-sessions-overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:2147483003;' +
+      'display:flex;align-items:center;justify-content:center;padding:16px;}' +
+      '.stt-sessions-box{background:#fff;border-radius:10px;max-width:460px;width:100%;max-height:80vh;' +
+      'display:flex;flex-direction:column;font-family:var(--font-body,\'Lato\',sans-serif);color:#222;' +
+      'box-shadow:0 12px 40px rgba(0,0,0,.25);}' +
+      '.stt-sessions-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;' +
+      'border-bottom:1px solid rgba(0,0,0,.08);}' +
+      '.stt-sessions-head h3{margin:0;font-size:1.05rem;font-weight:600;}' +
+      '.stt-sessions-close{border:0;background:none;font-size:1.3rem;cursor:pointer;color:#666;padding:0 4px;}' +
+      '.stt-sessions-list{overflow-y:auto;padding:8px 16px;}' +
+      '.stt-session{display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:1px solid rgba(0,0,0,.05);}' +
+      '.stt-session:last-child{border-bottom:0;}' +
+      '.stt-session-info{flex:1;min-width:0;}' +
+      '.stt-session-name{font-size:.92rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}' +
+      '.stt-session-meta{font-size:.78rem;color:#777;margin-top:2px;}' +
+      '.stt-session-current{font-size:.72rem;color:var(--blue,#1d6fd8);font-weight:600;}' +
+      '.stt-session-x{border:1px solid rgba(0,0,0,.15);background:none;border-radius:6px;padding:5px 10px;' +
+      'font-size:.78rem;cursor:pointer;color:#a33;white-space:nowrap;}' +
+      '.stt-session-x:hover{background:rgba(180,40,40,.08);}' +
+      '.stt-sessions-foot{padding:12px 16px;border-top:1px solid rgba(0,0,0,.08);}' +
+      '.stt-sessions-close-others{width:100%;border:0;border-radius:8px;padding:10px;background:#a33;color:#fff;' +
+      'font-size:.88rem;cursor:pointer;}' +
+      '.stt-sessions-close-others:hover{background:#8f2b2b;}';
     var style = document.createElement('style');
     style.id = STYLE_ID;
     style.textContent = css;
@@ -273,6 +297,163 @@
     // Se espera el cierre de Buddy para no cortar la revocación del refresh con
     // la navegación; si falla, se limpia igual (el logout es local también).
     p.catch(function () {}).then(function () { clearSession(); });
+  }
+
+  // ------------------------------------------------------------------
+  // "Mis sesiones" (F7): panel con las sesiones activas del usuario en
+  // este sitio. Lista, cierra una por una o todas menos la actual, vía
+  // Buddy.auth.listSessions / closeSession / closeOtherSessions.
+  // ------------------------------------------------------------------
+
+  function buddyAuthApi() {
+    return (window.Buddy && window.Buddy.auth) || null;
+  }
+
+  // Nombre corto del dispositivo a partir del User-Agent guardado.
+  function sessionName(s) {
+    var ua = String((s && s.deviceInfo) || '');
+    var device = 'Otro dispositivo';
+    if (/windows/i.test(ua)) device = 'Windows';
+    else if (/android/i.test(ua)) device = 'Android';
+    else if (/iphone|ipad|ipod/i.test(ua)) device = 'iPhone/iPad';
+    else if (/mac os|macintosh/i.test(ua)) device = 'Mac';
+    else if (/linux/i.test(ua)) device = 'Linux';
+    var browser = '';
+    if (/edg\//i.test(ua)) browser = 'Edge';
+    else if (/chrome\/|crios\//i.test(ua)) browser = 'Chrome';
+    else if (/firefox\//i.test(ua)) browser = 'Firefox';
+    else if (/safari\//i.test(ua)) browser = 'Safari';
+    return browser ? device + ' · ' + browser : device;
+  }
+
+  function sessionMeta(s) {
+    var parts = [];
+    if (s && s.updatedAt) {
+      try { parts.push('Último uso: ' + new Date(s.updatedAt).toLocaleString()); } catch (e) {}
+    }
+    if (s && s.expiresAt) {
+      try { parts.push('Vence: ' + new Date(s.expiresAt).toLocaleDateString()); } catch (e) {}
+    }
+    return parts.join(' · ');
+  }
+
+  function openSessionsPanel() {
+    var auth = buddyAuthApi();
+    if (!auth || typeof auth.listSessions !== 'function') return;
+
+    var prev = document.querySelector('.stt-sessions-overlay');
+    if (prev) prev.remove();
+
+    var overlay = document.createElement('div');
+    overlay.className = 'stt-sessions-overlay';
+    var box = document.createElement('div');
+    box.className = 'stt-sessions-box';
+    overlay.appendChild(box);
+
+    var head = document.createElement('div');
+    head.className = 'stt-sessions-head';
+    var title = document.createElement('h3');
+    title.textContent = 'Mis sesiones';
+    var x = document.createElement('button');
+    x.type = 'button';
+    x.className = 'stt-sessions-close';
+    x.textContent = '×';
+    x.setAttribute('aria-label', 'Cerrar');
+    head.appendChild(title);
+    head.appendChild(x);
+    box.appendChild(head);
+
+    var list = document.createElement('div');
+    list.className = 'stt-sessions-list';
+    list.textContent = 'Cargando…';
+    box.appendChild(list);
+
+    var foot = document.createElement('div');
+    foot.className = 'stt-sessions-foot';
+    var closeOthers = document.createElement('button');
+    closeOthers.type = 'button';
+    closeOthers.className = 'stt-sessions-close-others';
+    closeOthers.textContent = 'Cerrar las demás sesiones';
+    foot.appendChild(closeOthers);
+    box.appendChild(foot);
+
+    function close() { overlay.remove(); }
+    x.addEventListener('click', close);
+    overlay.addEventListener('click', function (e) { if (e.target === overlay) close(); });
+    document.addEventListener('keydown', function esc(e) {
+      if (e.key === 'Escape') { close(); document.removeEventListener('keydown', esc); }
+    });
+
+    function renderSessions(data) {
+      list.textContent = '';
+      var sessions = (data && data.sessions) || [];
+      if (!sessions.length) {
+        list.textContent = 'No hay otras sesiones activas.';
+        return;
+      }
+      var others = 0;
+      sessions.forEach(function (s) {
+        if (!s.isCurrent) others++;
+        var row = document.createElement('div');
+        row.className = 'stt-session';
+        var info = document.createElement('div');
+        info.className = 'stt-session-info';
+        var name = document.createElement('div');
+        name.className = 'stt-session-name';
+        name.textContent = sessionName(s);
+        info.appendChild(name);
+        var meta = document.createElement('div');
+        meta.className = 'stt-session-meta';
+        meta.textContent = sessionMeta(s);
+        info.appendChild(meta);
+        if (s.isCurrent) {
+          var cur = document.createElement('div');
+          cur.className = 'stt-session-current';
+          cur.textContent = 'Esta sesión';
+          info.appendChild(cur);
+        }
+        row.appendChild(info);
+        if (!s.isCurrent) {
+          var bx = document.createElement('button');
+          bx.type = 'button';
+          bx.className = 'stt-session-x';
+          bx.textContent = 'Cerrar';
+          bx.addEventListener('click', function () {
+            bx.disabled = true;
+            auth.closeSession(s.id)
+              .then(reload)
+              .catch(function () { bx.disabled = false; });
+          });
+          row.appendChild(bx);
+        }
+        list.appendChild(row);
+      });
+      closeOthers.style.display = others ? '' : 'none';
+      if (data && data.maxSessions) {
+        var hint = document.createElement('div');
+        hint.className = 'stt-session-meta';
+        hint.style.padding = '6px 4px 2px';
+        hint.textContent = 'Sesiones activas: ' + (data.activeCount || sessions.length) + ' de ' + data.maxSessions;
+        list.appendChild(hint);
+      }
+    }
+
+    function reload() {
+      list.textContent = 'Cargando…';
+      auth.listSessions().then(renderSessions).catch(function (e) {
+        list.textContent = 'No se pudieron cargar las sesiones: ' + (e && e.message || 'error');
+      });
+    }
+
+    closeOthers.addEventListener('click', function () {
+      closeOthers.disabled = true;
+      auth.closeOtherSessions()
+        .then(reload)
+        .catch(function () { closeOthers.disabled = false; });
+    });
+
+    document.body.appendChild(overlay);
+    reload();
   }
 
   // ------------------------------------------------------------------
@@ -594,6 +775,8 @@
     // Administración de Buddy (roles de admin/superadmin), sobre el separador.
     renderAdminBlock(dropdown);
 
+    appendSessionsLink(dropdown);
+
     var sep = document.createElement('div');
     sep.className = 'stt-user-dropdown-sep';
     dropdown.appendChild(sep);
@@ -731,6 +914,8 @@
     // Administración de Buddy (roles de admin/superadmin), sobre el separador.
     renderAdminBlock(container);
 
+    appendSessionsLink(container);
+
     var sep = document.createElement('div');
     sep.className = 'stt-user-toolbox-sep';
     container.appendChild(sep);
@@ -743,6 +928,19 @@
     container.appendChild(logoutBtn);
 
     return container;
+  }
+
+  // Agrega el link «Mis sesiones» (abre el panel de F7) al contenedor dado.
+  function appendSessionsLink(container) {
+    var a = document.createElement('a');
+    a.href = '#';
+    a.textContent = 'Mis sesiones';
+    a.setAttribute('role', 'menuitem');
+    a.addEventListener('click', function (e) {
+      e.preventDefault();
+      openSessionsPanel();
+    });
+    container.appendChild(a);
   }
 
   // Reserva el contenedor de "Buscar Inmuebles" en #toolbox, ANTES de los

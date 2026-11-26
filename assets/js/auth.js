@@ -193,13 +193,32 @@
 
   async function fetchAuthMe(token){
     var base=getApiBase();
-    var res=await fetch(base+'statetty/auth/me',{
-      method:'GET',
-      cache:'no-store',
-      headers:{'Authorization':'Bearer '+token}
-    });
-    var data=await res.json();
-    return data;
+    async function once(t){
+      var res=await fetch(base+'statetty/auth/me',{
+        method:'GET',
+        cache:'no-store',
+        headers:{'Authorization':'Bearer '+t}
+      });
+      var data=null;
+      try{data=await res.json();}catch(e){}
+      return {status:res.status,data:data};
+    }
+    var r;
+    try{r=await once(token);}
+    catch(e){
+      // Falla de red transitoria: un reintento antes de declarar "sin sesión".
+      await new Promise(function(rs){setTimeout(rs,800);});
+      r=await once(token);
+    }
+    if(r.status===401||r.status===403){
+      // El JWT pudo vencer justo en este momento: pedir a Buddy un token
+      // fresco (refresca vía refreshToken) y reintentar una sola vez.
+      try{
+        var t2=await window.STT.getTokenFresco(60000);
+        if(t2&&t2!==token) r=await once(t2);
+      }catch(e){}
+    }
+    return r.data||{ok:false,error:'HTTP '+r.status};
   }
 
   // ── construcción del usuario combinado ─────────────────────────────────────

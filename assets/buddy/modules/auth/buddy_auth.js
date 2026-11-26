@@ -10,6 +10,10 @@ window.Buddy = window.Buddy || {};
   var CONFIG = window.BuddyAuthConfig || {};
   var REFRESH_KEY = 'buddy_refresh_token';
   var ACCESS_KEY = 'buddy_access_token';
+  // Identidad estable de ESTE navegador: la genera el cliente una vez y vive en
+  // localStorage. Es lo que ata una sesión a este equipo (el User-Agent no
+  // sirve: es idéntico entre dispositivos de la misma versión de browser).
+  var DEVICE_KEY = 'buddy_device_id';
   // Flag de logout explícito de este sitio: evita que checkSession re-autentique
   // vía bridge tras un logout (el master de otros sitios sigue activo).
   var LOGOUT_KEY = 'buddy_logout';
@@ -56,6 +60,20 @@ window.Buddy = window.Buddy || {};
 
   function isValidEmail(email) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizeEmail(email));
+  }
+
+  // --- Identidad del dispositivo ---
+
+  function getDeviceId() {
+    try {
+      var id = localStorage.getItem(DEVICE_KEY);
+      if (id) return id;
+      id = (window.crypto && typeof crypto.randomUUID === 'function')
+        ? crypto.randomUUID()
+        : 'd-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 14);
+      localStorage.setItem(DEVICE_KEY, id);
+      return id;
+    } catch (e) { return null; }
   }
 
   // --- Token persistence ---
@@ -156,7 +174,7 @@ window.Buddy = window.Buddy || {};
 
       iframe.onload = function () {
         try {
-          iframe.contentWindow.postMessage({ type: 'buddy_grant', siteId: siteId }, origin);
+          iframe.contentWindow.postMessage({ type: 'buddy_grant', siteId: siteId, deviceId: getDeviceId() }, origin);
         } catch (e) {
           finish(false);
         }
@@ -186,6 +204,7 @@ window.Buddy = window.Buddy || {};
     state.refreshToken = refreshToken || null;
     storeAccessToken(accessToken);
     storeRefreshToken(refreshToken);
+    scheduleProactiveRefresh();
   }
 
   function clearTokens() {
@@ -198,6 +217,51 @@ window.Buddy = window.Buddy || {};
   function restoreTokens() {
     if (!state.accessToken) state.accessToken = getStoredAccessToken();
     if (!state.refreshToken) state.refreshToken = getStoredRefreshToken();
+  }
+
+  // exp del JWT en ms (0 si no se puede leer). Solo para decidir cuándo refrescar.
+  function _jwtExpMs(token) {
+    try {
+      var part = String(token || '').split('.')[1];
+      if (!part) return 0;
+      var b64 = part.replace(/-/g, '+').replace(/_/g, '/');
+      while (b64.length % 4) b64 += '=';
+      var p = JSON.parse(atob(b64));
+      return p && p.exp ? p.exp * 1000 : 0;
+    } catch (e) { return 0; }
+  }
+
+  // Renueva el access token ~60 s antes de vencer. Con la pestaña abierta mucho
+  // tiempo, getToken() devolvía un JWT muerto → 401 en los endpoints con
+  // Bearer (la mayoría de callers es síncrona y no usa getTokenFresco). Los
+  // timers se limitan en pestañas de fondo pero igual disparan; al volver a
+  // primer plano complementa el repaso de visibilitychange.
+  var _refreshTimer = null;
+  function scheduleProactiveRefresh() {
+    if (_refreshTimer) { clearTimeout(_refreshTimer); _refreshTimer = null; }
+    var exp = _jwtExpMs(state.accessToken);
+    if (!exp || !state.refreshToken) return;
+    var wait = exp - Date.now() - 60000;
+    if (wait < 5000) wait = 5000;
+    _refreshTimer = setTimeout(function () {
+      _refreshTimer = null;
+      if (!state.refreshToken) return;
+      tryRefreshToken().catch(function () {});
+    }, wait);
+  }
+
+  // Al volver a primer plano: si el access token venció (o falta) y hay
+  // refresh, renovarlo de inmediato — la sesión no debe verse caída aunque la
+  // pestaña haya dormido más de una hora.
+  function bindVisibilityRefresh() {
+    if (typeof document.addEventListener !== 'function') return;
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState !== 'visible') return;
+      if (!state.refreshToken || state.checking) return;
+      var exp = _jwtExpMs(state.accessToken);
+      if (exp && exp > Date.now() + 15000) return;
+      tryRefreshToken().catch(function () {});
+    });
   }
 
   // --- Sync entre pestañas del mismo origen ---
@@ -355,7 +419,7 @@ window.Buddy = window.Buddy || {};
 
     debugLog('tryRefreshToken: refrescando...');
 
-    var body = JSON.stringify({ refreshToken: state.refreshToken });
+    var body = JSON.stringify({ refreshToken: state.refreshToken, deviceId: getDeviceId() });
     var telemetry = getAuthApi();
     var endpoint = CONFIG.endpoints.refresh;
     if (!endpoint) return Promise.reject(new Error('Endpoint refresh no configurado.'));
@@ -374,9 +438,12 @@ window.Buddy = window.Buddy || {};
       return data;
     }).catch(function (error) {
       debugLog('tryRefreshToken: fallo', error);
-      // Si otra pestaña ya rotó el token (STALE_REFRESH_TOKEN), no limpiar:
-      // re-leer el token nuevo de localStorage y reintentar una vez.
-      if (error && (error.code === 'STALE_REFRESH_TOKEN' || (error.message && error.message.indexOf('STALE_REFRESH_TOKEN') !== -1))) {
+      // El código de error del servidor viaja en error.data.code (telemetry
+      // lanza 'HTTP NNN' con el body en .data). STALE = otra pestaña rotó el
+      // token: no limpiar a ciegas — re-leer el token nuevo de localStorage
+      // y reintentar una vez.
+      var code = error && (error.code || (error.data && error.data.code) || null);
+      if (code === 'STALE_REFRESH_TOKEN') {
         var latest = getStoredRefreshToken();
         if (latest && latest !== state.refreshToken) {
           state.refreshToken = latest;
@@ -384,8 +451,14 @@ window.Buddy = window.Buddy || {};
           return tryRefreshToken();
         }
       }
-      clearTokens();
-      setUnauthenticated();
+      // Solo un 401/403 limpia el storage: significa que el servidor mató la
+      // sesión (revocada, expirada o sustituida). Un error de red o un 5xx
+      // NO prueba que el refresh esté muerto — borrarlo convertía cualquier
+      // corte transitorio en logout permanente.
+      if (error && (error.status === 401 || error.status === 403)) {
+        clearTokens();
+        setUnauthenticated();
+      }
       throw error;
     });
   }
@@ -543,6 +616,18 @@ window.Buddy = window.Buddy || {};
 
   // --- Auth actions ---
 
+  // Auto-curación: si la sesión local murió en el servidor (sustituida, vencida
+  // o revocada) pero el usuario NO hizo logout explícito de este sitio, pedir
+  // al bridge una sesión nueva con el master del dispositivo. Resuelve true
+  // solo si quedó autenticado.
+  function recoverViaBridge() {
+    if (getStoredLogoutFlag()) return Promise.resolve(false);
+    return tryBridgeAuth().then(function (bridged) {
+      if (!bridged) return false;
+      return checkSessionAfterRefresh();
+    });
+  }
+
   function checkSession() {
     if (!state.enabled || state.checking) return Promise.resolve(state.authenticated);
     state.checking = true;
@@ -584,14 +669,20 @@ window.Buddy = window.Buddy || {};
       });
     }
 
-    // Si hay refreshToken pero no accessToken, intentar refresh primero
+    // Si hay refreshToken pero no accessToken, intentar refresh primero; si el
+    // refresh está muerto en el servidor, auto-curar por el bridge antes de
+    // declarar "sin sesión" (salvo logout explícito de este sitio).
     if (!state.accessToken && state.refreshToken) {
       return tryRefreshToken()
         .then(function () {
           return checkSessionAfterRefresh();
         })
+        .catch(function () {
+          return recoverViaBridge();
+        })
         .then(function (result) {
           state.checking = false;
+          if (!result && !state.authenticated) setUnauthenticated();
           emitEvent('buddy:auth-ready', {
             authenticated: state.authenticated,
             user: state.user,
@@ -600,18 +691,6 @@ window.Buddy = window.Buddy || {};
             sessionOk: result
           });
           return result;
-        })
-        .catch(function () {
-          state.checking = false;
-          setUnauthenticated();
-          emitEvent('buddy:auth-ready', {
-            authenticated: false,
-            user: null,
-            needsName: false,
-            welcomeType: null,
-            sessionOk: false
-          });
-          return false;
         });
     }
 
@@ -631,13 +710,15 @@ window.Buddy = window.Buddy || {};
         if (state.refreshToken) {
           return tryRefreshToken().then(function () {
             return checkSessionAfterRefresh();
+          }).catch(function () {
+            return recoverViaBridge();
           });
         }
-        setUnauthenticated();
-        return false;
+        return recoverViaBridge();
       })
       .then(function (result) {
         state.checking = false;
+        if (!result && !state.authenticated) setUnauthenticated();
         emitEvent('buddy:auth-ready', {
           authenticated: state.authenticated,
           user: state.user,
@@ -672,6 +753,9 @@ window.Buddy = window.Buddy || {};
     var authNeedsName = data.needsName === true;
     var isNewUser = data.newUser === true || data.isNewUser === true;
     setAuthenticated(user, authNeedsName, welcomeType || ((isNewUser || authNeedsName) ? 'new' : 'existing'));
+    // Cuando la sesión se confirma sin rotar tokens (accessToken aún válido)
+    // saveTokens no corre — programar el refresh proactivo aquí también.
+    scheduleProactiveRefresh();
     return true;
   }
 
@@ -729,6 +813,8 @@ window.Buddy = window.Buddy || {};
     var endpoint = CONFIG.endpoints.verify;
     var separator = endpoint.indexOf('?') === -1 ? '?' : '&';
     var path = endpoint + separator + encodeURIComponent(CONFIG.verificationParameter) + '=' + encodeURIComponent(value);
+    var did = getDeviceId();
+    if (did) path += '&deviceId=' + encodeURIComponent(did);
 
     return getAuthApi().request(CONFIG.apiService || 'auth', path, {
       method: 'GET',
@@ -802,7 +888,7 @@ window.Buddy = window.Buddy || {};
       method: 'POST',
       cache: 'no-store',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: normalizeEmail(email), code: value })
+      body: JSON.stringify({ email: normalizeEmail(email), code: value, deviceId: getDeviceId() })
     }).then(function (data) {
       if (!data || data.ok === false || data.authenticated === false) {
         var msg = (data && data.error) || 'El código no pudo validarse.';
@@ -876,7 +962,7 @@ window.Buddy = window.Buddy || {};
     return apiRequest('tgKey', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token: value, siteId: siteId })
+      body: JSON.stringify({ token: value, siteId: siteId, deviceId: getDeviceId() })
     }).then(function (data) {
       if (!data || data.ok === false || data.authenticated === false) {
         debugLog('loginWithTelegramKey: sin sesión emitida', data);
@@ -1090,6 +1176,7 @@ window.Buddy = window.Buddy || {};
 
     configureTelemetryApi();
     bindStorageSync();
+    bindVisibilityRefresh();
 
     var hash = getVerificationHash();
     if (hash) {
@@ -1110,6 +1197,8 @@ window.Buddy = window.Buddy || {};
     var siteId = getSiteId();
     var qs = (typeof URLSearchParams !== 'undefined') ? new URLSearchParams() : null;
     if (qs && siteId) qs.set('siteId', siteId);
+    // El backend marca isCurrent hasheando este token (GET no tiene body).
+    if (qs && state.refreshToken) qs.set('rt', state.refreshToken);
     var endpoint = CONFIG.endpoints.sessions + (qs ? '?' + qs.toString() : '');
     return telemetry.request(CONFIG.apiService || 'auth', endpoint, {
       method: 'GET',
