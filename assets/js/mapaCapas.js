@@ -24,12 +24,13 @@
 
   var API_CELDAS = 'statetty/ruido/malla';
   var API_CLIMA_CELDAS = 'statetty/clima/celdas';
+  var API_VERDE_CELDAS = 'statetty/verde/celdas';
   var API_RUTAS_CAPAS = 'statetty/rutasMicros/capas';
   var API_LEYENDA = 'statetty/ruido/leyenda';
 
   var mapa = null;
   var control = null;
-  var selTipo = null, chkRuido = null, chkRutas = null;
+  var selTipo = null, chkRuido = null, chkRutas = null, chkVerde = null;
   var chkTemp = null, chkAmp = null, chkLluvia = null;
   var estRuido = null, leyendaBox = null;
   var panelCapas = null, panelHome = null;
@@ -53,6 +54,12 @@
   var climaModo = null;          // 'temp' | 'amplitud' | 'lluvia'
   var cacheClima = {};
   var peticionClima = 0;
+
+  // ── capa de índice verde (copa satélite + GVI + censo por celda) ──
+  var capaVerde = null;
+  var verdeActivo = false;
+  var cacheVerde = {};
+  var peticionVerde = 0;
 
   // ── helpers de sesión / red ────────────────────────────────────────────────
   function sesionActiva() {
@@ -454,6 +461,99 @@
     capaClima = null;
   }
 
+  // ── capa de índice verde ─────────────────────────────────────────────────
+  // Rampa rojo→verde sobre greenIndex 0-100 (hoy = % copa vista por satélite;
+  // el tooltip desglosa las fuentes que ya aportaron a la celda).
+  function colorVerde(v) {
+    if (v == null) return '#e5e7eb';
+    var k = Math.max(0, Math.min(1, v / 100));
+    return 'hsl(' + Math.round(k * 120) + ',60%,40%)';
+  }
+  function etiquetaVerde(c) {
+    var v = c.verde;
+    if (v == null) return 'Sin datos';
+    if (v < 20) return 'Muy bajo';
+    if (v < 40) return 'Bajo';
+    if (v < 60) return 'Medio';
+    if (v < 80) return 'Alto';
+    return 'Muy alto';
+  }
+  function detalleVerde(c) {
+    var partes = [];
+    if (c.copa != null) partes.push('copa satélite ' + c.copa + ' %');
+    if (c.gvi != null) partes.push('verde en calle ' + c.gvi + (c.gviPuntos ? ' (' + c.gviPuntos + ' obs.)' : ''));
+    if (c.arboles) partes.push(c.arboles + ' árboles censados');
+    if (!partes.length) return 'sin detalle';
+    return partes.join(' · ');
+  }
+
+  function pintarVerde(celdas) {
+    if (!mapa) return;
+    if (!capaVerde) capaVerde = L.layerGroup().addTo(mapa);
+    capaVerde.clearLayers();
+    var pintadas = 0;
+    celdas.forEach(function (c) {
+      var ring = c.poligono;
+      if (!Array.isArray(ring) || ring.length < 4) return;
+      var coords = ring.map(function (p) { return [p[1], p[0]]; });
+      var color = colorVerde(c.verde);
+      var poly = L.polygon(coords, {
+        color: color, weight: 0.6, opacity: 0.9,
+        fillColor: color, fillOpacity: 0.45
+      });
+      poly.bindTooltip(
+        '<b>' + etiquetaVerde(c) + '</b> · índice verde ' + (c.verde == null ? '—' : c.verde) +
+        '<br>' + detalleVerde(c),
+        { sticky: true }
+      );
+      poly.addTo(capaVerde);
+      pintadas++;
+    });
+    if (!pintadas) {
+      avisarRuido('No hay datos de índice verde en esta zona (cobertura: Santa Cruz).', true);
+      return;
+    }
+    avisarRuido(pintadas + ' zonas con índice verde. Pasa el cursor para ver el detalle.', false);
+  }
+
+  function actualizarVerde() {
+    if (!verdeActivo || !mapa) return;
+    var fig = figurasActuales();
+    var bb = bboxDeZona(fig);
+    var clave = 'v' + claveZona(fig, bb);
+    peticionVerde++;
+    var miReq = peticionVerde;
+    if (cacheVerde[clave]) { pintarVerde(filtrarCeldas(cacheVerde[clave], fig)); return; }
+    var q = 'minLng=' + bb.minLng + '&minLat=' + bb.minLat +
+            '&maxLng=' + bb.maxLng + '&maxLat=' + bb.maxLat;
+    fetch(baseApi() + API_VERDE_CELDAS + '?' + q)
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (peticionVerde !== miReq || !verdeActivo) return;
+        if (!d || d.ok === false) { avisarRuido('Sin datos de índice verde en esta zona.', true); return; }
+        cacheVerde[clave] = d;
+        pintarVerde(filtrarCeldas(d, fig));
+      })
+      .catch(function () {
+        if (peticionVerde === miReq) avisarRuido('Falló la consulta de índice verde.', true);
+      });
+  }
+
+  function encenderVerde() {
+    if (!mapa) { avisarRuido('El mapa aún no está listo.', true); return; }
+    verdeActivo = true;
+    if (!capaVerde) capaVerde = L.layerGroup().addTo(mapa);
+    actualizarVerde();
+  }
+  function apagarVerde() {
+    verdeActivo = false;
+    peticionVerde++;
+    if (chkVerde) chkVerde.checked = false;
+    if (capaVerde && mapa) { capaVerde.clearLayers(); mapa.removeLayer(capaVerde); }
+    capaVerde = null;
+    avisarRuido('', false);
+  }
+
   function encenderRuido() {
     if (!mapa) { avisarRuido('El mapa aún no está listo.', true); return; }
     // El ruido es público (regla del dueño): sin sesión también se muestra.
@@ -727,6 +827,9 @@
           '<input type="checkbox" id="stt-capa-amp"> Amplitud anual</label>' +
         '<label title="Lluvia de hoy en cada zona: milímetros caídos y probabilidad del día (pronóstico Open-Meteo, 7 días).">' +
           '<input type="checkbox" id="stt-capa-lluvia"> Lluvia hoy</label>' +
+        '<div class="stt-capas-sub">Verde</div>' +
+        '<label title="Índice verde 0–100 por zona: porcentaje de copa arbórea vista por satélite (Sentinel-2). Verde intenso = más cubierta; rojo = zona desnuda. Cobertura: Santa Cruz de la Sierra.">' +
+          '<input type="checkbox" id="stt-capa-verde"> Índice verde</label>' +
         '<div class="stt-capas-estado" id="stt-capa-estado"></div>' +
         '<div class="stt-capas-leyenda" id="stt-capas-leyenda"></div>';
       selTipo = div.querySelector('#stt-capa-tipo');
@@ -760,6 +863,10 @@
       chkLluvia.addEventListener('change', function () {
         if (chkLluvia.checked) activarClima('lluvia'); else desactivarClima();
       });
+      chkVerde = div.querySelector('#stt-capa-verde');
+      chkVerde.addEventListener('change', function () {
+        if (chkVerde.checked) encenderVerde(); else apagarVerde();
+      });
       return div;
     };
     control.addTo(mapa);
@@ -788,6 +895,7 @@
           if (ruidoActivo) actualizarRuido();
           if (climaModo) actualizarClima();
           if (redActiva) actualizarRed();
+          if (verdeActivo) actualizarVerde();
         }, 600);
       }
     });
@@ -796,6 +904,7 @@
       if (ruidoActivo) actualizarRuido();
       if (climaModo) actualizarClima();
       if (redActiva) actualizarRed();
+      if (verdeActivo) actualizarVerde();
     });
     // Cuando rutasMicros dibuja rutas, el check «Rutas de micros» se marca
     // y se muestra la capa (si estaba oculta).

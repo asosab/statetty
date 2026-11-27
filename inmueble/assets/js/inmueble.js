@@ -632,6 +632,7 @@
         '<div class="inm-ent-bloque" id="inm-ent-bloque-clima">' +
           '<h3>🌡️ Clima y ruido de la zona</h3>' +
           '<div id="inm-ent-clima"><span style="font-size:12px;color:#7b8f99">Cargando…</span></div>' +
+          '<div id="inm-ent-verde"></div>' +
         '</div>');
     anchor.parentNode.insertBefore(sec, anchor);
     return sec;
@@ -750,6 +751,35 @@
     box.innerHTML = html;
   }
 
+  // Índice verde de la celda más cercana (satélite hoy; desglosa fuentes).
+  function pintarVerdeEntorno(sec, d) {
+    var box = sec && sec.querySelector('#inm-ent-verde');
+    if (!box) return;
+    var c = d && d.celda;
+    if (!c || c.verde == null) return;
+    function etq(v) {
+      return v < 20 ? 'Muy bajo' : v < 40 ? 'Bajo' : v < 60 ? 'Medio' : v < 80 ? 'Alto' : 'Muy alto';
+    }
+    var k = Math.max(0, Math.min(1, c.verde / 100));
+    var col = 'hsl(' + Math.round(k * 120) + ',60%,36%)';
+    var det = [];
+    if (c.copa != null) det.push('copa arbórea ' + c.copa + ' % (satélite)');
+    if (c.gvi != null) det.push('verde en calle ' + c.gvi + '/100');
+    if (c.arboles) det.push(c.arboles + ' árboles censados');
+    var html = '<div style="margin-top:8px">Verde de la zona: ' +
+      '<span class="inm-ent-ruido" style="background:' + col + '">' +
+      etq(c.verde) + ' · ' + c.verde + '/100</span>' +
+      (det.length ? ' <small style="color:#7b8f99">(' + det.join(' · ') + ')</small>' : '') + '</div>';
+    if (d.comparativa && d.comparativa.verdePct != null) {
+      html += '<div class="inm-ent-nota" style="margin-top:4px;font-weight:600;color:#074f66">' +
+        'Frente al resto de Santa Cruz: ' +
+        (d.comparativa.verdePct >= 50
+          ? 'más verde que el ' + d.comparativa.verdePct + '% de las zonas'
+          : 'menos verde que el ' + (100 - d.comparativa.verdePct) + '% de las zonas') + '.</div>';
+    }
+    box.innerHTML = html;
+  }
+
   // Gráfica SVG del ciclo anual: sensación térmica (naranja) y temperatura
   // media (azul) por mes. El mes actual va resaltado y se marcan la
   // temperatura real de ahora y la sensación real contra el promedio del mes.
@@ -862,6 +892,12 @@
         var bloque = sec.querySelector('#inm-ent-bloque-clima');
         if (bloque) { bloque.remove(); if (!sec.querySelector('.inm-ent-bloque')) sec.remove(); }
       });
+    // Índice verde de la zona (misma regla de visibilidad que clima/ruido).
+    // Si falla solo queda vacío su div; no toca el bloque de clima.
+    fetch(base + 'statetty/verde/punto?lat=' + coords.lat + '&lng=' + coords.lng)
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) { pintarVerdeEntorno(sec, d || {}); })
+      .catch(function () {});
   }
 
   /* ---------- Vista asesor (?t=waphone, usuario activo) ---------- */
