@@ -22,11 +22,24 @@
     .hero img { width: 64px; height: 64px; }
     .hero h1 { font-family: var(--font-head); font-size: clamp(1.5rem, 4vw, 2.1rem); font-weight: 800; margin: 14px 0 0; }
     .hero h1:after { content: ''; display: block; width: 60px; height: 4px; background: var(--yellow); border-radius: 2px; margin: 14px auto 0; }
-    .card { max-width: 520px; margin: -26px auto 60px; background: #fff; border-radius: 14px; padding: 34px 30px; box-shadow: 0 8px 30px rgba(7,79,102,.12); text-align: center; }
-    .card p { font-size: 1rem; line-height: 1.7; color: #44474d; }
-    .card .links { margin-top: 24px; }
-    .card a.btn { display: inline-block; background: var(--yellow); color: var(--blue-dark); font-family: var(--font-head); font-weight: 700; font-size: .95rem; text-decoration: none; padding: 12px 24px; border-radius: 8px; }
-    .card a.link { display: block; margin-top: 14px; color: var(--blue); font-size: .9rem; }
+    .card { max-width: 540px; margin: -26px auto 60px; background: #fff; border-radius: 14px; padding: 34px 30px; box-shadow: 0 8px 30px rgba(7,79,102,.12); }
+    .card > p.intro { font-size: 1rem; line-height: 1.7; color: #44474d; text-align: center; }
+    .motivo { margin-top: 26px; }
+    .motivo h2 { font-family: var(--font-head); color: var(--blue-dark); font-size: 1.05rem; margin-bottom: 4px; }
+    .motivo p.sub { font-size: .85rem; color: #8b939a; margin-bottom: 12px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chips button { border: 1.5px solid #d5dee4; background: #fff; border-radius: 999px; padding: 8px 14px; font-size: .85rem; font-family: var(--font-body); color: #44474d; cursor: pointer; }
+    .chips button:hover { border-color: var(--blue); }
+    .chips button.sel { background: var(--blue-dark); border-color: var(--blue-dark); color: #fff; }
+    textarea { width: 100%; margin-top: 12px; padding: 10px 12px; border: 1.5px solid #d5dee4; border-radius: 8px; font-size: .9rem; font-family: var(--font-body); resize: vertical; min-height: 62px; display: none; }
+    textarea:focus { outline: none; border-color: var(--blue); }
+    .btn-enviar { margin-top: 12px; width: 100%; padding: 12px; border: 0; border-radius: 8px; background: var(--yellow); color: var(--blue-dark); font-family: var(--font-head); font-size: .95rem; font-weight: 700; cursor: pointer; display: none; }
+    .btn-enviar:hover { background: #f4d67a; }
+    .msg { margin-top: 14px; font-size: .9rem; display: none; }
+    .msg.ok { display: block; color: #146c3e; }
+    .links { margin-top: 26px; text-align: center; }
+    .links a.btn { display: inline-block; background: var(--blue-dark); color: #fff; font-family: var(--font-head); font-weight: 700; font-size: .9rem; text-decoration: none; padding: 11px 22px; border-radius: 8px; }
+    .links a.link { display: block; margin-top: 14px; color: var(--blue); font-size: .9rem; }
     footer { text-align: center; color: #8b939a; font-size: .8rem; padding: 0 20px 40px; }
     footer a { color: var(--blue); }
   </style>
@@ -39,7 +52,23 @@
   </section>
 
   <div class="card">
-    <p id="txt">Te dimos de baja de la lista de novedades de Statetty.<br>Si fue un error, puedes volver desde el mismo correo.</p>
+    <p class="intro" id="txt">Te dimos de baja de la lista de novedades de Statetty.</p>
+
+    <div class="motivo" id="motivo-box" style="display:none">
+      <h2>¿Nos cuentas por qué?</h2>
+      <p class="sub">Opcional, un clic alcanza. Nos ayuda a escribir mejor.</p>
+      <div class="chips" id="chips">
+        <button type="button">Demasiados correos</button>
+        <button type="button">El contenido no me interesa</button>
+        <button type="button">Me suscribí por error</button>
+        <button type="button">Prefiero revisar el blog yo mismo</button>
+        <button type="button">Otro motivo</button>
+      </div>
+      <textarea id="detalle" placeholder="Si quieres, cuéntanos un poco más (opcional)"></textarea>
+      <button class="btn-enviar" id="btn-enviar">Enviar</button>
+      <div class="msg" id="msg"></div>
+    </div>
+
     <div class="links">
       <a class="btn" href="/">Volver a statetty.com</a>
       <a class="link" id="lnk-prefs" href="#" style="display:none">¿Te arrepentiste? Gestiona tu suscripción</a>
@@ -52,16 +81,60 @@
 
 <script>
 (function(){
+  var API = 'https://api.statetty.com/api/newsletter';
   var q = new URLSearchParams(location.search);
+  var t = q.get('t') || '';
+
   if (q.get('ok') === 'token_invalido') {
     document.getElementById('txt').innerHTML = 'Ese enlace de baja ya no sirve.<br>Si sigues recibiendo correos, escríbenos a info@statetty.com.';
+    document.getElementById('motivo-box').style.display = 'none';
+    return;
   }
-  var t = q.get('t');
-  if (t) {
-    var a = document.getElementById('lnk-prefs');
-    a.href = '/newsletter/preferencias/?t=' + encodeURIComponent(t);
-    a.style.display = 'block';
-  }
+
+  if (!t) return;
+
+  // Link para volver a gestionar (re-suscripción)
+  var a = document.getElementById('lnk-prefs');
+  a.href = '/newsletter/preferencias/?t=' + encodeURIComponent(t);
+  a.style.display = 'block';
+
+  // Formulario de motivo, fricción mínima
+  var box = document.getElementById('motivo-box');
+  box.style.display = 'block';
+  var chips = document.querySelectorAll('#chips button');
+  var detalle = document.getElementById('detalle');
+  var btn = document.getElementById('btn-enviar');
+  var msg = document.getElementById('msg');
+  var sel = '';
+
+  chips.forEach(function(c){
+    c.addEventListener('click', function(){
+      chips.forEach(function(x){ x.classList.remove('sel'); });
+      c.classList.add('sel');
+      sel = c.textContent.trim();
+      detalle.style.display = 'block';
+      btn.style.display = 'block';
+      btn.textContent = 'Enviar';
+    });
+  });
+
+  btn.addEventListener('click', async function(){
+    var motivo = sel + (detalle.value.trim() ? ' — ' + detalle.value.trim() : '');
+    btn.disabled = true;
+    try {
+      await fetch(API + '/motivo/' + encodeURIComponent(t), {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({motivo: motivo})
+      });
+      box.innerHTML = '<p class="intro" style="color:#146c3e">Gracias por contarnos. Lo tomamos en cuenta.</p>';
+    } catch(e) {
+      msg.className = 'msg ok';
+      msg.textContent = 'No se pudo enviar, pero la baja ya quedó hecha.';
+      msg.style.display = 'block';
+      btn.disabled = false;
+    }
+  });
 })();
 </script>
 

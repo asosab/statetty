@@ -144,8 +144,17 @@
     var freq = document.querySelector('input[name=freq]:checked');
     guardar({freq: freq ? freq.value : 'weekly'}, 'Guardado. Así quedó tu suscripción.');
   });
-  document.getElementById('btn-baja').addEventListener('click', function(){
-    guardar({estado: 'unsub'}, 'Te dimos de baja. No llegan más correos.');
+  document.getElementById('btn-baja').addEventListener('click', async function(){
+    msg.className = 'msg';
+    try {
+      var r = await fetch(API + '/prefs/' + encodeURIComponent(t), {
+        method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({estado: 'unsub'})
+      });
+      var d = await r.json();
+      if (!r.ok || !d.ok) { showMsg(false, 'No se pudo guardar. Inténtalo en un rato.'); return; }
+      // A la página de baja: ahí puede contarnos el motivo (form de poca fricción).
+      location.href = '/newsletter/baja/?t=' + encodeURIComponent(t);
+    } catch(e) { showMsg(false, 'Sin conexión con el servidor.'); }
   });
   document.getElementById('btn-volver').addEventListener('click', function(){
     guardar({estado: 'active'}, 'De vuelta. Volverás a recibir los resúmenes.');

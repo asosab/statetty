@@ -120,7 +120,8 @@
       var d = await r.json();
       if (!r.ok || !d.ok) { msg.className = 'msg err'; msg.textContent = d.error === 'email_invalido' ? 'Escribe un correo válido.' : 'Algo falló. Inténtalo de nuevo en un rato.'; }
       else if (d.code === 'ya_activo') { msg.className = 'msg ok'; msg.textContent = 'Ese correo ya está suscrito. Guardamos la frecuencia que elegiste.'; }
-      else { msg.className = 'msg ok'; msg.textContent = 'Listo. Te mandamos un correo de confirmación: haz clic en el enlace y quedas suscrito.'; }
+      else if (d.code === 'reingreso') { msg.className = 'msg ok'; msg.textContent = 'De vuelta. Reactivamos tu suscripción con la frecuencia que elegiste.'; }
+      else { msg.className = 'msg ok'; msg.textContent = 'Listo, ya estás suscrito. Te llega un correo de bienvenida con tus enlaces.'; }
     } catch (err) {
       msg.className = 'msg err'; msg.textContent = 'Sin conexión con el servidor. Inténtalo de nuevo en un rato.';
     }
