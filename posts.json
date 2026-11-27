@@ -1,0 +1,31 @@
+---
+layout: null
+permalink: /posts.json
+---
+[
+{%- assign first = true -%}
+{%- for post in site.posts -%}
+{%- unless first %},{% endunless -%}
+{%- assign first = false -%}
+{%- assign sp = post.content | split: 'open.spotify.com/embed/episode/' -%}
+{%- assign epid = '' -%}
+{%- if sp.size > 1 -%}
+  {%- assign epid = sp[1] | split: '"' | first | split: '?' | first | split: '/' | first -%}
+{%- endif -%}
+{%- if post.podcast -%}
+  {%- assign epid = post.podcast -%}
+{%- endif %}
+{
+  "slug": {{ post.url | jsonify }},
+  "titulo": {{ post.title | jsonify }},
+  "fecha": {{ post.date | date_to_xmlschema | jsonify }},
+  "url": {{ post.url | prepend: site.baseurl | prepend: site.url | jsonify }},
+  "abstract": {{ post.description | default: post.excerpt | strip_html | strip_newlines | jsonify }},
+  "imagen": {% if post.image %}{{ post.image | prepend: site.imageFolder | prepend: site.url | jsonify }}{% else %}null{% endif %},
+  "categorias": {{ post.categories | jsonify }},
+  "tags": {{ post.tags | jsonify }},
+  "podcast": {% if epid == '' %}null{% else %}{{ epid | jsonify }}{% endif %},
+  "podcastUrl": {% if epid == '' %}null{% else %}{{ 'https://open.spotify.com/episode/' | append: epid | jsonify }}{% endif %}
+}
+{%- endfor %}
+]

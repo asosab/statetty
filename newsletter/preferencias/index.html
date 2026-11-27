@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tu suscripción — Statetty</title>
+  <meta name="robots" content="noindex, nofollow">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/images/favicon/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/images/favicon/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/images/favicon/favicon-16x16.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --blue: #17baef; --blue-dark: #074f66;
+      --yellow: #eebf3f; --yellow-pale: #f4d67a; --red: #e04f5f;
+      --font-head: 'Montserrat', sans-serif; --font-body: 'Lato', sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--font-body); background: #eef2f5; color: #333; min-height: 100vh; }
+    .hero { background: linear-gradient(135deg, var(--blue-dark) 0%, var(--blue) 100%); color: #fff; text-align: center; padding: 56px 24px 48px; }
+    .hero img { width: 64px; height: 64px; }
+    .hero h1 { font-family: var(--font-head); font-size: clamp(1.5rem, 4vw, 2.1rem); font-weight: 800; margin: 14px 0 0; }
+    .hero h1:after { content: ''; display: block; width: 60px; height: 4px; background: var(--yellow); border-radius: 2px; margin: 14px auto 0; }
+    .card { max-width: 520px; margin: -26px auto 60px; background: #fff; border-radius: 14px; padding: 32px 30px; box-shadow: 0 8px 30px rgba(7,79,102,.12); }
+    .estado { font-size: .9rem; margin-bottom: 18px; }
+    .estado .pill { display: inline-block; padding: 3px 12px; border-radius: 999px; font-weight: 700; font-size: .8rem; }
+    .pill.activo { background: #e6f7ee; color: #146c3e; }
+    .pill.baja { background: #fdeaea; color: #9c2323; }
+    .pill.pendiente { background: #fff7e0; color: #7a5b00; }
+    .freq { display: flex; flex-direction: column; gap: 10px; margin: 8px 0 0; }
+    .freq label { display: flex; gap: 10px; align-items: flex-start; border: 1.5px solid #d5dee4; border-radius: 8px; padding: 12px 14px; cursor: pointer; }
+    .freq label:hover { border-color: var(--blue); }
+    .freq input { margin-top: 3px; accent-color: var(--blue-dark); }
+    .freq strong { display: block; color: var(--blue-dark); font-size: .95rem; }
+    .freq small { color: #6a6f75; font-size: .8rem; }
+    label.lbl { display: block; font-size: .85rem; font-weight: 700; color: var(--blue-dark); margin-bottom: 6px; }
+    button.btn { width: 100%; margin-top: 20px; padding: 13px; border: 0; border-radius: 8px; background: var(--yellow); color: var(--blue-dark); font-family: var(--font-head); font-size: .95rem; font-weight: 700; cursor: pointer; }
+    button.btn:hover { background: var(--yellow-pale); }
+    button.btn.baja { background: transparent; color: var(--red); border: 1.5px solid var(--red); margin-top: 12px; }
+    button.btn.baja:hover { background: #fdeaea; }
+    .msg { margin-top: 14px; padding: 12px 14px; border-radius: 8px; font-size: .9rem; display: none; }
+    .msg.ok { display: block; background: #e6f7ee; color: #146c3e; border: 1px solid #b7e4c8; }
+    .msg.err { display: block; background: #fdeaea; color: #9c2323; border: 1px solid #f3c1c1; }
+    footer { text-align: center; color: #8b939a; font-size: .8rem; padding: 0 20px 40px; }
+    footer a { color: var(--blue); }
+  </style>
+</head>
+<body>
+
+  <section class="hero">
+    <img src="/assets/docs/statetty_logotipo_circular_blanco.png" alt="Statetty">
+    <h1>Tu suscripción</h1>
+  </section>
+
+  <div class="card" id="card" style="display:none">
+    <div class="estado">
+      <span id="email"></span><br>
+      <span class="pill" id="pill"></span>
+    </div>
+
+    <div id="zona-activa">
+      <label class="lbl">¿Cada cuánto quieres recibir el resumen?</label>
+      <div class="freq">
+        <label><input type="radio" name="freq" value="weekly">
+          <span><strong>Semanal</strong><small>Un resumen cada martes con todo lo publicado en la semana.</small></span></label>
+        <label><input type="radio" name="freq" value="daily">
+          <span><strong>Diario</strong><small>Cada vez que haya algo nuevo, al día siguiente.</small></span></label>
+        <label><input type="radio" name="freq" value="monthly">
+          <span><strong>Mensual</strong><small>Un resumen el primer martes de cada mes.</small></span></label>
+      </div>
+      <button class="btn" id="btn-guardar">Guardar</button>
+      <button class="btn baja" id="btn-baja">Darme de baja</button>
+    </div>
+
+    <div id="zona-baja" style="display:none">
+      <p style="font-size:.95rem;line-height:1.6;color:#44474d;">Estás dado de baja: no llegan más correos. Si fue un error, puedes volver cuando quieras.</p>
+      <button class="btn" id="btn-volver">Volver a suscribirme</button>
+    </div>
+
+    <div class="msg" id="msg"></div>
+  </div>
+
+  <div class="card" id="error-card" style="display:none">
+    <p style="font-size:.95rem;line-height:1.6;color:#44474d;" id="error-txt">Ese enlace ya no sirve.</p>
+  </div>
+
+  <footer>
+    Statetty · Santa Cruz de la Sierra, Bolivia · <a href="/">statetty.com</a>
+  </footer>
+
+<script>
+(function(){
+  var API = 'https://api.statetty.com/api/newsletter';
+  var t = new URLSearchParams(location.search).get('t') || '';
+  var msg = document.getElementById('msg');
+  var card = document.getElementById('card');
+  var err = document.getElementById('error-card');
+
+  function showMsg(ok, txt){ msg.className = ok ? 'msg ok' : 'msg err'; msg.textContent = txt; }
+
+  function pintar(d){
+    document.getElementById('email').textContent = d.email;
+    var pill = document.getElementById('pill');
+    if (d.estado === 'active') { pill.textContent = 'Suscrito'; pill.className = 'pill activo'; }
+    else if (d.estado === 'unsub') { pill.textContent = 'De baja'; pill.className = 'pill baja'; }
+    else if (d.estado === 'pending') { pill.textContent = 'Pendiente de confirmar'; pill.className = 'pill pendiente'; }
+    else { pill.textContent = d.estado; pill.className = 'pill baja'; }
+    var r = document.querySelector('input[name=freq][value="' + d.freq + '"]');
+    if (r) r.checked = true;
+    document.getElementById('zona-activa').style.display = (d.estado === 'unsub') ? 'none' : 'block';
+    document.getElementById('zona-baja').style.display = (d.estado === 'unsub') ? 'block' : 'none';
+  }
+
+  async function cargar(){
+    if (!t) { err.style.display = 'block'; document.getElementById('error-txt').textContent = 'Falta el enlace de tu suscripción.'; return; }
+    try {
+      var r = await fetch(API + '/prefs/' + encodeURIComponent(t));
+      var d = await r.json();
+      if (!r.ok || !d.ok) { err.style.display = 'block'; return; }
+      pintar(d.data);
+      card.style.display = 'block';
+    } catch(e) { err.style.display = 'block'; }
+  }
+
+  async function guardar(body, okTxt){
+    msg.className = 'msg';
+    try {
+      var r = await fetch(API + '/prefs/' + encodeURIComponent(t), {
+        method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)
+      });
+      var d = await r.json();
+      if (!r.ok || !d.ok) { showMsg(false, 'No se pudo guardar. Inténtalo en un rato.'); return; }
+      pintar(d.data);
+      showMsg(true, okTxt);
+    } catch(e) { showMsg(false, 'Sin conexión con el servidor.'); }
+  }
+
+  document.getElementById('btn-guardar').addEventListener('click', function(){
+    var freq = document.querySelector('input[name=freq]:checked');
+    guardar({freq: freq ? freq.value : 'weekly'}, 'Guardado. Así quedó tu suscripción.');
+  });
+  document.getElementById('btn-baja').addEventListener('click', function(){
+    guardar({estado: 'unsub'}, 'Te dimos de baja. No llegan más correos.');
+  });
+  document.getElementById('btn-volver').addEventListener('click', function(){
+    guardar({estado: 'active'}, 'De vuelta. Volverás a recibir los resúmenes.');
+  });
+
+  cargar();
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Novedades por correo — Statetty</title>
+  <meta name="description" content="Suscríbete al newsletter de Statetty: resumen de las publicaciones del blog y el podcast, diario, semanal o mensual.">
+  <link rel="canonical" href="https://statetty.com/newsletter/">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/images/favicon/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/images/favicon/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/images/favicon/favicon-16x16.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --blue: #17baef; --blue-dark: #074f66; --blue-light: #6dd0f5;
+      --yellow: #eebf3f; --yellow-pale: #f4d67a; --red: #e04f5f;
+      --font-head: 'Montserrat', sans-serif; --font-body: 'Lato', sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--font-body); background: #eef2f5; color: #333; min-height: 100vh; }
+    .hero { background: linear-gradient(135deg, var(--blue-dark) 0%, var(--blue) 100%); color: #fff; text-align: center; padding: 64px 24px 56px; }
+    .hero img { width: 72px; height: 72px; }
+    .hero h1 { font-family: var(--font-head); font-size: clamp(1.7rem, 4vw, 2.5rem); font-weight: 800; margin: 16px 0 10px; }
+    .hero h1:after { content: ''; display: block; width: 60px; height: 4px; background: var(--yellow); border-radius: 2px; margin: 14px auto 0; }
+    .hero p { font-size: 1.05rem; opacity: .9; max-width: 540px; margin: 14px auto 0; line-height: 1.6; }
+    .card { max-width: 520px; margin: -28px auto 60px; background: #fff; border-radius: 14px; padding: 34px 30px; box-shadow: 0 8px 30px rgba(7,79,102,.12); }
+    .card h2 { font-family: var(--font-head); color: var(--blue-dark); font-size: 1.25rem; margin-bottom: 18px; }
+    label.lbl { display: block; font-size: .85rem; font-weight: 700; color: var(--blue-dark); margin: 16px 0 6px; }
+    input[type=email], input[type=text] { width: 100%; padding: 12px 14px; border: 1.5px solid #d5dee4; border-radius: 8px; font-size: 1rem; font-family: var(--font-body); }
+    input:focus { outline: none; border-color: var(--blue); }
+    .freq { display: flex; flex-direction: column; gap: 10px; margin-top: 6px; }
+    .freq label { display: flex; gap: 10px; align-items: flex-start; border: 1.5px solid #d5dee4; border-radius: 8px; padding: 12px 14px; cursor: pointer; transition: border-color .15s; }
+    .freq label:hover { border-color: var(--blue); }
+    .freq input { margin-top: 3px; accent-color: var(--blue-dark); }
+    .freq strong { display: block; color: var(--blue-dark); font-size: .95rem; }
+    .freq small { color: #6a6f75; font-size: .8rem; }
+    .hp { position: absolute; left: -9999px; opacity: 0; height: 0; }
+    button.btn { width: 100%; margin-top: 22px; padding: 14px; border: 0; border-radius: 8px; background: var(--yellow); color: var(--blue-dark); font-family: var(--font-head); font-size: 1rem; font-weight: 700; cursor: pointer; }
+    button.btn:hover { background: var(--yellow-pale); }
+    button.btn:disabled { opacity: .6; cursor: default; }
+    .msg { margin-top: 16px; padding: 12px 14px; border-radius: 8px; font-size: .9rem; display: none; }
+    .msg.ok { display: block; background: #e6f7ee; color: #146c3e; border: 1px solid #b7e4c8; }
+    .msg.err { display: block; background: #fdeaea; color: #9c2323; border: 1px solid #f3c1c1; }
+    .aviso { max-width: 520px; margin: 20px auto 0; padding: 14px 18px; border-radius: 10px; background: #e6f7ee; color: #146c3e; border: 1px solid #b7e4c8; display: none; text-align: center; }
+    .aviso.warn { background: #fff7e0; color: #7a5b00; border-color: #ecd98a; }
+    footer { text-align: center; color: #8b939a; font-size: .8rem; padding: 0 20px 40px; }
+    footer a { color: var(--blue); }
+  </style>
+</head>
+<body>
+
+  <section class="hero">
+    <img src="/assets/docs/statetty_logotipo_circular_blanco.png" alt="Statetty">
+    <h1>Novedades de Statetty por correo</h1>
+    <p>Cada vez que publicamos un artículo —y su episodio de podcast cuando lo acompaña— te mandamos un resumen con los enlaces. No necesitas cuenta: con tu correo alcanza.</p>
+  </section>
+
+  <div class="aviso" id="aviso"></div>
+
+  <div class="card">
+    <h2>Suscríbete</h2>
+    <form id="f-sub" novalidate>
+      <label class="lbl" for="email">Correo *</label>
+      <input type="email" id="email" name="email" required placeholder="tucorreo@ejemplo.com" autocomplete="email">
+
+      <label class="lbl" for="nombre">Nombre <small style="font-weight:400;color:#8b939a">(opcional)</small></label>
+      <input type="text" id="nombre" name="nombre" placeholder="Tu nombre" autocomplete="name">
+
+      <input type="text" name="web" class="hp" tabindex="-1" autocomplete="off">
+
+      <label class="lbl">¿Cada cuánto?</label>
+      <div class="freq">
+        <label><input type="radio" name="freq" value="weekly" checked>
+          <span><strong>Semanal · recomendado</strong><small>Un resumen cada martes con todo lo publicado en la semana.</small></span></label>
+        <label><input type="radio" name="freq" value="daily">
+          <span><strong>Diario</strong><small>Cada vez que haya algo nuevo, al día siguiente.</small></span></label>
+        <label><input type="radio" name="freq" value="monthly">
+          <span><strong>Mensual</strong><small>Un resumen el primer martes de cada mes.</small></span></label>
+      </div>
+
+      <button type="submit" class="btn" id="btn-sub">Suscribirme</button>
+      <div class="msg" id="msg"></div>
+    </form>
+  </div>
+
+  <footer>
+    Statetty · Santa Cruz de la Sierra, Bolivia · <a href="/">statetty.com</a><br>
+    Puedes cambiar la frecuencia o darte de baja desde cualquier correo que recibas.
+  </footer>
+
+<script>
+(function(){
+  var API = 'https://api.statetty.com/api/newsletter';
+  var f = document.getElementById('f-sub');
+  var msg = document.getElementById('msg');
+  var btn = document.getElementById('btn-sub');
+  var aviso = document.getElementById('aviso');
+
+  var q = new URLSearchParams(location.search).get('ok');
+  if (q === 'confirmada') { aviso.textContent = 'Suscripción confirmada. Ya recibirás las novedades de Statetty.'; aviso.style.display = 'block'; }
+  if (q === 'token_invalido') { aviso.textContent = 'Ese enlace ya no sirve. Suscríbete de nuevo abajo.'; aviso.className = 'aviso warn'; aviso.style.display = 'block'; }
+
+  f.addEventListener('submit', async function(e){
+    e.preventDefault();
+    msg.className = 'msg'; msg.textContent = '';
+    var email = f.email.value.trim();
+    if (!email || email.indexOf('@') < 0) { msg.className = 'msg err'; msg.textContent = 'Escribe un correo válido.'; return; }
+    btn.disabled = true;
+    try {
+      var r = await fetch(API + '/subscribe', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({email: email, nombre: f.nombre.value.trim(), freq: f.freq.value, web: f.web.value})
+      });
+      var d = await r.json();
+      if (!r.ok || !d.ok) { msg.className = 'msg err'; msg.textContent = d.error === 'email_invalido' ? 'Escribe un correo válido.' : 'Algo falló. Inténtalo de nuevo en un rato.'; }
+      else if (d.code === 'ya_activo') { msg.className = 'msg ok'; msg.textContent = 'Ese correo ya está suscrito. Guardamos la frecuencia que elegiste.'; }
+      else { msg.className = 'msg ok'; msg.textContent = 'Listo. Te mandamos un correo de confirmación: haz clic en el enlace y quedas suscrito.'; }
+    } catch (err) {
+      msg.className = 'msg err'; msg.textContent = 'Sin conexión con el servidor. Inténtalo de nuevo en un rato.';
+    }
+    btn.disabled = false;
+  });
+})();
+</script>
+
+</body>
+</html>
