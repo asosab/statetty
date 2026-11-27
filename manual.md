@@ -2,7 +2,7 @@
 layout: default
 title: "Manual de usuario"
 short: "Manual de usuario · Statetty"
-description: "Manual de uso de Statetty, paso a paso: buscar inmuebles con filtros, comparar resultados en el mapa, estimar valores con ACM, generar PDF, publicar tus captaciones y recibir alertas por WhatsApp. Web y bot de Telegram."
+description: "Manual de uso de Statetty, paso a paso: buscar inmuebles con filtros o dibujando la zona en el mapa, explorar capas de ruido, clima y equipamientos, comparar resultados, estimar valores con ACM, generar PDF, publicar tus captaciones y recibir alertas por WhatsApp. Web y bot de Telegram."
 permalink: /manual/
 ---
 
@@ -296,7 +296,9 @@ permalink: /manual/
     <p class="group-label">Lo que quieres lograr</p>
     <ol>
       <li class="item"><a href="#buscar-inmuebles">Buscar inmuebles según mis filtros</a></li>
+      <li class="item"><a href="#dibujar-zona">Buscar dibujando la zona en el mapa</a></li>
       <li class="item"><a href="#ver-resultados">Ver y comparar resultados en el mapa</a></li>
+      <li class="item"><a href="#capas-equipamientos">Explorar capas y equipamientos de la zona</a></li>
       <li class="item"><a href="#estimar-valor">Estimar el valor de un inmueble (ACM)</a></li>
       <li class="item"><a href="#generar-pdf">Generar un PDF para compartir</a></li>
       <li class="item"><a href="#publicar-inmuebles">Publicar mis propios inmuebles</a></li>
@@ -371,16 +373,25 @@ permalink: /manual/
       <div class="reqs"><span class="reqs-label">REQUISITOS</span><span class="req-none">Ninguno — puedes empezar aquí mismo</span></div>
       <p class="lede">No necesitas una cuenta para hacer lo siguiente en el sitio web:</p>
       <div class="grid">
+        <div class="card"><h4>Buscar desde la portada</h4><p>La home <a class="cmd" href="https://statetty.com/" target="_blank" rel="noopener">statetty.com</a> ya es el mapa:
+        escribe lo que buscas o <a href="#dibujar-zona">dibuja la zona</a> y mira los resultados
+        públicos, sin pedirte nada.</p></div>
         <div class="card"><h4>Ver una ficha de inmueble</h4><p>Cada inmueble tiene una página pública en
         <a class="cmd" href="https://statetty.com/inmueble/:id" target="_blank" rel="noopener">statetty.com/inmueble/:id</a> con toda su información.</p></div>
         <div class="card"><h4>Enviar una consulta</h4><p>Completa nombre, correo, teléfono y tu mensaje;
         te redirige directo al WhatsApp del agente.</p></div>
         <div class="card"><h4>Ver inmuebles similares</h4><p>Hasta 4 sugerencias relacionadas con la ficha
         que estás viendo.</p></div>
-        <div class="card"><h4>Abrir un mapa compartido</h4><p>Si alguien te envía un enlace de
-        <a class="cmd" href="https://statetty.com/maps/find" target="_blank" rel="noopener">statetty.com/maps/find</a>, verás un aviso para iniciar sesión y ver los resultados completos.</p></div>
+        <div class="card"><h4>Abrir un mapa compartido</h4><p>Si alguien te envía un enlace al mapa de
+        statetty.com, verás los resultados públicos y un aviso para iniciar sesión y verlos completos.</p></div>
         <div class="card"><h4>Enlaces cortos y WhatsApp</h4><p>Los enlaces tipo <a class="cmd" href="https://statetty.com/i/:codigo" target="_blank" rel="noopener">statetty.com/i/:codigo</a> y
         <a class="cmd" href="https://statetty.com/wa/:id" target="_blank" rel="noopener">statetty.com/wa/:id</a> te redirigen sin pedirte nada.</p></div>
+        <div class="card"><h4>Suscribirte al newsletter</h4><p>Cada artículo del <a class="cmd" href="https://statetty.com/blog/" target="_blank" rel="noopener">blog</a>
+        lleva el botón «Suscríbete al newsletter»: deja tu correo y te llegan las publicaciones
+        nuevas.</p></div>
+        <div class="card"><h4>WhatsApp Direct (extensión)</h4><p>En computadora, la extensión gratuita de
+        <a class="cmd" href="https://statetty.com/ext/" target="_blank" rel="noopener">statetty.com/ext</a> abre los chats de WhatsApp dentro de tu WhatsApp Web
+        ya cargado, en vez de recargar la pestaña cada vez.</p></div>
       </div>
     </section>
 
@@ -441,8 +452,12 @@ permalink: /manual/
       </div>
       <p>Si usas ambos canales, el sitio te preguntará <em>"¿Ya usaste Statetty desde Telegram?"</em> para
       vincular las dos cuentas en una sola, y así tus búsquedas y tus datos quedan sincronizados.</p>
-      <p>Para cerrar sesión, usa la opción del menú de usuario; esto invalida tu llave de acceso anterior en
-      ese dispositivo.</p>
+      <p>La sesión queda abierta en ese navegador hasta que la cierres tú (o la cierre un administrador):
+      no se cae sola aunque entres también desde otro equipo. Desde el menú de usuario,
+      <strong>Mis sesiones</strong> lista los dispositivos donde la tienes abierta, con su último uso, y te
+      permite cerrarlas una por una o todas menos la actual.</p>
+      <p>Para cerrar sesión, usa la opción del menú de usuario; esto invalida tu llave de acceso en ese
+      dispositivo.</p>
     </section>
 
     <!-- ============ BUSCAR INMUEBLES ============ -->
@@ -470,7 +485,11 @@ permalink: /manual/
           valor, tanto de terreno como de construcción.</p></div>
           <div class="card"><h4>📝 Términos de texto</h4><p>Palabras que el inmueble debe incluir, y
           palabras que debe excluir, separadas por coma.</p></div>
+          <div class="card"><h4>🔗 Búsqueda por URL</h4><p>Pega la URL de un inmueble y ese campo manda
+          solo: el resto del formulario se ignora y lo busca tal cual, esté activo o inactivo.</p></div>
         </div>
+        <p>Si <a href="#dibujar-zona">dibujaste una zona en el mapa</a>, el área dibujada manda sobre la
+        ubicación y el radio del filtro.</p>
         <p>Cuando termines, pulsa <strong>🔎 Buscar</strong>. Verás una barra de progreso mientras se procesa
         y luego te lleva directo al mapa de resultados. El botón <strong>↺ Limpiar</strong> borra todo lo
         configurado (te pide confirmación).</p>
@@ -510,6 +529,33 @@ permalink: /manual/
       </div>
     </section>
 
+    <!-- ============ DIBUJAR ZONA ============ -->
+    <section id="dibujar-zona">
+      <span class="kicker">OBJETIVO</span>
+      <h2>Buscar dibujando la zona en el mapa <span class="badge badge-web">Web</span></h2>
+      <div class="reqs"><span class="reqs-label">REQUISITOS</span><span class="req-none">Ninguno en la
+      portada — con sesión y tiempo activo se combina con todos tus filtros</span></div>
+      <p class="lede">Junto a la caja de búsqueda de la home hay tres botones para delimitar el área con
+      el ratón (o el dedo, en el celular). La zona que dibujes manda sobre la ubicación y el radio del
+      filtro.</p>
+      <div class="grid">
+        <div class="card"><h4>✏️ Lápiz: polígono</h4><p>Activa el lápiz y haz clic punto a punto; desde el
+        tercero el área se cierra sola. El mapa sigue navegable mientras dibujas: arrastra y haz zoom
+        entre punto y punto. Hasta 10 polígonos por búsqueda.</p></div>
+        <div class="card"><h4>📍 Pin: circunferencia</h4><p>Aprieta en el centro y arrastra para darle el
+        radio; un círculo menor de 20 m se descarta. También hasta 10.</p></div>
+        <div class="card"><h4>↩️ Deshacer</h4><p>Quita el último punto del polígono en curso o la última
+        figura cerrada. Una circunferencia se borra entera.</p></div>
+        <div class="card"><h4>Caja de datos por figura</h4><p>Cada figura muestra sus m² y sus metros de
+        borde mientras la dibujas. Tras buscar, la caja suma cuántos inmuebles contiene, el precio
+        ponderado, el máximo y el mínimo, y el tipo de inmueble y de negocio predominantes.</p></div>
+      </div>
+      <p>Las figuras viajan con tu búsqueda: <a href="#buscar-inmuebles">📋 Copiar búsqueda</a> las
+      incluye en el JSON y 📥 Pegar las redibuja en el mapa de quien las reciba. También acotan las
+      consultas de <a href="#capas-equipamientos">ruido, clima y equipamientos</a>: con una zona
+      dibujada, esas capas solo miran dentro de ella.</p>
+    </section>
+
     <!-- ============ VER RESULTADOS ============ -->
     <section id="ver-resultados">
       <span class="kicker">OBJETIVO</span>
@@ -517,22 +563,54 @@ permalink: /manual/
       <div class="reqs"><span class="reqs-label">REQUISITOS</span>
         <a class="req-chip" href="#buscar-inmuebles">Haber lanzado una búsqueda</a>
       </div>
-      <p class="lede">Los resultados se muestran en
-      <a class="cmd" href="https://statetty.com/maps/find" target="_blank" rel="noopener">statetty.com/maps/find</a>. Desde el ícono del engranaje accedes a estas herramientas:</p>
+      <p class="lede">Los resultados se muestran en el mapa de
+      <a class="cmd" href="https://statetty.com/" target="_blank" rel="noopener">statetty.com</a> (la
+      portada). Desde tu avatar en el menú de usuario se abre el panel de herramientas, con estas
+      secciones:</p>
       <div class="grid">
+        <div class="card"><h4>🔍 Buscar inmuebles</h4><p>El formulario de filtros completo
+        (<a href="#buscar-inmuebles">ver sección</a>), al alcance de un clic mientras miras el
+        mapa.</p></div>
         <div class="card"><h4>📊 Estadísticas y búsqueda</h4><p>Un buscador de texto para filtrar lo visible
         en pantalla, y estadísticas en vivo: total, precio promedio, más barato y más caro.</p></div>
         <div class="card"><h4>✅ Selección</h4><p>Marca inmuebles uno por uno o en bloque: agregar,
         quitar, mantener solo estos, agregar todos u "otros" (todos menos los filtrados).</p></div>
-        <div class="card"><h4>🏢 Fuentes de datos</h4><p>Activa o desactiva qué fuentes o agencias quieres
-        ver en el mapa; se recuerda para tu próxima visita.</p></div>
-        <div class="card"><h4>🗺️ Marcador y ficha rápida</h4><p>Desde el pin de cada inmueble puedes
-        seleccionarlo, ver sus fotos en pantalla completa, abrir su página oficial o la de Statetty, copiar
-        su ficha para WhatsApp o contactar directo al agente.</p></div>
+        <div class="card"><h4>🗺️ Marcador y ficha rápida</h4><p>Cada pin lleva un emoji de estado (🟢
+        activo, 🟡 activo publicado hace más de un año, 🔴 inactivo). Al abrirlo tienes botones para
+        seleccionarlo o quitarlo de la selección, ver sus fotos en pantalla completa, abrir su página
+        oficial o su ficha de Statetty, copiarla para WhatsApp y contactar al agente. Los usuarios con
+        confianza máxima ven además «Desactivar inmueble», que lo marca como inactivo.</p></div>
       </div>
       <p class="plat plat-tg">Desde Telegram no editas los resultados directamente: el bot te entrega el
-      enlace al mismo mapa de resultados y una hoja de cálculo, y desde ahí abres la vista web para
-      filtrar, comparar o seleccionar inmuebles.</p>
+      enlace al mismo mapa y una hoja de cálculo, y desde ahí abres la vista web para filtrar, comparar o
+      seleccionar inmuebles.</p>
+    </section>
+
+    <!-- ============ CAPAS Y EQUIPAMIENTOS ============ -->
+    <section id="capas-equipamientos">
+      <span class="kicker">OBJETIVO</span>
+      <h2>Explorar capas y equipamientos de la zona <span class="badge badge-web">Web</span></h2>
+      <div class="reqs"><span class="reqs-label">REQUISITOS</span><span class="req-none">Ninguno — funcionan
+      también sin cuenta</span></div>
+      <p class="lede">En la esquina inferior izquierda del mapa hay dos iconos flotantes. El primero,
+      🗂️, abre el panel de <strong>Capas</strong>:</p>
+      <div class="grid">
+        <div class="card"><h4>Tipo de mapa</h4><p>Calles, satélite o relieve.</p></div>
+        <div class="card"><h4>Ruido</h4><p>Una malla que colorea cada zona según su nivel de ruido urbano
+        (índice 0–100, con leyenda) y cuenta cuántas rutas de buses la atraviesan.</p></div>
+        <div class="card"><h4>Rutas de micros</h4><p>Pinta todas las líneas de transporte que cruzan la
+        zona visible. Con sesión y tiempo activo, el panel de herramientas también te deja buscar una
+        línea por su nombre o por un punto del recorrido.</p></div>
+        <div class="card"><h4>Clima</h4><p>Tres vistas por zona: temperatura actual (Open-Meteo),
+        amplitud anual —qué tan parejo es el clima durante el año (NASA POWER)— y lluvia de hoy con su
+        probabilidad.</p></div>
+      </div>
+      <p>El segundo icono, 🏙️, abre <strong>Equipamientos</strong>: marca las categorías que quieras ver
+      —aparcamientos, escuelas, universidades, farmacias, plazas, hospitales, mercados— y aparecen como
+      pines con su emoji. Al tocar uno ves su nombre y su ranking: la puntuación ponderada de Statetty
+      junto a la nota y el número de reseñas que tiene en Google.</p>
+      <p>Si tienes <a href="#dibujar-zona">una zona dibujada</a>, todas estas capas consultan solo dentro
+      de ella; si no, siguen lo que se ve en pantalla y se actualizan al mover el mapa.</p>
     </section>
 
     <!-- ============ ESTIMAR VALOR / ACM ============ -->
@@ -544,8 +622,8 @@ permalink: /manual/
         <a class="req-chip" href="#ver-resultados">Estar en el mapa de resultados</a>
       </div>
       <p class="lede">El Análisis Comparativo de Mercado (ACM) estima cuánto vale un inmueble comparándolo
-      contra los resultados que ya tienes en el mapa. Ábrelo desde el engranaje del mapa, en la sección
-      <strong>ACM</strong>.</p>
+      contra los resultados que ya tienes en el mapa. Ábrelo desde el panel de herramientas (tu avatar en
+      el menú de usuario), en la sección <strong>ACM</strong>.</p>
       <div class="grid">
         <div class="card"><h4>Describe el inmueble</h4><p>Tipo a estimar —departamento, oficina, local,
         casa o terreno—, subtipo, m² de terreno y construcción, dormitorios y baños.</p></div>
@@ -716,17 +794,25 @@ permalink: /manual/
     <!-- ============ MÁS TIEMPO ============ -->
     <section id="mas-tiempo">
       <span class="kicker">MI CUENTA</span>
-      <h2>Adquirir más tiempo de uso <span class="badge badge-tg">Telegram</span></h2>
+      <h2>Adquirir más tiempo de uso</h2>
       <div class="reqs"><span class="reqs-label">REQUISITOS</span>
-        <a class="req-chip" href="#crear-cuenta">Tener una cuenta creada en Telegram</a>
+        <a class="req-chip" href="#crear-cuenta">Tener una cuenta creada</a>
       </div>
-      <p class="lede">El bot ofrece planes de 2, 30, 90 o 180 días. Al elegir uno, te muestra el monto y un
-      código QR de pago.</p>
-      <p>También puedes pagar directo dentro de Telegram mediante su pasarela de pagos integrada
-      (invoice), sin salir del chat.</p>
-      <p>Si se te acabó el tiempo, escribe <code>/abonar</code> para ver un plan de pago; esto avisa al
-      equipo con tu número de teléfono. Y si necesitas que el equipo identifique tu cuenta puntualmente, usa
-      <code>/idaccnt</code> para enviarles tu ID.</p>
+      <div class="plat plat-web show">
+        <p class="lede" style="margin-top:0">Desde el menú de usuario, <strong>Adquirir tiempo</strong>
+        abre el diálogo de pago: eliges el paquete, pagas con el QR que te muestra y después subes la
+        imagen del recibo para verificarlo. Los días se cuentan desde que el comprobante queda
+        verificado.</p>
+      </div>
+      <div class="plat plat-tg">
+        <p class="lede" style="margin-top:0">El bot ofrece planes de 2, 30, 90 o 180 días. Al elegir uno,
+        te muestra el monto y un código QR de pago.</p>
+        <p>También puedes pagar directo dentro de Telegram mediante su pasarela de pagos integrada
+        (invoice), sin salir del chat.</p>
+        <p>Si se te acabó el tiempo, escribe <code>/abonar</code> para ver un plan de pago; esto avisa al
+        equipo con tu número de teléfono. Y si necesitas que el equipo identifique tu cuenta puntualmente,
+        usa <code>/idaccnt</code> para enviarles tu ID.</p>
+      </div>
     </section>
 
     <!-- ============ ASISTENTES ============ -->
@@ -750,6 +836,12 @@ permalink: /manual/
           <strong>Top 10</strong>, chatear con el personaje, cambiar el fondo de pantalla, activar o silenciar
           la voz, y jugar su minijuego de arquería (guarda medidas, equipo y puntajes).</p>
         </div>
+        <div class="card">
+          <h4>💬 Asistente de la portada <span class="badge badge-web">Web</span></h4>
+          <p>Si en la caja de búsqueda de la home escribes algo que no es una búsqueda de inmueble —una
+          pregunta sobre el servicio, por ejemplo— el asistente te responde en globos debajo de la
+          caja.</p>
+        </div>
       </div>
     </section>
 
@@ -770,9 +862,21 @@ permalink: /manual/
       </details>
       <details>
         <summary>¿Dónde veo el resultado de una búsqueda que lancé desde Telegram?</summary>
-        <p>El bot te envía un enlace al mapa de resultados en statetty.com/maps/find, más una hoja de
+        <p>El bot te envía un enlace al mapa de statetty.com, más una hoja de
         cálculo; desde la web puedes seleccionar inmuebles y generar el PDF. Ver
         <a href="#ver-resultados">Ver y comparar resultados en el mapa</a>.</p>
+      </details>
+      <details>
+        <summary>¿Por qué el sitio me pide instalar una extensión al abrir un WhatsApp?</summary>
+        <p>En computadora, los chats de Statetty se abren dentro de tu WhatsApp Web ya cargado gracias a
+        la extensión gratuita Statetty WhatsApp Direct; sin ella, cada chat abriría una pestaña nueva o
+        recargaría la que tienes. Se descarga desde
+        <a class="cmd" href="https://statetty.com/ext/" target="_blank" rel="noopener">statetty.com/ext</a>.</p>
+      </details>
+      <details>
+        <summary>¿Cómo cierro sesión en otro dispositivo?</summary>
+        <p>Desde el menú de usuario entra a <strong>Mis sesiones</strong>: verás los dispositivos con la
+        sesión abierta y su último uso, y puedes cerrar uno por uno o todos menos el actual.</p>
       </details>
       <details>
         <summary>¿Puedo publicar un inmueble desde Telegram?</summary>
@@ -786,20 +890,23 @@ permalink: /manual/
       </details>
       <details>
         <summary>¿Qué pasa si se me acaba el tiempo de uso?</summary>
-        <p>Puedes adquirir más tiempo desde el bot de Telegram eligiendo un plan (2, 30, 90 o 180 días) y
-        pagando con QR o con la pasarela integrada, o pedir un plan de pago con <code>/abonar</code>.</p>
+        <p>Puedes adquirir más desde la web (menú de usuario → «Adquirir tiempo», con QR y comprobante) o
+        desde el bot de Telegram eligiendo un plan (2, 30, 90 o 180 días), con QR, la pasarela integrada o
+        un plan de pago con <code>/abonar</code>.</p>
       </details>
 
       <table class="matrix">
         <tr><th>Función</th><th>Web</th><th>Telegram</th></tr>
         <tr><td>Buscar inmuebles</td><td class="yes">Sí</td><td class="yes">Sí</td></tr>
+        <tr><td>Dibujar la zona de búsqueda</td><td class="yes">Sí</td><td class="no">Radio y coordenadas</td></tr>
         <tr><td>Mapa, selección y PDF</td><td class="yes">Sí</td><td class="no">Solo enlace al mapa</td></tr>
+        <tr><td>Capas: ruido, micros, clima, equipamientos</td><td class="yes">Sí</td><td class="no">No</td></tr>
         <tr><td>Estimar valor (ACM)</td><td class="yes">Sí</td><td class="no">No</td></tr>
         <tr><td>Publicar inmuebles propios</td><td class="yes">Sí</td><td class="no">No</td></tr>
         <tr><td>Alertas de WhatsApp por búsqueda</td><td class="no">No</td><td class="yes">Sí</td></tr>
         <tr><td>Encontrar compradores para tus captaciones</td><td class="yes">Sí</td><td class="yes">Sí</td></tr>
         <tr><td>Buscar agentes</td><td class="no">Limitado</td><td class="yes">Sí</td></tr>
-        <tr><td>Adquirir tiempo de uso</td><td class="no">No</td><td class="yes">Sí</td></tr>
+        <tr><td>Adquirir tiempo de uso</td><td class="yes">Sí</td><td class="yes">Sí</td></tr>
         <tr><td>Asistente conversacional</td><td class="yes">Buddy</td><td class="yes">Igor</td></tr>
       </table>
     </section>
@@ -817,8 +924,10 @@ permalink: /manual/
     {title:"Explorar sin crear una cuenta", id:"sin-cuenta", kw:"anónimo visitante sin registro sin login"},
     {title:"Crear mi cuenta", id:"crear-cuenta", kw:"registro registrarme signup cuenta nueva"},
     {title:"Iniciar sesión y vincular Web + Telegram", id:"iniciar-sesion", kw:"login entrar sesión vincular correo magic link"},
-    {title:"Buscar inmuebles según mis filtros", id:"buscar-inmuebles", kw:"comprar filtros buscar propiedades búsqueda copiar pegar compartir"},
-    {title:"Ver y comparar resultados en el mapa", id:"ver-resultados", kw:"mapa resultados comparar seleccionar fuentes"},
+    {title:"Buscar inmuebles según mis filtros", id:"buscar-inmuebles", kw:"comprar filtros buscar propiedades búsqueda copiar pegar compartir url"},
+    {title:"Buscar dibujando la zona en el mapa", id:"dibujar-zona", kw:"polígono circunferencia círculo dibujar área zona lápiz pin radio deshacer"},
+    {title:"Ver y comparar resultados en el mapa", id:"ver-resultados", kw:"mapa resultados comparar seleccionar desactivar inmueble"},
+    {title:"Explorar capas y equipamientos de la zona", id:"capas-equipamientos", kw:"capas ruido micros rutas clima lluvia temperatura satélite relieve aparcamientos escuelas equipamientos"},
     {title:"Estimar el valor de un inmueble (ACM)", id:"estimar-valor", kw:"tasación avalúo precio valor mercado acm"},
     {title:"Generar un PDF para compartir", id:"generar-pdf", kw:"brochure pdf compartir exportar tsv descargar"},
     {title:"Publicar mis propios inmuebles", id:"publicar-inmuebles", kw:"vender publicar captación registrar inmueble subir fotos"},
