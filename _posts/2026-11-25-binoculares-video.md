@@ -10,6 +10,8 @@ tags: [statetty, captaciones, whatsapp, requerimientos, video]
 published: true
 ---
 
+{% include nl-suscripcion.html %}
+
 En **Mis captaciones**, junto a cada inmueble hay un botón de binoculares 🔭. Al tocarlo, Statetty revisa los más de 90 mil mensajes que llegan cada día desde más de 100 grupos de WhatsApp y te arma la lista de la gente que buscó un inmueble como el tuyo en los últimos 10 días. Grabamos un video de un minuto con el recorrido completo.
 
 [![Mensaje automático de WhatsApp con la ficha del inmueble, listo para enviar](/assets/images/posts/2026-11-25-binoculares-video.jpg)](https://youtube.com/shorts/0sri1i-BpPw)

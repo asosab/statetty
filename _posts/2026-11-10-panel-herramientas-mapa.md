@@ -12,6 +12,8 @@ published: true
 
 ![Panel de herramientas del mapa abierto al costado](/assets/images/posts/2026-11-10-panel-herramientas.png)
 
+{% include nl-suscripcion.html %}
+
 
 Si tienes tiempo activo en tu cuenta, el engranaje ⚙ del mapa abre el panel con tus herramientas: buscar inmuebles, filtrar por texto, ver estadísticas, armar la selección para el PDF o el ACM, y las rutas de micros.
 

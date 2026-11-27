@@ -10,6 +10,8 @@ tags: [statetty, asesor inmobiliario, whatsapp, captaciones, video]
 published: true
 ---
 
+{% include nl-suscripcion.html %}
+
 Si sos asesor inmobiliario ya sabés dónde están los clientes: en los grupos de WhatsApp. Ahí tus colegas piden inmuebles a gritos — «busco depto en Equipetrol hasta 60 mil» — pero entre los más de 90 mil mensajes que se mandan al día, encontrar el que te sirve es un trabajo de horas.
 
 **Statetty hace esa escucha por vos.** Es una app para asesores que junta en un solo lugar lo que hoy hacés con diez herramientas sueltas. Este video de un minuto lo resume:

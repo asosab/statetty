@@ -10,6 +10,8 @@ tags: [statetty, mapa, capas, ruido, micros, clima, video]
 published: true
 ---
 
+{% include nl-suscripcion.html %}
+
 El mapa de Statetty tiene un menú nuevo: el botón 🗂️ **Capas**, junto a la caja de búsqueda. Grabamos un video de un minuto recorriéndolo para que veas exactamente qué hace cada opción antes de tocarla.
 
 [![Nuevo menú de capas de Statetty](/assets/images/posts/2026-11-22-menu-capas-video.jpg)](https://www.youtube.com/shorts/x75LE0a3xVM)

@@ -12,6 +12,8 @@ published: true
 
 ![Formulario de registro de Statetty para crear cuenta con correo](/assets/images/posts/2026-11-09-cuenta-web.png)
 
+{% include nl-suscripcion.html %}
+
 
 Crear tu cuenta de Statetty desde la página web acaba de ponerse más simple.
 

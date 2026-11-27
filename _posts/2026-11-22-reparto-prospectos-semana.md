@@ -9,6 +9,8 @@ tags: [statetty, asesores, prospectos, whatsapp]
 published: true
 ---
 
+{% include nl-suscripcion.html %}
+
 Cuando alguien llena el formulario de contacto de un inmueble (o el de la página principal) y no es usuario de Statetty, derivamos su consulta a un asesor activo. La regla era sencilla: se la dábamos al que menos prospectos hubiera recibido en total.
 
 Eso funcionaba mientras todos llevaban parejo el contador, pero tenía un efecto raro con las cuentas nuevas. Si te dabas de alta hoy y los demás llevaban un año acumulando asignaciones, te llovían todos los prospectos hasta que empataras con los veteranos. Justo para ti, injusto para el resto.

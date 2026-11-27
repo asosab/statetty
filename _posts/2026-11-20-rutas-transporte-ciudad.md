@@ -10,6 +10,8 @@ tags: [statetty, mapa, rutas, micros, transporte, agentes]
 published: true
 ---
 
+{% include nl-suscripcion.html %}
+
 Hay una pregunta que aparece siempre en una visita comercial: *¿por dónde pasa la gente?* Un local en venta, una oficina que se muda, un terreno en una esquina con fachada — el valor de ese inmueble depende, en buena parte, de cuántas personas lo rozan todos los días. Y la respuesta casi nunca está en la ficha: hay que salir a la calle a contar.
 
 En Santa Cruz de la Sierra esa respuesta ya está dibujada. Las rutas de micros son los corredores por donde se mueve la ciudad: cada línea es un flujo constante de pasajeros, clientes y miradas. Un punto por el que pasan cuatro rutas no es lo mismo que uno por el que no pasa ninguna, aunque estén a dos cuadras de distancia.

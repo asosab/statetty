@@ -12,6 +12,8 @@ published: true
 
 ![Polígono dibujado punto a punto con su caja de datos](/assets/images/posts/2026-11-22-poligono-click-a-click.png)
 
+{% include nl-suscripcion.html %}
+
 Trazar una zona en el mapa ya no es asunto de pulso. Antes había que apretar el botón del lápiz y arrastrar el puntero de corrido, como firmar con el mouse: salía lo que salía. Ahora cada click deja un punto en su sitio. Con el tercero el área se cierra sola — el último punto se une al anterior y al primero — y a partir de ahí puedes seguir agregando esquinas hasta que la figura te quede como quieres.
 
 Mientras dibujas, el mapa se mueve con normalidad: puedes arrastrarlo o acercar entre punto y punto sin que se te arruine el trazo. Para terminar, apagas el lápiz con el mismo botón. La circunferencia sigue como estaba: aprietas el centro y arrastras el radio.

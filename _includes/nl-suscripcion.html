@@ -1,0 +1,14 @@
+{%- comment -%}
+Botón «Suscríbete al newsletter» + toolbox de suscripción.
+Se inserta en los posts del blog (al inicio del cuerpo o debajo del embed
+del podcast). El contenido del toolbox lo arma assets/js/newsletterBtn.js:
+usuario logueado → su correo + indicador de suscripción + opción de usar
+otro correo; visitante → input de correo. API: /api/newsletter (nodeLab).
+{%- endcomment -%}
+<div class="nl-sus">
+  <button type="button" class="nl-sus-btn" aria-expanded="false" aria-haspopup="dialog">
+    <i class="fas fa-envelope" aria-hidden="true"></i> Suscríbete al newsletter
+  </button>
+  <div class="nl-sus-box" role="dialog" aria-label="Suscripción al newsletter" hidden></div>
+</div>
+<script src="/assets/js/newsletterBtn.js?v=1"></script>

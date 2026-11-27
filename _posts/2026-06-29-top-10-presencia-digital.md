@@ -12,6 +12,8 @@ image: "Presencia-digital-de-una-empresa.jpg"
 
 ¿Sin tiempo para leer? Escucha el artículo en [Statetty Podcast](https://open.spotify.com/episode/6wzCnQCD6nedDgSXU1axzj)
 
+{% include nl-suscripcion.html %}
+
 
 ## Top 10 Acciones para Crear una Presencia Digital como Agente Inmobiliario
 

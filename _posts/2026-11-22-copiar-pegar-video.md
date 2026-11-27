@@ -10,6 +10,8 @@ tags: [statetty, busqueda, compartir, soporte, whatsapp, video]
 published: true
 ---
 
+{% include nl-suscripcion.html %}
+
 Armaste tu búsqueda con sus filtros y su zona dibujada, y querés pasarla tal cual a un colega o a soporte. Ahora se puede, con dos botones nuevos en el menú Buscar Inmuebles. Grabamos un video de un minuto con el recorrido completo, del que envía al que recibe.
 
 [![Compartir una búsqueda por WhatsApp](/assets/images/posts/2026-11-22-copiar-pegar-video.jpg)](https://www.youtube.com/shorts/PDiivfqKUjc)

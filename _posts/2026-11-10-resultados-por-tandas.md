@@ -12,6 +12,8 @@ published: true
 
 ![Resultados de búsqueda pintados sobre el mapa](/assets/images/posts/2026-11-10-resultados-tandas.png)
 
+{% include nl-suscripcion.html %}
+
 
 Si tu cuenta tiene tiempo activo, una búsqueda amplia puede devolver hasta 400 inmuebles. Hasta ahora el mapa esperaba a tenerlos todos antes de dibujar el primer pin, y en búsquedas grandes eso se sentía como una página congelada.
 

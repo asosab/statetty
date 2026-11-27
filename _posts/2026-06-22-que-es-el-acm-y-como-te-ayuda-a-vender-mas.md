@@ -12,6 +12,8 @@ image: "posts/2026-06-22-acm-tutorial.jpg"
 
 ¿Sin tiempo para leer? Escucha el artículo en [Statetty Podcast](https://open.spotify.com/episode/0NSokJKTVAyiPsUL8RPBNV)
 
+{% include nl-suscripcion.html %}
+
 
 ## El ACM: tu mejor aliado para poner precio a una propiedad
 

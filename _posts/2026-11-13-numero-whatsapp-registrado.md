@@ -9,6 +9,8 @@ tags: [statetty, cuenta, registro, whatsapp]
 published: true
 ---
 
+{% include nl-suscripcion.html %}
+
 A unos cuantos les pasó: entraban a la web con su correo, verificaban el código y, cuando la cuenta estaba por quedar lista, saltaba un aviso seco —«Ocurrió un problema (waphone_duplicado)»— y no había forma de seguir.
 
 Por detrás pasaba esto: en algún momento anterior quedó un registro a medias con ese mismo número de WhatsApp. Un formulario que nunca se terminó, una cuenta vieja sin Telegram conectado. El sistema veía el número ocupado y frenaba, aunque la persona era la misma.

@@ -12,6 +12,8 @@ image: "tokenizacion.jpg"
 
 ¿Sin tiempo para leer? Escucha el artículo en [Statetty Podcast](https://open.spotify.com/episode/0PrsYJ2P9ZWxYf82SvXjo6)
 
+{% include nl-suscripcion.html %}
+
 
 # Tokenización inmobiliaria en Suramérica: la propiedad que cabe en el celular
 

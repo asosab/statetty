@@ -12,6 +12,8 @@ published: true
 
 ![Mapa de Statetty acercado a la zona del visitante](/assets/images/posts/2026-11-14-mapa-donde-estas.png)
 
+{% include nl-suscripcion.html %}
+
 
 Hasta ahora el mapa recordaba dónde lo habías dejado y volvía a abrir ahí. Cómodo si trabajas siempre la misma zona; raro cuando te cambiaste de ciudad o lo dejaste en un barrio que ya no te interesa.
 

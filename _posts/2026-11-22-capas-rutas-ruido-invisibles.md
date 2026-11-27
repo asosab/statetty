@@ -10,6 +10,8 @@ tags: [statetty, mapa, rutas, micros, ruido, correccion]
 published: true
 ---
 
+{% include nl-suscripcion.html %}
+
 Si estos días abriste el panel Capas del mapa, marcaste «Rutas de micros» o «Ruido» y el mapa siguió igual de limpio, no fue tu conexión ni tu sesión: las capas sí se cargaban. El aviso incluso contaba cuántas líneas encontraba la zona («217 líneas de micros en la zona»), pero sobre el mapa no aparecía ni una.
 
 El motivo fue una regla de estilo que vino de fábrica con la plantilla del sitio y que obliga a todo `canvas` de la página a estirarse al 100% de su contenedor. Justo los canvas que usa el mapa para dibujar esas capas no siguen esa lógica: su tamaño lo calcula el motor del mapa, pixel por pixel. Al forzarlos, quedaban colapsados a cero. Las líneas existían, pero en un lienzo invisible.

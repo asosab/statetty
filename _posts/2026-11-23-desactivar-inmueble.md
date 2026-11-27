@@ -12,6 +12,8 @@ published: true
 
 ![Botón «Desactivar inmueble» en la caja de información de un pin](/assets/images/posts/2026-11-23-desactivar-inmueble.png)
 
+{% include nl-suscripcion.html %}
+
 Abre la ficha de cualquier inmueble en el mapa y mira la fila de botones de abajo. Si te aparece uno rojo que dice «Desactivar inmueble», felicidades: tu cuenta tiene confianza máxima y eres de las poquísimas personas que participan en este experimento.
 
 ¿Para qué sirve? Para lo que pasa todas las semanas: encuentras un aviso que pinta bien, le escribes al captador y te contesta «lo acabamos de alquilar». El anuncio sigue publicado, pero el inmueble ya no existe como oportunidad. Con ese botón lo marcas como inactivo en el acto, con fecha y hora de la baja. Sale de tu búsqueda y del mapa para todos.

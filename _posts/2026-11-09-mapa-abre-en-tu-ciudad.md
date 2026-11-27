@@ -12,6 +12,8 @@ published: true
 
 ![Mapa de Statetty centrado en la ciudad del visitante](/assets/images/posts/2026-11-09-mapa-ciudad.png)
 
+{% include nl-suscripcion.html %}
+
 
 Al entrar a statetty.com el mapa ya no se queda quieto en Santa Cruz de la Sierra: ahora se fija en dónde estás y arranca desde ahí.
 

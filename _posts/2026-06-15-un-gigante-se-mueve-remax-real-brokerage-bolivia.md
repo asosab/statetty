@@ -12,6 +12,8 @@ image: "statettyTatuaje.png"
 
 ¿Sin tiempo para leer? Escucha el artículo en [Statetty Podcast](https://open.spotify.com/episode/4RAnSOYMd3ikBGdUnB9Nbu)
 
+{% include nl-suscripcion.html %}
+
 
 ## El movimiento que redefine el sector
 

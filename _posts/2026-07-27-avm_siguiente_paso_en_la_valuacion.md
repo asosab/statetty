@@ -12,6 +12,8 @@ image: "Statetty_AVM.png"
 
 ¿Sin tiempo para leer? Escucha el artículo en [Statetty Podcast](https://open.spotify.com/episode/4nfyfCAEHZ4T3nuaqj25PS)
 
+{% include nl-suscripcion.html %}
+
 ## Del ACM al AVM: el siguiente paso en la valuación
 
 En el [artículo anterior](https://statetty.com/que-es-el-acm-y-como-te-ayuda-a-vender-mas/) vimos cómo el **Análisis Comparativo de Mercado (ACM)** te permite calcular un precio defendible con datos de tu zona en minutos, especialmente si usás Statetty. Ese análisis sigue siendo la base del oficio: comparás inmuebles similares, sacás un precio/m² promedio y armás un rango.

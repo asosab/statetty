@@ -10,6 +10,8 @@ tags: [statetty, ficha, inmueble, clima, ruido, micros, agentes]
 published: true
 ---
 
+{% include nl-suscripcion.html %}
+
 Una ficha de inmueble ya dice bastante: precio, fotos, superficie, ubicación en el mapa. Pero hay preguntas que el comprador hace igual, aunque no aparezcan en ningún campo: *¿pasa el micro por la puerta?*, *¿va a llover cuando vaya a visitar?*, *¿esta zona es un horno todo el año o tiene un invierno decente?*, *¿cuánto ruido hay a la hora de dormir?*.
 
 A partir de hoy la ficha responde esas preguntas sola. Debajo de la galería y antes del mapa aparecen dos cajas nuevas: **«Rutas de transporte urbano»** y **«Clima y ruido de la zona»**.

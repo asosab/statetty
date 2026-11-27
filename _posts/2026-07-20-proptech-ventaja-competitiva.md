@@ -12,6 +12,8 @@ image: "proptech-latam.png"
 
 ¿Sin tiempo para leer? Escucha el artículo en [Statetty Podcast](https://open.spotify.com/episode/34VgumeBnOq1M5avshyeLM)
 
+{% include nl-suscripcion.html %}
+
 ## Qué es el PropTech
 
 PropTech viene de *Property Technology*. El término se acuñó en el Reino Unido en 2013 y agrupa a todas las innovaciones tecnológicas que impactan la industria inmobiliaria: software, hardware, inteligencia artificial y realidad virtual, entre otras herramientas, aplicadas a optimizar o directamente reemplazar procesos que durante décadas se hicieron a mano.

@@ -9,6 +9,8 @@ tags: [statetty, cuenta, perfil, telegram, web]
 published: true
 ---
 
+{% include nl-suscripcion.html %}
+
 Si cambiabas tu teléfono en la web, el bot de Telegram se quedaba con el viejo. Si ponías tu foto en el bot, en la web no aparecía. Tenías que actualizar cada lado por separado, y si te olvidabas de uno, tus datos quedaban desparejos.
 
 Ya no. Ahora un solo cambio alcanza:

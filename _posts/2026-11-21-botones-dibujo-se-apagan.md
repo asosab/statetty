@@ -12,6 +12,8 @@ published: true
 
 ![El aviso solo sale con el botón encendido](/assets/images/posts/2026-11-21-botones-dibujo-se-apagan.png)
 
+{% include nl-suscripcion.html %}
+
 Detalle chico, molestia grande: el lápiz y el pin de la caja de búsqueda se quedaban encendidos después de buscar. Entonces dabas un clic cualquiera en el mapa, para moverte o mirar una zona, y en vez de arrastrar empezabas a dibujar un polígono o una circunferencia sin querer. Tocaba apagar el botón a mano o borrar la figura recién creada.
 
 Ya no pasa. Los dos botones se apagan solos al arrancar una búsqueda y también al concluirla, da igual si la lanzaste desde el Buscar de la caja o desde el formulario «Buscar inmuebles» del menú de usuario. Si tenías el lápiz armado, al terminar la búsqueda el mapa vuelve a lo suyo: clic para moverse, nada más.

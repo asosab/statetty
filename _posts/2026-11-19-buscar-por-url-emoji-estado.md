@@ -12,6 +12,8 @@ published: true
 
 ![Formulario Buscar Inmuebles con el campo URL destacado](/assets/images/posts/2026-11-19-buscar-por-url.png)
 
+{% include nl-suscripcion.html %}
+
 
 A veces ya tienes el enlace de una propiedad —el que te pasó un colega, el que guardaste en WhatsApp, el del aviso que viste en Instagram— y lo único que quieres es encontrarlo en el mapa. Para eso agregamos un campo nuevo en **Buscar Inmuebles**: **URL**.
 

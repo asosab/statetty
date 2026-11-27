@@ -12,6 +12,8 @@ published: true
 
 ![Ventana de inicio de sesión de Statetty que envía un código al correo](/assets/images/posts/2026-11-09-login-codigo.png)
 
+{% include nl-suscripcion.html %}
+
 
 Entrar a Statetty desde la web cambió un poco, para bien.
 

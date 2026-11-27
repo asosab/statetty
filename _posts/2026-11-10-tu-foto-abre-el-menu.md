@@ -12,6 +12,8 @@ published: true
 
 ![Foto de perfil en el encabezado que abre el menú](/assets/images/posts/2026-11-10-foto-abre-menu.png)
 
+{% include nl-suscripcion.html %}
+
 
 El engranaje ⚙ dejó de existir. Si tienes tiempo activo en tu cuenta, el mapa ahora te recibe con tu nombre, los días que te quedan y tu foto de perfil arriba a la derecha. Tocar esa foto abre el panel de siempre, el que tiene las herramientas de buscar, filtrar, seleccionar para el PDF, el ACM y las rutas de micros.
 

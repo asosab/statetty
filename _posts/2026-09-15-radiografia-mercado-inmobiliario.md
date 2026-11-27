@@ -12,6 +12,8 @@ image: "posts/260915-grafica-01.png"
 
 ¿Sin tiempo para leer? Escucha el artículo en [Statetty Podcast](https://open.spotify.com/episode/5ms97ikPQvmkDNJirZJxJb?si=CtVjh801T3isMwAOlV9oQw) 
 
+{% include nl-suscripcion.html %}
+
 Todos los días se publican, actualizan y eliminan miles de anuncios inmobiliarios en Bolivia y Perú. Pero pocas veces nos detenemos a mirar ese mercado en conjunto: ¿qué tipo de inmueble domina el mercado?, ¿en qué ciudades se concentra la oferta?, ¿cuánto cuesta realmente comprar o alquilar según el tipo de propiedad?
 
 Para responder estas preguntas, analizamos la base activa de inmuebles de Statetty: **99,236 propiedades activas**, de las cuales el 97.4% cuenta con ubicación válida. Este artículo resume los hallazgos más relevantes, con gráficas interactivas, para que agentes y agencias inmobiliarias tomen decisiones basadas en datos reales del mercado.

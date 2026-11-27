@@ -10,6 +10,8 @@ tags: [statetty, mapa, poligono, busqueda, video]
 published: true
 ---
 
+{% include nl-suscripcion.html %}
+
 El lápiz del mapa ya dibuja la zona punto a punto: nada de arrastrar de corrido. Grabamos un video de un minuto con el recorrido completo, para que veas cómo queda armada la figura y qué te cuenta la cajita de datos después de buscar.
 
 [![Polígono dibujado punto a punto con inmuebles y caja de datos](/assets/images/posts/2026-11-22-poligono-video.jpg)](https://www.youtube.com/shorts/pqKq5BHCIRA)

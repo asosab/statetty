@@ -12,6 +12,8 @@ published: true
 
 ![Login de Statetty con código por correo](/assets/images/posts/2026-11-09-login-codigo.png)
 
+{% include nl-suscripcion.html %}
+
 Si te logueabas en el celular y después abrías la laptop, la sesión de una de las dos podía aparecer cerrada sin que tocaras nada. Ya quedó corregido: **cada navegador donde entres con tu correo mantiene su propia sesión**, y ninguna se apaga por usar otra.
 
 ¿Qué había detrás? El sistema identificaba cada sesión por el tipo de navegador, y dos equipos con el mismo navegador se veían iguales. Al entrar desde el segundo, el primero quedaba «reemplazado» y en el peor caso se cerraban todas tus sesiones a la vez. Ahora cada navegador lleva una identidad propia, así que laptop, celular y una tercera máquina conviven sin pisarse.

@@ -10,6 +10,8 @@ tags: [statetty, mapa, ruido, micros, transporte, santa-cruz, agentes]
 published: true
 ---
 
+{% include nl-suscripcion.html %}
+
 Cuando alguien elige dónde vivir o dónde poner un local, la pregunta del ruido casi siempre se responde de memoria: «esa avenida es pesada», «por mi casa no pasa nada». Funciona hasta cierto punto, pero es una sensación, no un dato. Y en Santa Cruz la sensación engaña seguido, porque el ruido acá no se reparte parejo: se amontona donde las rutas se cruzan y se apaga a pocas cuadras de distancia.
 
 Por eso armamos un mapa de ruido. No es una medición con decibelímetro — nadie salió a contar decibelios por cada esquina — sino un índice calculado a partir de algo que sí tenemos muy bien mapeado: las 120 rutas de micros que recorren la ciudad todos los días.

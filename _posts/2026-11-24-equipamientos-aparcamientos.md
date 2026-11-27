@@ -12,6 +12,8 @@ published: true
 
 ![Pines 🅿️ de aparcamientos dentro de una zona dibujada, con la caja informativa de uno abierta](/assets/images/posts/2026-11-24-equipamientos-aparcamientos.png)
 
+{% include nl-suscripcion.html %}
+
 Mira abajo a la izquierda del mapa: junto al icono 🗂️ de Capas hay uno nuevo, 🏙️ **Equipamientos**. Es una herramienta en construcción que va a ir mostrando puntos de servicio de la ciudad — escuelas, farmacias, plazas, hospitales — y ya arrancó con la primera categoría: aparcamientos.
 
 Al marcar «Aparcamientos» aparecen pines 🅿️ sobre el mapa. Si dibujas una zona con el lápiz o el pin, la capa se limita a esa zona; si no, muestra los que caen dentro de lo que estás viendo. Cada pin abre una cajita con el nombre del lugar y su puntaje.

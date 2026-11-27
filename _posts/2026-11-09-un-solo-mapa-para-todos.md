@@ -12,6 +12,8 @@ published: true
 
 ![Mapa único de Statetty con resultados de búsqueda](/assets/images/posts/2026-11-09-un-solo-mapa.png)
 
+{% include nl-suscripcion.html %}
+
 
 Hasta ahora había dos mapas: el de la portada, con la vista pública, y el de resultados que usan los asesores. Desde hoy son el mismo: todo pasa en statetty.com.
 

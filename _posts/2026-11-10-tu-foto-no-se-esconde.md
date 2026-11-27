@@ -12,6 +12,8 @@ published: true
 
 ![Foto de perfil flotando en la esquina al acercar el mapa](/assets/images/posts/2026-11-10-foto-no-se-esconde.png)
 
+{% include nl-suscripcion.html %}
+
 
 Cuando acercas el mapa, la barra de arriba se retira sola para darte más espacio. El problema era que se llevaba tu foto de perfil, que es la puerta al menú. Si querías abrir el panel con el mapa ampliado, no había dónde tocar.
 

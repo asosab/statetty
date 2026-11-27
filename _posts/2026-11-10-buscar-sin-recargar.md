@@ -12,6 +12,8 @@ published: true
 
 ![Sección Buscar del panel del mapa](/assets/images/posts/2026-11-10-buscar-sin-recargar.png)
 
+{% include nl-suscripcion.html %}
+
 
 Si tu cuenta tiene tiempo activo, el engranaje ⚙ del mapa tiene una sección "Buscar Inmuebles" para armar búsquedas con filtros: zona, precio, dormitorios, superficie y más.
 

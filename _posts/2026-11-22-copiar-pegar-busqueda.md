@@ -12,6 +12,8 @@ published: true
 
 ![Los dos botones nuevos del menú Buscar inmuebles](/assets/images/posts/2026-11-22-copiar-pegar-busqueda.png)
 
+{% include nl-suscripcion.html %}
+
 ¿Alguna vez quisiste pasarle tu búsqueda a alguien? Tocaba describirla de memoria: «centro en Equipetrol, radio dos kilómetros, hasta 150 mil dólares, dos dormitorios…». Siempre se escapaba algún detalle.
 
 El menú **Buscar inmuebles** tiene ahora dos botones nuevos, justo encima de Buscar y Limpiar:
