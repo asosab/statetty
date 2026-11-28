@@ -259,6 +259,25 @@
     },
 
     {
+      legend: 'Índice verde',
+      tooltip: 'Exige un mínimo de verde en la zona del inmueble, según la capa Verde del mapa. En 0 o vacío no filtra.',
+      fields: [
+        { name: 'copaMin', type: 'slider', label: 'Verde de copas mínimo (%)', min: 0, max: 100,
+          tooltip: 'Cobertura de copa arbórea vista por satélite en la zona del inmueble (0-100%). Incluye verde privado de patios e interiores de manzana.' },
+        { name: 'gviMin', type: 'slider', label: 'Verde en calle mínimo (0-100)', min: 0, max: 100,
+          tooltip: 'Índice de verde a la vista del peatón (Street View) en la zona del inmueble. Solo cuenta lo que se ve desde la calle.' }
+      ],
+      summary: function (form) {
+        var parts = [];
+        var copa = getVal(form, 'copaMin');
+        var gvi = getVal(form, 'gviMin');
+        if (copa !== '') parts.push('copas ≥' + copa + '%');
+        if (gvi !== '') parts.push('calle ≥' + gvi);
+        return parts.join(', ');
+      }
+    },
+
+    {
       legend: 'Términos de texto',
       tooltip: 'Filtra según palabras que deben o no aparecer en la descripción del inmueble.',
       fields: [
@@ -454,6 +473,9 @@
       '#' + SECTION_ID + ' .fndinm-note{font-size:.72rem;opacity:.65;margin-top:2px;}' +
       '#' + SECTION_ID + ' .fndinm-latlng-wrapper{display:flex;flex-direction:row;align-items:center;gap:4px;}' +
       '#' + SECTION_ID + ' .fndinm-latlng-wrapper input{flex:1;}' +
+      '#' + SECTION_ID + ' .fndinm-slider-wrap{display:flex;flex-direction:row;align-items:center;gap:8px;}' +
+      '#' + SECTION_ID + ' .fndinm-slider-range{flex:1;min-width:0;accent-color:#4a9c4a;}' +
+      '#' + SECTION_ID + ' .fndinm-slider-wrap input[type="number"]{width:64px;flex:0 0 auto;padding:5px 6px;border:1px solid rgba(0,0,0,.2);border-radius:6px;font-size:.85rem;box-sizing:border-box;}' +
       '#' + SECTION_ID + ' .fndinm-latlng-search{cursor:pointer;font-size:1rem;padding:0 4px;user-select:none;}' +
       '#' + SECTION_ID + ' .fndinm-latlng-search:hover{opacity:.7;}' +
       '#' + SECTION_ID + ' .fndinm-actions{display:flex;gap:8px;margin-top:4px;}' +
@@ -646,6 +668,62 @@
         row.appendChild(llNote);
       }
 
+      return row;
+    }
+
+    // ---- Deslizante + input numérico exacto (índices 0-100) ----
+    // El <input type="range"> es solo la herramienta visual: el elemento con
+    // name (el que getParams, aplicarFiltros y el autosave leen/escriben) es
+    // el input numérico. Se mantienen sincronizados en ambos sentidos.
+    if (field.type === 'slider') {
+      var slWrap = document.createElement('div');
+      slWrap.className = 'fndinm-slider-wrap';
+
+      var range = document.createElement('input');
+      range.type = 'range';
+      range.className = 'fndinm-slider-range';
+      range.min = field.min !== undefined ? field.min : 0;
+      range.max = field.max !== undefined ? field.max : 100;
+      range.step = field.step || 1;
+      range.value = range.min;
+      range.setAttribute('data-for', field.name);
+      if (field.tooltip) range.setAttribute('data-tippy-content', field.tooltip);
+
+      var numInput = document.createElement('input');
+      numInput.type = 'number';
+      numInput.id = inputId;
+      numInput.name = field.name;
+      numInput.min = range.min;
+      numInput.max = range.max;
+      numInput.step = range.step;
+      numInput.placeholder = 'mín. ' + range.min;
+      if (field.tooltip) numInput.setAttribute('data-tippy-content', field.tooltip);
+
+      range.addEventListener('input', function () {
+        numInput.value = range.value;
+        numInput.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+      numInput.addEventListener('input', function () {
+        var v = parseFloat(numInput.value);
+        range.value = (numInput.value === '' || isNaN(v))
+          ? range.min
+          : Math.min(Math.max(v, Number(range.min)), Number(range.max));
+      });
+
+      var overridesSl = window.STT_FND_INM_DEFAULTS || {};
+      if (Object.prototype.hasOwnProperty.call(overridesSl, field.name)) {
+        numInput.value = overridesSl[field.name];
+        range.value = numInput.value === '' ? range.min : numInput.value;
+      }
+
+      var slLabel = document.createElement('label');
+      slLabel.setAttribute('for', inputId);
+      slLabel.textContent = field.label;
+
+      slWrap.appendChild(range);
+      slWrap.appendChild(numInput);
+      row.appendChild(slLabel);
+      row.appendChild(slWrap);
       return row;
     }
 
@@ -868,8 +946,26 @@
   // Pinta el estado de cada fieldset: verde si sus campos se usarán en la
   // búsqueda, rojo si el modo solo-URL los deja fuera. Sin URL, los
   // fieldsets sin valores quedan sin marca.
+  // Los rangos de los campos 'slider' no llevan name: los escritos
+  // programáticos (aplicarFiltros, restaurar slot, reset) tocan solo el
+  // input numérico, así que el deslizante se resincroniza acá, que corre
+  // después de cada llenado y de cada input/change del form.
+  function syncSliders(form) {
+    if (!form) return;
+    var ranges = form.querySelectorAll('input.fndinm-slider-range');
+    Array.prototype.forEach.call(ranges, function (r) {
+      var num = form.elements[r.getAttribute('data-for')];
+      if (!num) return;
+      var v = parseFloat(num.value);
+      r.value = (num.value === '' || isNaN(v))
+        ? r.min
+        : Math.min(Math.max(v, Number(r.min)), Number(r.max));
+    });
+  }
+
   function refreshEstados(form, fieldsetRefs) {
     if (!form || !fieldsetRefs) return;
+    syncSliders(form);
     var urlEl = form.elements['url'];
     var hayUrl = !!(urlEl && String(urlEl.value).trim() !== '');
     fieldsetRefs.forEach(function (ref) {
@@ -1342,6 +1438,7 @@
       var els = root.querySelectorAll('input, select, textarea');
       Array.prototype.forEach.call(els, function (el) {
         if (el.type === 'hidden' || el.type === 'button' || el.type === 'submit' || el.type === 'reset' || el.id === 'fndInm-slots-select') return;
+        if (el.type === 'range') return; // deslizante espejo: el autosave va por el input numérico
         if (el.id === 'fndInm-latlng') {
           el.addEventListener('input', function () {
             var parsed = parseLatLng(el.value);
@@ -1655,7 +1752,7 @@
 
     var params = {};
     var numberFields = ['dist', 'antiguedad', 'pMin', 'pMax', 'hab', 'banos', 'amb',
-      'm2c', 'm2t', 'm2clt', 'm2cgt', 'm2tlt', 'm2tgt', 'anoc'];
+      'm2c', 'm2t', 'm2clt', 'm2cgt', 'm2tlt', 'm2tgt', 'anoc', 'copaMin', 'gviMin'];
     // lat/lng siguen siendo dos campos independientes a nivel de datos;
     // solo la presentación/edición está unificada en un input "latlng".
     var textFields = ['nombre', 'lat', 'lng', 'userID', 'agenciaID', 'agenteID', 'inmuebleID',
