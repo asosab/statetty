@@ -473,7 +473,7 @@ permalink: /manual/
 
       <div class="plat plat-web show">
         <p>Abre <strong>Buscar inmuebles</strong> desde el menú de usuario. Los filtros están organizados en
-        un acordeón de cinco grupos, y se guardan automáticamente mientras los editas:</p>
+        un acordeón de grupos, y se guardan automáticamente mientras los editas:</p>
         <div class="grid">
           <div class="card"><h4>📍 Ubicación y radio</h4><p>Coordenadas del centro de tu búsqueda (o tu
           ubicación, si la dejas vacía) y el radio en kilómetros.</p></div>
@@ -483,6 +483,10 @@ permalink: /manual/
           ambientes y año de construcción mínimos.</p></div>
           <div class="card"><h4>📐 Superficies</h4><p>Metros cuadrados mínimos, o mayores/menores a un
           valor, tanto de terreno como de construcción.</p></div>
+          <div class="card"><h4>🌳 Índice verde</h4><p>Exige un mínimo de verde en la zona: cobertura
+          de copas vista por satélite y verde a la vista del peatón, como en la capa Verde.</p></div>
+          <div class="card"><h4>🏘️ Nivel socioeconómico</h4><p>Exige un rango de nivel socioeconómico
+          del manzano del inmueble (0-100, percentil nacional del Censo 2024), como en la capa NSE.</p></div>
           <div class="card"><h4>📝 Términos de texto</h4><p>Palabras que el inmueble debe incluir, y
           palabras que debe excluir, separadas por coma.</p></div>
           <div class="card"><h4>🔗 Búsqueda por URL</h4><p>Pega la URL de un inmueble y ese campo manda
@@ -625,23 +629,30 @@ permalink: /manual/
         <a class="req-chip" href="#iniciar-sesion">Sesión iniciada</a>
         <a class="req-chip" href="#ver-resultados">Estar en el mapa de resultados</a>
       </div>
-      <p class="lede">El Análisis Comparativo de Mercado (ACM) estima cuánto vale un inmueble comparándolo
-      contra los resultados que ya tienes en el mapa. Ábrelo desde el panel de herramientas (tu avatar en
-      el menú de usuario), en la sección <strong>ACM</strong>.</p>
+      <p class="lede">El Análisis Comparativo de Mercado (ACM) estima cuánto vale un inmueble a partir de
+      los que se ofrecen y se retiraron de la misma zona. Funciona desde el buscador de inmuebles: enciende
+      el grupo <strong>📈 Análisis de mercado (ACM)</strong>, marca la casilla <strong>Generar ACM
+      automático</strong> y busca como siempre. Mientras cargan los resultados, el servidor arma el
+      estudio.</p>
       <div class="grid">
-        <div class="card"><h4>Describe el inmueble</h4><p>Tipo a estimar —departamento, oficina, local,
-        casa o terreno—, subtipo, m² de terreno y construcción, dormitorios y baños.</p></div>
-        <div class="card"><h4>Ajusta la comparación</h4><p>Un modo de "vista rápida" que aplica un
-        porcentaje de descuento, y un ajuste manual de porcentaje por tipo de inmueble (terreno,
-        construcción, departamento).</p></div>
-        <div class="card"><h4>Fija la ubicación</h4><p>Haz clic en el mapa para marcar las coordenadas del
-        inmueble que estás evaluando.</p></div>
-        <div class="card"><h4>Revisa el resultado</h4><p>Verás el valor estimado en USD y el tiempo
-        aproximado en que ese tipo de inmueble se suele vender u ofertar en la zona.</p></div>
+        <div class="card"><h4>El inmueble a evaluar</h4><p>Se deduce de tu búsqueda: tipo, rango de precio,
+        superficies, dormitorios y ubicación. Si quieres precisarlo, el mismo grupo te deja declarar el
+        tipo, el precio pensado y los m² del sujeto. Con un clic en el mapa fijas el puntero ACM y esas
+        coordenadas mandan sobre las del formulario.</p></div>
+        <div class="card"><h4>Qué trae el informe</h4><p>Competencia activa en la zona, inmuebles retirados
+        en los últimos 24 meses con los días que tardaron, datos de la zona (ruido, verde, micros, nivel
+        socioeconómico, valor de la tierra), zonas comparables de la ciudad, un valor estimado con tres
+        escenarios de precio y el alquiler ideal si lo pusieras a rentar.</p></div>
+        <div class="card"><h4>🖨️ Imprimir ACM</h4><p>Cuando el estudio llega aparece el botón abajo del
+        formulario. Genera un PDF vertical de varias páginas, distinto del brochure de inmuebles, con tu
+        nombre y agencia al pie de cada página.</p></div>
+        <div class="card"><h4>Ajuste manual</h4><p>La calculadora de antes sigue disponible al final de la
+        misma sección, para afinar el estimado con los USD/m² de tus inmuebles seleccionados en el mapa.
+        El botón <strong>ℹ️ ¿Cómo se calcula?</strong> explica el método paso a paso.</p></div>
       </div>
-      <p>Si quieres entender el cálculo, el botón <strong>ℹ️ ¿Cómo se calcula?</strong> te explica el
-      método paso a paso. Y si el estimado te sirve, puedes incluirlo como un inmueble más dentro del PDF
-      que generes, junto con una imagen de referencia.</p>
+      <div class="note">El ACM automático es función de asesor: requiere cuenta con tiempo activo. Los
+      precios publicados no son precios de cierre y un retiro no siempre fue una venta; el informe lo
+      aclara en su sección de metodología.</div>
     </section>
 
     <!-- ============ GENERAR PDF ============ -->

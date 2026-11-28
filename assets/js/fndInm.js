@@ -278,6 +278,25 @@
     },
 
     {
+      legend: 'Nivel socioeconómico',
+      tooltip: 'Exige un rango de nivel socioeconómico de la zona del inmueble, según la capa NSE del mapa (Censo 2024). En 0 o vacío no filtra.',
+      fields: [
+        { name: 'nseMin', type: 'slider', label: 'NSE mínimo (0-100)', min: 0, max: 100,
+          tooltip: 'Percentil nacional mínimo del manzano censal donde está el inmueble. 70 = solo el 30% más alto del país.' },
+        { name: 'nseMax', type: 'slider', label: 'NSE máximo (0-100)', min: 0, max: 100,
+          tooltip: 'Percentil nacional máximo del manzano. Sirve para buscar en zonas humildes: 30 = solo el 30% más bajo.' }
+      ],
+      summary: function (form) {
+        var parts = [];
+        var nseMin = getVal(form, 'nseMin');
+        var nseMax = getVal(form, 'nseMax');
+        if (nseMin !== '' && nseMin !== '0') parts.push('NSE ≥' + nseMin);
+        if (nseMax !== '' && nseMax !== '0' && nseMax !== '100') parts.push('NSE ≤' + nseMax);
+        return parts.join(', ');
+      }
+    },
+
+    {
       legend: 'Términos de texto',
       tooltip: 'Filtra según palabras que deben o no aparecer en la descripción del inmueble.',
       fields: [
@@ -1752,7 +1771,8 @@
 
     var params = {};
     var numberFields = ['dist', 'antiguedad', 'pMin', 'pMax', 'hab', 'banos', 'amb',
-      'm2c', 'm2t', 'm2clt', 'm2cgt', 'm2tlt', 'm2tgt', 'anoc', 'copaMin', 'gviMin'];
+      'm2c', 'm2t', 'm2clt', 'm2cgt', 'm2tlt', 'm2tgt', 'anoc', 'copaMin', 'gviMin',
+      'nseMin', 'nseMax'];
     // lat/lng siguen siendo dos campos independientes a nivel de datos;
     // solo la presentación/edición está unificada en un input "latlng".
     var textFields = ['nombre', 'lat', 'lng', 'userID', 'agenciaID', 'agenteID', 'inmuebleID',
