@@ -311,6 +311,40 @@
         if (bl !== '') parts.push('-' + truncate(bl, 18));
         return parts.join(', ');
       }
+    },
+    {
+      // ACM automático (plan opencode/nodelab/PLAN/acm-buscador.md): con el
+      // toggle encendido, la búsqueda además pide el informe al servidor y el
+      // resultado queda en window.__acmData (botón «Imprimir ACM» al final).
+      legend: '📈 Análisis de mercado (ACM)',
+      tooltip: 'Con ACM encendido, la búsqueda además genera un análisis comparativo de mercado: competencia activa, historial de retiradas, datos de la zona y precio estimado, listo para imprimir en PDF.',
+      fields: [
+        { name: 'acm', type: 'checkbox', label: 'Generar ACM automático', tooltip: 'Además de buscar inmuebles, genera el informe ACM con competencia, historial, zona y estimado de precio.' },
+        {
+          name: 'acmTipo', type: 'select', label: 'Tipo del inmueble a evaluar', tooltip: 'Tipo del inmueble sujeto del estudio. Si se deja en auto, se infiere de la búsqueda.',
+          options: [
+            { value: '', label: 'Auto (de la búsqueda)' },
+            { value: 'casa', label: 'Casa' },
+            { value: 'depto', label: 'Departamento' },
+            { value: 'terreno', label: 'Terreno' },
+            { value: 'oficina', label: 'Oficina' },
+            { value: 'local_comercial', label: 'Local comercial' },
+            { value: 'galpon', label: 'Galpón' }
+          ]
+        },
+        { name: 'acmPrecio', type: 'number', label: 'Precio supuesto (USD)', min: '0', tooltip: 'Precio pensado del inmueble a evaluar. Vacío = se toma la media del rango de la búsqueda.' },
+        { name: 'acmM2c', type: 'number', label: 'm² construcción del sujeto', min: '0', tooltip: 'Superficie construida del inmueble a evaluar. Vacío = punto medio del filtro de superficie.' },
+        { name: 'acmM2t', type: 'number', label: 'm² terreno del sujeto', min: '0', tooltip: 'Superficie de terreno del inmueble a evaluar. Vacío = punto medio del filtro de superficie.' }
+      ],
+      summary: function (form) {
+        if (!getChecked(form, 'acm')) return '';
+        var parts = ['ACM'];
+        var t = getVal(form, 'acmTipo');
+        if (t !== '') parts.push(t);
+        var p = getVal(form, 'acmPrecio');
+        if (p !== '') parts.push('$' + p);
+        return parts.join(' ');
+      }
     }
   ];
 
@@ -423,6 +457,111 @@
     var lng = parseFloat(parts[1]);
     if (isNaN(lat) || isNaN(lng)) return null;
     return { lat: lat, lng: lng };
+  }
+
+  // ------------------------------------------------------------------
+  // ACM automático: POST /statetty/acm en paralelo a la búsqueda normal.
+  // El informe queda en window.__acmData y se imprime con acmPdf.js.
+  // ------------------------------------------------------------------
+  var ACM_PDF_SCRIPT = 'https://statetty.com/assets/js/acmPdf.js?v=1';
+
+  function acmPanel() { return document.getElementById('fndInm-acm-panel'); }
+
+  function acmPanelMsg(html) {
+    var p = acmPanel();
+    if (p) { p.style.display = ''; p.innerHTML = html; }
+  }
+
+  /** Arma el body del POST /statetty/acm desde los params de la búsqueda. */
+  function bodyAcm(params, fig) {
+    var filtros = {};
+    ['lat', 'lng', 'dist', 'pMin', 'pMax', 'hab', 'banos', 'amb',
+     'm2cgt', 'm2clt', 'm2tgt', 'm2tlt', 'whiteList', 'blackList', 'pais']
+      .forEach(function (k) {
+        if (params[k] !== undefined && params[k] !== null && params[k] !== '') filtros[k] = params[k];
+      });
+    var body = { filtros: filtros };
+    var sujeto = {};
+    if (params.acmTipo) sujeto.tipoInmueble = params.acmTipo;
+    if (params.acmPrecio) sujeto.precio = params.acmPrecio;
+    if (params.acmM2c) sujeto.m2c = params.acmM2c;
+    if (params.acmM2t) sujeto.m2t = params.acmM2t;
+    // El puntero ACM del mapa gana como coordenada del sujeto si está puesto.
+    if (window.__acmCoords && window.__acmCoords.lat !== undefined) {
+      sujeto.lat = window.__acmCoords.lat;
+      sujeto.lng = window.__acmCoords.lng;
+    }
+    if (Object.keys(sujeto).length) body.sujeto = sujeto;
+    if (fig && fig.poligono && fig.poligono.length) body.poligono = fig.poligono;
+    if (fig && fig.circunferencia && fig.circunferencia.length) body.circunferencia = fig.circunferencia;
+    return body;
+  }
+
+  function _fmtUSD(n) {
+    return n == null ? '—' : 'USD ' + Math.round(n).toLocaleString('en-US');
+  }
+
+  /** Resumen del informe en el panel + botón de impresión. */
+  function renderAcmResult(d) {
+    var e = d.estimacion || {}, c = d.competencia || {}, h = d.historial || {};
+    var partes = [];
+    if (e.valor) partes.push('<b>Estimado: ' + _fmtUSD(e.valor) + '</b> (' + (e.confianza || '—') + ')');
+    partes.push('Competencia: ' + (c.n || 0) + ' activos' + (c.mediana ? ', mediana ' + _fmtUSD(c.mediana) : ''));
+    partes.push('Historial: ' + (h.n || 0) + ' retirados' + (h.domMedianaDias ? ', mediana ' + h.domMedianaDias + ' días' : ''));
+    if (d.ingreso && d.ingreso.alquilerIdeal) partes.push('Alquiler ideal: ' + _fmtUSD(d.ingreso.alquilerIdeal) + '/mes');
+    acmPanelMsg(
+      '<div class="fndinm-acm-resumen">' + partes.join(' · ') + '</div>' +
+      '<div class="fndinm-acm-acciones">' +
+      '<button type="button" id="fndInm-acm-print">🖨️ Imprimir ACM</button>' +
+      (d.avisos && d.avisos.length ? '<div class="fndinm-note">' + d.avisos.join(' ') + '</div>' : '') +
+      '</div>'
+    );
+    var btn = document.getElementById('fndInm-acm-print');
+    if (btn) btn.addEventListener('click', imprimirAcm);
+  }
+
+  /** Carga acmPdf.js bajo demanda (mismo patrón que inmueblesPdf/ensureSync). */
+  function imprimirAcm() {
+    if (!window.__acmData) return;
+    if (window.STT_ACM_PDF && typeof window.STT_ACM_PDF.imprimir === 'function') {
+      window.STT_ACM_PDF.imprimir(window.__acmData);
+      return;
+    }
+    var s = document.createElement('script');
+    s.src = ACM_PDF_SCRIPT;
+    s.onload = function () {
+      if (window.STT_ACM_PDF) window.STT_ACM_PDF.imprimir(window.__acmData);
+      else showSaveStatus('error', 'No se pudo cargar el generador de PDF.');
+    };
+    s.onerror = function () { showSaveStatus('error', 'No se pudo cargar el generador de PDF.'); };
+    document.head.appendChild(s);
+  }
+
+  /** Dispara el análisis ACM contra el backend (en paralelo a la búsqueda). */
+  function lanzarAcm(params, fig, headers) {
+    acmPanelMsg('<div class="fndinm-acm-resumen">📈 Generando análisis de mercado…</div>');
+    var base = window.STATETTY_CONFIG ? STATETTY_CONFIG.WS_API_BASE : '';
+    fetch(base + 'statetty/acm', {
+      method: 'POST', headers: headers, body: JSON.stringify(bodyAcm(params, fig))
+    }).then(function (r) { return r.json(); }).then(function (res) {
+      if (!res.ok) {
+        var msg = res.error === 'sin_tiempo'
+          ? 'El informe ACM requiere cuenta con tiempo activo.'
+          : 'No se pudo generar el ACM (' + (res.error || 'error') + ').';
+        acmPanelMsg('<div class="fndinm-acm-resumen">⚠️ ' + msg + '</div>');
+        return;
+      }
+      window.__acmData = res;
+      renderAcmResult(res);
+      // Precargar los promedios del servidor en el ajuste manual (D3):
+      // acm.js lee window.ACM_INFO.promM2T cuando no hay terrenos
+      // seleccionados en el mapa.
+      var pm = res.estimacion && res.estimacion.pm2Ref;
+      if (pm) window.ACM_INFO = { promM2T: pm.terreno, promM2C: pm.construccion, promM2D: pm.construido };
+      if (typeof actualizarACM === 'function') actualizarACM();
+    }).catch(function () {
+      acmPanelMsg('<div class="fndinm-acm-resumen">⚠️ Error de conexión generando el ACM.</div>');
+    });
   }
 
   // ------------------------------------------------------------------
@@ -550,6 +689,19 @@
       '#' + SECTION_ID + ' #fndInm-acm-pointer{font-size:.8rem;margin-bottom:4px;display:flex;align-items:center;gap:6px;}' +
       '#' + SECTION_ID + ' #fndInm-acm-usar-btn{padding:2px 8px;border:1px solid rgba(0,0,0,.15);border-radius:4px;cursor:pointer;background:#f4f6f7;font-size:.78rem;}' +
       '#' + SECTION_ID + ' #fndInm-acm-usar-btn:hover{background:rgba(0,0,0,.08);}' +
+      // Panel del informe ACM automático: resumen de una línea + botón de
+      // impresión. El bloque «Ajuste manual» es el viejo #acm-container de
+      // acm.js absorbido dentro de esta sección (decisión D3 del plan).
+      '#' + SECTION_ID + ' #fndInm-acm-panel{margin-top:8px;padding:8px 10px;' +
+      'border:1px solid rgba(23,186,239,.45);border-radius:8px;background:rgba(23,186,239,.06);}' +
+      '#' + SECTION_ID + ' .fndinm-acm-resumen{font-size:.8rem;line-height:1.4;}' +
+      '#' + SECTION_ID + ' .fndinm-acm-acciones{margin-top:6px;}' +
+      '#' + SECTION_ID + ' #fndInm-acm-print{padding:6px 10px;border:1px solid rgba(0,0,0,.15);' +
+      'border-radius:6px;font-size:.82rem;cursor:pointer;background:#fff;color:inherit;}' +
+      '#' + SECTION_ID + ' #fndInm-acm-print:hover{background:rgba(0,0,0,.08);}' +
+      '#' + SECTION_ID + ' .fndinm-acm-manual{margin-top:10px;border-top:1px dashed rgba(0,0,0,.15);padding-top:8px;}' +
+      '#' + SECTION_ID + ' .fndinm-acm-manual-label{font-size:.75rem;font-weight:600;opacity:.7;' +
+      'text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;}' +
       '#' + SECTION_ID + ' #fndInm-save-status{margin-left:auto;font-size:.78rem;display:flex;align-items:center;gap:4px;flex-shrink:0;}' +
       '#' + SECTION_ID + ' .fndinm-spinner{width:14px;height:14px;border:2px solid #ddd;border-top-color:#17baef;border-radius:50%;animation:fndinm-spin .6s linear infinite;display:inline-block;}' +
       '@keyframes fndinm-spin{to{transform:rotate(360deg)}}' +
@@ -1555,6 +1707,13 @@
     actions.appendChild(btnReset);
     form.appendChild(actions);
 
+    // Panel del informe ACM: vacío/oculto hasta que una búsqueda con el
+    // toggle ACM encendido devuelva datos (window.__acmData).
+    var acmPanelDiv = document.createElement('div');
+    acmPanelDiv.id = 'fndInm-acm-panel';
+    acmPanelDiv.style.display = 'none';
+    form.appendChild(acmPanelDiv);
+
     var bottomSpacer = document.createElement('div');
     bottomSpacer.className = 'fndinm-bottom-spacer';
     bottomSpacer.setAttribute('aria-hidden', 'true');
@@ -1749,6 +1908,8 @@
           showSaveStatus('error', msg);
           return;
         }
+        // ACM automático: en paralelo al polling de la búsqueda normal.
+        if (params.acm) lanzarAcm(params, fig, headers);
         pollSearchReady(base, pk, res.searchTs, overlay, controller, isCancelled, function () { clearTimeout(slowTimer); });
       }).catch(function () {
         if (cancelled) return;
@@ -1772,12 +1933,12 @@
     var params = {};
     var numberFields = ['dist', 'antiguedad', 'pMin', 'pMax', 'hab', 'banos', 'amb',
       'm2c', 'm2t', 'm2clt', 'm2cgt', 'm2tlt', 'm2tgt', 'anoc', 'copaMin', 'gviMin',
-      'nseMin', 'nseMax'];
+      'nseMin', 'nseMax', 'acmPrecio', 'acmM2c', 'acmM2t'];
     // lat/lng siguen siendo dos campos independientes a nivel de datos;
     // solo la presentación/edición está unificada en un input "latlng".
     var textFields = ['nombre', 'lat', 'lng', 'userID', 'agenciaID', 'agenteID', 'inmuebleID',
-      'whiteList', 'blackList', 'ciudad', 'url'];
-    var boolFields = [];
+      'whiteList', 'blackList', 'ciudad', 'url', 'acmTipo'];
+    var boolFields = ['acm'];
 
     textFields.forEach(function (name) {
       var el = form.elements[name];
@@ -1900,14 +2061,49 @@
   //   - containerEl: nodo donde insertar la sección. Lo decide quien
   //     llama (menuUser.js); fndInm.js no asume dónde vive.
   //   - opts.variant: 'toolbox' (default) | 'standalone' (ver arriba).
+  // Absorción del bloque «📈 ACM» del toolbox dentro de «🔎 Buscar
+  // Inmuebles» (decisión D3): el contenedor de la calculadora manual pasa a
+  // vivir al final de esta sección, bajo la etiqueta «Ajuste manual», y el
+  // bloque suelto del toolbox desaparece. Se mueve el nodo vivo, así acm.js
+  // no se entera del cambio de lugar.
+  function absorberAcmToolbox(section) {
+    var acmContainer = document.getElementById('acm-container');
+    if (!acmContainer) return;
+    var body = section.querySelector('.section-body');
+    if (!body) return;
+
+    var wrap = document.createElement('div');
+    wrap.className = 'fndinm-acm-manual';
+    var label = document.createElement('div');
+    label.className = 'fndinm-acm-manual-label';
+    label.textContent = 'Ajuste manual';
+    label.setAttribute('data-tippy-content', 'Calculadora manual de ACM: estima el valor con los USD/m² de tus inmuebles seleccionados en el mapa.');
+    wrap.appendChild(label);
+    wrap.appendChild(acmContainer);
+    body.appendChild(wrap);
+
+    // El .section que lo contenía («📈 ACM», bloque 3 del toolbox) queda
+    // vacío: se retira para que no aparezca como sección propia.
+    var sections = document.querySelectorAll('#toolbox > .section');
+    sections.forEach(function (s) {
+      var h = s.querySelector('.section-header');
+      if (h && h.textContent.trim().indexOf('ACM') !== -1 && !s.querySelector('#acm-container')) {
+        s.remove();
+      }
+    });
+    if (typeof initPopupTooltips === 'function') initPopupTooltips(wrap);
+  }
+
   function mount(containerEl, usuario, opts) {
     if (document.getElementById(SECTION_ID)) return false; // ya montada
     if (!containerEl) containerEl = document.getElementById('toolbox');
     if (!containerEl) return false;
 
     injectStyles();
+    var variant = (opts && opts.variant) || 'toolbox';
     var section = buildSection(usuario, opts);
     containerEl.appendChild(section);
+    if (variant === 'toolbox') absorberAcmToolbox(section);
     initTooltips(section);
     return true;
   }
