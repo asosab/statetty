@@ -37,24 +37,74 @@
   var estRuido = null, leyendaBox = null;
   var panelCapas = null, panelHome = null;
 
+  // ── cache de sesión compartido (assets/js/capasCache.js) ──────────────────
+  // Cobertura por grilla: solo se piden las celdas nunca vistas; apagar y
+  // encender capas, volver a una zona o dibujar figuras sobre zona cubierta
+  // no repite peticiones (persiste en sessionStorage hasta cerrar la pestaña).
+  var CC = window.STT_CAPAS_CACHE;
+  var figApi = CC.fig;
+  var FUENTE_RUIDO = CC.definir('ruido', {
+    celdaDeg: 0.01,
+    dims: function (ctx) { return 'p' + ctx.paso; },
+    idItem: function (c) { return (c.centro || c.anillo[0]).join(','); },
+    centroItem: function (c) { return c.centro; }
+  });
+  var FUENTE_CLIMA = CC.definir('clima', {
+    celdaDeg: 0.01,
+    idItem: function (c) { return c.h3; },
+    centroItem: function (c) { return c.centro; }
+  });
+  var FUENTE_VERDE = CC.definir('verde', {
+    celdaDeg: 0.01,
+    idItem: function (c) { return c.h3; },
+    centroItem: function (c) { return c.centro; }
+  });
+  var FUENTE_NSE = CC.definir('nse', {
+    celdaDeg: 0.01,
+    idItem: function (m) { return m.codigo || (m.centro || [0, 0]).join(','); },
+    // $geoIntersects: la manzana entra aunque su centro quede fuera del bbox.
+    enZona: function (m, bb, fig) {
+      var minLng = 180, maxLng = -180, minLat = 90, maxLat = -90;
+      (m.anillos || []).forEach(function (ring) {
+        (ring || []).forEach(function (p) {
+          if (p[0] < minLng) minLng = p[0]; if (p[0] > maxLng) maxLng = p[0];
+          if (p[1] < minLat) minLat = p[1]; if (p[1] > maxLat) maxLat = p[1];
+        });
+      });
+      if (maxLng < bb.minLng || minLng > bb.maxLng || maxLat < bb.minLat || minLat > bb.maxLat) return false;
+      if (figApi.hay(fig) && !(m.centro && figApi.dentro(m.centro[0], m.centro[1], fig))) return false;
+      return true;
+    }
+  });
+  var FUENTE_RED = CC.definir('rutas-red', {
+    celdaDeg: 0.02,
+    idItem: function (r) { return (r.id || r.route_id || r.nombre) + '|' + (r.viaje || r.linea || ''); },
+    enZona: function (r, bb) {
+      var cs = r.coords || [];
+      if (!cs.length) return false;
+      var minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
+      cs.forEach(function (c) {
+        if (c[0] < minLat) minLat = c[0]; if (c[0] > maxLat) maxLat = c[0];
+        if (c[1] < minLng) minLng = c[1]; if (c[1] > maxLng) maxLng = c[1];
+      });
+      return !(maxLng < bb.minLng || minLng > bb.maxLng || maxLat < bb.minLat || minLat > bb.maxLat);
+    }
+  });
+
   var capaRuido = null;          // L.layerGroup con los cuadros de la malla
   var ruidoActivo = false;
-  var ruidoCargando = false;
   var peticionRuido = 0;
   var leyendaCats = null;
-  var cacheCeldas = {};          // key bbox+figuras → respuesta
   var debounceMove = null;
 
   // ── capa de rutas de micros (red completa de la zona) ──
   var capaRed = null;
   var redActiva = false;
-  var cacheRed = {};
   var peticionRed = 0;
 
   // ── capa de clima (temperature/lluvia por celda) ──
   var capaClima = null;
   var climaModo = null;          // 'temp' | 'amplitud' | 'lluvia'
-  var cacheClima = {};
   var peticionClima = 0;
 
   // ── capas de índice verde ────────────────────────────────────────────────
@@ -65,13 +115,11 @@
   // privado (patios) vs verde experimentable en la vereda.
   var capaVerdeSat = null, capaVerdeCalle = null;
   var verdeSatActivo = false, verdeCalleActivo = false;
-  var cacheVerde = {};
   var peticionVerde = 0;
 
   // ── capa de nivel socioeconómico (Censo 2024, por manzano) ──────────────
   var capaNse = null;
   var nseActivo = false;
-  var cacheNse = {};
   var peticionNse = 0;
 
   // ── helpers de sesión / red ────────────────────────────────────────────────
@@ -115,67 +163,13 @@
   }
 
   // ── geometría de figuras (✏️ polígono / 📍 circunferencia) ────────────────
-  function figurasActuales() {
-    try {
-      if (window.STT_MAP_FIGURAS) return window.STT_MAP_FIGURAS() || {};
-    } catch (e) {}
-    return {};
-  }
-
-  function hayFiguras(fig) {
-    return !!((fig.poligono && fig.poligono.length) || (fig.circunferencia && fig.circunferencia.length));
-  }
-
-  function bboxDeFiguras(fig) {
-    var b = null;
-    function ext(lat, lng) {
-      if (!b) { b = { minLat: lat, maxLat: lat, minLng: lng, maxLng: lng }; return; }
-      if (lat < b.minLat) b.minLat = lat; if (lat > b.maxLat) b.maxLat = lat;
-      if (lng < b.minLng) b.minLng = lng; if (lng > b.maxLng) b.maxLng = lng;
-    }
-    (fig.poligono || []).forEach(function (p) {
-      (p.puntos || []).forEach(function (pt) { ext(pt.lat, pt.lng); });
-    });
-    (fig.circunferencia || []).forEach(function (c) {
-      var dLat = c.radio / 111320;
-      var dLng = c.radio / (111320 * Math.max(0.2, Math.cos(c.lat * Math.PI / 180)));
-      ext(c.lat - dLat, c.lng - dLng); ext(c.lat - dLat, c.lng + dLng);
-      ext(c.lat + dLat, c.lng - dLng); ext(c.lat + dLat, c.lng + dLng);
-    });
-    return b;
-  }
-
-  function puntoEnPoligono(lng, lat, puntos) {
-    var dentro = false;
-    for (var i = 0, j = puntos.length - 1; i < puntos.length; j = i++) {
-      var pi = puntos[i], pj = puntos[j];
-      if (((pi.lat > lat) !== (pj.lat > lat)) &&
-          (lng < (pj.lng - pi.lng) * (lat - pi.lat) / (pj.lat - pi.lat) + pi.lng)) {
-        dentro = !dentro;
-      }
-    }
-    return dentro;
-  }
-
-  function distM(lat1, lng1, lat2, lng2) {
-    var dx = (lng2 - lng1) * 111320 * Math.cos((lat1 + lat2) / 2 * Math.PI / 180);
-    var dy = (lat2 - lat1) * 110540;
-    return Math.sqrt(dx * dx + dy * dy);
-  }
-
+  // Delegados a STT_CAPAS_CACHE.fig (los paneles ya no duplican la lógica).
+  function figurasActuales() { return figApi.actuales(); }
+  function hayFiguras(fig) { return figApi.hay(fig); }
+  function bboxDeFiguras(fig) { return figApi.bbox(fig); }
+  function distM(lat1, lng1, lat2, lng2) { return figApi.distM(lat1, lng1, lat2, lng2); }
   // ¿El centro de la celda cae dentro de alguna figura dibujada?
-  function dentroDeFiguras(centro, fig) {
-    var lng = centro[0], lat = centro[1];
-    var polis = fig.poligono || [], cirs = fig.circunferencia || [];
-    for (var i = 0; i < polis.length; i++) {
-      if (puntoEnPoligono(lng, lat, polis[i].puntos || [])) return true;
-    }
-    for (var k = 0; k < cirs.length; k++) {
-      var c = cirs[k];
-      if (distM(lat, lng, c.lat, c.lng) <= (c.radio || 0)) return true;
-    }
-    return false;
-  }
+  function dentroDeFiguras(centro, fig) { return figApi.dentro(centro[0], centro[1], fig); }
 
   // ── capa de ruido ──────────────────────────────────────────────────────────
   // Índice efectivo: el solapamiento de muchas rutas sube el piso del
@@ -274,7 +268,9 @@
 
   function cargarLeyenda() {
     if (leyendaCats) { repintarLeyenda(); return; }
-    getAuthed(API_LEYENDA).then(function (r) { return r.json(); }).then(function (d) {
+    CC.unaVez('ruido-leyenda', function () {
+      return getAuthed(API_LEYENDA).then(function (r) { return r.json(); });
+    }).then(function (d) {
       if (d && d.categorias) { leyendaCats = d.categorias; repintarLeyenda(); }
     }).catch(function () {});
   }
@@ -285,35 +281,19 @@
     return { minLat: b.getSouth(), maxLat: b.getNorth(), minLng: b.getWest(), maxLng: b.getEast() };
   }
 
-  function claveZona(fig, bb) {
-    var partes = [bb.minLng.toFixed(4), bb.minLat.toFixed(4), bb.maxLng.toFixed(4), bb.maxLat.toFixed(4)];
-    if (hayFiguras(fig)) {
-      // hash simple de la geometría: distingue figuras distintas en la misma zona
-      var s = JSON.stringify(fig), h = 0;
-      for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
-      partes.push('f' + h);
-    }
-    return partes.join(',');
-  }
-
   var reqId = 0;
 
-  function terminarCeldas(d, fig) {
-    var celdas = d.celdas || [];
-    if (hayFiguras(fig)) {
-      celdas = celdas.filter(function (c) {
-        return c.centro && dentroDeFiguras(c.centro, fig);
-      });
-    }
+  // Items ya filtrados por la capa de cache a la zona real (bbox + figuras).
+  function terminarCeldas(celdas, fig, pasoM) {
     if (!celdas.length) {
-      pintarCeldas([], d && d.pasoM);
+      pintarCeldas([], pasoM || pasoRuidoActual);
       avisarRuido(hayFiguras(fig)
         ? 'La zona marcada no tiene datos de ruido (cobertura: Santa Cruz).'
         : 'Esta vista no tiene datos de ruido (cobertura: Santa Cruz).', true);
       repintarLeyenda();
       return;
     }
-    pintarCeldas(celdas, d && d.pasoM);
+    pintarCeldas(celdas, pasoM || pasoRuidoActual);
     cargarLeyenda();
   }
 
@@ -337,29 +317,35 @@
     var bb = bboxDeZona(fig);
     var paso = pasoSegunZona(bb);
     pasoRuidoActual = paso;
-    var clave = claveZona(fig, bb) + '|p' + paso;
     reqId++;
     var miReq = reqId;
     peticionRuido = miReq;
     avisarRuido('Cargando ruido…', false);
-    if (cacheCeldas[clave]) { terminarCeldas(cacheCeldas[clave], fig); return; }
-    ruidoCargando = true;
-    var q = 'minLng=' + bb.minLng + '&minLat=' + bb.minLat +
-            '&maxLng=' + bb.maxLng + '&maxLat=' + bb.maxLat + '&paso=' + paso;
-    getAuthed(API_CELDAS + '?' + q).then(function (r) {
-      if (r.status === 401 || r.status === 403) { avisarRuido('No se pudo cargar el ruido.', true); return null; }
-      if (r.status === 429) { avisarRuido('Demasiadas consultas. Espera un minuto.', true); return null; }
-      if (!r.ok) { avisarRuido('No se pudo cargar el ruido (' + r.status + ').', true); return null; }
-      return r.json();
-    }).then(function (d) {
+    FUENTE_RUIDO.obtener({ bbox: bb, fig: fig, paso: paso }, function (bbF, ctx) {
+      var q = 'minLng=' + bbF.minLng + '&minLat=' + bbF.minLat +
+              '&maxLng=' + bbF.maxLng + '&maxLat=' + bbF.maxLat + '&paso=' + ctx.paso;
+      return getAuthed(API_CELDAS + '?' + q).then(function (r) {
+        if (!r.ok) { var e = new Error('http'); e.status = r.status; throw e; }
+        return r.json();
+      }).then(function (d) {
+        if (!d || d.ok === false) { var e2 = new Error('sin_datos'); e2.status = 0; throw e2; }
+        // El servidor puede devolver otro paso (auto-coarsen): la cobertura se
+        // marca bajo el paso REAL para que la misma zona no se repida.
+        return { items: d.celdas || [], dims: 'p' + (d.pasoM || ctx.paso), truncado: !!d.truncado };
+      });
+    }).then(function (res) {
       if (peticionRuido !== miReq || !ruidoActivo) return;
-      if (!d || d.ok === false) { avisarRuido('Sin datos de ruido en esta zona.', true); return; }
-      cacheCeldas[clave] = d;
-      terminarCeldas(d, fig);
-    }).catch(function () {
-      if (peticionRuido === miReq) avisarRuido('Falló la consulta de ruido. Revisa tu conexión.', true);
-    }).then(function () {
-      ruidoCargando = false;
+      // '~N m' del aviso: el paso real puede diferir del pedido (coarsen).
+      var ps = (res.dimsUsados || []).map(function (d) { return +String(d).slice(1); }).filter(Boolean);
+      terminarCeldas(res.items, fig, ps.length ? Math.min.apply(null, ps) : null);
+    }).catch(function (err) {
+      if (peticionRuido !== miReq || !ruidoActivo) return;
+      var s = err && err.status;
+      avisarRuido(
+        s === 429 ? 'Demasiadas consultas. Espera un minuto.' :
+        s === 0 ? 'Sin datos de ruido en esta zona.' :
+        s ? 'No se pudo cargar el ruido (' + s + ').' :
+        'Falló la consulta de ruido. Revisa tu conexión.', true);
     });
   }
 
@@ -438,31 +424,24 @@
     if (!climaModo || !mapa) return;
     var fig = figurasActuales();
     var bb = bboxDeZona(fig);
-    var clave = 'c' + claveZona(fig, bb);
     peticionClima++;
     var miReq = peticionClima;
-    if (cacheClima[clave]) { pintarClima(filtrarCeldas(cacheClima[clave], fig), climaModo); return; }
-    var q = 'minLng=' + bb.minLng + '&minLat=' + bb.minLat +
-            '&maxLng=' + bb.maxLng + '&maxLat=' + bb.maxLat;
-    fetch(baseApi() + API_CLIMA_CELDAS + '?' + q)
-      .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (d) {
-        if (peticionClima !== miReq || !climaModo) return;
-        if (!d || d.ok === false) { avisarRuido('Sin datos de clima en esta zona.', true); return; }
-        cacheClima[clave] = d;
-        pintarClima(filtrarCeldas(d, fig), climaModo);
-      })
-      .catch(function () {
-        if (peticionClima === miReq) avisarRuido('Falló la consulta de clima.', true);
-      });
-  }
-
-  // Filtra las celdas develtas por bbox a las que caen dentro de las figuras.
-  function filtrarCeldas(d, fig) {
-    var celdas = d.celdas || [];
-    if (!hayFiguras(fig)) return celdas;
-    return celdas.filter(function (c) {
-      return c.centro && dentroDeFiguras(c.centro, fig);
+    FUENTE_CLIMA.obtener({ bbox: bb, fig: fig }, function (bbF) {
+      var q = 'minLng=' + bbF.minLng + '&minLat=' + bbF.minLat +
+              '&maxLng=' + bbF.maxLng + '&maxLat=' + bbF.maxLat;
+      return fetch(baseApi() + API_CLIMA_CELDAS + '?' + q)
+        .then(function (r) { if (!r.ok) { var e = new Error('http'); e.status = r.status; throw e; } return r.json(); })
+        .then(function (d) {
+          if (!d || d.ok === false) { var e2 = new Error('sin_datos'); e2.status = 0; throw e2; }
+          return { items: d.celdas || [] };
+        });
+    }).then(function (res) {
+      if (peticionClima !== miReq || !climaModo) return;
+      if (!res.items.length) { pintarClima([], climaModo); return; }
+      pintarClima(res.items, climaModo);
+    }).catch(function (err) {
+      if (peticionClima !== miReq || !climaModo) return;
+      avisarRuido(err && err.status === 0 ? 'Sin datos de clima en esta zona.' : 'Falló la consulta de clima.', true);
     });
   }
 
@@ -553,23 +532,24 @@
     if ((!verdeSatActivo && !verdeCalleActivo) || !mapa) return;
     var fig = figurasActuales();
     var bb = bboxDeZona(fig);
-    var clave = 'v' + claveZona(fig, bb);
     peticionVerde++;
     var miReq = peticionVerde;
-    if (cacheVerde[clave]) { pintarVerde(filtrarCeldas(cacheVerde[clave], fig)); return; }
-    var q = 'minLng=' + bb.minLng + '&minLat=' + bb.minLat +
-            '&maxLng=' + bb.maxLng + '&maxLat=' + bb.maxLat;
-    fetch(baseApi() + API_VERDE_CELDAS + '?' + q)
-      .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (d) {
-        if (peticionVerde !== miReq || (!verdeSatActivo && !verdeCalleActivo)) return;
-        if (!d || d.ok === false) { avisarRuido('Sin datos de índice verde en esta zona.', true); return; }
-        cacheVerde[clave] = d;
-        pintarVerde(filtrarCeldas(d, fig));
-      })
-      .catch(function () {
-        if (peticionVerde === miReq) avisarRuido('Falló la consulta de índice verde.', true);
-      });
+    FUENTE_VERDE.obtener({ bbox: bb, fig: fig }, function (bbF) {
+      var q = 'minLng=' + bbF.minLng + '&minLat=' + bbF.minLat +
+              '&maxLng=' + bbF.maxLng + '&maxLat=' + bbF.maxLat;
+      return fetch(baseApi() + API_VERDE_CELDAS + '?' + q)
+        .then(function (r) { if (!r.ok) { var e = new Error('http'); e.status = r.status; throw e; } return r.json(); })
+        .then(function (d) {
+          if (!d || d.ok === false) { var e2 = new Error('sin_datos'); e2.status = 0; throw e2; }
+          return { items: d.celdas || [] };
+        });
+    }).then(function (res) {
+      if (peticionVerde !== miReq || (!verdeSatActivo && !verdeCalleActivo)) return;
+      pintarVerde(res.items);
+    }).catch(function (err) {
+      if (peticionVerde !== miReq) return;
+      avisarRuido(err && err.status === 0 ? 'Sin datos de índice verde en esta zona.' : 'Falló la consulta de índice verde.', true);
+    });
   }
 
   function encenderVerdeSat() {
@@ -695,24 +675,25 @@
       avisarRuido('Acerca el mapa a un barrio o zona para ver el nivel socioeconómico por manzano.', true);
       return;
     }
-    var clave = 'n' + claveZona(fig, bb);
     peticionNse++;
     var miReq = peticionNse;
-    if (cacheNse[clave]) { pintarNse(cacheNse[clave], fig); return; }
     avisarRuido('Cargando nivel socioeconómico…', false);
-    var q = 'minLng=' + bb.minLng + '&minLat=' + bb.minLat +
-            '&maxLng=' + bb.maxLng + '&maxLat=' + bb.maxLat;
-    fetch(baseApi() + API_NSE_MANZANAS + '?' + q)
-      .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (d) {
-        if (peticionNse !== miReq || !nseActivo) return;
-        if (!d || d.ok === false) { avisarRuido('Sin datos de NSE en esta zona.', true); return; }
-        cacheNse[clave] = d.manzanas || [];
-        pintarNse(cacheNse[clave], fig);
-      })
-      .catch(function () {
-        if (peticionNse === miReq) avisarRuido('Falló la consulta de nivel socioeconómico.', true);
-      });
+    FUENTE_NSE.obtener({ bbox: bb, fig: fig }, function (bbF) {
+      var q = 'minLng=' + bbF.minLng + '&minLat=' + bbF.minLat +
+              '&maxLng=' + bbF.maxLng + '&maxLat=' + bbF.maxLat;
+      return fetch(baseApi() + API_NSE_MANZANAS + '?' + q)
+        .then(function (r) { if (!r.ok) { var e = new Error('http'); e.status = r.status; throw e; } return r.json(); })
+        .then(function (d) {
+          if (!d || d.ok === false) { var e2 = new Error('sin_datos'); e2.status = 0; throw e2; }
+          return { items: d.manzanas || [] };
+        });
+    }).then(function (res) {
+      if (peticionNse !== miReq || !nseActivo) return;
+      pintarNse(res.items, fig);
+    }).catch(function (err) {
+      if (peticionNse !== miReq) return;
+      avisarRuido(err && err.status === 0 ? 'Sin datos de NSE en esta zona.' : 'Falló la consulta de nivel socioeconómico.', true);
+    });
   }
 
   function encenderNse() {
@@ -876,24 +857,30 @@
     }
     var fig = figurasActuales();
     var bb = bboxDeZona(fig);
-    var clave = 'r' + claveZona(fig, bb);
     peticionRed++;
     var miReq = peticionRed;
-    if (cacheRed[clave]) { pintarRed(cacheRed[clave], fig); return; }
-    var q = 'minLng=' + bb.minLng + '&minLat=' + bb.minLat +
-            '&maxLng=' + bb.maxLng + '&maxLat=' + bb.maxLat;
-    getAuthed(API_RUTAS_CAPAS + '?' + q).then(function (r) {
-      if (r.status === 401 || r.status === 403) { avisarRuido('Inicia sesión con una cuenta de agente para ver las rutas.', true); return null; }
-      if (r.status === 429) { avisarRuido('Demasiadas consultas. Espera un minuto.', true); return null; }
-      if (!r.ok) { avisarRuido('No se pudieron cargar las rutas (' + r.status + ').', true); return null; }
-      return r.json();
-    }).then(function (d) {
+    FUENTE_RED.obtener({ bbox: bb, fig: fig }, function (bbF) {
+      var q = 'minLng=' + bbF.minLng + '&minLat=' + bbF.minLat +
+              '&maxLng=' + bbF.maxLng + '&maxLat=' + bbF.maxLat;
+      return getAuthed(API_RUTAS_CAPAS + '?' + q).then(function (r) {
+        if (!r.ok) { var e = new Error('http'); e.status = r.status; throw e; }
+        return r.json();
+      }).then(function (d) {
+        if (!d || d.ok === false) { var e2 = new Error('sin_datos'); e2.status = 0; throw e2; }
+        return { items: d.rutas || [] };
+      });
+    }).then(function (res) {
       if (peticionRed !== miReq || !redActiva) return;
-      if (!d || d.ok === false) { avisarRuido('Sin datos de rutas en esta zona.', true); return; }
-      cacheRed[clave] = d.rutas || [];
-      pintarRed(cacheRed[clave], fig);
-    }).catch(function () {
-      if (peticionRed === miReq) avisarRuido('Falló la consulta de rutas.', true);
+      pintarRed(res.items, fig);
+    }).catch(function (err) {
+      if (peticionRed !== miReq || !redActiva) return;
+      var s = err && err.status;
+      avisarRuido(
+        (s === 401 || s === 403) ? 'Inicia sesión con una cuenta de agente para ver las rutas.' :
+        s === 429 ? 'Demasiadas consultas. Espera un minuto.' :
+        s === 0 ? 'Sin datos de rutas en esta zona.' :
+        s ? 'No se pudieron cargar las rutas (' + s + ').' :
+        'Falló la consulta de rutas.', true);
     });
   }
 

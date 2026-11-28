@@ -283,6 +283,20 @@
   function clearSession() {
     document.cookie = 'stt_pk=; Max-Age=0; Path=/; Domain=.statetty.com; Secure';
     localStorage.removeItem('stt_pk');
+    // Cache de capas (capasCache.js): la red de micros y el toolbox son datos
+    // de agente y no deben sobrevivir al cierre de sesión.
+    try {
+      if (window.STT_CAPAS_CACHE && window.STT_CAPAS_CACHE.limpiar) {
+        window.STT_CAPAS_CACHE.limpiar();
+      } else {
+        var ks = [];
+        for (var i = 0; i < sessionStorage.length; i++) {
+          var k = sessionStorage.key(i);
+          if (k && k.indexOf('stt-cc:') === 0) ks.push(k);
+        }
+        ks.forEach(function (k) { sessionStorage.removeItem(k); });
+      }
+    } catch (e) {}
     window.publicKey = null;
     if (window.STT) window.STT.usuario = null;
     window.location.href = '/';

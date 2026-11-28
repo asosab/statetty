@@ -868,6 +868,21 @@
       'Puntos sólidos: valor real de ahora. Valores normales NASA POWER 2001-2025.</div>';
   }
 
+  // Cache de sesión compartido (capasCache.js): las consultas por punto de
+  // la ficha (rutas/clima/verde) se guardan por coordenada — volver a la
+  // misma ficha o abrir otra del mismo lugar no repite peticiones.
+  var CC = window.STT_CAPAS_CACHE || null;
+  function apiJson(nombre, clave, url, ttlMs) {
+    var fn = function () {
+      return fetch(url).then(function (r) {
+        if (!r.ok) { var e = new Error('http'); e.status = r.status; throw e; }
+        return r.json();
+      });
+    };
+    return CC ? CC.consulta(nombre, clave, fn, { ttlMs: ttlMs || 0 }) : fn();
+  }
+  function clavePunto(p) { return p.lat + ',' + p.lng; }
+
   function renderEntornoInmueble(esAsesor) {
     var coords = coordsInmueble();
     if (!coords) return;
@@ -877,16 +892,16 @@
     var base = window.STATETTY_CONFIG ? STATETTY_CONFIG.WS_API_BASE : '';
 
     // Rutas de micros cercanas: para todos los visitantes.
-    fetch(base + 'statetty/inmueble/rutas?lat=' + coords.lat + '&lng=' + coords.lng + '&radio=150')
-      .then(function (r) { return r.ok ? r.json() : null; })
+    apiJson('inm-entorno', 'rutas|' + clavePunto(coords),
+      base + 'statetty/inmueble/rutas?lat=' + coords.lat + '&lng=' + coords.lng + '&radio=150')
       .then(function (d) { pintarRutasEntorno(sec, d && d.rutas); })
       .catch(function () { pintarRutasEntorno(sec, []); });
 
     // Clima + ruido: solo vista PÚBLICA. En ?t= (asesor) se ocultan porque
     // pueden mostrar datos «negativos» de la zona (regla del dueño).
     if (esAsesor) return;
-    fetch(base + 'statetty/clima/punto?lat=' + coords.lat + '&lng=' + coords.lng)
-      .then(function (r) { return r.ok ? r.json() : null; })
+    apiJson('inm-entorno', 'clima|' + clavePunto(coords),
+      base + 'statetty/clima/punto?lat=' + coords.lat + '&lng=' + coords.lng, 10 * 60 * 1000)
       .then(function (d) { pintarClimaEntorno(sec, d || {}); })
       .catch(function () {
         var bloque = sec.querySelector('#inm-ent-bloque-clima');
@@ -894,8 +909,8 @@
       });
     // Índice verde de la zona (misma regla de visibilidad que clima/ruido).
     // Si falla solo queda vacío su div; no toca el bloque de clima.
-    fetch(base + 'statetty/verde/punto?lat=' + coords.lat + '&lng=' + coords.lng)
-      .then(function (r) { return r.ok ? r.json() : null; })
+    apiJson('inm-entorno', 'verde|' + clavePunto(coords),
+      base + 'statetty/verde/punto?lat=' + coords.lat + '&lng=' + coords.lng)
       .then(function (d) { pintarVerdeEntorno(sec, d || {}); })
       .catch(function () {});
   }

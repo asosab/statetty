@@ -32,6 +32,11 @@
   var SECCIONES = ['nombre', 'origen', 'destino', 'ruido'];
   var COLOR_SECCION = { nombre: '#7c3aed', origen: '#0e7490', destino: '#f97316', ruido: '#dc2626' };
 
+  // Cache de sesión compartido (capasCache.js): las respuestas del toolbox
+  // y del buscador origen→destino se guardan por clave (sección + body),
+  // así repetir la misma búsqueda no vuelve a pegarle al API.
+  var CC = window.STT_CAPAS_CACHE;
+
   var mapa = null;
   var slot = null;
   var origen = null;
@@ -307,32 +312,37 @@
       ? window.STT.getTokenFresco()
       : Promise.resolve(window.STT && window.STT.getToken ? window.STT.getToken() : '');
 
-    Promise.resolve(tokenPromise).then(function (token) {
-      return fetch(base + API_MAPA, {
-        method: 'POST',
-        headers: Object.assign(
-          { 'Content-Type': 'application/json' },
-          token ? { 'Authorization': 'Bearer ' + token } : {}
-        ),
-        body: JSON.stringify(body)
-      }).then(function (r) {
-        return r.json().then(function (d) { return { status: r.status, data: d }; });
-      }).then(function (res) {
-        if (peticionSeccion[sec] !== req) return;
-        if (res.status === 401) { mensajeSeccion(sec, 'Inicia sesión para ver rutas.', true); return; }
-        if (res.status === 403) { mensajeSeccion(sec, 'Tu cuenta no está activa o no tiene tiempo de uso disponible.', true); return; }
-        if (res.status === 429) { mensajeSeccion(sec, 'Demasiadas búsquedas. Espera un minuto e intenta de nuevo.', true); return; }
-        if (res.status !== 200 || !res.data || !res.data.ok) {
-          mensajeSeccion(sec, 'No se pudieron cargar las rutas. Intenta de nuevo.', true);
-          return;
-        }
-        pintarRutasSeccion(sec, res.data.rutas || []);
-      }).catch(function () {
-        if (peticionSeccion[sec] === req) mensajeSeccion(sec, 'Falló la búsqueda de rutas. Revisa tu conexión.', true);
-      }).then(function () {
-        pidiendoSeccion[sec] = false;
-        if (boton) boton.disabled = false;
+    CC.consulta('rutas-toolbox', sec + '|' + CC.claveDe(body), function () {
+      return Promise.resolve(tokenPromise).then(function (token) {
+        return fetch(base + API_MAPA, {
+          method: 'POST',
+          headers: Object.assign(
+            { 'Content-Type': 'application/json' },
+            token ? { 'Authorization': 'Bearer ' + token } : {}
+          ),
+          body: JSON.stringify(body)
+        }).then(function (r) {
+          return r.json().then(function (d) {
+            if (r.status !== 200 || !d || !d.ok) { var e = new Error('http'); e.status = r.status; throw e; }
+            return d;
+          });
+        });
       });
+    }).then(function (d) {
+      if (peticionSeccion[sec] !== req) return;
+      pintarRutasSeccion(sec, d.rutas || []);
+    }).catch(function (err) {
+      if (peticionSeccion[sec] !== req) return;
+      var s = err && err.status;
+      mensajeSeccion(sec,
+        s === 401 ? 'Inicia sesión para ver rutas.' :
+        s === 403 ? 'Tu cuenta no está activa o no tiene tiempo de uso disponible.' :
+        s === 429 ? 'Demasiadas búsquedas. Espera un minuto e intenta de nuevo.' :
+        s ? 'No se pudieron cargar las rutas. Intenta de nuevo.' :
+        'Falló la búsqueda de rutas. Revisa tu conexión.', true);
+    }).then(function () {
+      pidiendoSeccion[sec] = false;
+      if (boton) boton.disabled = false;
     });
   }
 
@@ -575,31 +585,35 @@
       ? window.STT.getTokenFresco()
       : Promise.resolve(window.STT && window.STT.getToken ? window.STT.getToken() : '');
 
-    Promise.resolve(tokenPromise).then(function (token) {
-    return fetch(base + API, {
-      method: 'POST',
-      headers: Object.assign(
-        { 'Content-Type': 'application/json' },
-        token ? { 'Authorization': 'Bearer ' + token } : {}
-      ),
-      body: JSON.stringify({ origen: origen, destino: destino })
-    }).then(function (r) {
-      return r.json().then(function (d) { return { status: r.status, data: d }; });
-    }).then(function (res) {
-      if (res.status === 401) { avisar('Inicia sesión para calcular rutas.', true); return; }
-      if (res.status === 403) { avisar('Tu cuenta no está activa o no tiene tiempo de uso disponible.', true); return; }
-      if (res.status === 429) { avisar('Demasiadas búsquedas. Espera un minuto e intenta de nuevo.', true); return; }
-      if (res.status !== 200 || !res.data || !res.data.ok) {
-        avisar('No se pudieron calcular las rutas. Intenta de nuevo.', true);
-        return;
-      }
-      pintarOpciones(res.data.opciones);
-    }).catch(function () {
-      avisar('Falló la búsqueda de rutas. Revisa tu conexión.', true);
+    CC.consulta('rutas-buscar', 'od|' + CC.claveDe({ origen: origen, destino: destino }), function () {
+      return Promise.resolve(tokenPromise).then(function (token) {
+        return fetch(base + API, {
+          method: 'POST',
+          headers: Object.assign(
+            { 'Content-Type': 'application/json' },
+            token ? { 'Authorization': 'Bearer ' + token } : {}
+          ),
+          body: JSON.stringify({ origen: origen, destino: destino })
+        }).then(function (r) {
+          return r.json().then(function (d) {
+            if (r.status !== 200 || !d || !d.ok) { var e = new Error('http'); e.status = r.status; throw e; }
+            return d;
+          });
+        });
+      });
+    }).then(function (d) {
+      pintarOpciones(d.opciones);
+    }).catch(function (err) {
+      var s = err && err.status;
+      avisar(
+        s === 401 ? 'Inicia sesión para calcular rutas.' :
+        s === 403 ? 'Tu cuenta no está activa o no tiene tiempo de uso disponible.' :
+        s === 429 ? 'Demasiadas búsquedas. Espera un minuto e intenta de nuevo.' :
+        s ? 'No se pudieron calcular las rutas. Intenta de nuevo.' :
+        'Falló la búsqueda de rutas. Revisa tu conexión.', true);
     }).then(function () {
       pidiendo = false;
       if (el.buscar) el.buscar.disabled = false;
-    });
     });
   }
 

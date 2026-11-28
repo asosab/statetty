@@ -43,12 +43,23 @@
     parque: '🌳'
   };
 
+  // Cache de sesión compartido: cobertura por categoría sobre la grilla —
+  // activar una categoría nueva solo pide las celdas que le faltan a ELLA,
+  // y apagar/encender o volver a una zona no repite peticiones.
+  var CC = window.STT_CAPAS_CACHE;
+  var figApi = CC.fig;
+  var FUENTE_EQUIP = CC.definir('equipamientos', {
+    celdaDeg: 0.01,
+    dimsItem: function (e) { return e.categoria || 'otros'; },
+    idItem: function (e) { return e.id || (e.lng + ',' + e.lat + '|' + (e.categoria || '')); },
+    centroItem: function (e) { return (e.lng != null && e.lat != null) ? [e.lng, e.lat] : null; }
+  });
+
   var mapa = null;
   var panelEq = null, panelHome = null;
   var estEq = null, listaBox = null;
   var capaEq = null;                 // L.layerGroup con los marcadores
   var activas = {};                  // categoria → true
-  var cacheEq = {};                  // key bbox+figuras+cats → items
   var peticionEq = 0;
   var debounceMove = null;
   var catsCargadas = false;
@@ -92,80 +103,16 @@
   }
 
   // ── geometría de figuras (✏️ polígono / 📍 circunferencia) ────────────────
-  function figurasActuales() {
-    try {
-      if (window.STT_MAP_FIGURAS) return window.STT_MAP_FIGURAS() || {};
-    } catch (e) {}
-    return {};
-  }
-
-  function hayFiguras(fig) {
-    return !!((fig.poligono && fig.poligono.length) || (fig.circunferencia && fig.circunferencia.length));
-  }
-
-  function bboxDeFiguras(fig) {
-    var b = null;
-    function ext(lat, lng) {
-      if (!b) { b = { minLat: lat, maxLat: lat, minLng: lng, maxLng: lng }; return; }
-      if (lat < b.minLat) b.minLat = lat; if (lat > b.maxLat) b.maxLat = lat;
-      if (lng < b.minLng) b.minLng = lng; if (lng > b.maxLng) b.maxLng = lng;
-    }
-    (fig.poligono || []).forEach(function (p) {
-      (p.puntos || []).forEach(function (pt) { ext(pt.lat, pt.lng); });
-    });
-    (fig.circunferencia || []).forEach(function (c) {
-      var dLat = c.radio / 111320;
-      var dLng = c.radio / (111320 * Math.max(0.2, Math.cos(c.lat * Math.PI / 180)));
-      ext(c.lat - dLat, c.lng - dLng); ext(c.lat - dLat, c.lng + dLng);
-      ext(c.lat + dLat, c.lng - dLng); ext(c.lat + dLat, c.lng + dLng);
-    });
-    return b;
-  }
-
-  function puntoEnPoligono(lng, lat, puntos) {
-    var dentro = false;
-    for (var i = 0, j = puntos.length - 1; i < puntos.length; j = i++) {
-      var pi = puntos[i], pj = puntos[j];
-      if (((pi.lat > lat) !== (pj.lat > lat)) &&
-          (lng < (pj.lng - pi.lng) * (lat - pi.lat) / (pj.lat - pi.lat) + pi.lng)) {
-        dentro = !dentro;
-      }
-    }
-    return dentro;
-  }
-
-  function distM(lat1, lng1, lat2, lng2) {
-    var dx = (lng2 - lng1) * 111320 * Math.cos((lat1 + lat2) / 2 * Math.PI / 180);
-    var dy = (lat2 - lat1) * 110540;
-    return Math.sqrt(dx * dx + dy * dy);
-  }
-
-  function dentroDeFiguras(lng, lat, fig) {
-    var polis = fig.poligono || [], cirs = fig.circunferencia || [];
-    for (var i = 0; i < polis.length; i++) {
-      if (puntoEnPoligono(lng, lat, polis[i].puntos || [])) return true;
-    }
-    for (var k = 0; k < cirs.length; k++) {
-      var c = cirs[k];
-      if (distM(lat, lng, c.lat, c.lng) <= (c.radio || 0)) return true;
-    }
-    return false;
-  }
+  // Delegados a STT_CAPAS_CACHE.fig (los paneles ya no duplican la lógica).
+  function figurasActuales() { return figApi.actuales(); }
+  function hayFiguras(fig) { return figApi.hay(fig); }
+  function bboxDeFiguras(fig) { return figApi.bbox(fig); }
+  function dentroDeFiguras(lng, lat, fig) { return figApi.dentro(lng, lat, fig); }
 
   function bboxDeZona(fig) {
     if (hayFiguras(fig)) return bboxDeFiguras(fig);
     var b = mapa.getBounds();
     return { minLat: b.getSouth(), maxLat: b.getNorth(), minLng: b.getWest(), maxLng: b.getEast() };
-  }
-
-  function claveZona(fig, bb, cats) {
-    var partes = [bb.minLng.toFixed(4), bb.minLat.toFixed(4), bb.maxLng.toFixed(4), bb.maxLat.toFixed(4), cats.join('+')];
-    if (hayFiguras(fig)) {
-      var s = JSON.stringify(fig), h = 0;
-      for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
-      partes.push('f' + h);
-    }
-    return partes.join(',');
   }
 
   // ── pintado ────────────────────────────────────────────────────────────────
@@ -233,26 +180,31 @@
     if (!mapa || !cats.length) return;
     var fig = figurasActuales();
     var bb = bboxDeZona(fig);
-    var clave = claveZona(fig, bb, cats);
     peticionEq++;
     var miReq = peticionEq;
     avisar('Cargando equipamientos…', false);
-    if (cacheEq[clave]) { pintarEq(cacheEq[clave], fig); return; }
-    var q = 'minLng=' + bb.minLng + '&minLat=' + bb.minLat +
-            '&maxLng=' + bb.maxLng + '&maxLat=' + bb.maxLat +
-            '&categoria=' + encodeURIComponent(cats.join(','));
-    fetch(baseApi() + API_EQUIP + '?' + q).then(function (r) {
-      if (r.status === 429) { avisar('Demasiadas consultas. Espera un minuto.', true); return null; }
-      if (!r.ok) { avisar('No se pudieron cargar los equipamientos (' + r.status + ').', true); return null; }
-      return r.json();
-    }).then(function (d) {
+    FUENTE_EQUIP.obtenerVarios({ bbox: bb, fig: fig }, cats, function (bbF, ctx, dimsF) {
+      var q = 'minLng=' + bbF.minLng + '&minLat=' + bbF.minLat +
+              '&maxLng=' + bbF.maxLng + '&maxLat=' + bbF.maxLat +
+              '&categoria=' + encodeURIComponent(dimsF.join(','));
+      return fetch(baseApi() + API_EQUIP + '?' + q).then(function (r) {
+        if (!r.ok) { var e = new Error('http'); e.status = r.status; throw e; }
+        return r.json();
+      }).then(function (d) {
+        if (!d || d.ok === false) { var e2 = new Error('sin_datos'); e2.status = 0; throw e2; }
+        return { items: d.equipamientos || [] };
+      });
+    }).then(function (res) {
       if (peticionEq !== miReq || !catsActivas().length) return;
-      if (!d || d.ok === false) { avisar('Sin datos de equipamientos en esta zona.', true); return; }
-      var items = d.equipamientos || [];
-      cacheEq[clave] = items;
-      pintarEq(items, fig);
-    }).catch(function () {
-      if (peticionEq === miReq) avisar('Falló la consulta. Revisa tu conexión.', true);
+      pintarEq(res.items, fig);
+    }).catch(function (err) {
+      if (peticionEq !== miReq) return;
+      var s = err && err.status;
+      avisar(
+        s === 429 ? 'Demasiadas consultas. Espera un minuto.' :
+        s === 0 ? 'Sin datos de equipamientos en esta zona.' :
+        s ? 'No se pudieron cargar los equipamientos (' + s + ').' :
+        'Falló la consulta. Revisa tu conexión.', true);
     });
   }
 
@@ -275,7 +227,6 @@
       chk.checked = !!activas[slug];
       chk.addEventListener('change', function () {
         activas[slug] = chk.checked;
-        cacheEq = {};
         repintar();
       });
       lab.appendChild(chk);
@@ -288,7 +239,9 @@
     if (catsCargadas || !listaBox) return;
     catsCargadas = true;
     var base = [{ categoria: 'aparcamiento', n: 0 }];
-    fetch(baseApi() + API_CATS).then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+    CC.unaVez('equip-categorias', function () {
+      return fetch(baseApi() + API_CATS).then(function (r) { return r.ok ? r.json() : null; });
+    }).then(function (d) {
       var cats = (d && d.categorias) || [];
       var slugs = {};
       cats.forEach(function (c) { slugs[c.categoria] = true; });
