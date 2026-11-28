@@ -30,7 +30,8 @@
 
   var mapa = null;
   var control = null;
-  var selTipo = null, chkRuido = null, chkRutas = null, chkVerde = null;
+  var selTipo = null, chkRuido = null, chkRutas = null,
+      chkVerdeSat = null, chkVerdeCalle = null;
   var chkTemp = null, chkAmp = null, chkLluvia = null;
   var estRuido = null, leyendaBox = null;
   var panelCapas = null, panelHome = null;
@@ -55,9 +56,14 @@
   var cacheClima = {};
   var peticionClima = 0;
 
-  // ── capa de índice verde (copa satélite + GVI + censo por celda) ──
-  var capaVerde = null;
-  var verdeActivo = false;
+  // ── capas de índice verde ────────────────────────────────────────────────
+  // Dos vistas comparables sobre la misma consulta /verde/celdas:
+  //  satélite → copa arbórea vista desde arriba (Sentinel-2, relleno)
+  //  calle    → verde que ve el peatón (GVI sobre panos GSV, anillo)
+  // Solapadas se lee la divergencia: copa alta + anillo rojo = verde
+  // privado (patios) vs verde experimentable en la vereda.
+  var capaVerdeSat = null, capaVerdeCalle = null;
+  var verdeSatActivo = false, verdeCalleActivo = false;
   var cacheVerde = {};
   var peticionVerde = 0;
 
@@ -489,35 +495,48 @@
 
   function pintarVerde(celdas) {
     if (!mapa) return;
-    if (!capaVerde) capaVerde = L.layerGroup().addTo(mapa);
-    capaVerde.clearLayers();
-    var pintadas = 0;
+    if (verdeSatActivo && !capaVerdeSat) capaVerdeSat = L.layerGroup().addTo(mapa);
+    if (verdeCalleActivo && !capaVerdeCalle) capaVerdeCalle = L.layerGroup().addTo(mapa);
+    if (capaVerdeSat) capaVerdeSat.clearLayers();
+    if (capaVerdeCalle) capaVerdeCalle.clearLayers();
+    var nSat = 0, nCalle = 0;
     celdas.forEach(function (c) {
       var ring = c.poligono;
       if (!Array.isArray(ring) || ring.length < 4) return;
       var coords = ring.map(function (p) { return [p[1], p[0]]; });
-      var color = colorVerde(c.verde);
-      var poly = L.polygon(coords, {
-        color: color, weight: 0.6, opacity: 0.9,
-        fillColor: color, fillOpacity: 0.45
-      });
-      poly.bindTooltip(
+      var tooltip =
         '<b>' + etiquetaVerde(c) + '</b> · índice verde ' + (c.verde == null ? '—' : c.verde) +
-        '<br>' + detalleVerde(c),
-        { sticky: true }
-      );
-      poly.addTo(capaVerde);
-      pintadas++;
+        '<br>' + detalleVerde(c);
+      // satélite: hexágono relleno por % copa
+      if (capaVerdeSat) {
+        var colS = colorVerde(c.copa);
+        L.polygon(coords, {
+          color: colS, weight: 0.6, opacity: 0.9,
+          fillColor: colS, fillOpacity: 0.45
+        }).bindTooltip(tooltip, { sticky: true }).addTo(capaVerdeSat);
+        nSat++;
+      }
+      // calle: anillo por GVI — se superpone al relleno satélite
+      if (capaVerdeCalle && c.gvi != null) {
+        L.polygon(coords, {
+          color: colorVerde(c.gvi), weight: 3.5, opacity: 1,
+          fill: false, interactive: false
+        }).addTo(capaVerdeCalle);
+        nCalle++;
+      }
     });
-    if (!pintadas) {
+    if (!nSat && !nCalle) {
       avisarRuido('No hay datos de índice verde en esta zona (cobertura: Santa Cruz).', true);
       return;
     }
-    avisarRuido(pintadas + ' zonas con índice verde. Pasa el cursor para ver el detalle.', false);
+    var msg = [];
+    if (verdeSatActivo) msg.push(nSat + ' zonas vista satélite');
+    if (verdeCalleActivo) msg.push(nCalle ? nCalle + ' con dato de calle (anillo)' : 'sin levantamiento callejero aquí');
+    avisarRuido(msg.join(' · ') + '. Pasa el cursor para el detalle.', false);
   }
 
   function actualizarVerde() {
-    if (!verdeActivo || !mapa) return;
+    if ((!verdeSatActivo && !verdeCalleActivo) || !mapa) return;
     var fig = figurasActuales();
     var bb = bboxDeZona(fig);
     var clave = 'v' + claveZona(fig, bb);
@@ -529,7 +548,7 @@
     fetch(baseApi() + API_VERDE_CELDAS + '?' + q)
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (d) {
-        if (peticionVerde !== miReq || !verdeActivo) return;
+        if (peticionVerde !== miReq || (!verdeSatActivo && !verdeCalleActivo)) return;
         if (!d || d.ok === false) { avisarRuido('Sin datos de índice verde en esta zona.', true); return; }
         cacheVerde[clave] = d;
         pintarVerde(filtrarCeldas(d, fig));
@@ -539,19 +558,31 @@
       });
   }
 
-  function encenderVerde() {
+  function encenderVerdeSat() {
     if (!mapa) { avisarRuido('El mapa aún no está listo.', true); return; }
-    verdeActivo = true;
-    if (!capaVerde) capaVerde = L.layerGroup().addTo(mapa);
+    verdeSatActivo = true;
+    if (!capaVerdeSat) capaVerdeSat = L.layerGroup().addTo(mapa);
     actualizarVerde();
   }
-  function apagarVerde() {
-    verdeActivo = false;
-    peticionVerde++;
-    if (chkVerde) chkVerde.checked = false;
-    if (capaVerde && mapa) { capaVerde.clearLayers(); mapa.removeLayer(capaVerde); }
-    capaVerde = null;
-    avisarRuido('', false);
+  function apagarVerdeSat() {
+    verdeSatActivo = false;
+    if (chkVerdeSat) chkVerdeSat.checked = false;
+    if (capaVerdeSat && mapa) { capaVerdeSat.clearLayers(); mapa.removeLayer(capaVerdeSat); }
+    capaVerdeSat = null;
+    if (!verdeCalleActivo) { peticionVerde++; avisarRuido('', false); }
+  }
+  function encenderVerdeCalle() {
+    if (!mapa) { avisarRuido('El mapa aún no está listo.', true); return; }
+    verdeCalleActivo = true;
+    if (!capaVerdeCalle) capaVerdeCalle = L.layerGroup().addTo(mapa);
+    actualizarVerde();
+  }
+  function apagarVerdeCalle() {
+    verdeCalleActivo = false;
+    if (chkVerdeCalle) chkVerdeCalle.checked = false;
+    if (capaVerdeCalle && mapa) { capaVerdeCalle.clearLayers(); mapa.removeLayer(capaVerdeCalle); }
+    capaVerdeCalle = null;
+    if (!verdeSatActivo) { peticionVerde++; avisarRuido('', false); }
   }
 
   function encenderRuido() {
@@ -828,8 +859,10 @@
         '<label title="Lluvia de hoy en cada zona: milímetros caídos y probabilidad del día (pronóstico Open-Meteo, 7 días).">' +
           '<input type="checkbox" id="stt-capa-lluvia"> Lluvia hoy</label>' +
         '<div class="stt-capas-sub">Verde</div>' +
-        '<label title="Índice verde 0–100 por zona: porcentaje de copa arbórea vista por satélite (Sentinel-2). Verde intenso = más cubierta; rojo = zona desnuda. Cobertura: Santa Cruz de la Sierra.">' +
-          '<input type="checkbox" id="stt-capa-verde"> Índice verde</label>' +
+        '<label title="Copa arbórea vista por satélite (Sentinel-2), 0–100 por zona. Verde intenso = más cubierta; rojo = zona desnuda. Cobertura: Santa Cruz de la Sierra.">' +
+          '<input type="checkbox" id="stt-capa-verde-sat"> Verde satélite</label>' +
+        '<label title="Verde que ve el peatón: índice GVI 0–100 calculado sobre panoramas de calle (anillo sobre el hexágono). Verde intenso = calle muy arbolada; rojo = vereda desnuda. Cobertura: levantamiento por distritos de SCZ.">' +
+          '<input type="checkbox" id="stt-capa-verde-calle"> Verde en calle</label>' +
         '<div class="stt-capas-estado" id="stt-capa-estado"></div>' +
         '<div class="stt-capas-leyenda" id="stt-capas-leyenda"></div>';
       selTipo = div.querySelector('#stt-capa-tipo');
@@ -863,9 +896,13 @@
       chkLluvia.addEventListener('change', function () {
         if (chkLluvia.checked) activarClima('lluvia'); else desactivarClima();
       });
-      chkVerde = div.querySelector('#stt-capa-verde');
-      chkVerde.addEventListener('change', function () {
-        if (chkVerde.checked) encenderVerde(); else apagarVerde();
+      chkVerdeSat = div.querySelector('#stt-capa-verde-sat');
+      chkVerdeCalle = div.querySelector('#stt-capa-verde-calle');
+      chkVerdeSat.addEventListener('change', function () {
+        if (chkVerdeSat.checked) encenderVerdeSat(); else apagarVerdeSat();
+      });
+      chkVerdeCalle.addEventListener('change', function () {
+        if (chkVerdeCalle.checked) encenderVerdeCalle(); else apagarVerdeCalle();
       });
       return div;
     };
@@ -895,7 +932,7 @@
           if (ruidoActivo) actualizarRuido();
           if (climaModo) actualizarClima();
           if (redActiva) actualizarRed();
-          if (verdeActivo) actualizarVerde();
+          if (verdeSatActivo || verdeCalleActivo) actualizarVerde();
         }, 600);
       }
     });
@@ -904,7 +941,7 @@
       if (ruidoActivo) actualizarRuido();
       if (climaModo) actualizarClima();
       if (redActiva) actualizarRed();
-      if (verdeActivo) actualizarVerde();
+      if (verdeSatActivo || verdeCalleActivo) actualizarVerde();
     });
     // Cuando rutasMicros dibuja rutas, el check «Rutas de micros» se marca
     // y se muestra la capa (si estaba oculta).
