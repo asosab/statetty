@@ -25,13 +25,14 @@
   var API_CELDAS = 'statetty/ruido/malla';
   var API_CLIMA_CELDAS = 'statetty/clima/celdas';
   var API_VERDE_CELDAS = 'statetty/verde/celdas';
+  var API_NSE_MANZANAS = 'statetty/nse/manzanas';
   var API_RUTAS_CAPAS = 'statetty/rutasMicros/capas';
   var API_LEYENDA = 'statetty/ruido/leyenda';
 
   var mapa = null;
   var control = null;
   var selTipo = null, chkRuido = null, chkRutas = null,
-      chkVerdeSat = null, chkVerdeCalle = null;
+      chkVerdeSat = null, chkVerdeCalle = null, chkNse = null;
   var chkTemp = null, chkAmp = null, chkLluvia = null;
   var estRuido = null, leyendaBox = null;
   var panelCapas = null, panelHome = null;
@@ -66,6 +67,12 @@
   var verdeSatActivo = false, verdeCalleActivo = false;
   var cacheVerde = {};
   var peticionVerde = 0;
+
+  // ── capa de nivel socioeconómico (Censo 2024, por manzano) ──────────────
+  var capaNse = null;
+  var nseActivo = false;
+  var cacheNse = {};
+  var peticionNse = 0;
 
   // ── helpers de sesión / red ────────────────────────────────────────────────
   function sesionActiva() {
@@ -239,9 +246,7 @@
       '. Pasa el cursor para ver el detalle.', false);
   }
 
-  function pintarLeyenda() {
-    if (!leyendaBox) return;
-    leyendaBox.innerHTML = '';
+  function filasLeyendaRuido() {
     var cats = leyendaCats || [
       { min: 0, max: 0, label: 'Sin aporte de buses', color: '#e5e7eb' },
       { min: 1, max: 25, label: 'Bajo', color: '#fde047' },
@@ -257,10 +262,20 @@
     });
   }
 
+  // Reconstruye la leyenda juntando las capas activas (ruido + NSE).
+  function repintarLeyenda() {
+    if (!leyendaBox) return;
+    leyendaBox.innerHTML = '';
+    var algo = false;
+    if (ruidoActivo) { filasLeyendaRuido(); algo = true; }
+    if (nseActivo) { filasLeyendaNse(); algo = true; }
+    leyendaBox.style.display = algo ? '' : 'none';
+  }
+
   function cargarLeyenda() {
-    if (leyendaCats) { pintarLeyenda(); return; }
+    if (leyendaCats) { repintarLeyenda(); return; }
     getAuthed(API_LEYENDA).then(function (r) { return r.json(); }).then(function (d) {
-      if (d && d.categorias) { leyendaCats = d.categorias; pintarLeyenda(); }
+      if (d && d.categorias) { leyendaCats = d.categorias; repintarLeyenda(); }
     }).catch(function () {});
   }
 
@@ -295,12 +310,11 @@
       avisarRuido(hayFiguras(fig)
         ? 'La zona marcada no tiene datos de ruido (cobertura: Santa Cruz).'
         : 'Esta vista no tiene datos de ruido (cobertura: Santa Cruz).', true);
-      leyendaBox.style.display = 'none';
+      repintarLeyenda();
       return;
     }
     pintarCeldas(celdas, d && d.pasoM);
     cargarLeyenda();
-    if (leyendaBox) leyendaBox.style.display = '';
   }
 
   // Paso de la malla según el tamaño de la zona: figuras o vista de pocos
@@ -585,6 +599,140 @@
     if (!verdeSatActivo) { peticionVerde++; avisarRuido('', false); }
   }
 
+  // ── capa de nivel socioeconómico (Censo 2024 + mercado Statetty) ──────────
+  // Rampa RdYlGn por decil nacional del ingreso estimado (10 = más alto);
+  // sin ficha censal el INE suprime el dato → gris.
+  var NSE_COLORES = ['#a50026', '#d73027', '#f46d43', '#fdae61', '#fee08b',
+                     '#d9ef8b', '#a6d96a', '#66bd63', '#1a9850', '#006837'];
+  function colorNse(decil) {
+    if (decil == null) return '#e5e7eb';
+    return NSE_COLORES[Math.max(1, Math.min(10, decil)) - 1];
+  }
+  function etiquetaNse(m) {
+    if (m.nse == null) return 'Sin ficha censal';
+    var banda = m.decil >= 9 ? 'alto' : m.decil >= 6 ? 'medio-alto' :
+                m.decil >= 4 ? 'medio' : m.decil >= 2 ? 'medio-bajo' : 'bajo';
+    return 'NSE ' + banda + ' · decil ' + m.decil + '/10';
+  }
+  function detalleNse(m) {
+    var p = [];
+    if (m.ing != null) p.push('ingreso est. ~Bs ' + m.ing + '/mes por persona');
+    if (m.eduSup != null) p.push('educ. superior ' + m.eduSup + '%');
+    if (m.saludPriv != null) p.push('salud privada ' + m.saludPriv + '%');
+    if (m.internet != null) p.push('internet ' + m.internet + '%');
+    if (m.personas) p.push(m.personas + ' personas');
+    if (m.pm2 != null) {
+      p.push('venta ~$us ' + m.pm2 + '/m²' + (m.pm2i != null && m.pm2x != null ? ' (rango ' + m.pm2i + '–' + m.pm2x + ')' : '') +
+             (m.tipo ? ', más ' + m.tipo.toLowerCase() : '') + (m.nVenta ? ' · ' + m.nVenta + ' ofertas' : ''));
+    }
+    return p.join('<br>');
+  }
+
+  function filasLeyendaNse() {
+    var row = document.createElement('div');
+    row.className = 'stt-capas-leyenda-row';
+    row.innerHTML = '<b>NSE (Censo 2024)</b>';
+    leyendaBox.appendChild(row);
+    [[1, 2, 'bajo'], [3, 5, 'medio-bajo'], [6, 7, 'medio-alto'], [8, 10, 'alto']]
+      .forEach(function (g) {
+        var r = document.createElement('div');
+        r.className = 'stt-capas-leyenda-row';
+        var g1 = NSE_COLORES[g[0] - 1], g2 = NSE_COLORES[g[1] - 1];
+        r.innerHTML = '<span class="stt-capas-chip" style="background:linear-gradient(90deg,' + g1 + ',' + g2 + ')"></span>' +
+                      'deciles ' + g[0] + '–' + g[1] + ' (' + g[2] + ')';
+        leyendaBox.appendChild(r);
+      });
+    var g0 = document.createElement('div');
+    g0.className = 'stt-capas-leyenda-row';
+    g0.innerHTML = '<span class="stt-capas-chip" style="background:#e5e7eb"></span>sin ficha censal';
+    leyendaBox.appendChild(g0);
+  }
+
+  var rendererNse = null;
+  function pintarNse(manzanas, fig) {
+    if (!mapa) return;
+    if (!capaNse) capaNse = L.layerGroup().addTo(mapa);
+    if (!rendererNse) rendererNse = L.canvas({ padding: 0.5 });
+    capaNse.clearLayers();
+    var pintadas = 0;
+    manzanas.forEach(function (m) {
+      if (hayFiguras(fig) && !(m.centro && dentroDeFiguras(m.centro, fig))) return;
+      var color = colorNse(m.decil);
+      (m.anillos || []).forEach(function (ring) {
+        if (!Array.isArray(ring) || ring.length < 3) return;
+        var coords = ring.map(function (p) { return [p[1], p[0]]; });
+        L.polygon(coords, {
+          color: color, weight: 0.5, opacity: 0.85,
+          fillColor: color, fillOpacity: m.nse != null ? 0.5 : 0.3,
+          renderer: rendererNse
+        }).bindTooltip(
+          '<b>' + (m.nombre || 'Manzano') + '</b>' +
+          (m.municipio ? ' · ' + m.municipio : '') +
+          '<br>' + etiquetaNse(m) +
+          (detalleNse(m) ? '<br>' + detalleNse(m) : ''),
+          { sticky: true }
+        ).addTo(capaNse);
+        pintadas++;
+      });
+    });
+    if (!pintadas) {
+      avisarRuido('No hay manzanos censados en esta zona.', true);
+      return;
+    }
+    avisarRuido(pintadas + ' manzanos · rojo=bajo, verde=alto (ingreso est. por decil nacional). Pasa el cursor para el detalle.', false);
+  }
+
+  // Carga razonable: solo cuando la zona cabe en ~0.12° por lado (~13 km).
+  function zonaCabeNse(bb) {
+    return (bb.maxLng - bb.minLng) <= 0.12 && (bb.maxLat - bb.minLat) <= 0.12;
+  }
+
+  function actualizarNse() {
+    if (!nseActivo || !mapa) return;
+    var fig = figurasActuales();
+    var bb = bboxDeZona(fig);
+    if (!zonaCabeNse(bb)) {
+      avisarRuido('Acerca el mapa a un barrio o zona para ver el nivel socioeconómico por manzano.', true);
+      return;
+    }
+    var clave = 'n' + claveZona(fig, bb);
+    peticionNse++;
+    var miReq = peticionNse;
+    if (cacheNse[clave]) { pintarNse(cacheNse[clave], fig); return; }
+    avisarRuido('Cargando nivel socioeconómico…', false);
+    var q = 'minLng=' + bb.minLng + '&minLat=' + bb.minLat +
+            '&maxLng=' + bb.maxLng + '&maxLat=' + bb.maxLat;
+    fetch(baseApi() + API_NSE_MANZANAS + '?' + q)
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (peticionNse !== miReq || !nseActivo) return;
+        if (!d || d.ok === false) { avisarRuido('Sin datos de NSE en esta zona.', true); return; }
+        cacheNse[clave] = d.manzanas || [];
+        pintarNse(cacheNse[clave], fig);
+      })
+      .catch(function () {
+        if (peticionNse === miReq) avisarRuido('Falló la consulta de nivel socioeconómico.', true);
+      });
+  }
+
+  function encenderNse() {
+    if (!mapa) { avisarRuido('El mapa aún no está listo.', true); return; }
+    nseActivo = true;
+    if (!capaNse) capaNse = L.layerGroup().addTo(mapa);
+    repintarLeyenda();
+    actualizarNse();
+  }
+
+  function apagarNse() {
+    nseActivo = false;
+    peticionNse++;
+    if (chkNse) chkNse.checked = false;
+    if (capaNse && mapa) { capaNse.clearLayers(); mapa.removeLayer(capaNse); }
+    capaNse = null;
+    repintarLeyenda();
+    avisarRuido('', false);
+  }
+
   function encenderRuido() {
     if (!mapa) { avisarRuido('El mapa aún no está listo.', true); return; }
     // El ruido es público (regla del dueño): sin sesión también se muestra.
@@ -606,7 +754,7 @@
     if (chkRuido) chkRuido.checked = false;
     if (capaRuido && mapa) { capaRuido.clearLayers(); mapa.removeLayer(capaRuido); }
     capaRuido = null;
-    if (leyendaBox) leyendaBox.style.display = 'none';
+    repintarLeyenda();
     avisarRuido('', false);
   }
 
@@ -863,6 +1011,9 @@
           '<input type="checkbox" id="stt-capa-verde-sat"> Verde satélite</label>' +
         '<label title="Verde que ve el peatón: índice GVI 0–100 calculado sobre panoramas de calle (anillo sobre el hexágono). Verde intenso = calle muy arbolada; rojo = vereda desnuda. Cobertura: levantamiento por distritos de SCZ.">' +
           '<input type="checkbox" id="stt-capa-verde-calle"> Verde en calle</label>' +
+        '<div class="stt-capas-sub">Censo 2024</div>' +
+        '<label title="Nivel socioeconómico estimado por manzano censal (INE Censo 2024): decil nacional del ingreso por persona predicho con la Encuesta de Hogares 2025, cruzado con precio de venta $us/m² de la oferta Statetty. Rojo = bajo, verde = alto; gris = manzano sin ficha (el INE suprime manzanos chicos).">' +
+          '<input type="checkbox" id="stt-capa-nse"> Nivel socioeconómico</label>' +
         '<div class="stt-capas-estado" id="stt-capa-estado"></div>' +
         '<div class="stt-capas-leyenda" id="stt-capas-leyenda"></div>';
       selTipo = div.querySelector('#stt-capa-tipo');
@@ -904,6 +1055,10 @@
       chkVerdeCalle.addEventListener('change', function () {
         if (chkVerdeCalle.checked) encenderVerdeCalle(); else apagarVerdeCalle();
       });
+      chkNse = div.querySelector('#stt-capa-nse');
+      chkNse.addEventListener('change', function () {
+        if (chkNse.checked) encenderNse(); else apagarNse();
+      });
       return div;
     };
     control.addTo(mapa);
@@ -933,6 +1088,7 @@
           if (climaModo) actualizarClima();
           if (redActiva) actualizarRed();
           if (verdeSatActivo || verdeCalleActivo) actualizarVerde();
+          if (nseActivo) actualizarNse();
         }, 600);
       }
     });
@@ -942,6 +1098,7 @@
       if (climaModo) actualizarClima();
       if (redActiva) actualizarRed();
       if (verdeSatActivo || verdeCalleActivo) actualizarVerde();
+      if (nseActivo) actualizarNse();
     });
     // Cuando rutasMicros dibuja rutas, el check «Rutas de micros» se marca
     // y se muestra la capa (si estaba oculta).

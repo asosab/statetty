@@ -604,6 +604,10 @@ permalink: /manual/
         <div class="card"><h4>Clima</h4><p>Tres vistas por zona: temperatura actual (Open-Meteo),
         amplitud anual —qué tan parejo es el clima durante el año (NASA POWER)— y lluvia de hoy con su
         probabilidad.</p></div>
+        <div class="card"><h4>Nivel socioeconómico</h4><p>Colorea cada manzano del Censo 2024 (INE)
+        por su decil de ingreso estimado: rojo bajo, verde alto, gris sin ficha censal. Al pasar el
+        cursor ves el ingreso estimado, % de educación superior, salud privada e internet, más el
+        precio de venta $us/m² de la oferta de la zona. Pídela con el mapa acercado a un barrio.</p></div>
       </div>
       <p>El segundo icono, 🏙️, abre <strong>Equipamientos</strong>: marca las categorías que quieras ver
       —aparcamientos, escuelas, universidades, farmacias, plazas, hospitales, mercados— y aparecen como
@@ -900,7 +904,7 @@ permalink: /manual/
         <tr><td>Buscar inmuebles</td><td class="yes">Sí</td><td class="yes">Sí</td></tr>
         <tr><td>Dibujar la zona de búsqueda</td><td class="yes">Sí</td><td class="no">Radio y coordenadas</td></tr>
         <tr><td>Mapa, selección y PDF</td><td class="yes">Sí</td><td class="no">Solo enlace al mapa</td></tr>
-        <tr><td>Capas: ruido, micros, clima, equipamientos</td><td class="yes">Sí</td><td class="no">No</td></tr>
+        <tr><td>Capas: ruido, micros, clima, nivel socioeconómico, equipamientos</td><td class="yes">Sí</td><td class="no">No</td></tr>
         <tr><td>Estimar valor (ACM)</td><td class="yes">Sí</td><td class="no">No</td></tr>
         <tr><td>Publicar inmuebles propios</td><td class="yes">Sí</td><td class="no">No</td></tr>
         <tr><td>Alertas de WhatsApp por búsqueda</td><td class="no">No</td><td class="yes">Sí</td></tr>
@@ -927,7 +931,7 @@ permalink: /manual/
     {title:"Buscar inmuebles según mis filtros", id:"buscar-inmuebles", kw:"comprar filtros buscar propiedades búsqueda copiar pegar compartir url"},
     {title:"Buscar dibujando la zona en el mapa", id:"dibujar-zona", kw:"polígono circunferencia círculo dibujar área zona lápiz pin radio deshacer"},
     {title:"Ver y comparar resultados en el mapa", id:"ver-resultados", kw:"mapa resultados comparar seleccionar desactivar inmueble"},
-    {title:"Explorar capas y equipamientos de la zona", id:"capas-equipamientos", kw:"capas ruido micros rutas clima lluvia temperatura satélite relieve aparcamientos escuelas equipamientos"},
+    {title:"Explorar capas y equipamientos de la zona", id:"capas-equipamientos", kw:"capas ruido micros rutas clima lluvia temperatura satélite relieve aparcamientos escuelas equipamientos nivel socioeconómico censo ingreso manzano"},
     {title:"Estimar el valor de un inmueble (ACM)", id:"estimar-valor", kw:"tasación avalúo precio valor mercado acm"},
     {title:"Generar un PDF para compartir", id:"generar-pdf", kw:"brochure pdf compartir exportar tsv descargar"},
     {title:"Publicar mis propios inmuebles", id:"publicar-inmuebles", kw:"vender publicar captación registrar inmueble subir fotos"},
